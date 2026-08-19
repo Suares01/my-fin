@@ -1,0 +1,42 @@
+{
+  "name": "@workspace/infrastructure-sqlite",
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "lint": "eslint . --max-warnings 0",
+    "lint:fix": "eslint . --max-warnings 0 --fix",
+    "check-types": "tsc --noEmit",
+    "generate:migrations": "node scripts/generate-migrations.mjs",
+    "check:migrations": "node scripts/generate-migrations.mjs --check",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@workspace/application": "workspace:*",
+    "@workspace/domain": "workspace:*"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^22.15.3",
+    "@workspace/infrastructure-memory": "workspace:*",
+    "better-sqlite3": "^13.0.2",
+    "eslint": "^9.39.5",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.6",
+    "globals": "^17.11.0",
+    "prettier": "^3.8.3",
+    "typescript": "5.9.2",
+    "typescript-eslint": "^8.67.0",
+    "vitest": "^4.0.0"
+  }
+}
