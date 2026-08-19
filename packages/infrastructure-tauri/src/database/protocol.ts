@@ -235,6 +235,19 @@ export function decodeIpcExecutionResult(
 
 export function decodeIpcError(error: unknown): TauriDatabaseError {
   const safe = sanitizeIpcError(error)
+  const rawMessage = isRecord(error)
+    ? typeof error.message === "string"
+      ? error.message
+      : undefined
+    : error instanceof Error
+      ? error.message
+      : undefined
+  console.error("[sqlite/ipc] operation failed", {
+    code: safe.code,
+    diagnosticId: safe.diagnosticId,
+    message: safe.message,
+    rawMessage,
+  })
   return new TauriDatabaseError(safe)
 }
 

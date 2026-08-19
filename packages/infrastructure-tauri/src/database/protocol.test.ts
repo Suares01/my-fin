@@ -35,7 +35,7 @@ describe("SQLite IPC protocol", () => {
 
   it.each([
     [null, { type: "null" }],
-    ["Open Coin", { type: "text", value: "Open Coin" }],
+    ["My Fin", { type: "text", value: "My Fin" }],
     [42, { type: "integer", value: "42" }],
     [12.5, { type: "real", value: 12.5 }],
     [new Uint8Array([0, 127, 255]), { type: "blob", value: [0, 127, 255] }],

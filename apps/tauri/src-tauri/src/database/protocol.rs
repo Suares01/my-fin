@@ -103,6 +103,10 @@ impl DatabaseError {
         &self.code
     }
 
+    pub fn diagnostic_id(&self) -> &str {
+        &self.diagnostic_id
+    }
+
     pub fn source(&self) -> Option<&str> {
         self.source.as_deref()
     }
@@ -256,7 +260,7 @@ mod tests {
             },
             IpcSqliteValue::Real { value: 12.5 },
             IpcSqliteValue::Text {
-                value: "Open Coin".into(),
+                value: "My Fin".into(),
             },
             IpcSqliteValue::Blob {
                 value: vec![0, 127, 255],

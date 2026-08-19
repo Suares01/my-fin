@@ -7,7 +7,7 @@ edition = "2021"
 
 [lib]
 name = "my_fin_tauri_lib"
-crate-type = ["lib", "staticlib", "cdylib", "rlib"]
+crate-type = ["staticlib", "cdylib", "rlib"]
 
 [[bin]]
 name = "my-fin"

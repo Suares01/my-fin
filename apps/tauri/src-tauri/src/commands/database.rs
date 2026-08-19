@@ -45,7 +45,14 @@ pub struct TransactionRequest {
     pub transaction_id: String,
 }
 
-fn safe(error: DatabaseError) -> DatabaseErrorResponse {
+fn safe(command: &str, error: DatabaseError) -> DatabaseErrorResponse {
+    eprintln!(
+        "[sqlite] command={command} code={} diagnostic_id={} message={} source={}",
+        error.code(),
+        error.diagnostic_id(),
+        error,
+        error.source().unwrap_or("-")
+    );
     error.response()
 }
 
@@ -60,18 +67,24 @@ pub async fn database_open(
     request: OpenRequest,
 ) -> CommandResult<()> {
     if request.vault_name != APPROVED_VAULT_NAME {
-        return Err(
-            DatabaseError::new(VAULT_PATH_REJECTED, "Database vault is not approved").response(),
-        );
+        return Err(safe(
+            "database_open",
+            DatabaseError::new(VAULT_PATH_REJECTED, "Database vault is not approved"),
+        ));
     }
     let app_data_dir = app.path().app_local_data_dir().map_err(|_| {
-        DatabaseError::new(
-            VAULT_PATH_REJECTED,
-            "Database app-data directory is not approved",
+        safe(
+            "database_open",
+            DatabaseError::new(
+                VAULT_PATH_REJECTED,
+                "Database app-data directory is not approved",
+            ),
         )
-        .response()
     })?;
-    state.open(app_data_dir).map(|_| ()).map_err(safe)
+    state
+        .open(app_data_dir)
+        .map(|_| ())
+        .map_err(|error| safe("database_open", error))
 }
 
 #[tauri::command]
@@ -82,8 +95,10 @@ pub async fn database_execute(
     match request.transaction_id {
         Some(transaction_id) => state
             .execute_in_transaction(request.sql, request.parameters, transaction_id)
-            .map_err(safe),
-        None => state.execute(request.sql, request.parameters).map_err(safe),
+            .map_err(|error| safe("database_execute", error)),
+        None => state
+            .execute(request.sql, request.parameters)
+            .map_err(|error| safe("database_execute", error)),
     }
 }
 
@@ -95,8 +110,10 @@ pub async fn database_query(
     match request.transaction_id {
         Some(transaction_id) => state
             .query_in_transaction(request.sql, request.parameters, transaction_id)
-            .map_err(safe),
-        None => state.query(request.sql, request.parameters).map_err(safe),
+            .map_err(|error| safe("database_query", error)),
+        None => state
+            .query(request.sql, request.parameters)
+            .map_err(|error| safe("database_query", error)),
     }
 }
 
@@ -108,8 +125,10 @@ pub async fn database_execute_batch(
     match request.transaction_id {
         Some(transaction_id) => state
             .execute_batch_in_transaction(request.sql, transaction_id)
-            .map_err(safe),
-        None => state.execute_batch(request.sql).map_err(safe),
+            .map_err(|error| safe("database_execute_batch", error)),
+        None => state
+            .execute_batch(request.sql)
+            .map_err(|error| safe("database_execute_batch", error)),
     }
 }
 
@@ -119,8 +138,12 @@ pub async fn database_begin_transaction(
     request: BeginTransactionRequest,
 ) -> CommandResult<String> {
     match request.mode.as_str() {
-        "write" => state.begin_write().map_err(safe),
-        "read" => state.begin_read().map_err(safe),
+        "write" => state
+            .begin_write()
+            .map_err(|error| safe("database_begin_transaction", error)),
+        "read" => state
+            .begin_read()
+            .map_err(|error| safe("database_begin_transaction", error)),
         _ => Err(invalid("Transaction mode must be write or read")),
     }
 }
@@ -130,7 +153,9 @@ pub async fn database_commit_transaction(
     state: State<'_, DatabaseHandle>,
     request: TransactionRequest,
 ) -> CommandResult<()> {
-    state.commit(request.transaction_id).map_err(safe)
+    state
+        .commit(request.transaction_id)
+        .map_err(|error| safe("database_commit_transaction", error))
 }
 
 #[tauri::command]
@@ -138,17 +163,21 @@ pub async fn database_rollback_transaction(
     state: State<'_, DatabaseHandle>,
     request: TransactionRequest,
 ) -> CommandResult<()> {
-    state.rollback(request.transaction_id).map_err(safe)
+    state
+        .rollback(request.transaction_id)
+        .map_err(|error| safe("database_rollback_transaction", error))
 }
 
 #[tauri::command]
 pub async fn database_health(state: State<'_, DatabaseHandle>) -> CommandResult<()> {
-    state.health().map_err(safe)
+    state
+        .health()
+        .map_err(|error| safe("database_health", error))
 }
 
 #[tauri::command]
 pub async fn database_close(state: State<'_, DatabaseHandle>) -> CommandResult<()> {
-    state.close().map_err(safe)
+    state.close().map_err(|error| safe("database_close", error))
 }
 
 #[cfg(test)]

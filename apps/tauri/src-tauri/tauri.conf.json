@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "identifier": "com.open.myfin",
   "build": {
-    "beforeDevCommand": "pnpm dev",
+    "beforeDevCommand": "pnpm --filter @workspace/infrastructure-tauri build && pnpm dev",
     "devUrl": "http://localhost:1420",
     "beforeBuildCommand": "pnpm build",
     "frontendDist": "../dist"
