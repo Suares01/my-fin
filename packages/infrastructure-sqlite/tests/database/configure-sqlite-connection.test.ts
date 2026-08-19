@@ -53,7 +53,7 @@ describe("configureSqliteConnection", () => {
   })
 
   it("enables foreign keys and timeout for a file connection", async () => {
-    const directory = await mkdtemp(join(tmpdir(), "open-coin-sqlite-"))
+    const directory = await mkdtemp(join(tmpdir(), "my-fin-sqlite-"))
     temporaryDirectories.push(directory)
     database = new BetterSqliteDatabase(join(directory, "ledger.sqlite"))
 
@@ -68,7 +68,7 @@ describe("configureSqliteConnection", () => {
   })
 
   it("uses WAL and FULL synchronous mode for a file connection", async () => {
-    const directory = await mkdtemp(join(tmpdir(), "open-coin-sqlite-"))
+    const directory = await mkdtemp(join(tmpdir(), "my-fin-sqlite-"))
     temporaryDirectories.push(directory)
     database = new BetterSqliteDatabase(join(directory, "ledger.sqlite"))
 

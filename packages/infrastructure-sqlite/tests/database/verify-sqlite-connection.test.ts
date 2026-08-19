@@ -183,7 +183,7 @@ describe("verifySqliteConnection", () => {
   })
 
   it("verifies a real file database against the configured invariants", async () => {
-    const directory = await mkdtemp(join(tmpdir(), "open-coin-sqlite-verify-"))
+    const directory = await mkdtemp(join(tmpdir(), "my-fin-sqlite-verify-"))
     temporaryDirectories.push(directory)
     database = new BetterSqliteDatabase(join(directory, "ledger.sqlite"))
 

@@ -46,7 +46,7 @@ describe("initializeSqliteDatabase", () => {
   })
 
   it("configures WAL and migrates a file database", async () => {
-    const directory = await mkdtemp(join(tmpdir(), "open-coin-sqlite-init-"))
+    const directory = await mkdtemp(join(tmpdir(), "my-fin-sqlite-init-"))
     temporaryDirectories.push(directory)
     database = new BetterSqliteDatabase(join(directory, "ledger.sqlite"))
 

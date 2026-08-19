@@ -28,7 +28,7 @@ export type TauriSqliteDatabaseOptions = {
 
 type DatabasePhase = "new" | "open" | "closing" | "closed"
 
-const APPROVED_VAULT_NAME = "open-coin.sqlite"
+const APPROVED_VAULT_NAME = "my-fin.sqlite"
 
 function lifecycleError(code: string, message: string): TauriDatabaseError {
   return new TauriDatabaseError({

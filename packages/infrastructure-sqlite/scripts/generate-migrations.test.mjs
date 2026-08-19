@@ -14,7 +14,7 @@ import {
 const temporaryDirectories = []
 
 async function createFixture(files) {
-  const directory = await mkdtemp(join(tmpdir(), "open-coin-migrations-"))
+  const directory = await mkdtemp(join(tmpdir(), "my-fin-migrations-"))
   temporaryDirectories.push(directory)
 
   for (const [filename, sql] of Object.entries(files)) {

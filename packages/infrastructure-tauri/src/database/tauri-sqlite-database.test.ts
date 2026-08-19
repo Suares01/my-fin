@@ -64,7 +64,7 @@ describe("TauriSqliteDatabase", () => {
     expect(calls).toEqual([
       {
         command: "database_open",
-        args: { request: { vaultName: "open-coin.sqlite" } },
+        args: { request: { vaultName: "my-fin.sqlite" } },
       },
     ])
     await database.close()

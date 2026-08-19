@@ -46,7 +46,7 @@ describe("application public query API", () => {
   })
 
   it("keeps the application source graph independent from SQLite infrastructure", () => {
-    const forbiddenPackage = ["@open-coin", "infrastructure-sqlite"].join("/")
+    const forbiddenPackage = ["@workspace", "infrastructure-sqlite"].join("/")
     const applicationSource = sourceFiles(
       new URL(".", import.meta.url).pathname
     )
