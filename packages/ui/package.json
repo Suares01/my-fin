@@ -5,8 +5,10 @@
   "private": true,
   "scripts": {
     "lint": "eslint",
+    "lint:fix": "eslint --fix",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
@@ -37,13 +39,18 @@
     "prettier": "^3.8.3",
     "tailwindcss": "^4",
     "typescript": "~6",
-    "typescript-eslint": "^8"
+    "typescript-eslint": "^8",
+    "vitest": "^4.0.0"
   },
   "exports": {
     "./globals.css": "./src/styles/globals.css",
     "./lib/*": "./src/lib/*.ts",
     "./components/*": "./src/components/*.tsx",
     "./hooks/*": "./src/hooks/*.ts",
-    "./money/*": "./src/money/*.ts"
+    "./money": "./src/money/index.ts",
+    "./money/index": "./src/money/index.ts",
+    "./money/money": "./src/money/money.ts",
+    "./money/formatted-money": "./src/money/formatted-money.tsx",
+    "./money/money-input": "./src/money/money-input.tsx"
   }
 }
