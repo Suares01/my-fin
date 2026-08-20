@@ -1,24 +1,13 @@
 "use client"
 
 import {
-  BadgeCheck,
-  BarChart3,
   BookOpen,
-  Briefcase,
   ChevronRight,
   ChevronsUpDown,
-  ClipboardList,
-  Clock3,
-  FileText,
-  Folder,
-  Globe2,
-  HelpCircle,
   LayoutDashboard,
   Plus,
-  Settings,
-  Sparkles,
-  Star,
-  Users,
+  Tags,
+  WalletCards,
 } from "lucide-react"
 import * as React from "react"
 
@@ -68,7 +57,7 @@ import {
   SidebarTrigger,
 } from "@workspace/ui/components/sidebar"
 import { cn } from "@workspace/ui/lib/utils"
-import { Link } from "react-router"
+import { Link, Outlet, useLocation } from "react-router"
 import { useBooks } from "../features/books/hooks"
 import { useActiveBook } from "../providers"
 import { BOOK_SWITCHER_NAVIGATION_STATE } from "../features/books/hooks/use-book-page-navigation"
@@ -92,13 +81,6 @@ type NavGroup = {
   defaultOpen?: boolean
 }
 
-// User data for footer (Sidebar6+)
-type UserData = {
-  name: string
-  email: string
-  avatar: string
-}
-
 // Complete sidebar data structure
 type SidebarData = {
   // Logo/branding (all sidebars)
@@ -110,122 +92,35 @@ type SidebarData = {
   }
   // Main navigation groups (all sidebars)
   navGroups: NavGroup[]
-  // Footer navigation group (all sidebars)
-  footerGroup: NavGroup
-  // User data for user footer (Sidebar6+)
-  user?: UserData
-  // Workspaces for switcher (Sidebar7+)
-  workspaces?: Array<{
-    id: string
-    name: string
-    logo: string
-    plan: string
-  }>
-  // Currently active workspace (Sidebar7+)
-  activeWorkspace?: string
 }
 
 // Shared sidebar data - works with all sidebar variations
-const sidebarData: SidebarData = {
+const sidebarData = {
   logo: {
     src: "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/shadcnblocks-logo.svg",
-    alt: "Shadcnblocks",
-    title: "Shadcnblocks",
-    description: "Build your app",
+    alt: "My Fin",
+    title: "My Fin",
+    description: "Total controle das suas finanças",
   },
   navGroups: [
     {
-      title: "Overview",
-      defaultOpen: true,
+      title: "Visão Geral",
       items: [
         {
           label: "Dashboard",
           icon: LayoutDashboard,
-          href: "#",
-          isActive: true,
-        },
-        { label: "Tasks", icon: ClipboardList, href: "#" },
-        { label: "Roadmap", icon: BarChart3, href: "#" },
-      ],
-    },
-    {
-      title: "Projects",
-      defaultOpen: true,
-      items: [
-        {
-          label: "Active Projects",
-          icon: Briefcase,
-          href: "#",
-          children: [
-            { label: "Project Alpha", icon: FileText, href: "#" },
-            { label: "Project Beta", icon: FileText, href: "#" },
-            { label: "Project Gamma", icon: FileText, href: "#" },
-          ],
-        },
-        {
-          label: "Archived",
-          icon: Folder,
-          href: "#",
-          children: [
-            { label: "2024 Archive", icon: FileText, href: "#" },
-            { label: "2023 Archive", icon: FileText, href: "#" },
-          ],
+          href: "/dashboard",
         },
       ],
     },
     {
-      title: "Team",
-      defaultOpen: false,
+      title: "Organização",
       items: [
-        { label: "Members", icon: Users, href: "#" },
-        { label: "Sprints", icon: Clock3, href: "#" },
-        { label: "Approvals", icon: BadgeCheck, href: "#" },
-        { label: "Reviews", icon: Star, href: "#" },
-      ],
-    },
-    {
-      title: "Workspace",
-      defaultOpen: false,
-      items: [
-        { label: "Integrations", icon: Globe2, href: "#" },
-        { label: "Automations", icon: Sparkles, href: "#" },
+        { label: "Categorias", icon: Tags, href: "/categories" },
+        { label: "Contas", icon: WalletCards, href: "/accounts" },
       ],
     },
   ],
-  footerGroup: {
-    title: "Support",
-    items: [
-      { label: "Help Center", icon: HelpCircle, href: "#" },
-      { label: "Settings", icon: Settings, href: "#" },
-    ],
-  },
-  user: {
-    name: "John Doe",
-    email: "john@example.com",
-    avatar:
-      "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/avatar-1.webp",
-  },
-  workspaces: [
-    {
-      id: "1",
-      name: "Shadcnblocks",
-      logo: "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/shadcnblocks-logo.svg",
-      plan: "Enterprise",
-    },
-    {
-      id: "2",
-      name: "Shadcn Templates",
-      logo: "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/shadcnblocks-logo.svg",
-      plan: "Startup",
-    },
-    {
-      id: "3",
-      name: "Shadcn Components",
-      logo: "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/shadcnblocks-logo.svg",
-      plan: "Free",
-    },
-  ],
-  activeWorkspace: "1",
 }
 
 const SidebarLogo = ({ logo }: { logo: SidebarData["logo"] }) => {
@@ -253,16 +148,16 @@ const SidebarLogo = ({ logo }: { logo: SidebarData["logo"] }) => {
 }
 
 const NavMenuItem = ({ item }: { item: NavItem }) => {
+  const location = useLocation()
+
   const Icon = item.icon
   const hasChildren = item.children && item.children.length > 0
+  const isActive = location.pathname === item.href
 
   if (!hasChildren) {
     return (
       <SidebarMenuItem>
-        <SidebarMenuButton
-          render={<a href={item.href} />}
-          isActive={item.isActive}
-        >
+        <SidebarMenuButton render={<Link to={item.href} />} isActive={isActive}>
           <Icon className="size-4" />
           <span>{item.label}</span>
         </SidebarMenuButton>
@@ -288,7 +183,7 @@ const NavMenuItem = ({ item }: { item: NavItem }) => {
           {item.children!.map((child) => (
             <SidebarMenuSubItem key={child.label}>
               <SidebarMenuSubButton
-                render={<a href={child.href} />}
+                render={<Link to={child.href} />}
                 isActive={child.isActive}
               >
                 {child.label}
@@ -446,14 +341,59 @@ const AppSidebar = ({ ...props }: React.ComponentProps<typeof Sidebar>) => {
   )
 }
 
-interface ApplicationShellProps extends React.PropsWithChildren {
+function AutoBreadcrumb() {
+  const location = useLocation()
+  const pathnames = location.pathname.split("/").filter((x) => x)
+
+  const route = sidebarData.navGroups
+    .flatMap((group) =>
+      group.items.map((item) => ({
+        group,
+        item,
+      }))
+    )
+    .find(({ item }) => item.href === `/${pathnames[0]}`)
+
+  if (!route) {
+    return null
+  }
+
+  const { group, item } = route
+
+  return (
+    <Breadcrumb className="hidden md:block">
+      <BreadcrumbList>
+        <BreadcrumbItem>
+          <BreadcrumbLink href="/">{group.title}</BreadcrumbLink>
+        </BreadcrumbItem>
+        {pathnames.map((value, index) => {
+          const to = `/${pathnames.slice(0, index + 1).join("/")}`
+          const isLast = index === pathnames.length - 1
+          const label = index === 0 ? item.label : value
+
+          return (
+            <React.Fragment key={to}>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                {isLast ? (
+                  <BreadcrumbPage>{label}</BreadcrumbPage>
+                ) : (
+                  <BreadcrumbLink href={to}>{label}</BreadcrumbLink>
+                )}
+              </BreadcrumbItem>
+            </React.Fragment>
+          )
+        })}
+      </BreadcrumbList>
+    </Breadcrumb>
+  )
+}
+
+interface ApplicationShellProps {
   className?: string
 }
 
-export function ApplicationShell({
-  className,
-  children,
-}: ApplicationShellProps) {
+export function ApplicationShell({ className }: ApplicationShellProps) {
   return (
     <SidebarProvider className={cn(className)}>
       <AppSidebar />
@@ -474,21 +414,11 @@ export function ApplicationShell({
             </div>
             <span className="font-semibold">{sidebarData.logo.title}</span>
           </a>
-          <Breadcrumb className="hidden md:block">
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink href="#">Overview</BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Dashboard</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
+          <AutoBreadcrumb />
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4">
           <div className="min-h-[100vh] flex-1 rounded-xl bg-muted/50 md:min-h-min">
-            {children}
+            <Outlet />
           </div>
         </div>
       </SidebarInset>

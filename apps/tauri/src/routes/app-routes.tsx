@@ -12,6 +12,8 @@ export default function AppRoutes() {
 
       <Route element={<ApplicationShell />}>
         <Route path="dashboard" element={<CategoriesPage />} />
+        <Route path="accounts" element={<CategoriesPage />} />
+        <Route path="categories" element={<CategoriesPage />} />
       </Route>
 
       <Route path="books">
