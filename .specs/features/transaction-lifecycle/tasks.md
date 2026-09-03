@@ -578,11 +578,11 @@ T25 → T26 → T27
 
 **Done when**:
 
-- [ ] Four cards use only locally filtered loaded items, preserve each displayed currency, and visibly say `resultados carregados`.
-- [ ] Transfers remain neutral in income/expense totals and participate in count and largest absolute value.
-- [ ] Co-located component tests cover empty, mixed-type, multi-currency, signed, and large-integer outcomes.
-- [ ] Gate check passes: `pnpm --filter tauri exec vitest run src/features/transactions/components/transaction-summary.test.tsx`, then `pnpm --filter tauri exec tsc --noEmit`.
-- [ ] Test count: exactly 7 task-owned tests pass; no existing test is removed or skipped.
+- [x] Four cards use only locally filtered loaded items, preserve each displayed currency, and visibly say `resultados carregados`.
+- [x] Transfers remain neutral in income/expense totals and participate in count and largest absolute value.
+- [x] Co-located component tests cover empty, mixed-type, multi-currency, signed, and large-integer outcomes.
+- [x] Gate check passes: `pnpm --filter tauri exec vitest run src/features/transactions/components/transaction-summary.test.tsx`, then `pnpm --filter tauri exec tsc --noEmit`.
+- [x] Test count: exactly 7 task-owned tests pass; no existing test is removed or skipped.
 
 **Tests**: integration
 **Gate**: full
