@@ -415,11 +415,11 @@ T25 → T26 → T27
 
 **Done when**:
 
-- [ ] Options include only active financial accounts in the active book's base currency and only active categories of the requested type.
-- [ ] Missing, archived, renamed, loading, error, and fewer-than-two-transfer-account states are explicit and refreshable.
-- [ ] Co-located hook tests cover every assigned acceptance outcome.
-- [ ] Gate check passes: `pnpm --filter tauri exec vitest run src/features/transactions/hooks/use-transaction-form-options.test.tsx`, then `pnpm --filter tauri exec tsc --noEmit`.
-- [ ] Test count: exactly 9 task-owned tests pass; no existing test is removed or skipped.
+- [x] Options include only active financial accounts in the active book's base currency and only active categories of the requested type.
+- [x] Missing, archived, renamed, loading, error, and fewer-than-two-transfer-account states are explicit and refreshable.
+- [x] Co-located hook tests cover every assigned acceptance outcome.
+- [x] Gate check passes: `pnpm --filter tauri exec vitest run src/features/transactions/hooks/use-transaction-form-options.test.tsx`, then `pnpm --filter tauri exec tsc --noEmit`.
+- [x] Test count: exactly 9 task-owned tests pass; no existing test is removed or skipped.
 
 **Tests**: integration
 **Gate**: full
