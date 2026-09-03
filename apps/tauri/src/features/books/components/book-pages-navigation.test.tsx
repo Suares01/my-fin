@@ -95,7 +95,7 @@ describe("book page contextual back navigation", () => {
     renderWithHistory(
       <Routes>
         <Route path="/books" element={<SelectBookPage />} />
-        <Route path="*" element={<LocationProbe />} />
+        <Route path="*" element={null} />
       </Routes>,
       "/books",
       BOOK_SWITCHER_NAVIGATION_STATE
@@ -130,7 +130,9 @@ describe("book page contextual back navigation", () => {
       BOOK_SWITCHER_NAVIGATION_STATE
     )
 
-    fireEvent.click(screen.getByRole("link", { name: "Criar primeiro livro" }))
+    fireEvent.click(
+      screen.getByRole("button", { name: "Criar primeiro livro" })
+    )
     await waitFor(() =>
       expect(screen.getByTestId("location-state").textContent).toBe(
         "nav-book-switcher"
@@ -151,7 +153,7 @@ describe("book page contextual back navigation", () => {
     renderWithHistory(
       <Routes>
         <Route path="/books/new" element={<CreateBookPage />} />
-        <Route path="*" element={<LocationProbe />} />
+        <Route path="*" element={null} />
       </Routes>,
       "/books/new",
       BOOK_SWITCHER_NAVIGATION_STATE
