@@ -742,10 +742,10 @@ T25 → T26 → T27
 
 **Done when**:
 
-- [ ] The entry point exports `TransactionsPage` and no internal mutation/query primitive.
-- [ ] A co-located public-contract test imports the page only through the feature entry point.
-- [ ] Gate check passes: `pnpm --filter tauri exec vitest run src/features/transactions/index.test.ts`.
-- [ ] Test count: exactly 2 task-owned tests pass; no existing test is removed or skipped.
+- [x] The entry point exports `TransactionsPage` and no internal mutation/query primitive.
+- [x] A co-located public-contract test imports the page only through the feature entry point.
+- [x] Gate check passes: `pnpm --filter tauri exec vitest run src/features/transactions/index.test.ts`.
+- [x] Test count: exactly 2 task-owned tests pass; no existing test is removed or skipped.
 
 **Tests**: unit
 **Gate**: quick
