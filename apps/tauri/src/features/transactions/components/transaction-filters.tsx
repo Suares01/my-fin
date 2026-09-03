@@ -7,6 +7,7 @@ import type {
   TransactionType,
 } from "../transaction-list-model.js"
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const emptyTransactionFilters: TransactionFiltersState = {
   from: "",
   to: "",
@@ -62,17 +63,25 @@ export function TransactionFilters({
     onChange({ ...filters, ...patch })
 
   return (
-    <section className="rounded-xl border border-border p-4" aria-label="Filtros de transações">
+    <section
+      className="rounded-xl border border-border p-4"
+      aria-label="Filtros de transações"
+    >
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <label className="flex flex-col gap-1 text-sm font-medium sm:col-span-2">
           Buscar
           <span className="relative">
-            <Search className="pointer-events-none absolute top-2.5 left-3 size-4 text-muted-foreground" aria-hidden="true" />
+            <Search
+              className="pointer-events-none absolute top-2.5 left-3 size-4 text-muted-foreground"
+              aria-hidden="true"
+            />
             <input
               type="search"
               className="w-full rounded-md border border-input bg-background py-2 pr-3 pl-9"
               value={filters.search}
-              onChange={(event) => update({ search: event.currentTarget.value })}
+              onChange={(event) =>
+                update({ search: event.currentTarget.value })
+              }
             />
           </span>
         </label>
@@ -98,12 +107,21 @@ export function TransactionFilters({
           <legend>Tipo</legend>
           <div className="flex flex-wrap gap-3">
             {typeLabels.map(({ value, label }) => (
-              <label key={value} className="flex items-center gap-1.5 font-normal">
+              <label
+                key={value}
+                className="flex items-center gap-1.5 font-normal"
+              >
                 <input
                   type="checkbox"
                   checked={filters.types.includes(value)}
                   onChange={(event) =>
-                    update({ types: nextTypes(filters.types, value, event.currentTarget.checked) })
+                    update({
+                      types: nextTypes(
+                        filters.types,
+                        value,
+                        event.currentTarget.checked
+                      ),
+                    })
                   }
                 />
                 {label}
@@ -116,10 +134,20 @@ export function TransactionFilters({
           <select
             className="w-full rounded-md border border-input bg-background p-2"
             value={filters.accountIds[0] ?? ""}
-            onChange={(event) => update({ accountIds: event.currentTarget.value ? [event.currentTarget.value] : [] })}
+            onChange={(event) =>
+              update({
+                accountIds: event.currentTarget.value
+                  ? [event.currentTarget.value]
+                  : [],
+              })
+            }
           >
             <option value="">Todas as contas</option>
-            {accounts.map((account) => <option key={account.id} value={account.id}>{account.name}</option>)}
+            {accounts.map((account) => (
+              <option key={account.id} value={account.id}>
+                {account.name}
+              </option>
+            ))}
           </select>
         </label>
         <label className="flex flex-col gap-1 text-sm font-medium">
@@ -127,10 +155,20 @@ export function TransactionFilters({
           <select
             className="w-full rounded-md border border-input bg-background p-2"
             value={filters.categoryIds[0] ?? ""}
-            onChange={(event) => update({ categoryIds: event.currentTarget.value ? [event.currentTarget.value] : [] })}
+            onChange={(event) =>
+              update({
+                categoryIds: event.currentTarget.value
+                  ? [event.currentTarget.value]
+                  : [],
+              })
+            }
           >
             <option value="">Todas as categorias</option>
-            {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
+            {categories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
           </select>
         </label>
         <label className="flex flex-col gap-1 text-sm font-medium">
@@ -138,16 +176,29 @@ export function TransactionFilters({
           <select
             className="w-full rounded-md border border-input bg-background p-2"
             value={filters.status}
-            onChange={(event) => update({ status: event.currentTarget.value as TransactionStatusFilter })}
+            onChange={(event) =>
+              update({
+                status: event.currentTarget.value as TransactionStatusFilter,
+              })
+            }
           >
-            {statusLabels.map(({ value, label }) => <option key={value} value={value}>{label}</option>)}
+            {statusLabels.map(({ value, label }) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
           </select>
         </label>
       </div>
       <p className="mt-3 text-sm text-muted-foreground" role="status">
         O status filtra somente os resultados carregados.
       </p>
-      <Button type="button" variant="outline" className="mt-3 w-full sm:w-auto" onClick={onReset}>
+      <Button
+        type="button"
+        variant="outline"
+        className="mt-3 w-full sm:w-auto"
+        onClick={onReset}
+      >
         Limpar filtros
       </Button>
     </section>

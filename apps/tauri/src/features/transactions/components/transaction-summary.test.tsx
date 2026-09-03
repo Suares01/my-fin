@@ -49,9 +49,9 @@ describe("TransactionSummary", () => {
   it("shows locally loaded income with a positive sign", () => {
     render(<TransactionSummary items={[chain({ amountMinor: "12345" })]} />)
 
-    expect(screen.getByTestId("transaction-summary-income-BRL").textContent).toBe(
-      "+R$ 123,45"
-    )
+    expect(
+      screen.getByTestId("transaction-summary-income-BRL").textContent
+    ).toBe("+R$ 123,45")
   })
 
   it("shows locally loaded expense with a negative sign", () => {
@@ -61,9 +61,9 @@ describe("TransactionSummary", () => {
       />
     )
 
-    expect(screen.getByTestId("transaction-summary-expense-BRL").textContent).toBe(
-      "-R$ 123,45"
-    )
+    expect(
+      screen.getByTestId("transaction-summary-expense-BRL").textContent
+    ).toBe("-R$ 123,45")
   })
 
   it("keeps transfers neutral in totals while counting them and selecting their magnitude", () => {
@@ -93,12 +93,12 @@ describe("TransactionSummary", () => {
       />
     )
 
-    expect(screen.getByTestId("transaction-summary-income-BRL").textContent).toBe(
-      "+R$ 100,00"
-    )
-    expect(screen.getByTestId("transaction-summary-income-USD").textContent).toBe(
-      "+US$ 200,00"
-    )
+    expect(
+      screen.getByTestId("transaction-summary-income-BRL").textContent
+    ).toBe("+R$ 100,00")
+    expect(
+      screen.getByTestId("transaction-summary-income-USD").textContent
+    ).toBe("+US$ 200,00")
   })
 
   it("keeps large loaded integer values exact", () => {
@@ -108,8 +108,8 @@ describe("TransactionSummary", () => {
       />
     )
 
-    expect(screen.getByTestId("transaction-summary-income-BRL").textContent).toBe(
-      "+R$ 90.071.992.547.409,93"
-    )
+    expect(
+      screen.getByTestId("transaction-summary-income-BRL").textContent
+    ).toBe("+R$ 90.071.992.547.409,93")
   })
 })

@@ -2,7 +2,10 @@
 
 import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { emptyTransactionFilters, TransactionFilters } from "./transaction-filters.js"
+import {
+  emptyTransactionFilters,
+  TransactionFilters,
+} from "./transaction-filters.js"
 
 function renderFilters() {
   const props = {
@@ -20,58 +23,92 @@ describe("TransactionFilters", () => {
 
   it("emits search input", () => {
     const { props } = renderFilters()
-    fireEvent.change(screen.getByLabelText("Buscar"), { target: { value: "Mercado" } })
-    expect(props.onChange).toHaveBeenCalledWith(expect.objectContaining({ search: "Mercado" }))
+    fireEvent.change(screen.getByLabelText("Buscar"), {
+      target: { value: "Mercado" },
+    })
+    expect(props.onChange).toHaveBeenCalledWith(
+      expect.objectContaining({ search: "Mercado" })
+    )
   })
 
   it("emits the start date", () => {
     const { props } = renderFilters()
-    fireEvent.change(screen.getByLabelText("De"), { target: { value: "2026-09-01" } })
-    expect(props.onChange).toHaveBeenCalledWith(expect.objectContaining({ from: "2026-09-01" }))
+    fireEvent.change(screen.getByLabelText("De"), {
+      target: { value: "2026-09-01" },
+    })
+    expect(props.onChange).toHaveBeenCalledWith(
+      expect.objectContaining({ from: "2026-09-01" })
+    )
   })
 
   it("emits the end date", () => {
     const { props } = renderFilters()
-    fireEvent.change(screen.getByLabelText("Até"), { target: { value: "2026-09-30" } })
-    expect(props.onChange).toHaveBeenCalledWith(expect.objectContaining({ to: "2026-09-30" }))
+    fireEvent.change(screen.getByLabelText("Até"), {
+      target: { value: "2026-09-30" },
+    })
+    expect(props.onChange).toHaveBeenCalledWith(
+      expect.objectContaining({ to: "2026-09-30" })
+    )
   })
 
   it("emits selected transaction types", () => {
     const { props } = renderFilters()
     fireEvent.click(screen.getByLabelText("Receita"))
-    expect(props.onChange).toHaveBeenCalledWith(expect.objectContaining({ types: ["EXPENSE", "TRANSFER"] }))
+    expect(props.onChange).toHaveBeenCalledWith(
+      expect.objectContaining({ types: ["EXPENSE", "TRANSFER"] })
+    )
   })
 
   it("emits the selected account", () => {
     const { props } = renderFilters()
-    fireEvent.change(screen.getByLabelText("Conta"), { target: { value: "account-1" } })
-    expect(props.onChange).toHaveBeenCalledWith(expect.objectContaining({ accountIds: ["account-1"] }))
+    fireEvent.change(screen.getByLabelText("Conta"), {
+      target: { value: "account-1" },
+    })
+    expect(props.onChange).toHaveBeenCalledWith(
+      expect.objectContaining({ accountIds: ["account-1"] })
+    )
   })
 
   it("emits the selected category", () => {
     const { props } = renderFilters()
-    fireEvent.change(screen.getByLabelText("Categoria"), { target: { value: "category-1" } })
-    expect(props.onChange).toHaveBeenCalledWith(expect.objectContaining({ categoryIds: ["category-1"] }))
+    fireEvent.change(screen.getByLabelText("Categoria"), {
+      target: { value: "category-1" },
+    })
+    expect(props.onChange).toHaveBeenCalledWith(
+      expect.objectContaining({ categoryIds: ["category-1"] })
+    )
   })
 
   it("keeps status local to loaded results", () => {
     const { props } = renderFilters()
-    fireEvent.change(screen.getByLabelText("Status"), { target: { value: "CANCELLED" } })
-    expect(props.onChange).toHaveBeenCalledWith(expect.objectContaining({ status: "CANCELLED" }))
-    expect(screen.getByRole("status").textContent).toContain("somente os resultados carregados")
+    fireEvent.change(screen.getByLabelText("Status"), {
+      target: { value: "CANCELLED" },
+    })
+    expect(props.onChange).toHaveBeenCalledWith(
+      expect.objectContaining({ status: "CANCELLED" })
+    )
+    expect(screen.getByRole("status").textContent).toContain(
+      "somente os resultados carregados"
+    )
   })
 
   it("preserves combined filter state", () => {
     render(
       <TransactionFilters
-        filters={{ ...emptyTransactionFilters, search: "Mercado", status: "EDITED" }}
+        filters={{
+          ...emptyTransactionFilters,
+          search: "Mercado",
+          status: "EDITED",
+        }}
         accounts={[]}
         categories={[]}
         onChange={vi.fn()}
         onReset={vi.fn()}
       />
     )
-    expect(screen.getByLabelText("Buscar").getAttribute("value")).toBe("Mercado")
+    expect(screen.getByLabelText("Buscar").getAttribute("value")).toBe(
+      "Mercado"
+    )
     expect((screen.getByLabelText("Status") as HTMLSelectElement).value).toBe(
       "EDITED"
     )
@@ -91,12 +128,20 @@ describe("TransactionFilters", () => {
   it("uses full-width controls below the small breakpoint", () => {
     renderFilters()
     expect(screen.getByLabelText("Buscar").className).toContain("w-full")
-    expect(screen.getByRole("button", { name: "Limpar filtros" }).className).toContain("w-full")
+    expect(
+      screen.getByRole("button", { name: "Limpar filtros" }).className
+    ).toContain("w-full")
   })
 
   it("renders active-book account and category options", () => {
     renderFilters()
-    expect(screen.getByRole("option", { name: "Conta corrente" }).getAttribute("value")).toBe("account-1")
-    expect(screen.getByRole("option", { name: "Mercado" }).getAttribute("value")).toBe("category-1")
+    expect(
+      screen
+        .getByRole("option", { name: "Conta corrente" })
+        .getAttribute("value")
+    ).toBe("account-1")
+    expect(
+      screen.getByRole("option", { name: "Mercado" }).getAttribute("value")
+    ).toBe("category-1")
   })
 })

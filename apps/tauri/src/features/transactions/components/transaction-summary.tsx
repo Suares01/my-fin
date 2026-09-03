@@ -49,7 +49,10 @@ function SummaryAmount({
       className="block text-2xl font-semibold tracking-tight"
     >
       {sign}
-      <FormattedMoney amountMinor={amountMinor.toString()} currency={currency} />
+      <FormattedMoney
+        amountMinor={amountMinor.toString()}
+        currency={currency}
+      />
     </span>
   ))
 }
@@ -79,11 +82,14 @@ export function TransactionSummary({
 }) {
   const income = totalsByCurrency(items, "INCOME")
   const expense = totalsByCurrency(items, "EXPENSE")
-  const largest = items.reduce<JournalChainListItem | undefined>((current, item) =>
-    current === undefined || BigInt(item.amountMinor) > BigInt(current.amountMinor)
-      ? item
-      : current
-  , undefined)
+  const largest = items.reduce<JournalChainListItem | undefined>(
+    (current, item) =>
+      current === undefined ||
+      BigInt(item.amountMinor) > BigInt(current.amountMinor)
+        ? item
+        : current,
+    undefined
+  )
 
   return (
     <section

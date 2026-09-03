@@ -713,13 +713,13 @@ T25 → T26 → T27
 
 **Done when**:
 
-- [ ] One page presents header/action, summary, filters, list, and overlay with all initial/loading/error/empty/filtered/paginated states.
-- [ ] Book changes clear local state and late mutations affect only their submitted book.
-- [ ] Successful commands close their form, failed commands retain values, and partial refresh failures show reload guidance without asking for command resubmission.
-- [ ] Co-located integration tests cover the composed create/edit/delete flows with mocked services and content contracts at 375, 768, and 1280 px.
-- [ ] Gate check passes: `pnpm --filter tauri exec vitest run src/features/transactions/components/transactions-page.test.tsx`, then `pnpm --filter tauri exec tsc --noEmit`.
-- [ ] Phase 4 build gate passes using all three Build commands.
-- [ ] Test count: exactly 18 task-owned tests pass; no existing test is removed or skipped.
+- [x] One page presents header/action, summary, filters, list, and overlay with all initial/loading/error/empty/filtered/paginated states.
+- [x] Book changes clear local state and late mutations affect only their submitted book.
+- [x] Successful commands close their form, failed commands retain values, and partial refresh failures show reload guidance without asking for command resubmission.
+- [x] Co-located integration tests cover the composed create/edit/delete flows with mocked services and content contracts at 375, 768, and 1280 px.
+- [x] Gate check passes: `pnpm --filter tauri exec vitest run src/features/transactions/components/transactions-page.test.tsx`, then `pnpm --filter tauri exec tsc --noEmit`.
+- [x] Phase 4 build gate passes using all three Build commands.
+- [x] Test count: exactly 18 task-owned tests pass; no existing test is removed or skipped.
 
 **Tests**: integration
 **Gate**: build
