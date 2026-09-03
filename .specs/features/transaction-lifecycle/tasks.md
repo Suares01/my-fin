@@ -308,10 +308,10 @@ T25 → T26 → T27
 
 **Done when**:
 
-- [ ] One valid submit invokes exactly one expense command with unchanged IDs and refreshes only the submitted book and affected account.
-- [ ] Co-located tests cover exact payload, pending duplicate rejection, service error with retained caller state, and refresh warning.
-- [ ] Gate check passes: `pnpm --filter tauri exec vitest run src/features/transactions/hooks/use-record-expense.test.tsx`, then `pnpm --filter tauri exec tsc --noEmit`.
-- [ ] Test count: exactly 6 task-owned tests pass; no existing test is removed or skipped.
+- [x] One valid submit invokes exactly one expense command with unchanged IDs and refreshes only the submitted book and affected account.
+- [x] Co-located tests cover exact payload, pending duplicate rejection, service error with retained caller state, and refresh warning.
+- [x] Gate check passes: `pnpm --filter tauri exec vitest run src/features/transactions/hooks/use-record-expense.test.tsx`, then `pnpm --filter tauri exec tsc --noEmit`.
+- [x] Test count: exactly 6 task-owned tests pass; no existing test is removed or skipped.
 
 **Tests**: integration
 **Gate**: full
