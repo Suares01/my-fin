@@ -1,26 +1,208 @@
 /* @vitest-environment jsdom */
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const state = vi.hoisted((): any => ({ options: null }))
-vi.mock("../hooks/use-transaction-form-options.js", () => ({ useTransactionFormOptions: () => state.options }))
+vi.mock("../hooks/use-transaction-form-options.js", () => ({
+  useTransactionFormOptions: () => state.options,
+}))
 import { TransferForm } from "./transfer-form.js"
-const base = { bookId: "book-1", baseCurrency: "BRL", accounts: [{ id: "a1", name: "Carteira" }, { id: "a2", name: "Banco" }], categories: [], loading: false, error: null, requiresTwoAccounts: false, refresh: vi.fn() }
-function renderForm(overrides: Partial<React.ComponentProps<typeof TransferForm>> = {}) { const props = { onSubmit: vi.fn().mockResolvedValue(undefined), onCancel: vi.fn(), ...overrides }; return { props, ...render(<TransferForm {...props} />) } }
-function fill(destination = "a2") { fireEvent.change(screen.getByLabelText("Conta de origem"), { target: { value: "a1" } }); fireEvent.change(screen.getByLabelText("Conta de destino"), { target: { value: destination } }); fireEvent.change(screen.getByLabelText("Valor"), { target: { value: "10,00" } }); fireEvent.change(screen.getByLabelText("Data"), { target: { value: "2026-09-03" } }); fireEvent.change(screen.getByLabelText("Descrição"), { target: { value: "Reserva" } }) }
-beforeEach(() => { state.options = { ...base, refresh: vi.fn() } }); afterEach(cleanup)
+const base = {
+  bookId: "book-1",
+  baseCurrency: "BRL",
+  accounts: [
+    { id: "a1", name: "Carteira" },
+    { id: "a2", name: "Banco" },
+  ],
+  categories: [],
+  loading: false,
+  error: null,
+  requiresTwoAccounts: false,
+  refresh: vi.fn(),
+}
+function renderForm(
+  overrides: Partial<React.ComponentProps<typeof TransferForm>> = {}
+) {
+  const props = {
+    onSubmit: vi.fn().mockResolvedValue(undefined),
+    onCancel: vi.fn(),
+    ...overrides,
+  }
+  return { props, ...render(<TransferForm {...props} />) }
+}
+function fill(destination = "a2") {
+  fireEvent.change(screen.getByLabelText("Conta de origem"), {
+    target: { value: "a1" },
+  })
+  fireEvent.change(screen.getByLabelText("Conta de destino"), {
+    target: { value: destination },
+  })
+  fireEvent.change(screen.getByLabelText("Valor"), {
+    target: { value: "10,00" },
+  })
+  fireEvent.change(screen.getByLabelText("Data"), {
+    target: { value: "2026-09-03" },
+  })
+  fireEvent.change(screen.getByLabelText("Descrição"), {
+    target: { value: "Reserva" },
+  })
+}
+beforeEach(() => {
+  state.options = { ...base, refresh: vi.fn() }
+})
+afterEach(cleanup)
 describe("TransferForm", () => {
-  it("emits exactly the validated transfer draft", async () => { const { props } = renderForm(); fill(); fireEvent.click(screen.getByRole("button", { name: "Salvar transferência" })); await waitFor(() => expect(props.onSubmit).toHaveBeenCalledWith({ type: "TRANSFER", sourceAccountId: "a1", destinationAccountId: "a2", amountMinor: "1000", currency: "BRL", occurredOn: "2026-09-03", description: "Reserva" })) })
-  it("does not render a category selector", () => { renderForm(); expect(screen.queryByLabelText("Categoria")).toBeNull() })
-  it("prefills the edit draft", () => { renderForm({ initialDraft: { type: "TRANSFER", sourceAccountId: "a1", destinationAccountId: "a2", amountMinor: "1000", currency: "BRL", occurredOn: "2026-09-03", description: "Antes" } }); expect(screen.getByLabelText("Descrição").getAttribute("value")).toBe("Antes") })
-  it("rejects equal accounts at the destination field", async () => { const { props } = renderForm(); fill("a1"); fireEvent.click(screen.getByRole("button", { name: "Salvar transferência" })); expect(await screen.findByText("Escolha contas diferentes.")).toBeTruthy(); expect(props.onSubmit).not.toHaveBeenCalled() })
-  it("blocks with account creation guidance when fewer than two accounts exist", () => { state.options = { ...base, accounts: [{ id: "a1", name: "Carteira" }], requiresTwoAccounts: true }; renderForm(); expect(screen.getByRole("link", { name: "Criar conta" }).getAttribute("href")).toBe("/accounts") })
-  it("renders renamed account options", () => { state.options = { ...base, accounts: [{ id: "a1", name: "Conta nova" }, { id: "a2", name: "Banco" }] }; renderForm(); expect(screen.getAllByRole("option", { name: "Conta nova" })).toHaveLength(2) })
-  it("shows amount validation without submitting", async () => { const { props } = renderForm(); fireEvent.click(screen.getByRole("button", { name: "Salvar transferência" })); expect(await screen.findByText("Informe um valor inteiro positivo.")).toBeTruthy(); expect(props.onSubmit).not.toHaveBeenCalled() })
-  it("retains values after service failure", async () => { const { props } = renderForm({ onSubmit: vi.fn().mockRejectedValue(new Error("offline")) }); fill(); fireEvent.click(screen.getByRole("button", { name: "Salvar transferência" })); expect(await screen.findByText("Não foi possível salvar a transação")).toBeTruthy(); expect(screen.getByLabelText("Descrição").getAttribute("value")).toBe("Reserva"); expect(props.onSubmit).toHaveBeenCalledOnce() })
-  it("disables submission while pending", () => { renderForm({ pending: true }); expect(screen.getByRole("button", { name: "Salvando transferência" }).hasAttribute("disabled")).toBe(true) })
-  it("shows refresh warning", () => { renderForm({ refreshWarning: true }); expect(screen.getByText("Atualize os dados para ver todas as projeções.")).toBeTruthy() })
-  it("locks after an optimistic conflict", async () => { const conflict = Object.assign(new Error("changed"), { code: "OPTIMISTIC_CONCURRENCY_FAILURE" }); const { props } = renderForm({ onSubmit: vi.fn().mockRejectedValue(conflict) }); fill(); fireEvent.click(screen.getByRole("button", { name: "Salvar transferência" })); expect(await screen.findByText("Este lançamento mudou")).toBeTruthy(); expect(screen.getByRole("button", { name: "Salvar transferência" }).hasAttribute("disabled")).toBe(true); expect(props.onSubmit).toHaveBeenCalledOnce() })
-  it("shows loading options", () => { state.options = { ...base, loading: true }; renderForm(); expect(screen.getByText("Carregando opções da transação…")).toBeTruthy() })
-  it("retries option loading errors", () => { state.options = { ...base, error: new Error("offline") }; renderForm(); fireEvent.click(screen.getByRole("button", { name: "Tentar novamente" })); expect(state.options.refresh).toHaveBeenCalledOnce() })
-  it("cancels without submitting", () => { const { props } = renderForm(); fireEvent.click(screen.getByRole("button", { name: "Cancelar" })); expect(props.onCancel).toHaveBeenCalledOnce(); expect(props.onSubmit).not.toHaveBeenCalled() })
+  it("emits exactly the validated transfer draft", async () => {
+    const { props } = renderForm()
+    fill()
+    fireEvent.click(
+      screen.getByRole("button", { name: "Salvar transferência" })
+    )
+    await waitFor(() =>
+      expect(props.onSubmit).toHaveBeenCalledWith({
+        type: "TRANSFER",
+        sourceAccountId: "a1",
+        destinationAccountId: "a2",
+        amountMinor: "1000",
+        currency: "BRL",
+        occurredOn: "2026-09-03",
+        description: "Reserva",
+      })
+    )
+  })
+  it("does not render a category selector", () => {
+    renderForm()
+    expect(screen.queryByLabelText("Categoria")).toBeNull()
+  })
+  it("prefills the edit draft", () => {
+    renderForm({
+      initialDraft: {
+        type: "TRANSFER",
+        sourceAccountId: "a1",
+        destinationAccountId: "a2",
+        amountMinor: "1000",
+        currency: "BRL",
+        occurredOn: "2026-09-03",
+        description: "Antes",
+      },
+    })
+    expect(screen.getByLabelText("Descrição").getAttribute("value")).toBe(
+      "Antes"
+    )
+  })
+  it("rejects equal accounts at the destination field", async () => {
+    const { props } = renderForm()
+    fill("a1")
+    fireEvent.click(
+      screen.getByRole("button", { name: "Salvar transferência" })
+    )
+    expect(await screen.findByText("Escolha contas diferentes.")).toBeTruthy()
+    expect(props.onSubmit).not.toHaveBeenCalled()
+  })
+  it("blocks with account creation guidance when fewer than two accounts exist", () => {
+    state.options = {
+      ...base,
+      accounts: [{ id: "a1", name: "Carteira" }],
+      requiresTwoAccounts: true,
+    }
+    renderForm()
+    expect(
+      screen.getByRole("link", { name: "Criar conta" }).getAttribute("href")
+    ).toBe("/accounts")
+  })
+  it("renders renamed account options", () => {
+    state.options = {
+      ...base,
+      accounts: [
+        { id: "a1", name: "Conta nova" },
+        { id: "a2", name: "Banco" },
+      ],
+    }
+    renderForm()
+    expect(screen.getAllByRole("option", { name: "Conta nova" })).toHaveLength(
+      2
+    )
+  })
+  it("shows amount validation without submitting", async () => {
+    const { props } = renderForm()
+    fireEvent.click(
+      screen.getByRole("button", { name: "Salvar transferência" })
+    )
+    expect(
+      await screen.findByText("Informe um valor inteiro positivo.")
+    ).toBeTruthy()
+    expect(props.onSubmit).not.toHaveBeenCalled()
+  })
+  it("retains values after service failure", async () => {
+    const { props } = renderForm({
+      onSubmit: vi.fn().mockRejectedValue(new Error("offline")),
+    })
+    fill()
+    fireEvent.click(
+      screen.getByRole("button", { name: "Salvar transferência" })
+    )
+    expect(
+      await screen.findByText("Não foi possível salvar a transação")
+    ).toBeTruthy()
+    expect(screen.getByLabelText("Descrição").getAttribute("value")).toBe(
+      "Reserva"
+    )
+    expect(props.onSubmit).toHaveBeenCalledOnce()
+  })
+  it("disables submission while pending", () => {
+    renderForm({ pending: true })
+    expect(
+      screen
+        .getByRole("button", { name: "Salvando transferência" })
+        .hasAttribute("disabled")
+    ).toBe(true)
+  })
+  it("shows refresh warning", () => {
+    renderForm({ refreshWarning: true })
+    expect(
+      screen.getByText("Atualize os dados para ver todas as projeções.")
+    ).toBeTruthy()
+  })
+  it("locks after an optimistic conflict", async () => {
+    const conflict = Object.assign(new Error("changed"), {
+      code: "OPTIMISTIC_CONCURRENCY_FAILURE",
+    })
+    const { props } = renderForm({
+      onSubmit: vi.fn().mockRejectedValue(conflict),
+    })
+    fill()
+    fireEvent.click(
+      screen.getByRole("button", { name: "Salvar transferência" })
+    )
+    expect(await screen.findByText("Este lançamento mudou")).toBeTruthy()
+    expect(
+      screen
+        .getByRole("button", { name: "Salvar transferência" })
+        .hasAttribute("disabled")
+    ).toBe(true)
+    expect(props.onSubmit).toHaveBeenCalledOnce()
+  })
+  it("shows loading options", () => {
+    state.options = { ...base, loading: true }
+    renderForm()
+    expect(screen.getByText("Carregando opções da transação…")).toBeTruthy()
+  })
+  it("retries option loading errors", () => {
+    state.options = { ...base, error: new Error("offline") }
+    renderForm()
+    fireEvent.click(screen.getByRole("button", { name: "Tentar novamente" }))
+    expect(state.options.refresh).toHaveBeenCalledOnce()
+  })
+  it("cancels without submitting", () => {
+    const { props } = renderForm()
+    fireEvent.click(screen.getByRole("button", { name: "Cancelar" }))
+    expect(props.onCancel).toHaveBeenCalledOnce()
+    expect(props.onSubmit).not.toHaveBeenCalled()
+  })
 })

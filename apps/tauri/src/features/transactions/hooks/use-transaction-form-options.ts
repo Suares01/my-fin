@@ -27,7 +27,10 @@ export function useTransactionFormOptions(type: TransactionFormType) {
           !account.archived &&
           (baseCurrency === undefined || account.currency === baseCurrency)
       )
-      .map((account) => ({ id: account.accountId, name: account.accountName })) ?? []
+      .map((account) => ({
+        id: account.accountId,
+        name: account.accountName,
+      })) ?? []
   const categoryOptions: readonly TransactionFormOption[] =
     type === "TRANSFER"
       ? []
@@ -38,8 +41,13 @@ export function useTransactionFormOptions(type: TransactionFormType) {
 
   const loading =
     bookId !== null &&
-    (book.isLoading || accounts.isLoading || (type !== "TRANSFER" && categories.isLoading))
-  const error = book.error ?? accounts.error ?? (type === "TRANSFER" ? null : categories.error)
+    (book.isLoading ||
+      accounts.isLoading ||
+      (type !== "TRANSFER" && categories.isLoading))
+  const error =
+    book.error ??
+    accounts.error ??
+    (type === "TRANSFER" ? null : categories.error)
 
   return {
     bookId,
@@ -50,7 +58,8 @@ export function useTransactionFormOptions(type: TransactionFormType) {
     error,
     requiresTwoAccounts: type === "TRANSFER" && financialAccounts.length < 2,
     missingAccounts: !loading && financialAccounts.length === 0,
-    missingCategories: type !== "TRANSFER" && !loading && categoryOptions.length === 0,
+    missingCategories:
+      type !== "TRANSFER" && !loading && categoryOptions.length === 0,
     refresh: async () => {
       await Promise.all([
         book.refetch(),
