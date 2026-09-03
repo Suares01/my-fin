@@ -442,11 +442,11 @@ T25 → T26 → T27
 
 **Done when**:
 
-- [ ] The component renders controlled amount, date, and description fields with stable labels, descriptions, errors, and disabled states.
-- [ ] Native civil-date behavior and money-boundary feedback remain visible and keyboard operable.
-- [ ] Co-located component tests cover valid values, every field error, pending state, and accessible name relationships.
-- [ ] Gate check passes: `pnpm --filter tauri exec vitest run src/features/transactions/components/transaction-form-fields.test.tsx`, then `pnpm --filter tauri exec tsc --noEmit`.
-- [ ] Test count: exactly 8 task-owned tests pass; no existing test is removed or skipped.
+- [x] The component renders controlled amount, date, and description fields with stable labels, descriptions, errors, and disabled states.
+- [x] Native civil-date behavior and money-boundary feedback remain visible and keyboard operable.
+- [x] Co-located component tests cover valid values, every field error, pending state, and accessible name relationships.
+- [x] Gate check passes: `pnpm --filter tauri exec vitest run src/features/transactions/components/transaction-form-fields.test.tsx`, then `pnpm --filter tauri exec tsc --noEmit`.
+- [x] Test count: exactly 8 task-owned tests pass; no existing test is removed or skipped.
 
 **Tests**: integration
 **Gate**: full
