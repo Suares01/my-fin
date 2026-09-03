@@ -148,10 +148,10 @@ T25 → T26 → T27
 
 **Done when**:
 
-- [ ] Every key includes the owning `bookId`; list keys include normalized server filters and detail keys use stable `chainId`.
-- [ ] Co-located tests prove key stability, filter separation, and cross-book isolation.
-- [ ] Gate check passes: `pnpm --filter tauri exec vitest run src/features/transactions/hooks/transaction-keys.test.ts`.
-- [ ] Test count: exactly 5 task-owned tests pass; no existing test is removed or skipped.
+- [x] Every key includes the owning `bookId`; list keys include normalized server filters and detail keys use stable `chainId`.
+- [x] Co-located tests prove key stability, filter separation, and cross-book isolation.
+- [x] Gate check passes: `pnpm --filter tauri exec vitest run src/features/transactions/hooks/transaction-keys.test.ts`.
+- [x] Test count: exactly 5 task-owned tests pass; no existing test is removed or skipped.
 
 **Tests**: unit
 **Gate**: quick
