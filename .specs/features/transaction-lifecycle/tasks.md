@@ -686,11 +686,11 @@ T25 → T26 → T27
 
 **Done when**:
 
-- [ ] The create chooser offers exactly Receita, Despesa, and Transferência, and every state renders at most one dedicated child.
-- [ ] Mobile width, localized accessible close naming, contained focus, Escape/cancel, and focus return satisfy the spec.
-- [ ] A book change closes the overlay and clears stale detail/form state.
-- [ ] Gate check passes: `pnpm --filter tauri exec vitest run src/features/transactions/components/transaction-overlay.test.tsx`, then `pnpm --filter tauri exec tsc --noEmit`.
-- [ ] Test count: exactly 12 task-owned tests pass; no existing test is removed or skipped.
+- [x] The create chooser offers exactly Receita, Despesa, and Transferência, and every state renders at most one dedicated child.
+- [x] Mobile width, localized accessible close naming, contained focus, Escape/cancel, and focus return satisfy the spec.
+- [x] A book change closes the overlay and clears stale detail/form state.
+- [x] Gate check passes: `pnpm --filter tauri exec vitest run src/features/transactions/components/transaction-overlay.test.tsx`, then `pnpm --filter tauri exec tsc --noEmit`.
+- [x] Test count: exactly 12 task-owned tests pass; no existing test is removed or skipped.
 
 **Tests**: integration
 **Gate**: full
