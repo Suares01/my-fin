@@ -605,11 +605,11 @@ T25 → T26 → T27
 
 **Done when**:
 
-- [ ] Supported server filters emit normalized values; status stays local and displays its loaded-results limitation.
-- [ ] Reset clears every filter, search is keyboard accessible, and controls span full width below 640 px.
-- [ ] Co-located tests cover each filter, combined filters, reset, local status notice, keyboard use, and responsive class contracts.
-- [ ] Gate check passes: `pnpm --filter tauri exec vitest run src/features/transactions/components/transaction-filters.test.tsx`, then `pnpm --filter tauri exec tsc --noEmit`.
-- [ ] Test count: exactly 12 task-owned tests pass; no existing test is removed or skipped.
+- [x] Supported server filters emit normalized values; status stays local and displays its loaded-results limitation.
+- [x] Reset clears every filter, search is keyboard accessible, and controls span full width below 640 px.
+- [x] Co-located tests cover each filter, combined filters, reset, local status notice, keyboard use, and responsive class contracts.
+- [x] Gate check passes: `pnpm --filter tauri exec vitest run src/features/transactions/components/transaction-filters.test.tsx`, then `pnpm --filter tauri exec tsc --noEmit`.
+- [x] Test count: exactly 12 task-owned tests pass; no existing test is removed or skipped.
 
 **Tests**: integration
 **Gate**: full
