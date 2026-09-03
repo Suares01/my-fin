@@ -5,6 +5,7 @@ import { CreateBookPage } from "../features/books/components/create-book-page"
 import { HandleBootstrap } from "../bootstrap/handle-bootstrap"
 import { SelectBookPage } from "../features/books/components/select-books-page"
 import { AccountsPage } from "../features/accounts/components/accounts-page"
+import { TransactionsPage } from "../features/transactions"
 
 export default function AppRoutes() {
   return (
@@ -15,6 +16,7 @@ export default function AppRoutes() {
         <Route path="dashboard" element={<CategoriesPage />} />
         <Route path="accounts" element={<AccountsPage />} />
         <Route path="categories" element={<CategoriesPage />} />
+        <Route path="transactions" element={<TransactionsPage />} />
       </Route>
 
       <Route path="books">

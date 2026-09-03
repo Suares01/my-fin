@@ -768,10 +768,10 @@ T25 → T26 → T27
 
 **Done when**:
 
-- [ ] Navigating to `/transactions` renders the feature through the existing shell and does not change existing route behavior.
-- [ ] Co-located router tests cover direct navigation, shell presence, active-book handoff, and an existing-route regression.
-- [ ] Gate check passes: `pnpm --filter tauri exec vitest run src/routes/app-routes.test.tsx`, then `pnpm --filter tauri exec tsc --noEmit`.
-- [ ] Test count: exactly 5 task-owned tests pass; no existing test is removed or skipped.
+- [x] Navigating to `/transactions` renders the feature through the existing shell and does not change existing route behavior.
+- [x] Co-located router tests cover direct navigation, shell presence, active-book handoff, and an existing-route regression.
+- [x] Gate check passes: `pnpm --filter tauri exec vitest run src/routes/app-routes.test.tsx`, then `pnpm --filter tauri exec tsc --noEmit`.
+- [x] Test count: exactly 5 task-owned tests pass; no existing test is removed or skipped.
 
 **Tests**: integration
 **Gate**: full
