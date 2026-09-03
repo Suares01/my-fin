@@ -523,11 +523,11 @@ T25 → T26 → T27
 
 **Done when**:
 
-- [ ] Create and edit modes share one transfer form, never require a category, and emit the exact discriminated draft expected by their caller.
-- [ ] Equal accounts show `Escolha contas diferentes.`; fewer than two eligible accounts block the form and link to account creation.
-- [ ] Pending, failure, refresh warning, conflict lock, prefill, retained-values, and archived/renamed option behavior satisfy the spec.
-- [ ] Gate check passes: `pnpm --filter tauri exec vitest run src/features/transactions/components/transfer-form.test.tsx`, then `pnpm --filter tauri exec tsc --noEmit`.
-- [ ] Test count: exactly 14 task-owned tests pass; no existing test is removed or skipped.
+- [x] Create and edit modes share one transfer form, never require a category, and emit the exact discriminated draft expected by their caller.
+- [x] Equal accounts show `Escolha contas diferentes.`; fewer than two eligible accounts block the form and link to account creation.
+- [x] Pending, failure, refresh warning, conflict lock, prefill, retained-values, and archived/renamed option behavior satisfy the spec.
+- [x] Gate check passes: `pnpm --filter tauri exec vitest run src/features/transactions/components/transfer-form.test.tsx`, then `pnpm --filter tauri exec tsc --noEmit`.
+- [x] Test count: exactly 14 task-owned tests pass; no existing test is removed or skipped.
 
 **Tests**: integration
 **Gate**: full
