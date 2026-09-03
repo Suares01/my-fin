@@ -632,11 +632,11 @@ T25 → T26 → T27
 
 **Done when**:
 
-- [ ] Income/expense detail presents account and category; transfer presents origin to destination with no category requirement.
-- [ ] Active/edited chains expose Edit and Excluir; cancelled chains expose neither.
-- [ ] Loading, detail error/retry, full history, and keyboard action access are covered.
-- [ ] Gate check passes: `pnpm --filter tauri exec vitest run src/features/transactions/components/transaction-row-details.test.tsx`, then `pnpm --filter tauri exec tsc --noEmit`.
-- [ ] Test count: exactly 10 task-owned tests pass; no existing test is removed or skipped.
+- [x] Income/expense detail presents account and category; transfer presents origin to destination with no category requirement.
+- [x] Active/edited chains expose Edit and Excluir; cancelled chains expose neither.
+- [x] Loading, detail error/retry, full history, and keyboard action access are covered.
+- [x] Gate check passes: `pnpm --filter tauri exec vitest run src/features/transactions/components/transaction-row-details.test.tsx`, then `pnpm --filter tauri exec tsc --noEmit`.
+- [x] Test count: exactly 10 task-owned tests pass; no existing test is removed or skipped.
 
 **Tests**: integration
 **Gate**: full
