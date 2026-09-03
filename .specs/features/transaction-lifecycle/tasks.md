@@ -120,12 +120,12 @@ T25 → T26 → T27
 
 **Done when**:
 
-- [ ] Amount, description, valid civil date, cancellation-date order, and distinct-account rules match the spec exactly.
-- [ ] Fresh chain detail maps unambiguously to a same-type edit draft, and ambiguous projections block editing.
-- [ ] Domain failures map to safe Portuguese feedback without changing submitted identifiers.
-- [ ] Co-located tests assert every assigned acceptance outcome and boundary.
-- [ ] Gate check passes: `pnpm --filter tauri exec vitest run src/features/transactions/transaction-form-model.test.ts`.
-- [ ] Test count: exactly 14 task-owned tests pass; no existing test is removed or skipped.
+- [x] Amount, description, valid civil date, cancellation-date order, and distinct-account rules match the spec exactly.
+- [x] Fresh chain detail maps unambiguously to a same-type edit draft, and ambiguous projections block editing.
+- [x] Domain failures map to safe Portuguese feedback without changing submitted identifiers.
+- [x] Co-located tests assert every assigned acceptance outcome and boundary.
+- [x] Gate check passes: `pnpm --filter tauri exec vitest run src/features/transactions/transaction-form-model.test.ts`.
+- [x] Test count: exactly 14 task-owned tests pass; no existing test is removed or skipped.
 
 **Tests**: unit
 **Gate**: quick
