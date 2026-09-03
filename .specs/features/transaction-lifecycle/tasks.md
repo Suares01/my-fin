@@ -334,10 +334,10 @@ T25 → T26 → T27
 
 **Done when**:
 
-- [ ] One valid submit invokes exactly one transfer command and refreshes both distinct affected accounts under the submitted book.
-- [ ] Equal accounts never reach the service; duplicate, service-error, book-switch, and refresh-warning paths are covered.
-- [ ] Gate check passes: `pnpm --filter tauri exec vitest run src/features/transactions/hooks/use-transfer-money.test.tsx`, then `pnpm --filter tauri exec tsc --noEmit`.
-- [ ] Test count: exactly 7 task-owned tests pass; no existing test is removed or skipped.
+- [x] One valid submit invokes exactly one transfer command and refreshes both distinct affected accounts under the submitted book.
+- [x] Equal accounts never reach the service; duplicate, service-error, book-switch, and refresh-warning paths are covered.
+- [x] Gate check passes: `pnpm --filter tauri exec vitest run src/features/transactions/hooks/use-transfer-money.test.tsx`, then `pnpm --filter tauri exec tsc --noEmit`.
+- [x] Test count: exactly 7 task-owned tests pass; no existing test is removed or skipped.
 
 **Tests**: integration
 **Gate**: full
