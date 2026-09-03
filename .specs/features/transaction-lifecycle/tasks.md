@@ -201,11 +201,11 @@ T25 → T26 → T27
 
 **Done when**:
 
-- [ ] Fetching remains disabled until detail is requested and always targets the latest presented entry associated with the stable chain.
-- [ ] Loading, error, refetch, and cross-book states are explicit and never expose stale edit/delete identities.
-- [ ] Co-located hook tests cover all assigned paths.
-- [ ] Gate check passes: `pnpm --filter tauri exec vitest run src/features/transactions/hooks/use-transaction-chain-detail.test.tsx`, then `pnpm --filter tauri exec tsc --noEmit`.
-- [ ] Test count: exactly 7 task-owned tests pass; no existing test is removed or skipped.
+- [x] Fetching remains disabled until detail is requested and always targets the latest presented entry associated with the stable chain.
+- [x] Loading, error, refetch, and cross-book states are explicit and never expose stale edit/delete identities.
+- [x] Co-located hook tests cover all assigned paths.
+- [x] Gate check passes: `pnpm --filter tauri exec vitest run src/features/transactions/hooks/use-transaction-chain-detail.test.tsx`, then `pnpm --filter tauri exec tsc --noEmit`.
+- [x] Test count: exactly 7 task-owned tests pass; no existing test is removed or skipped.
 
 **Tests**: integration
 **Gate**: full
