@@ -93,11 +93,11 @@ T25 → T26 → T27
 
 **Done when**:
 
-- [ ] The module keeps status outside the server filter, deduplicates by stable `chainId`, preserves server order, and computes summaries with `BigInt`.
-- [ ] Income is positive, expense is negative, transfer is neutral for totals, and transfer still contributes to count and largest absolute value.
-- [ ] Co-located tests assert every assigned acceptance outcome and boundary.
-- [ ] Gate check passes: `pnpm --filter tauri exec vitest run src/features/transactions/transaction-list-model.test.ts`.
-- [ ] Test count: exactly 12 task-owned tests pass; no existing test is removed or skipped.
+- [x] The module keeps status outside the server filter, deduplicates by stable `chainId`, preserves server order, and computes summaries with `BigInt`.
+- [x] Income is positive, expense is negative, transfer is neutral for totals, and transfer still contributes to count and largest absolute value.
+- [x] Co-located tests assert every assigned acceptance outcome and boundary.
+- [x] Gate check passes: `pnpm --filter tauri exec vitest run src/features/transactions/transaction-list-model.test.ts`.
+- [x] Test count: exactly 12 task-owned tests pass; no existing test is removed or skipped.
 
 **Tests**: unit
 **Gate**: quick
