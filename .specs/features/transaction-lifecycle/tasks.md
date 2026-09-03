@@ -659,11 +659,11 @@ T25 → T26 → T27
 
 **Done when**:
 
-- [ ] Initial loading uses list-geometry skeleton plus `aria-busy=true`; initial failure has `Tentar novamente`; unfiltered and filtered empty states have their distinct actions.
-- [ ] Mobile content requires no horizontal scrolling for essential fields; desktop renders semantic context, value, date, status, and action columns.
-- [ ] Load more preserves filters, keeps locally filtered empty results honest, deduplicates stable chains, and remains keyboard operable.
-- [ ] Gate check passes: `pnpm --filter tauri exec vitest run src/features/transactions/components/transaction-list.test.tsx`, then `pnpm --filter tauri exec tsc --noEmit`.
-- [ ] Test count: exactly 16 task-owned tests pass; no existing test is removed or skipped.
+- [x] Initial loading uses list-geometry skeleton plus `aria-busy=true`; initial failure has `Tentar novamente`; unfiltered and filtered empty states have their distinct actions.
+- [x] Mobile content requires no horizontal scrolling for essential fields; desktop renders semantic context, value, date, status, and action columns.
+- [x] Load more preserves filters, keeps locally filtered empty results honest, deduplicates stable chains, and remains keyboard operable.
+- [x] Gate check passes: `pnpm --filter tauri exec vitest run src/features/transactions/components/transaction-list.test.tsx`, then `pnpm --filter tauri exec tsc --noEmit`.
+- [x] Test count: exactly 16 task-owned tests pass; no existing test is removed or skipped.
 
 **Tests**: integration
 **Gate**: full
