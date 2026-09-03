@@ -70,7 +70,7 @@ function LocationStateProbe() {
   const location = useLocation()
   return (
     <output data-testid="location-state">
-      {location.state === undefined ? "none" : "set"}
+      {location.state == null ? "none" : "set"}
     </output>
   )
 }
