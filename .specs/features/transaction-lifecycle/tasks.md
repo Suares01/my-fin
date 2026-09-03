@@ -256,10 +256,10 @@ T25 → T26 → T27
 
 **Done when**:
 
-- [ ] The in-flight guard is synchronous, `retry` is false, service errors remain distinct from post-command refresh warnings, and submitted `bookId` owns all refreshes.
-- [ ] Co-located tests cover double submit, service failure, refresh failure, late completion after book switch, and guard release.
-- [ ] Gate check passes: `pnpm --filter tauri exec vitest run src/features/transactions/hooks/transaction-mutation.test.tsx`, then `pnpm --filter tauri exec tsc --noEmit`.
-- [ ] Test count: exactly 7 task-owned tests pass; no existing test is removed or skipped.
+- [x] The in-flight guard is synchronous, `retry` is false, service errors remain distinct from post-command refresh warnings, and submitted `bookId` owns all refreshes.
+- [x] Co-located tests cover double submit, service failure, refresh failure, late completion after book switch, and guard release.
+- [x] Gate check passes: `pnpm --filter tauri exec vitest run src/features/transactions/hooks/transaction-mutation.test.tsx`, then `pnpm --filter tauri exec tsc --noEmit`.
+- [x] Test count: exactly 7 task-owned tests pass; no existing test is removed or skipped.
 
 **Tests**: integration
 **Gate**: full
