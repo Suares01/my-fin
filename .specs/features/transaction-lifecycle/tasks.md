@@ -228,12 +228,12 @@ T25 → T26 → T27
 
 **Done when**:
 
-- [ ] `refreshTransactionProjections` scopes every key by the command's `bookId`, accepts affected account IDs and optional stable chain ID, and uses settled refresh results.
-- [ ] A refresh rejection cannot convert a committed command into mutation failure and returns a retryable projection outcome.
-- [ ] Co-located tests seed every cache family, force partial failure, and switch books during a pending command.
-- [ ] Gate check passes: `pnpm --filter tauri exec vitest run src/features/query-invalidation.test.ts`, then `pnpm --filter tauri exec tsc --noEmit`.
-- [ ] Phase 1 build gate passes using all three Build commands.
-- [ ] Test count: exactly 8 task-owned tests pass; no existing test is removed or skipped.
+- [x] `refreshTransactionProjections` scopes every key by the command's `bookId`, accepts affected account IDs and optional stable chain ID, and uses settled refresh results.
+- [x] A refresh rejection cannot convert a committed command into mutation failure and returns a retryable projection outcome.
+- [x] Co-located tests seed every cache family, force partial failure, and switch books during a pending command.
+- [x] Gate check passes: `pnpm --filter tauri exec vitest run src/features/query-invalidation.test.ts`, then `pnpm --filter tauri exec tsc --noEmit`.
+- [x] Phase 1 build gate passes using all three Build commands.
+- [x] Test count: exactly 8 task-owned tests pass; no existing test is removed or skipped.
 
 **Tests**: integration
 **Gate**: build
