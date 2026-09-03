@@ -550,12 +550,12 @@ T25 → T26 → T27
 
 **Done when**:
 
-- [ ] Opening explains cancellation semantics, defaults to the local civil date, and preserves the chain until confirmed success.
-- [ ] Invalid date, duplicate confirmation, service failure, and optimistic conflict keep the dialog open with actionable feedback.
-- [ ] Accessible naming, focus containment, keyboard cancel/confirm, and focus return are covered.
-- [ ] Gate check passes: `pnpm --filter tauri exec vitest run src/features/transactions/components/transaction-delete-dialog.test.tsx`, then `pnpm --filter tauri exec tsc --noEmit`.
-- [ ] Phase 3 build gate passes using all three Build commands.
-- [ ] Test count: exactly 12 task-owned tests pass; no existing test is removed or skipped.
+- [x] Opening explains cancellation semantics, defaults to the local civil date, and preserves the chain until confirmed success.
+- [x] Invalid date, duplicate confirmation, service failure, and optimistic conflict keep the dialog open with actionable feedback.
+- [x] Accessible naming, focus containment, keyboard cancel/confirm, and focus return are covered.
+- [x] Gate check passes: `pnpm --filter tauri exec vitest run src/features/transactions/components/transaction-delete-dialog.test.tsx`, then `pnpm --filter tauri exec tsc --noEmit`.
+- [x] Phase 3 build gate passes using all three Build commands.
+- [x] Test count: exactly 12 task-owned tests pass; no existing test is removed or skipped.
 
 **Tests**: integration
 **Gate**: build
