@@ -1,6 +1,7 @@
 "use client"
 
 import {
+  ArrowLeftRight,
   BookOpen,
   ChevronRight,
   ChevronsUpDown,
@@ -106,6 +107,11 @@ const sidebarData = {
           label: "Dashboard",
           icon: LayoutDashboard,
           href: "/dashboard",
+        },
+        {
+          label: "Transações",
+          icon: ArrowLeftRight,
+          href: "/transactions",
         },
       ],
     },

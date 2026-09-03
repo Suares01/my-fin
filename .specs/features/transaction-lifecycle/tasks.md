@@ -794,12 +794,12 @@ T25 → T26 → T27
 
 **Done when**:
 
-- [ ] Desktop and mobile navigation expose Transações, highlight it at `/transactions`, and show matching breadcrumb text.
-- [ ] Keyboard navigation works and unrelated user modifications in the shell remain intact.
-- [ ] Co-located shell tests cover desktop/mobile link rendering, active state, breadcrumb, keyboard activation, and existing navigation regression.
-- [ ] Gate check passes: `pnpm --filter tauri exec vitest run src/layout/app-shell.test.tsx`, then `pnpm --filter tauri exec tsc --noEmit`.
-- [ ] Workspace gate passes using every command in the Workspace row.
-- [ ] Test count: exactly 7 task-owned tests pass; no existing test is removed or skipped.
+- [x] Desktop and mobile navigation expose Transações, highlight it at `/transactions`, and show matching breadcrumb text.
+- [x] Keyboard navigation works and unrelated user modifications in the shell remain intact.
+- [x] Co-located shell tests cover desktop/mobile link rendering, active state, breadcrumb, keyboard activation, and existing navigation regression.
+- [x] Gate check passes: `pnpm --filter tauri exec vitest run src/layout/app-shell.test.tsx`, then `pnpm --filter tauri exec tsc --noEmit`.
+- [x] Workspace gate passes using every command in the Workspace row.
+- [x] Test count: exactly 7 task-owned tests pass; no existing test is removed or skipped.
 
 **Tests**: integration
 **Gate**: workspace
