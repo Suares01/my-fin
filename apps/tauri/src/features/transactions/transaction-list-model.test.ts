@@ -84,15 +84,16 @@ describe("transaction list model", () => {
     const pages: readonly QueryPage<JournalChainListItem>[] = [
       { items: [chain(), chain({ chainId: "chain-2" })], nextCursor: "next" },
       {
-        items: [chain({ chainId: "chain-2", presentedEntryId: "entry-2" }), chain({ chainId: "chain-3" })],
+        items: [
+          chain({ chainId: "chain-2", presentedEntryId: "entry-2" }),
+          chain({ chainId: "chain-3" }),
+        ],
         nextCursor: null,
       },
     ]
-    expect(dedupeTransactionChainPages(pages).map((item) => item.chainId)).toEqual([
-      "chain-1",
-      "chain-2",
-      "chain-3",
-    ])
+    expect(
+      dedupeTransactionChainPages(pages).map((item) => item.chainId)
+    ).toEqual(["chain-1", "chain-2", "chain-3"])
   })
 
   it("keeps every loaded chain for the ALL status selection", () => {
@@ -102,7 +103,9 @@ describe("transaction list model", () => {
 
   it("filters only loaded chains by the selected chain status", () => {
     const items = [chain(), chain({ chainId: "chain-2", status: "CANCELLED" })]
-    expect(filterTransactionChainsByStatus(items, "CANCELLED")).toEqual([items[1]])
+    expect(filterTransactionChainsByStatus(items, "CANCELLED")).toEqual([
+      items[1],
+    ])
   })
 
   it("presents income values with a positive sign", () => {
@@ -118,9 +121,10 @@ describe("transaction list model", () => {
   })
 
   it("sums only income magnitudes as a positive BigInt total", () => {
-    expect(summarizeTransactionChains([chain({ amountMinor: "9007199254740993" })]).incomeMinor).toBe(
-      9007199254740993n
-    )
+    expect(
+      summarizeTransactionChains([chain({ amountMinor: "9007199254740993" })])
+        .incomeMinor
+    ).toBe(9007199254740993n)
   })
 
   it("sums expense magnitudes as a negative total and excludes transfers", () => {
@@ -136,7 +140,11 @@ describe("transaction list model", () => {
     expect(
       summarizeTransactionChains([
         chain({ amountMinor: "100" }),
-        chain({ chainId: "chain-2", type: "TRANSFER", amountMinor: "9007199254740993" }),
+        chain({
+          chainId: "chain-2",
+          type: "TRANSFER",
+          amountMinor: "9007199254740993",
+        }),
       ])
     ).toMatchObject({ count: 2, largestAbsoluteMinor: 9007199254740993n })
   })

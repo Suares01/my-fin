@@ -6,7 +6,8 @@ import type { JournalChainListItem } from "@workspace/application"
 import { describe, expect, it, vi } from "vitest"
 import type { MyFinServices } from "../../../bootstrap/create-services.js"
 import { MyFinProvider } from "../../../providers/my-fin-provider.js"
-import { ActiveBookProvider, useActiveBook } from "../../../providers/active-book-provider.js"
+import { ActiveBookProvider } from "../../../providers/active-book-provider.js"
+import { useActiveBook } from "../../../providers/use-active-book.js"
 import { MyFinQueryProvider } from "../../../providers/query-provider.js"
 import type { TransactionFilters } from "../transaction-list-model.js"
 import { useTransactionChains } from "./use-transaction-chains.js"
@@ -21,7 +22,9 @@ const filters: TransactionFilters = {
   status: "ALL",
 }
 
-function item(overrides: Partial<JournalChainListItem> = {}): JournalChainListItem {
+function item(
+  overrides: Partial<JournalChainListItem> = {}
+): JournalChainListItem {
   return {
     chainId: "chain-1",
     presentedEntryId: "entry-1",
@@ -71,7 +74,11 @@ function wrapperFor(
       <MyFinQueryProvider client={queryClient}>
         <MyFinProvider services={serviceFacade}>
           <ActiveBookProvider
-            initial={initial === null ? { status: "UNRESOLVED" } : { status: "ACTIVE", bookId: initial }}
+            initial={
+              initial === null
+                ? { status: "UNRESOLVED" }
+                : { status: "ACTIVE", bookId: initial }
+            }
           >
             {children}
           </ActiveBookProvider>
@@ -119,8 +126,14 @@ describe("useTransactionChains", () => {
   it("passes only the opaque cursor returned by the previous page", async () => {
     const serviceFacade = services()
     vi.mocked(serviceFacade.journal.listChains.execute)
-      .mockResolvedValueOnce({ ok: true, value: { items: [item()], nextCursor: "opaque-next" } })
-      .mockResolvedValueOnce({ ok: true, value: { items: [item({ chainId: "chain-2" })], nextCursor: null } })
+      .mockResolvedValueOnce({
+        ok: true,
+        value: { items: [item()], nextCursor: "opaque-next" },
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        value: { items: [item({ chainId: "chain-2" })], nextCursor: null },
+      })
     const { result } = renderHook(() => useTransactionChains(filters), {
       wrapper: wrapperFor(serviceFacade, new QueryClient()),
     })
@@ -136,8 +149,17 @@ describe("useTransactionChains", () => {
   it("deduplicates overlapping chain pages in server order", async () => {
     const serviceFacade = services()
     vi.mocked(serviceFacade.journal.listChains.execute)
-      .mockResolvedValueOnce({ ok: true, value: { items: [item()], nextCursor: "next" } })
-      .mockResolvedValueOnce({ ok: true, value: { items: [item(), item({ chainId: "chain-2" })], nextCursor: null } })
+      .mockResolvedValueOnce({
+        ok: true,
+        value: { items: [item()], nextCursor: "next" },
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        value: {
+          items: [item(), item({ chainId: "chain-2" })],
+          nextCursor: null,
+        },
+      })
     const { result } = renderHook(() => useTransactionChains(filters), {
       wrapper: wrapperFor(serviceFacade, new QueryClient()),
     })
@@ -157,11 +179,16 @@ describe("useTransactionChains", () => {
     const serviceFacade = services()
     const { result, rerender } = renderHook(
       ({ currentFilters }) => useTransactionChains(currentFilters),
-      { initialProps: { currentFilters: filters }, wrapper: wrapperFor(serviceFacade, new QueryClient()) }
+      {
+        initialProps: { currentFilters: filters },
+        wrapper: wrapperFor(serviceFacade, new QueryClient()),
+      }
     )
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     rerender({ currentFilters: { ...filters, search: "  Mercado " } })
-    await waitFor(() => expect(serviceFacade.journal.listChains.execute).toHaveBeenCalledTimes(2))
+    await waitFor(() =>
+      expect(serviceFacade.journal.listChains.execute).toHaveBeenCalledTimes(2)
+    )
     expect(serviceFacade.journal.listChains.execute).toHaveBeenLastCalledWith(
       expect.objectContaining({ search: "mercado" })
     )
@@ -186,7 +213,9 @@ describe("useTransactionChains", () => {
       ok: false,
       error: { code: "ENTITY_NOT_FOUND" },
     } as never)
-    const client = new QueryClient({ defaultOptions: { queries: { retry: 3 } } })
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: 3 } },
+    })
     const { result } = renderHook(() => useTransactionChains(filters), {
       wrapper: wrapperFor(serviceFacade, client),
     })
@@ -197,9 +226,18 @@ describe("useTransactionChains", () => {
   it("recovers an invalid pagination cursor once by requesting page one", async () => {
     const serviceFacade = services()
     vi.mocked(serviceFacade.journal.listChains.execute)
-      .mockResolvedValueOnce({ ok: true, value: { items: [item()], nextCursor: "bad-cursor" } })
-      .mockResolvedValueOnce({ ok: false, error: { code: "INVALID_QUERY" } } as never)
-      .mockResolvedValueOnce({ ok: true, value: { items: [item()], nextCursor: null } })
+      .mockResolvedValueOnce({
+        ok: true,
+        value: { items: [item()], nextCursor: "bad-cursor" },
+      })
+      .mockResolvedValueOnce({
+        ok: false,
+        error: { code: "INVALID_QUERY" },
+      } as never)
+      .mockResolvedValueOnce({
+        ok: true,
+        value: { items: [item()], nextCursor: null },
+      })
     const { result } = renderHook(() => useTransactionChains(filters), {
       wrapper: wrapperFor(serviceFacade, new QueryClient()),
     })
@@ -216,12 +254,17 @@ describe("useTransactionChains", () => {
     const serviceFacade = services()
     const queryClient = new QueryClient()
     const { result } = renderHook(
-      () => ({ chains: useTransactionChains(filters), activeBook: useActiveBook() }),
+      () => ({
+        chains: useTransactionChains(filters),
+        activeBook: useActiveBook(),
+      }),
       { wrapper: wrapperFor(serviceFacade, queryClient) }
     )
     await waitFor(() => expect(result.current.chains.isSuccess).toBe(true))
     act(() => result.current.activeBook.actions.activate("book-2"))
-    await waitFor(() => expect(serviceFacade.journal.listChains.execute).toHaveBeenCalledTimes(2))
+    await waitFor(() =>
+      expect(serviceFacade.journal.listChains.execute).toHaveBeenCalledTimes(2)
+    )
     expect(serviceFacade.journal.listChains.execute).toHaveBeenLastCalledWith(
       expect.objectContaining({ bookId: "book-2" })
     )

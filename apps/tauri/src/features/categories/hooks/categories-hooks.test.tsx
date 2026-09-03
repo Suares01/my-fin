@@ -3,10 +3,8 @@
 import { act, renderHook, waitFor } from "@testing-library/react"
 import { QueryClient } from "@tanstack/react-query"
 import { describe, expect, it, vi } from "vitest"
-import {
-  ActiveBookProvider,
-  useActiveBook,
-} from "../../../providers/active-book-provider.js"
+import { ActiveBookProvider } from "../../../providers/active-book-provider.js"
+import { useActiveBook } from "../../../providers/use-active-book.js"
 
 import {
   categoryKeys,

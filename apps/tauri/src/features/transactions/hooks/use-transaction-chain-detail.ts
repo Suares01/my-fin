@@ -22,13 +22,22 @@ export function useTransactionChainDetail({
   const scopedChainId = chainId ?? "unresolved"
   const previousPresentedEntryId = useRef(presentedEntryId)
   const latestPresentedEntryId = useRef(presentedEntryId)
-  latestPresentedEntryId.current = presentedEntryId
   const queryClient = useQueryClient()
+
+  useEffect(() => {
+    latestPresentedEntryId.current = presentedEntryId
+  }, [presentedEntryId])
 
   useEffect(() => {
     if (previousPresentedEntryId.current === presentedEntryId) return
     previousPresentedEntryId.current = presentedEntryId
-    if (!enabled || bookId === null || chainId === undefined || presentedEntryId === undefined) return
+    if (
+      !enabled ||
+      bookId === null ||
+      chainId === undefined ||
+      presentedEntryId === undefined
+    )
+      return
     void queryClient.invalidateQueries({
       queryKey: transactionKeys.detail(bookId, chainId),
     })
@@ -37,19 +46,25 @@ export function useTransactionChainDetail({
   return useQuery<JournalChainDetail>({
     queryKey: transactionKeys.detail(scopedBookId, scopedChainId),
     enabled:
-      enabled && bookId !== null && chainId !== undefined && presentedEntryId !== undefined,
+      enabled &&
+      bookId !== null &&
+      chainId !== undefined &&
+      presentedEntryId !== undefined,
     retry: false,
     queryFn: async () => {
       const entryId = latestPresentedEntryId.current
       if (bookId === null || entryId === undefined) {
-        throw new Error("Transaction chain detail requires an active book and entry")
+        throw new Error(
+          "Transaction chain detail requires an active book and entry"
+        )
       }
       const result = await services.journal.getChain.execute({
         bookId,
         entryId,
       })
       if (!result.ok) throw result.error
-      if (result.value === null) throw new Error("Transaction chain detail was not found")
+      if (result.value === null)
+        throw new Error("Transaction chain detail was not found")
       return result.value
     },
   })

@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 
-import { useMyFin } from "../../../providers/my-fin-provider.js"
+import { useMyFin } from "../../../providers/use-my-fin.js"
 import { bookKeys } from "./book-keys.js"
 import { BookDto, CreateFinancialBookCommand } from "@workspace/application"
 

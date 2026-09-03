@@ -12,10 +12,7 @@ import {
   TauriIdGenerator,
   TauriSqliteDatabase,
 } from "@workspace/infrastructure-tauri"
-import {
-  createMyFinServices,
-  type MyFinServices,
-} from "./create-services.js"
+import { createMyFinServices, type MyFinServices } from "./create-services.js"
 
 export type BootstrapErrorCode =
   | "VAULT_OPEN_FAILED"
@@ -113,8 +110,7 @@ export async function createMyFinRuntime(
     const ids = new TauriIdGenerator(options.ids)
     const publisher = options.publisher ?? new TauriEventPublisher()
     const services = (
-      options.compose ??
-      ((dependencies) => createMyFinServices(dependencies))
+      options.compose ?? ((dependencies) => createMyFinServices(dependencies))
     )({ database, clock, ids, publisher })
     const initializedDatabase = database
 

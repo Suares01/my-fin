@@ -1,8 +1,8 @@
 import { useEffect } from "react"
 import { useQuery, type UseQueryResult } from "@tanstack/react-query"
 
-import { useMyFin } from "../../../providers/my-fin-provider.js"
-import { useActiveBook } from "../../../providers/active-book-provider.js"
+import { useMyFin } from "../../../providers/use-my-fin.js"
+import { useActiveBook } from "../../../providers/use-active-book.js"
 import { bookKeys } from "./book-keys.js"
 import { isEntityNotFound, resolveBookSession } from "./book-session.js"
 import { useBookRouteNavigation } from "./use-book-route-navigation.js"

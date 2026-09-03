@@ -1,10 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useNavigate } from "react-router"
 
-import {
-  useActiveBook,
-  type ActiveBookSession,
-} from "../../../providers/active-book-provider.js"
+import { type ActiveBookSession } from "../../../providers/active-book-model.js"
+import { useActiveBook } from "../../../providers/use-active-book.js"
 
 type PendingBookNavigation =
   | { readonly status: "REQUIRES_CREATION"; readonly to: "/books/new" }

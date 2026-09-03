@@ -18,9 +18,9 @@ describe("transaction query keys", () => {
   })
 
   it("keeps distinct normalized server filters in separate list keys", () => {
-    expect(
-      transactionKeys.list("book-1", { types: ["INCOME"] })
-    ).not.toEqual(transactionKeys.list("book-1", { types: ["EXPENSE"] }))
+    expect(transactionKeys.list("book-1", { types: ["INCOME"] })).not.toEqual(
+      transactionKeys.list("book-1", { types: ["EXPENSE"] })
+    )
   })
 
   it("keeps chain detail keys stable by chain identity", () => {
@@ -34,9 +34,9 @@ describe("transaction query keys", () => {
   })
 
   it("isolates identical transaction filters and chain identities across books", () => {
-    expect(
-      transactionKeys.list("book-1", { types: ["TRANSFER"] })
-    ).not.toEqual(transactionKeys.list("book-2", { types: ["TRANSFER"] }))
+    expect(transactionKeys.list("book-1", { types: ["TRANSFER"] })).not.toEqual(
+      transactionKeys.list("book-2", { types: ["TRANSFER"] })
+    )
     expect(transactionKeys.detail("book-1", "chain-1")).not.toEqual(
       transactionKeys.detail("book-2", "chain-1")
     )

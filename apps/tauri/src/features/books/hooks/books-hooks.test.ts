@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest"
 
-import { createMyFinQueryClient } from "../../../providers/query-provider.js"
+import { createMyFinQueryClient } from "../../../providers/query-client.js"
 import {
   bookErrorMessage,
   bookKeys,

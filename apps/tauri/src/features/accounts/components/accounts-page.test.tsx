@@ -3,9 +3,10 @@
 import type { AccountBalanceItemView } from "@workspace/application"
 import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
-import { AccountsPage, filterAccounts } from "./accounts-page"
+import { AccountsPage } from "./accounts-page"
 import type { FinancialAccountBalance } from "./account-card"
-import { summarizeAccounts } from "./account-summary"
+import { filterAccounts } from "./account-list-model"
+import { summarizeAccounts } from "./account-summary-model"
 
 const state = vi.hoisted(() => ({
   session: { status: "ACTIVE", bookId: "book-1" } as const,

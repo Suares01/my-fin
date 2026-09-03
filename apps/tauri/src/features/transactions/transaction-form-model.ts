@@ -1,5 +1,8 @@
 import { z } from "zod"
-import type { JournalBusinessDraft, JournalChainDetail } from "@workspace/application"
+import type {
+  JournalBusinessDraft,
+  JournalChainDetail,
+} from "@workspace/application"
 
 const MAX_AMOUNT_MINOR = "9223372036854775807"
 const amountPattern = /^[1-9]\d*$/
@@ -8,9 +11,13 @@ const civilDatePattern = /^\d{4}-\d{2}-\d{2}$/
 export const amountMinorSchema = z
   .string()
   .regex(amountPattern, "Informe um valor inteiro positivo.")
-  .refine((value) => !amountPattern.test(value) || BigInt(value) <= BigInt(MAX_AMOUNT_MINOR), {
-    message: "Informe um valor de até 9223372036854775807.",
-  })
+  .refine(
+    (value) =>
+      !amountPattern.test(value) || BigInt(value) <= BigInt(MAX_AMOUNT_MINOR),
+    {
+      message: "Informe um valor de até 9223372036854775807.",
+    }
+  )
 
 export const civilDateSchema = z
   .string()
@@ -50,13 +57,10 @@ export const transferDraftSchema = z
     destinationAccountId: z.string().min(1),
     ...sharedDraftFields,
   })
-  .refine(
-    (draft) => draft.sourceAccountId !== draft.destinationAccountId,
-    {
-      path: ["destinationAccountId"],
-      message: "Escolha contas diferentes.",
-    }
-  )
+  .refine((draft) => draft.sourceAccountId !== draft.destinationAccountId, {
+    path: ["destinationAccountId"],
+    message: "Escolha contas diferentes.",
+  })
 
 export function cancellationSchema(presentedOccurredOn: string) {
   return z
@@ -101,7 +105,9 @@ export type EditDraftResult =
   | { readonly ok: true; readonly draft: JournalBusinessDraft }
   | { readonly ok: false; readonly reason: "AMBIGUOUS_DETAIL" }
 
-export function editDraftFromDetail(detail: JournalChainDetail): EditDraftResult {
+export function editDraftFromDetail(
+  detail: JournalChainDetail
+): EditDraftResult {
   const shared = {
     amountMinor: detail.amountMinor,
     currency: detail.currency,
@@ -110,7 +116,8 @@ export function editDraftFromDetail(detail: JournalChainDetail): EditDraftResult
   }
 
   if (detail.type === "TRANSFER") {
-    if (detail.transfer === undefined) return { ok: false, reason: "AMBIGUOUS_DETAIL" }
+    if (detail.transfer === undefined)
+      return { ok: false, reason: "AMBIGUOUS_DETAIL" }
     return {
       ok: true,
       draft: {
@@ -135,7 +142,12 @@ export function editDraftFromDetail(detail: JournalChainDetail): EditDraftResult
     }
     return {
       ok: true,
-      draft: { type: detail.type, accountId: account.id, categoryId: category.id, ...shared },
+      draft: {
+        type: detail.type,
+        accountId: account.id,
+        categoryId: category.id,
+        ...shared,
+      },
     }
   }
 
@@ -150,7 +162,8 @@ export function affectedAccountIds(
     draft.type === "TRANSFER"
       ? [draft.sourceAccountId, draft.destinationAccountId]
       : [draft.accountId]
-  const previousIds = previousDetail?.financialAccounts.map((account) => account.id) ?? []
+  const previousIds =
+    previousDetail?.financialAccounts.map((account) => account.id) ?? []
   return [...new Set([...previousIds, ...currentIds])]
 }
 

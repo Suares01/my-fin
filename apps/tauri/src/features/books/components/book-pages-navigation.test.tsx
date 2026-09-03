@@ -17,7 +17,7 @@ const mockUseCreateBook = vi.hoisted(() => vi.fn())
 vi.mock("../hooks/use-books.js", () => ({
   useBooks: mockUseBooks,
 }))
-vi.mock("../../../providers/active-book-provider.js", () => ({
+vi.mock("../../../providers/use-active-book.js", () => ({
   useActiveBook: mockUseActiveBook,
 }))
 vi.mock("../hooks/use-book-route-navigation.js", () => ({

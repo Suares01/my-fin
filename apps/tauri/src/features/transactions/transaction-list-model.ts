@@ -39,12 +39,18 @@ function normalizeText(value: string): string | undefined {
   return normalized === "" ? undefined : normalized
 }
 
-function normalizeIds(values: readonly string[]): readonly string[] | undefined {
-  const normalized = [...new Set(values.map((value) => value.trim()).filter(Boolean))].sort()
+function normalizeIds(
+  values: readonly string[]
+): readonly string[] | undefined {
+  const normalized = [
+    ...new Set(values.map((value) => value.trim()).filter(Boolean)),
+  ].sort()
   return normalized.length === 0 ? undefined : normalized
 }
 
-function normalizeTypes(values: readonly TransactionType[]): readonly TransactionType[] {
+function normalizeTypes(
+  values: readonly TransactionType[]
+): readonly TransactionType[] {
   return [...new Set(values)].sort()
 }
 
@@ -88,7 +94,9 @@ export function filterTransactionChainsByStatus(
   items: readonly JournalChainListItem[],
   status: TransactionStatusFilter
 ): readonly JournalChainListItem[] {
-  return status === "ALL" ? items : items.filter((item) => item.status === status)
+  return status === "ALL"
+    ? items
+    : items.filter((item) => item.status === status)
 }
 
 export function transactionAmountSign(type: TransactionType): "+" | "-" | "" {
@@ -111,5 +119,10 @@ export function summarizeTransactionChains(
     if (amountMinor > largestAbsoluteMinor) largestAbsoluteMinor = amountMinor
   }
 
-  return { incomeMinor, expenseMinor, largestAbsoluteMinor, count: items.length }
+  return {
+    incomeMinor,
+    expenseMinor,
+    largestAbsoluteMinor,
+    count: items.length,
+  }
 }

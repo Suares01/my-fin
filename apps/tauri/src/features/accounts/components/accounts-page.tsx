@@ -12,15 +12,13 @@ import {
   SheetTitle,
 } from "@workspace/ui/components/sheet"
 import { Skeleton } from "@workspace/ui/components/skeleton"
-import type { AccountBalanceItemView } from "@workspace/application"
 import { useMemo, useState } from "react"
 import { AddAccountCard } from "./add-account-card"
-import { AccountCard, type FinancialAccountBalance } from "./account-card"
+import { AccountCard } from "./account-card"
 import { AccountForm } from "./account-form"
 import { AccountSummary } from "./account-summary"
+import { filterAccounts, type AccountFilter } from "./account-list-model"
 import { useAccountBalances } from "../hooks"
-
-type AccountFilter = "ALL" | "ASSET" | "LIABILITY"
 
 const filters: ReadonlyArray<{
   readonly value: AccountFilter
@@ -30,18 +28,6 @@ const filters: ReadonlyArray<{
   { value: "ASSET", label: "Ativos" },
   { value: "LIABILITY", label: "Passivos" },
 ]
-
-export function filterAccounts(
-  accounts: readonly AccountBalanceItemView[],
-  filter: AccountFilter
-): readonly FinancialAccountBalance[] {
-  return accounts.filter(
-    (account): account is FinancialAccountBalance =>
-      (account.accountKind === "ASSET" ||
-        account.accountKind === "LIABILITY") &&
-      (filter === "ALL" || account.accountKind === filter)
-  )
-}
 
 function PageIntroSkeleton() {
   return (
@@ -120,7 +106,7 @@ export function AccountsPage() {
   const query = useAccountBalances(false)
   const [selectedFilter, setSelectedFilter] = useState<AccountFilter>("ALL")
   const [isCreateDrawerOpen, setIsCreateDrawerOpen] = useState(false)
-  const accounts = query.data ?? []
+  const accounts = useMemo(() => query.data ?? [], [query.data])
   const financialAccounts = useMemo(
     () => filterAccounts(accounts, "ALL"),
     [accounts]

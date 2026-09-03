@@ -1,29 +1,6 @@
-import {
-  keepPreviousData,
-  QueryClient,
-  QueryClientProvider,
-  type QueryClientConfig,
-} from "@tanstack/react-query"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { useState, type ReactNode } from "react"
-
-export function createMyFinQueryClient(
-  config: QueryClientConfig = {}
-): QueryClient {
-  return new QueryClient({
-    ...config,
-    defaultOptions: {
-      ...config.defaultOptions,
-      queries: {
-        ...config.defaultOptions?.queries,
-        placeholderData: keepPreviousData,
-      },
-      mutations: {
-        ...config.defaultOptions?.mutations,
-        retry: false,
-      },
-    },
-  })
-}
+import { createMyFinQueryClient } from "./query-client"
 
 export function MyFinQueryProvider({
   client,

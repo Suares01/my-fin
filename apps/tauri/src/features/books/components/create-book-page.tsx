@@ -1,6 +1,5 @@
-import { z } from "zod"
 import { useForm } from "react-hook-form"
-import { useRef } from "react"
+import { useRef, type FormEvent } from "react"
 import { bookErrorMessage, useCreateBook } from "../hooks"
 import { BookPageBackButton } from "./book-page-back-button.js"
 import { useBookPageNavigation } from "../hooks/use-book-page-navigation.js"
@@ -21,52 +20,17 @@ import {
 import { Input } from "@workspace/ui/components/input"
 import { Button } from "@workspace/ui/components/button"
 import { Spinner } from "@workspace/ui/components/spinner"
-
-const nameSchema = z.string().trim().min(1, "Informe um nome para o livro.")
-const currencySchema = z
-  .string()
-  .trim()
-  .regex(/^[A-Z]{3}$/, "Use exatamente três letras maiúsculas, como BRL.")
-const timezoneSchema = z
-  .string()
-  .trim()
-  .min(1, "Informe um timezone IANA.")
-  .refine(isValidTimezone, "Use um timezone IANA aceito pelo dispositivo.")
-
-export const createBookSchema = z.object({
-  name: nameSchema,
-  baseCurrency: currencySchema,
-  timezone: timezoneSchema,
-})
-
-type CreateBookFormValues = z.input<typeof createBookSchema>
-
-export function detectedTimezone(): string {
-  try {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"
-  } catch {
-    return "UTC"
-  }
-}
-
-export function isValidTimezone(timezone: string): boolean {
-  try {
-    new Intl.DateTimeFormat(undefined, { timeZone: timezone }).format()
-    return true
-  } catch {
-    return false
-  }
-}
+import {
+  createBookSchema,
+  detectedTimezone,
+  type CreateBookFormValues,
+} from "./create-book-model"
 
 function fieldMessage(
   field: "name" | "baseCurrency" | "timezone",
   value: string
 ): true | string {
-  const schema = {
-    name: nameSchema,
-    baseCurrency: currencySchema,
-    timezone: timezoneSchema,
-  }[field]
+  const schema = createBookSchema.shape[field]
   const result = schema.safeParse(value)
   return result.success
     ? true
@@ -97,39 +61,41 @@ export function CreateBookPage() {
   const currencyField = register("baseCurrency", {
     validate: (value) => fieldMessage("baseCurrency", value),
   })
-  const onSubmit = handleSubmit(async (values) => {
-    if (submitGuardRef.current) return
-    submitGuardRef.current = true
-    const parsed = createBookSchema.safeParse(values)
-    if (!parsed.success) {
-      for (const issue of parsed.error.issues) {
-        const field = issue.path[0]
-        if (
-          field === "name" ||
-          field === "baseCurrency" ||
-          field === "timezone"
-        ) {
-          setError(field, { type: "schema", message: issue.message })
+  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
+    void handleSubmit(async (values) => {
+      if (submitGuardRef.current) return
+      submitGuardRef.current = true
+      const parsed = createBookSchema.safeParse(values)
+      if (!parsed.success) {
+        for (const issue of parsed.error.issues) {
+          const field = issue.path[0]
+          if (
+            field === "name" ||
+            field === "baseCurrency" ||
+            field === "timezone"
+          ) {
+            setError(field, { type: "schema", message: issue.message })
+          }
         }
+        submitGuardRef.current = false
+        return
       }
-      submitGuardRef.current = false
-      return
-    }
 
-    const command: CreateFinancialBookCommand = {
-      ...parsed.data,
-      baseCurrency: parsed.data.baseCurrency.toUpperCase(),
-    }
+      const command: CreateFinancialBookCommand = {
+        ...parsed.data,
+        baseCurrency: parsed.data.baseCurrency.toUpperCase(),
+      }
 
-    try {
-      const book = await mutation.mutateAsync(command)
-      activateAndOpenDashboard(book.id)
-    } catch {
-      // The mutation state renders a safe, actionable message and keeps the form open.
-    } finally {
-      submitGuardRef.current = false
-    }
-  })
+      try {
+        const book = await mutation.mutateAsync(command)
+        activateAndOpenDashboard(book.id)
+      } catch {
+        // The mutation state renders a safe, actionable message and keeps the form open.
+      } finally {
+        submitGuardRef.current = false
+      }
+    })(event)
+  }
 
   return (
     <section className="motion-reveal flex min-h-screen w-full flex-col justify-center gap-8 p-8">

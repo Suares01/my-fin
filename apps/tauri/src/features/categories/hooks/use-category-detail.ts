@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query"
 
-import { useActiveBook } from "../../../providers/active-book-provider.js"
+import { useActiveBook } from "../../../providers/use-active-book.js"
 import { categoryKeys } from "./category-keys.js"
-import { useMyFin } from "../../../providers/my-fin-provider.js"
+import { useMyFin } from "../../../providers/use-my-fin.js"
 
 export function useCategoryDetail(categoryId: string | undefined) {
   const services = useMyFin()

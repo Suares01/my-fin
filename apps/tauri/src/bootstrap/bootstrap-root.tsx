@@ -119,8 +119,8 @@ export function BootstrapFailureScreen({
           Não foi possível preparar o cofre
         </AlertTitle>
         <AlertDescription id={descriptionId}>
-          Feche outras instâncias do My Fin, se houver, e tente novamente. Se
-          o problema continuar, informe o código diagnóstico ao suporte.
+          Feche outras instâncias do My Fin, se houver, e tente novamente. Se o
+          problema continuar, informe o código diagnóstico ao suporte.
         </AlertDescription>
       </Alert>
 

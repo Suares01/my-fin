@@ -163,7 +163,9 @@ export function useBootstrap(
     }
   }, [detachLifecycle, disposeCurrent, disposeRuntime])
 
-  startRef.current = start
+  useEffect(() => {
+    startRef.current = start
+  }, [start])
 
   useEffect(() => {
     activeRef.current = true

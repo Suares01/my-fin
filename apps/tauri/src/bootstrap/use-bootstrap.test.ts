@@ -34,9 +34,7 @@ function deferred<T>(): Deferred<T> {
   return { promise, resolve, reject }
 }
 
-function runtimeFixture(
-  overrides: Partial<MyFinRuntime> = {}
-): MyFinRuntime {
+function runtimeFixture(overrides: Partial<MyFinRuntime> = {}): MyFinRuntime {
   return {
     services: {} as never,
     health: vi.fn().mockResolvedValue(undefined),

@@ -12,7 +12,9 @@ import {
   validateCancellationDate,
 } from "./transaction-form-model.js"
 
-function detail(overrides: Partial<JournalChainDetail> = {}): JournalChainDetail {
+function detail(
+  overrides: Partial<JournalChainDetail> = {}
+): JournalChainDetail {
   return {
     chainId: "chain-1",
     presentedEntryId: "entry-1",
@@ -37,7 +39,9 @@ function detail(overrides: Partial<JournalChainDetail> = {}): JournalChainDetail
 describe("transaction form model", () => {
   it("accepts the positive minor-unit amount boundaries", () => {
     expect(amountMinorSchema.parse("1")).toBe("1")
-    expect(amountMinorSchema.parse("9223372036854775807")).toBe("9223372036854775807")
+    expect(amountMinorSchema.parse("9223372036854775807")).toBe(
+      "9223372036854775807"
+    )
   })
 
   it("rejects zero, fractional, negative, and overflowing amounts", () => {
@@ -101,7 +105,11 @@ describe("transaction form model", () => {
   it("maps an expense detail to the same-type edit draft", () => {
     expect(editDraftFromDetail(detail({ type: "EXPENSE" }))).toMatchObject({
       ok: true,
-      draft: { type: "EXPENSE", accountId: "account-1", categoryId: "category-1" },
+      draft: {
+        type: "EXPENSE",
+        accountId: "account-1",
+        categoryId: "category-1",
+      },
     })
   })
 
@@ -113,20 +121,31 @@ describe("transaction form model", () => {
           categories: [],
           transfer: {
             source: { id: "source", name: "Origem", kind: "ASSET" },
-            destination: { id: "destination", name: "Destino", kind: "LIABILITY" },
+            destination: {
+              id: "destination",
+              name: "Destino",
+              kind: "LIABILITY",
+            },
           },
         })
       )
     ).toMatchObject({
       ok: true,
-      draft: { type: "TRANSFER", sourceAccountId: "source", destinationAccountId: "destination" },
+      draft: {
+        type: "TRANSFER",
+        sourceAccountId: "source",
+        destinationAccountId: "destination",
+      },
     })
   })
 
   it("blocks editing when a projected account or category is ambiguous", () => {
     expect(
       editDraftFromDetail(
-        detail({ financialAccounts: [], categories: [{ id: "category-1", name: "Trabalho", kind: "INCOME" }] })
+        detail({
+          financialAccounts: [],
+          categories: [{ id: "category-1", name: "Trabalho", kind: "INCOME" }],
+        })
       )
     ).toEqual({ ok: false, reason: "AMBIGUOUS_DETAIL" })
   })
@@ -149,8 +168,11 @@ describe("transaction form model", () => {
   })
 
   it("translates known domain failures into safe Portuguese feedback", () => {
-    expect(transactionErrorMessage({ code: "INVALID_ACCOUNT_STATUS", id: "account-1" })).toBe(
-      "A conta ou categoria selecionada não está ativa."
-    )
+    expect(
+      transactionErrorMessage({
+        code: "INVALID_ACCOUNT_STATUS",
+        id: "account-1",
+      })
+    ).toBe("A conta ou categoria selecionada não está ativa.")
   })
 })

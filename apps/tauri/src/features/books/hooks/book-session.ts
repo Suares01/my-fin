@@ -2,7 +2,7 @@ import { FinancialBookSummary } from "@workspace/application"
 import type {
   ActiveBookSession,
   ActiveBookTransition,
-} from "../../../providers/active-book-provider.js"
+} from "../../../providers/active-book-model.js"
 
 export function resolveBookSession(
   session: ActiveBookSession,

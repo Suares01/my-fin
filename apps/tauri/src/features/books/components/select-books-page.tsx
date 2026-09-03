@@ -1,5 +1,5 @@
 import { Skeleton } from "@workspace/ui/components/skeleton"
-import { useActiveBook } from "../../../providers/active-book-provider.js"
+import { useActiveBook } from "../../../providers/use-active-book.js"
 import { BookPageBackButton } from "./book-page-back-button.js"
 import { useBookRouteNavigation } from "../hooks/use-book-route-navigation.js"
 import { useBookPageNavigation } from "../hooks/use-book-page-navigation.js"
