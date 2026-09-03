@@ -469,11 +469,11 @@ T25 → T26 → T27
 
 **Done when**:
 
-- [ ] Create and edit modes share one income form and emit the exact discriminated draft expected by their caller.
-- [ ] Missing account/category guidance links are shown instead of an unusable form.
-- [ ] Pending, service error, refresh warning, conflict lock, prefill, retained-values, and renamed-option behavior satisfy the spec.
-- [ ] Gate check passes: `pnpm --filter tauri exec vitest run src/features/transactions/components/income-form.test.tsx`, then `pnpm --filter tauri exec tsc --noEmit`.
-- [ ] Test count: exactly 12 task-owned tests pass; no existing test is removed or skipped.
+- [x] Create and edit modes share one income form and emit the exact discriminated draft expected by their caller.
+- [x] Missing account/category guidance links are shown instead of an unusable form.
+- [x] Pending, service error, refresh warning, conflict lock, prefill, retained-values, and renamed-option behavior satisfy the spec.
+- [x] Gate check passes: `pnpm --filter tauri exec vitest run src/features/transactions/components/income-form.test.tsx`, then `pnpm --filter tauri exec tsc --noEmit`.
+- [x] Test count: exactly 12 task-owned tests pass; no existing test is removed or skipped.
 
 **Tests**: integration
 **Gate**: full
