@@ -360,11 +360,11 @@ T25 → T26 → T27
 
 **Done when**:
 
-- [ ] The command contains `bookId`, latest `presentedEntryId`, `presentedVersion`, and one same-type replacement.
-- [ ] General failure leaves caller state open; optimistic conflict locks resubmission until fresh detail is loaded.
-- [ ] Co-located tests cover all three replacement types, atomic-failure presentation, conflict recovery, renamed options, and late book switch.
-- [ ] Gate check passes: `pnpm --filter tauri exec vitest run src/features/transactions/hooks/use-amend-transaction.test.tsx`, then `pnpm --filter tauri exec tsc --noEmit`.
-- [ ] Test count: exactly 10 task-owned tests pass; no existing test is removed or skipped.
+- [x] The command contains `bookId`, latest `presentedEntryId`, `presentedVersion`, and one same-type replacement.
+- [x] General failure leaves caller state open; optimistic conflict locks resubmission until fresh detail is loaded.
+- [x] Co-located tests cover all three replacement types, atomic-failure presentation, conflict recovery, renamed options, and late book switch.
+- [x] Gate check passes: `pnpm --filter tauri exec vitest run src/features/transactions/hooks/use-amend-transaction.test.tsx`, then `pnpm --filter tauri exec tsc --noEmit`.
+- [x] Test count: exactly 10 task-owned tests pass; no existing test is removed or skipped.
 
 **Tests**: integration
 **Gate**: full
