@@ -4,6 +4,7 @@ import { ApplicationShell } from "../layout/app-shell"
 import { CreateBookPage } from "../features/books/components/create-book-page"
 import { HandleBootstrap } from "../bootstrap/handle-bootstrap"
 import { SelectBookPage } from "../features/books/components/select-books-page"
+import { AccountsPage } from "../features/accounts/components/accounts-page"
 
 export default function AppRoutes() {
   return (
@@ -12,7 +13,7 @@ export default function AppRoutes() {
 
       <Route element={<ApplicationShell />}>
         <Route path="dashboard" element={<CategoriesPage />} />
-        <Route path="accounts" element={<CategoriesPage />} />
+        <Route path="accounts" element={<AccountsPage />} />
         <Route path="categories" element={<CategoriesPage />} />
       </Route>
 

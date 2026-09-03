@@ -5,6 +5,7 @@ import {
   ChevronRight,
   ChevronsUpDown,
   LayoutDashboard,
+  Landmark,
   Plus,
   Tags,
   WalletCards,
@@ -35,7 +36,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@workspace/ui/components/dropdown-menu"
-import { ScrollArea } from "@workspace/ui/components/scroll-area"
 import { Separator } from "@workspace/ui/components/separator"
 import {
   Sidebar,
@@ -85,8 +85,6 @@ type NavGroup = {
 type SidebarData = {
   // Logo/branding (all sidebars)
   logo: {
-    src: string
-    alt: string
     title: string
     description: string
   }
@@ -97,8 +95,6 @@ type SidebarData = {
 // Shared sidebar data - works with all sidebar variations
 const sidebarData = {
   logo: {
-    src: "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/shadcnblocks-logo.svg",
-    alt: "My Fin",
     title: "My Fin",
     description: "Total controle das suas finanças",
   },
@@ -127,12 +123,15 @@ const SidebarLogo = ({ logo }: { logo: SidebarData["logo"] }) => {
   return (
     <SidebarMenu>
       <SidebarMenuItem>
-        <SidebarMenuButton size="lg">
+        <SidebarMenuButton
+          size="lg"
+          tooltip="Ir para o dashboard"
+          render={<Link to="/dashboard" />}
+        >
           <div className="flex aspect-square size-8 items-center justify-center rounded-sm bg-primary">
-            <img
-              src={logo.src}
-              alt={logo.alt}
-              className="size-6 text-primary-foreground invert dark:invert-0"
+            <Landmark
+              className="size-4 text-primary-foreground"
+              aria-hidden="true"
             />
           </div>
           <div className="flex flex-col gap-0.5 leading-none">
@@ -157,7 +156,11 @@ const NavMenuItem = ({ item }: { item: NavItem }) => {
   if (!hasChildren) {
     return (
       <SidebarMenuItem>
-        <SidebarMenuButton render={<Link to={item.href} />} isActive={isActive}>
+        <SidebarMenuButton
+          render={<Link to={item.href} />}
+          isActive={isActive}
+          tooltip={item.label}
+        >
           <Icon className="size-4" />
           <span>{item.label}</span>
         </SidebarMenuButton>
@@ -184,7 +187,7 @@ const NavMenuItem = ({ item }: { item: NavItem }) => {
             <SidebarMenuSubItem key={child.label}>
               <SidebarMenuSubButton
                 render={<Link to={child.href} />}
-                isActive={child.isActive}
+                isActive={location.pathname === child.href}
               >
                 {child.label}
               </SidebarMenuSubButton>
@@ -313,25 +316,23 @@ export const NavBookSwitcher = () => {
 
 const AppSidebar = ({ ...props }: React.ComponentProps<typeof Sidebar>) => {
   return (
-    <Sidebar {...props}>
+    <Sidebar variant="inset" {...props}>
       <SidebarHeader>
         <SidebarLogo logo={sidebarData.logo} />
       </SidebarHeader>
-      <SidebarContent className="overflow-hidden">
-        <ScrollArea className="min-h-0 flex-1">
-          {sidebarData.navGroups.map((group) => (
-            <SidebarGroup key={group.title}>
-              <SidebarGroupLabel>{group.title}</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {group.items.map((item) => (
-                    <NavMenuItem key={item.label} item={item} />
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          ))}
-        </ScrollArea>
+      <SidebarContent>
+        {sidebarData.navGroups.map((group) => (
+          <SidebarGroup key={group.title}>
+            <SidebarGroupLabel>{group.title}</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {group.items.map((item) => (
+                  <NavMenuItem key={item.label} item={item} />
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
       </SidebarContent>
       <SidebarFooter>
         <NavBookSwitcher />
@@ -361,11 +362,14 @@ function AutoBreadcrumb() {
   const { group, item } = route
 
   return (
-    <Breadcrumb className="hidden md:block">
+    <Breadcrumb>
       <BreadcrumbList>
-        <BreadcrumbItem>
-          <BreadcrumbLink href="/">{group.title}</BreadcrumbLink>
+        <BreadcrumbItem className="hidden md:block">
+          <BreadcrumbLink render={<Link to="/dashboard" />}>
+            {group.title}
+          </BreadcrumbLink>
         </BreadcrumbItem>
+        <BreadcrumbSeparator className="hidden md:block" />
         {pathnames.map((value, index) => {
           const to = `/${pathnames.slice(0, index + 1).join("/")}`
           const isLast = index === pathnames.length - 1
@@ -373,12 +377,14 @@ function AutoBreadcrumb() {
 
           return (
             <React.Fragment key={to}>
-              <BreadcrumbSeparator />
+              {index > 0 && <BreadcrumbSeparator />}
               <BreadcrumbItem>
                 {isLast ? (
                   <BreadcrumbPage>{label}</BreadcrumbPage>
                 ) : (
-                  <BreadcrumbLink href={to}>{label}</BreadcrumbLink>
+                  <BreadcrumbLink render={<Link to={to} />}>
+                    {label}
+                  </BreadcrumbLink>
                 )}
               </BreadcrumbItem>
             </React.Fragment>
@@ -395,29 +401,21 @@ interface ApplicationShellProps {
 
 export function ApplicationShell({ className }: ApplicationShellProps) {
   return (
-    <SidebarProvider className={cn(className)}>
+    <SidebarProvider className={cn("my-fin-shell", className)}>
       <AppSidebar />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-          <SidebarTrigger className="-ml-1" />
-          <Separator
-            orientation="vertical"
-            className="mr-2 hidden data-[orientation=vertical]:h-4 md:block"
-          />
-          <a href="#" className="flex items-center gap-2 md:hidden">
-            <div className="flex aspect-square size-8 items-center justify-center rounded-sm bg-primary">
-              <img
-                src={sidebarData.logo.src}
-                alt={sidebarData.logo.alt}
-                className="size-6 text-primary-foreground invert dark:invert-0"
-              />
-            </div>
-            <span className="font-semibold">{sidebarData.logo.title}</span>
-          </a>
-          <AutoBreadcrumb />
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b border-border/80">
+          <div className="flex items-center gap-2 px-4">
+            <SidebarTrigger className="-ml-1" />
+            <Separator
+              orientation="vertical"
+              className="mr-2 h-4 data-[orientation=vertical]:h-4"
+            />
+            <AutoBreadcrumb />
+          </div>
         </header>
-        <div className="flex flex-1 flex-col gap-4 p-4">
-          <div className="min-h-[100vh] flex-1 rounded-xl bg-muted/50 md:min-h-min">
+        <div className="flex flex-1 flex-col p-4 sm:p-6">
+          <div className="min-h-[100vh] flex-1 rounded-xl md:min-h-min">
             <Outlet />
           </div>
         </div>

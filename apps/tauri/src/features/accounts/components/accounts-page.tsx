@@ -12,16 +12,36 @@ import {
   SheetTitle,
 } from "@workspace/ui/components/sheet"
 import { Skeleton } from "@workspace/ui/components/skeleton"
+import type { AccountBalanceItemView } from "@workspace/application"
 import { useMemo, useState } from "react"
-import { useCategories } from "../hooks"
-import { AddCategoryCard } from "./add-category-card"
-import { CategoryCard } from "./category-card"
-import { CategoryForm } from "./category-form"
-import {
-  categoryFilters,
-  filterCategories,
-  type CategoryFilter,
-} from "./category-list-model"
+import { AddAccountCard } from "./add-account-card"
+import { AccountCard, type FinancialAccountBalance } from "./account-card"
+import { AccountForm } from "./account-form"
+import { AccountSummary } from "./account-summary"
+import { useAccountBalances } from "../hooks"
+
+type AccountFilter = "ALL" | "ASSET" | "LIABILITY"
+
+const filters: ReadonlyArray<{
+  readonly value: AccountFilter
+  readonly label: string
+}> = [
+  { value: "ALL", label: "Todas" },
+  { value: "ASSET", label: "Ativos" },
+  { value: "LIABILITY", label: "Passivos" },
+]
+
+export function filterAccounts(
+  accounts: readonly AccountBalanceItemView[],
+  filter: AccountFilter
+): readonly FinancialAccountBalance[] {
+  return accounts.filter(
+    (account): account is FinancialAccountBalance =>
+      (account.accountKind === "ASSET" ||
+        account.accountKind === "LIABILITY") &&
+      (filter === "ALL" || account.accountKind === filter)
+  )
+}
 
 function PageIntroSkeleton() {
   return (
@@ -40,29 +60,29 @@ function PageIntro() {
         Livro ativo
       </p>
       <h1 className="font-display text-4xl font-normal tracking-tight text-balance sm:text-5xl">
-        Suas categorias.
+        Suas contas.
       </h1>
       <p className="max-w-xl text-base leading-relaxed text-muted-foreground">
-        Organize cada entrada e saída para manter seus lançamentos claros no
-        livro local.
+        Uma leitura calma da sua posição financeira, sempre derivada do ledger
+        local.
       </p>
     </header>
   )
 }
 
-function CategoryFilters({
+function AccountFilters({
   selectedFilter,
   onChange,
 }: {
-  readonly selectedFilter: CategoryFilter
-  readonly onChange: (filter: CategoryFilter) => void
+  readonly selectedFilter: AccountFilter
+  readonly onChange: (filter: AccountFilter) => void
 }) {
   return (
     <div
       className="flex flex-wrap gap-1.5"
-      aria-label="Filtrar categorias por tipo"
+      aria-label="Filtrar contas por tipo"
     >
-      {categoryFilters.map((filter) => (
+      {filters.map((filter) => (
         <button
           key={filter.value}
           type="button"
@@ -81,29 +101,33 @@ function CategoryFilters({
   )
 }
 
-function EmptyCategoryFilter({ filter }: { readonly filter: CategoryFilter }) {
-  const message =
-    filter === "ALL"
-      ? "Você ainda não tem categorias ativas."
-      : `Nenhuma categoria de ${filter === "INCOME" ? "receita" : "despesa"} foi encontrada.`
-
+function EmptyAccountFilter({ filter }: { readonly filter: AccountFilter }) {
   return (
-    <div className="flex min-h-40 flex-col justify-center rounded-xl border border-dashed border-border bg-muted/20 p-6 text-center sm:text-left">
-      <p className="font-medium">{message}</p>
+    <div className="flex min-h-52 flex-col justify-center rounded-xl border border-dashed border-border bg-muted/20 p-6 text-center sm:text-left">
+      <p className="font-medium">
+        {filter === "ALL"
+          ? "Você ainda não tem contas financeiras."
+          : `Nenhuma conta ${filter === "ASSET" ? "de ativo" : "de passivo"} foi encontrada.`}
+      </p>
       <p className="mt-1 text-sm text-muted-foreground">
-        Adicione uma categoria ou altere o filtro para continuar.
+        Adicione uma conta ou altere o filtro para continuar.
       </p>
     </div>
   )
 }
 
-export function CategoriesPage() {
-  const query = useCategories(false)
-  const [selectedFilter, setSelectedFilter] = useState<CategoryFilter>("ALL")
+export function AccountsPage() {
+  const query = useAccountBalances(false)
+  const [selectedFilter, setSelectedFilter] = useState<AccountFilter>("ALL")
   const [isCreateDrawerOpen, setIsCreateDrawerOpen] = useState(false)
-  const filteredCategories = useMemo(
-    () => filterCategories(query.data ?? [], selectedFilter),
-    [query.data, selectedFilter]
+  const accounts = query.data ?? []
+  const financialAccounts = useMemo(
+    () => filterAccounts(accounts, "ALL"),
+    [accounts]
+  )
+  const filteredAccounts = useMemo(
+    () => filterAccounts(accounts, selectedFilter),
+    [accounts, selectedFilter]
   )
 
   function openCreateDrawer(): void {
@@ -117,9 +141,9 @@ export function CategoriesPage() {
         aria-busy="true"
       >
         <PageIntroSkeleton />
-        <div className="flex flex-col gap-4" aria-label="Carregando categorias">
-          <Skeleton className="h-40 w-full" />
-          <Skeleton className="h-40 w-full" />
+        <div className="flex flex-col gap-4" aria-label="Carregando contas">
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-20 w-full" />
         </div>
       </section>
     )
@@ -133,21 +157,21 @@ export function CategoriesPage() {
       >
         <PageIntro />
         <Alert variant="destructive">
-          <AlertTitle>Não foi possível carregar as categorias</AlertTitle>
+          <AlertTitle>Não foi possível carregar as contas</AlertTitle>
           <AlertDescription>
-            Suas categorias continuam preservadas. Tente atualizar esta etapa.
+            Seus saldos continuam preservados. Tente atualizar esta etapa.
           </AlertDescription>
         </Alert>
         <Button
           className="touch-target w-full sm:w-fit"
           onClick={() => void query.refetch()}
         >
-          Tentar carregar categorias novamente
+          Tentar carregar contas novamente
         </Button>
         <div className="grid grid-cols-1 gap-4 sm:max-w-sm">
-          <AddCategoryCard onClick={openCreateDrawer} />
+          <AddAccountCard onClick={openCreateDrawer} />
         </div>
-        <CreateCategoryDrawer
+        <CreateAccountDrawer
           open={isCreateDrawerOpen}
           onOpenChange={setIsCreateDrawerOpen}
         />
@@ -158,20 +182,21 @@ export function CategoriesPage() {
   return (
     <section className="motion-reveal flex w-full max-w-6xl flex-col gap-6">
       <PageIntro />
-      <CategoryFilters
+      <AccountSummary accounts={financialAccounts} />
+      <AccountFilters
         selectedFilter={selectedFilter}
         onChange={setSelectedFilter}
       />
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {filteredCategories.map((category) => (
-          <CategoryCard key={category.id} category={category} />
+        {filteredAccounts.map((account) => (
+          <AccountCard key={account.accountId} account={account} />
         ))}
-        {filteredCategories.length === 0 && (
-          <EmptyCategoryFilter filter={selectedFilter} />
+        {filteredAccounts.length === 0 && (
+          <EmptyAccountFilter filter={selectedFilter} />
         )}
-        <AddCategoryCard onClick={openCreateDrawer} />
+        <AddAccountCard onClick={openCreateDrawer} />
       </div>
-      <CreateCategoryDrawer
+      <CreateAccountDrawer
         open={isCreateDrawerOpen}
         onOpenChange={setIsCreateDrawerOpen}
       />
@@ -179,7 +204,7 @@ export function CategoriesPage() {
   )
 }
 
-function CreateCategoryDrawer({
+function CreateAccountDrawer({
   open,
   onOpenChange,
 }: {
@@ -190,14 +215,14 @@ function CreateCategoryDrawer({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right">
         <SheetHeader>
-          <SheetTitle>Adicionar categoria</SheetTitle>
+          <SheetTitle>Adicionar conta</SheetTitle>
           <SheetDescription>
-            Registre uma categoria de receita ou despesa para organizar o livro
+            Registre uma conta financeira para acompanhar seu saldo no livro
             ativo.
           </SheetDescription>
         </SheetHeader>
         <div className="flex-1 overflow-y-auto px-6 pb-6">
-          <CategoryForm
+          <AccountForm
             onSuccess={() => onOpenChange(false)}
             onCancel={() => onOpenChange(false)}
           />
@@ -206,5 +231,3 @@ function CreateCategoryDrawer({
     </Sheet>
   )
 }
-
-export default CategoriesPage
