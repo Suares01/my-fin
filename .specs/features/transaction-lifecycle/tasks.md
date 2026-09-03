@@ -174,11 +174,11 @@ T25 → T26 → T27
 
 **Done when**:
 
-- [ ] The exact list command carries the active `bookId`, `INCOME|EXPENSE|TRANSFER`, limit 20, supported filters, and opaque cursor.
-- [ ] Filter changes restart at page one; rejected cursors recover once without losing visible filters; automatic retry is disabled.
-- [ ] Co-located hook tests cover initial, pagination, deduplication, filter-reset, error, retry, and book-switch paths.
-- [ ] Gate check passes: `pnpm --filter tauri exec vitest run src/features/transactions/hooks/use-transaction-chains.test.tsx`, then `pnpm --filter tauri exec tsc --noEmit`.
-- [ ] Test count: exactly 10 task-owned tests pass; no existing test is removed or skipped.
+- [x] The exact list command carries the active `bookId`, `INCOME|EXPENSE|TRANSFER`, limit 20, supported filters, and opaque cursor.
+- [x] Filter changes restart at page one; rejected cursors recover once without losing visible filters; automatic retry is disabled.
+- [x] Co-located hook tests cover initial, pagination, deduplication, filter-reset, error, retry, and book-switch paths.
+- [x] Gate check passes: `pnpm --filter tauri exec vitest run src/features/transactions/hooks/use-transaction-chains.test.tsx`, then `pnpm --filter tauri exec tsc --noEmit`.
+- [x] Test count: exactly 10 task-owned tests pass; no existing test is removed or skipped.
 
 **Tests**: integration
 **Gate**: full
