@@ -30,8 +30,15 @@ export function useTransferMoney() {
       if (draft.sourceAccountId === draft.destinationAccountId) {
         throw new EqualTransferAccountsError()
       }
-      const { type: _type, ...command } = draft
-      return services.transfers.record.execute({ bookId, ...command })
+      return services.transfers.record.execute({
+        bookId,
+        sourceAccountId: draft.sourceAccountId,
+        destinationAccountId: draft.destinationAccountId,
+        amountMinor: draft.amountMinor,
+        currency: draft.currency,
+        occurredOn: draft.occurredOn,
+        description: draft.description,
+      })
     },
     refresh: ({ bookId, draft }) => ({
       bookId,

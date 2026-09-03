@@ -387,12 +387,12 @@ T25 → T26 → T27
 
 **Done when**:
 
-- [ ] Exactly one valid reversal command carries latest identity, version, date, and cancellation description.
-- [ ] The chain remains visible while pending and on failure; optimistic conflict locks reconfirmation until refetch.
-- [ ] Co-located tests cover active and edited chains, invalid date, duplicate confirmation, service failure, conflict, refresh warning, and no optimistic removal.
-- [ ] Gate check passes: `pnpm --filter tauri exec vitest run src/features/transactions/hooks/use-reverse-transaction.test.tsx`, then `pnpm --filter tauri exec tsc --noEmit`.
-- [ ] Phase 2 build gate passes using all three Build commands.
-- [ ] Test count: exactly 10 task-owned tests pass; no existing test is removed or skipped.
+- [x] Exactly one valid reversal command carries latest identity, version, date, and cancellation description.
+- [x] The chain remains visible while pending and on failure; optimistic conflict locks reconfirmation until refetch.
+- [x] Co-located tests cover active and edited chains, invalid date, duplicate confirmation, service failure, conflict, refresh warning, and no optimistic removal.
+- [x] Gate check passes: `pnpm --filter tauri exec vitest run src/features/transactions/hooks/use-reverse-transaction.test.tsx`, then `pnpm --filter tauri exec tsc --noEmit`.
+- [x] Phase 2 build gate passes using all three Build commands.
+- [x] Test count: exactly 10 task-owned tests pass; no existing test is removed or skipped.
 
 **Tests**: integration
 **Gate**: build

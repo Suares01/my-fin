@@ -24,8 +24,15 @@ export function useRecordIncome() {
 
   return useTransactionMutation<RecordIncomeInput, JournalEntryDto>({
     execute: async ({ bookId, draft }) => {
-      const { type: _type, ...command } = draft
-      return services.income.record.execute({ bookId, ...command })
+      return services.income.record.execute({
+        bookId,
+        accountId: draft.accountId,
+        categoryId: draft.categoryId,
+        amountMinor: draft.amountMinor,
+        currency: draft.currency,
+        occurredOn: draft.occurredOn,
+        description: draft.description,
+      })
     },
     refresh: ({ bookId, draft }) => ({
       bookId,
