@@ -44,13 +44,11 @@ vi.mock("./transaction-list.js", () => ({
     items: unknown[]
     onCreate: () => void
     onRetry: () => void
-    onLoadMore: () => void
   }) => (
     <div>
       Lista {props.items.length}
       <button onClick={props.onCreate}>Criar na lista</button>
       <button onClick={props.onRetry}>Tentar novamente</button>
-      <button onClick={props.onLoadMore}>Carregar mais resultados</button>
     </div>
   ),
 }))
@@ -88,10 +86,7 @@ function setup(bookId: string | null = "book-1") {
     data: { items: [item()] },
     isPending: false,
     isError: false,
-    hasNextPage: false,
-    isFetchingNextPage: false,
     refetch: vi.fn(),
-    fetchNextPage: vi.fn(),
   })
   mocks.options.mockReturnValue({ accounts: [], categories: [] })
   return render(<TransactionsPage />)

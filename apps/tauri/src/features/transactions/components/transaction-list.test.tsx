@@ -34,7 +34,6 @@ function renderList(
     items: [chain()],
     status: "ALL" as const,
     onRetry: vi.fn(),
-    onLoadMore: vi.fn(),
     onResetFilters: vi.fn(),
     onCreate: vi.fn(),
     onEdit: vi.fn(),
@@ -98,24 +97,8 @@ describe("TransactionList", () => {
     fireEvent.click(screen.getAllByRole("button", { name: "Ver detalhes" })[0])
     expect(screen.getAllByText("Detalhe expandido").length).toBe(2)
   })
-  it("loads more while retaining list items", () => {
-    const { props } = renderList({ hasNextPage: true })
-    fireEvent.click(
-      screen.getByRole("button", { name: "Carregar mais resultados" })
-    )
-    expect(props.onLoadMore).toHaveBeenCalledTimes(1)
-    expect(screen.getAllByText("Salário").length).toBeGreaterThan(0)
-  })
-  it("disables load more while pending", () => {
-    renderList({ hasNextPage: true, isFetchingNextPage: true })
-    expect(
-      screen
-        .getByRole("button", { name: "Carregando mais resultados" })
-        .hasAttribute("disabled")
-    ).toBe(true)
-  })
   it("preserves the action when a local status hides loaded rows", () => {
-    renderList({ items: [], status: "EDITED", hasNextPage: true })
+    renderList({ items: [], status: "EDITED" })
     expect(screen.getByRole("button", { name: "Limpar filtros" })).toBeTruthy()
   })
   it("uses stable chain identity for rows", () => {
