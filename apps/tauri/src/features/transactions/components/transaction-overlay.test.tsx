@@ -1,7 +1,17 @@
 /* @vitest-environment jsdom */
-import { cleanup, fireEvent, render, screen } from "@testing-library/react"
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react"
+import { useState } from "react"
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { TransactionOverlay } from "./transaction-overlay.js"
+import {
+  TransactionOverlay,
+  type TransactionOverlayState,
+} from "./transaction-overlay.js"
 vi.mock("./income-form.js", () => ({
   IncomeForm: () => <div>Formulário de receita</div>,
 }))
@@ -22,6 +32,25 @@ function renderOverlay(
 ) {
   const props = { bookId, state, onStateChange: vi.fn(), onSuccess: vi.fn() }
   return { props, ...render(<TransactionOverlay {...props} />) }
+}
+
+function FormFocusLifecycleHarness() {
+  const [state, setState] = useState<TransactionOverlayState>({
+    kind: "closed",
+  })
+  return (
+    <>
+      <button type="button" onClick={() => setState({ kind: "create" })}>
+        Nova transação
+      </button>
+      <TransactionOverlay
+        bookId="book-1"
+        state={state}
+        onStateChange={setState}
+        onSuccess={vi.fn()}
+      />
+    </>
+  )
 }
 describe("TransactionOverlay", () => {
   afterEach(cleanup)
@@ -83,5 +112,24 @@ describe("TransactionOverlay", () => {
   it("starts closed without rendering a surface", () => {
     renderOverlay({ kind: "closed" })
     expect(screen.queryByText("Nova transação")).toBeNull()
+  })
+
+  it("contains form focus and restores it after close", async () => {
+    render(<FormFocusLifecycleHarness />)
+    const trigger = screen.getByRole("button", { name: "Nova transação" })
+    trigger.focus()
+    fireEvent.click(trigger)
+
+    const firstChoice = await screen.findByRole("button", { name: "Receita" })
+    const focusGuards = document.querySelectorAll<HTMLElement>(
+      "[data-base-ui-focus-guard]"
+    )
+    expect(focusGuards).toHaveLength(2)
+    focusGuards[1].focus()
+    await waitFor(() => expect(document.activeElement).toBe(firstChoice))
+
+    fireEvent.click(screen.getByRole("button", { name: "Close" }))
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
+    expect(document.activeElement).toBe(trigger)
   })
 })

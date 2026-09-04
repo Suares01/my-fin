@@ -807,6 +807,35 @@ T25 → T26 → T27
 
 ---
 
+## Corrective Verification Cycle 1
+
+#### T28: Prove transaction dialog focus lifecycle
+
+**What**: Add integration evidence that the transaction form Sheet and cancellation confirmation keep keyboard focus within their modal surface and restore focus to the initiating control on close.
+**Where**: `apps/tauri/src/features/transactions/components/` dialog integration suites
+**Depends on**: T27 and the independent Verifier report
+**Reuses**: Base UI Sheet focus guards and the existing controlled-overlay/component test patterns
+**Requirement**: TXL-53
+
+**Tools**:
+
+- MCP: NONE
+- Skill: `tlc-spec-driven`
+
+**Done when**:
+
+- [x] The form overlay test moves focus through the trailing Base UI focus guard, verifies it returns to the first form action, closes the Sheet, and verifies focus returns to its opener.
+- [x] The cancellation confirmation test performs the equivalent containment and focus-return assertions.
+- [x] The targeted component suites pass without removing or skipping existing tests.
+- [x] Gate check passes: `pnpm --filter tauri exec vitest run src/features/transactions/components/transaction-delete-dialog.test.tsx src/features/transactions/components/transaction-overlay.test.tsx`, then `pnpm --filter tauri exec tsc --noEmit`.
+- [x] Test count: exactly 2 corrective task-owned tests pass; no existing test is removed or skipped.
+
+**Tests**: integration
+**Gate**: full
+**Commit**: `test(transactions): cover dialog focus lifecycle`
+
+---
+
 ## Phase Execution Map
 
 ```
@@ -816,7 +845,8 @@ Phase 1: T1 → T2 → T3 → T4 → T5 → T6
 Phase 2: T7 → T8 → T9 → T10 → T11 → T12
 Phase 3: T13 → T14 → T15 → T16 → T17 → T18
 Phase 4: T19 → T20 → T21 → T22 → T23 → T24
-Phase 5: T25 → T26 → T27
+Phase 5: T25 → T26 → T27 → T28
+Correction 1: T28 (Verifier gap closure)
 ```
 
 Execution is strictly sequential. Phase boundaries are semantic and are never split across workers. With 27 tasks, the proposed packing is five sequential whole-phase batches of 6, 6, 6, 6, and 3 tasks. Execute must offer the user a choice between inline execution and approved batch sub-agents before dispatching any worker. A fresh independent Verifier still runs after the final task in either mode.
@@ -831,7 +861,7 @@ Execution is strictly sequential. Phase boundaries are semantic and are never sp
 | TXL-25–TXL-31     | T2, T5, T11, T15–T17, T21, T23  |
 | TXL-32–TXL-40     | T5, T7, T12, T18, T21, T23, T24 |
 | TXL-41–TXL-46     | T1, T3, T4, T20, T22, T24       |
-| TXL-47–TXL-53     | T1, T2, T14, T18–T24, T27       |
+| TXL-47–TXL-53     | T1, T2, T14, T18–T24, T27, T28  |
 | TXL-54–TXL-59     | T2–T13, T15–T18, T23, T24, T26  |
 
 Coverage target: 59 of 59 requirements have at least one implementation task and spec-derived test owner.

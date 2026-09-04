@@ -6,6 +6,7 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react"
+import { useState } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import type { JournalChainDetail } from "@workspace/application"
 import { TransactionDeleteDialog } from "./transaction-delete-dialog.js"
@@ -28,6 +29,25 @@ function renderDialog(
   }
   return { props, ...render(<TransactionDeleteDialog {...props} />) }
 }
+
+function FocusLifecycleHarness() {
+  const [open, setOpen] = useState(false)
+  return (
+    <>
+      <button type="button" onClick={() => setOpen(true)}>
+        Abrir cancelamento
+      </button>
+      {open ? (
+        <TransactionDeleteDialog
+          detail={detail}
+          onConfirm={vi.fn().mockResolvedValue(undefined)}
+          onCancel={() => setOpen(false)}
+        />
+      ) : null}
+    </>
+  )
+}
+
 beforeEach(() => undefined)
 afterEach(cleanup)
 describe("TransactionDeleteDialog", () => {
@@ -165,5 +185,34 @@ describe("TransactionDeleteDialog", () => {
     ).toBeTruthy()
     fireEvent.click(screen.getByRole("button", { name: "Voltar" }))
     expect(props.onCancel).toHaveBeenCalledOnce()
+  })
+
+  it("contains focus and returns it to the control that opened the dialog", async () => {
+    render(<FocusLifecycleHarness />)
+    const trigger = screen.getByRole("button", {
+      name: "Abrir cancelamento",
+    })
+    trigger.focus()
+    fireEvent.click(trigger)
+
+    const confirm = await screen.findByRole("button", {
+      name: "Confirmar cancelamento",
+    })
+    confirm.focus()
+    const focusGuards = document.querySelectorAll<HTMLElement>(
+      "[data-base-ui-focus-guard]"
+    )
+    expect(focusGuards).toHaveLength(2)
+    focusGuards[1].focus()
+
+    await waitFor(() =>
+      expect(document.activeElement).toBe(
+        screen.getByLabelText("Data de cancelamento")
+      )
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: "Voltar" }))
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
+    expect(document.activeElement).toBe(trigger)
   })
 })
