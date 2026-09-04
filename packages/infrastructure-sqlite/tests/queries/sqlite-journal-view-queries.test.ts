@@ -62,22 +62,21 @@ describe("SqliteJournalViewQueries.listJournalChains", () => {
   })
 
   it("returns one consolidated row per business chain", async () => {
-    const result = await queries.listJournalChains({ bookId, limit: 10 })
+    const result = await queries.listJournalChains({ bookId })
 
     expect(
-      result.items.map(({ presentedEntryId }) => presentedEntryId)
+      result.map(({ presentedEntryId }) => presentedEntryId)
     ).toEqual([transferId, expenseId, incomeId, openingId])
-    expect(result.items).toHaveLength(4)
+    expect(result).toHaveLength(4)
   })
 
   it("classifies opening balance exactly", async () => {
     const result = await queries.listJournalChains({
       bookId,
       types: ["OPENING_BALANCE"],
-      limit: 10,
     })
 
-    expect(result.items[0]).toMatchObject({
+    expect(result[0]).toMatchObject({
       chainId: openingId,
       presentedEntryId: openingId,
       type: "OPENING_BALANCE",
@@ -91,10 +90,9 @@ describe("SqliteJournalViewQueries.listJournalChains", () => {
     const result = await queries.listJournalChains({
       bookId,
       types: ["INCOME"],
-      limit: 10,
     })
 
-    expect(result.items).toEqual([
+    expect(result).toEqual([
       expect.objectContaining({
         presentedEntryId: incomeId,
         type: "INCOME",
@@ -108,10 +106,9 @@ describe("SqliteJournalViewQueries.listJournalChains", () => {
     const result = await queries.listJournalChains({
       bookId,
       types: ["EXPENSE"],
-      limit: 10,
     })
 
-    expect(result.items).toEqual([
+    expect(result).toEqual([
       expect.objectContaining({
         presentedEntryId: expenseId,
         type: "EXPENSE",
@@ -126,10 +123,9 @@ describe("SqliteJournalViewQueries.listJournalChains", () => {
     const result = await queries.listJournalChains({
       bookId,
       types: ["TRANSFER"],
-      limit: 10,
     })
 
-    expect(result.items).toEqual([
+    expect(result).toEqual([
       expect.objectContaining({
         presentedEntryId: transferId,
         type: "TRANSFER",
@@ -147,11 +143,10 @@ describe("SqliteJournalViewQueries.listJournalChains", () => {
     const result = await queries.listJournalChains({
       bookId,
       from: { value: "2026-08-03" } as never,
-      limit: 10,
     })
 
     expect(
-      result.items.map(({ presentedEntryId }) => presentedEntryId)
+      result.map(({ presentedEntryId }) => presentedEntryId)
     ).toEqual([transferId, expenseId])
   })
 
@@ -159,11 +154,10 @@ describe("SqliteJournalViewQueries.listJournalChains", () => {
     const result = await queries.listJournalChains({
       bookId,
       to: { value: "2026-08-02" } as never,
-      limit: 10,
     })
 
     expect(
-      result.items.map(({ presentedEntryId }) => presentedEntryId)
+      result.map(({ presentedEntryId }) => presentedEntryId)
     ).toEqual([incomeId, openingId])
   })
 
@@ -171,12 +165,11 @@ describe("SqliteJournalViewQueries.listJournalChains", () => {
     const result = await queries.listJournalChains({
       bookId,
       accountIds: [checking, savings] as never,
-      limit: 10,
     })
 
-    expect(result.items).toHaveLength(4)
+    expect(result).toHaveLength(4)
     expect(
-      result.items.every(
+      result.every(
         ({ financialAccounts }) => financialAccounts.length > 0
       )
     ).toBe(true)
@@ -186,11 +179,10 @@ describe("SqliteJournalViewQueries.listJournalChains", () => {
     const result = await queries.listJournalChains({
       bookId,
       categoryIds: [food, salary] as never,
-      limit: 10,
     })
 
     expect(
-      result.items.map(({ presentedEntryId }) => presentedEntryId)
+      result.map(({ presentedEntryId }) => presentedEntryId)
     ).toEqual([expenseId, incomeId])
   })
 
@@ -203,11 +195,10 @@ describe("SqliteJournalViewQueries.listJournalChains", () => {
       origins: ["MANUAL"],
       from: { value: "2026-08-03" } as never,
       to: { value: "2026-08-03" } as never,
-      limit: 10,
     })
 
     expect(
-      result.items.map(({ presentedEntryId }) => presentedEntryId)
+      result.map(({ presentedEntryId }) => presentedEntryId)
     ).toEqual([expenseId])
   })
 
@@ -216,12 +207,11 @@ describe("SqliteJournalViewQueries.listJournalChains", () => {
     const result = await queries.listJournalChains({
       bookId,
       origins: ["SYSTEM"],
-      limit: 10,
     })
 
-    expect(result.items).toEqual([])
+    expect(result).toEqual([])
     expect(
-      result.items.some(
+      result.some(
         ({ presentedEntryId }) => presentedEntryId === reversalId
       )
     ).toBe(false)
@@ -231,11 +221,10 @@ describe("SqliteJournalViewQueries.listJournalChains", () => {
     const result = await queries.listJournalChains({
       bookId,
       search: "café",
-      limit: 10,
     })
 
     expect(
-      result.items.map(({ presentedEntryId }) => presentedEntryId)
+      result.map(({ presentedEntryId }) => presentedEntryId)
     ).toEqual([expenseId])
   })
 
@@ -250,64 +239,22 @@ describe("SqliteJournalViewQueries.listJournalChains", () => {
     const result = await queries.listJournalChains({
       bookId,
       search: "cafe",
-      limit: 10,
     })
 
     expect(
-      result.items.map(({ presentedEntryId }) => presentedEntryId)
+      result.map(({ presentedEntryId }) => presentedEntryId)
     ).toEqual([unaccented])
     expect(
-      result.items.some(
+      result.some(
         ({ presentedEntryId }) => presentedEntryId === expenseId
       )
     ).toBe(false)
   })
 
-  it("paginates by presented date and numeric sequence without gaps", async () => {
-    const first = await queries.listJournalChains({ bookId, limit: 2 })
-    const second = await queries.listJournalChains({
-      bookId,
-      limit: 2,
-      cursor: first.nextKey ?? undefined,
-    })
-
-    expect(first.items).toHaveLength(2)
-    expect(second.items).toHaveLength(2)
-    expect(
-      second.items.map(({ presentedEntryId }) => presentedEntryId)
-    ).toEqual([incomeId, openingId])
-    expect(
-      new Set(
-        [...first.items, ...second.items].map(
-          ({ presentedEntryId }) => presentedEntryId
-        )
-      ).size
-    ).toBe(4)
-  })
-
-  it("returns null continuation on the final page", async () => {
-    const result = await queries.listJournalChains({ bookId, limit: 10 })
-
-    expect(result.nextKey).toBeNull()
-  })
-
-  it("uses the chain root as the cursor tie-breaker", async () => {
-    const first = await queries.listJournalChains({ bookId, limit: 1 })
-    const cursor = first.nextKey
-
-    expect(cursor).toEqual(
-      expect.objectContaining({
-        chainId: transferId,
-        occurredOn: "2026-08-04",
-        sequence: "4",
-      })
-    )
-  })
-
   it("omits technical reversal rows and marks a cancelled chain", async () => {
     const reversalId = await scenario.reverse({ journalEntryId: expenseId })
-    const result = await queries.listJournalChains({ bookId, limit: 10 })
-    const cancelled = result.items.find(({ chainId }) => chainId === expenseId)
+    const result = await queries.listJournalChains({ bookId })
+    const cancelled = result.find(({ chainId }) => chainId === expenseId)
 
     expect(cancelled).toEqual(
       expect.objectContaining({
@@ -317,7 +264,7 @@ describe("SqliteJournalViewQueries.listJournalChains", () => {
       })
     )
     expect(
-      result.items.some(
+      result.some(
         ({ presentedEntryId }) => presentedEntryId === reversalId
       )
     ).toBe(false)
@@ -325,8 +272,8 @@ describe("SqliteJournalViewQueries.listJournalChains", () => {
 
   it("follows a replacement and exposes the edited leaf", async () => {
     await insertReplacement(scenario, expenseId, checking, food)
-    const result = await queries.listJournalChains({ bookId, limit: 10 })
-    const edited = result.items.find(({ chainId }) => chainId === expenseId)
+    const result = await queries.listJournalChains({ bookId })
+    const edited = result.find(({ chainId }) => chainId === expenseId)
 
     expect(edited).toEqual(
       expect.objectContaining({
@@ -341,10 +288,10 @@ describe("SqliteJournalViewQueries.listJournalChains", () => {
 
   it("does not return a replacement as a second chain row", async () => {
     await insertReplacement(scenario, expenseId, checking, food)
-    const result = await queries.listJournalChains({ bookId, limit: 10 })
+    const result = await queries.listJournalChains({ bookId })
 
     expect(
-      result.items.filter(({ chainId }) => chainId === expenseId)
+      result.filter(({ chainId }) => chainId === expenseId)
     ).toHaveLength(1)
   })
 
@@ -353,10 +300,9 @@ describe("SqliteJournalViewQueries.listJournalChains", () => {
     const result = await queries.listJournalChains({
       bookId,
       categoryIds: [food] as never,
-      limit: 10,
     })
 
-    expect(result.items[0]?.categories).toEqual([
+    expect(result[0]?.categories).toEqual([
       { id: food, name: "Food", kind: "EXPENSE" },
     ])
   })
@@ -366,18 +312,18 @@ describe("SqliteJournalViewQueries.listJournalChains", () => {
       "UPDATE journal_entries SET sequence = ? WHERE id = ?",
       ["9007199254740993", expenseId]
     )
-    const result = await queries.listJournalChains({ bookId, limit: 10 })
+    const result = await queries.listJournalChains({ bookId })
 
     expect(
-      result.items.find(
+      result.find(
         ({ presentedEntryId }) => presentedEntryId === expenseId
       )?.sequence
     ).toBe("9007199254740993")
   })
 
   it("preserves exact signed posting amounts in the hydrated list-derived accounts", async () => {
-    const result = await queries.listJournalChains({ bookId, limit: 10 })
-    const expense = result.items.find(
+    const result = await queries.listJournalChains({ bookId })
+    const expense = result.find(
       ({ presentedEntryId }) => presentedEntryId === expenseId
     )
 
@@ -395,7 +341,7 @@ describe("SqliteJournalViewQueries.listJournalChains", () => {
         return original(sql, parameters)
       })
 
-    await queries.listJournalChains({ bookId, limit: 10 })
+    await queries.listJournalChains({ bookId })
 
     expect(calls).toHaveLength(2)
     expect(calls[0]).toContain("WITH RECURSIVE")
@@ -412,10 +358,9 @@ describe("SqliteJournalViewQueries.listJournalChains", () => {
     const result = await queries.listJournalChains({
       bookId,
       search: "does-not-exist",
-      limit: 10,
     })
 
-    expect(result.items).toEqual([])
+    expect(result).toEqual([])
     expect(spy).toHaveBeenCalledTimes(2)
     spy.mockRestore()
   })
@@ -437,12 +382,12 @@ describe("SqliteJournalViewQueries.listJournalChains", () => {
       "INSERT INTO financial_books (id, name, base_currency, timezone, version) VALUES (?, ?, ?, ?, ?)",
       ["book-2", "Other", "BRL", "UTC", 0]
     )
-    const result = await queries.listJournalChains({ bookId, limit: 10 })
+    const result = await queries.listJournalChains({ bookId })
 
     expect(
-      result.items.every(({ chainId }) => !chainId.includes("book-2"))
+      result.every(({ chainId }) => !chainId.includes("book-2"))
     ).toBe(true)
-    expect(result.items).toHaveLength(4)
+    expect(result).toHaveLength(4)
   })
 
   it("accepts all supported business type filters", async () => {
@@ -455,9 +400,8 @@ describe("SqliteJournalViewQueries.listJournalChains", () => {
       const result = await queries.listJournalChains({
         bookId,
         types: [type],
-        limit: 10,
       })
-      expect(result.items.every((item) => item.type === type)).toBe(true)
+      expect(result.every((item) => item.type === type)).toBe(true)
     }
   })
 
@@ -466,10 +410,9 @@ describe("SqliteJournalViewQueries.listJournalChains", () => {
       const result = await queries.listJournalChains({
         bookId,
         origins: [origin],
-        limit: 10,
       })
-      expect(result.items).toHaveLength(origin === "MANUAL" ? 4 : 0)
-      expect(result.items.every((item) => item.origin === origin)).toBe(true)
+      expect(result).toHaveLength(origin === "MANUAL" ? 4 : 0)
+      expect(result.every((item) => item.origin === origin)).toBe(true)
     }
   })
 
@@ -478,16 +421,15 @@ describe("SqliteJournalViewQueries.listJournalChains", () => {
       bookId,
       accountIds: [savings] as never,
       categoryIds: [food] as never,
-      limit: 10,
     })
 
-    expect(result.items).toEqual([])
+    expect(result).toEqual([])
   })
 
   it("orders rows by descending occurred date before numeric sequence", async () => {
-    const result = await queries.listJournalChains({ bookId, limit: 10 })
+    const result = await queries.listJournalChains({ bookId })
 
-    expect(result.items.map(({ occurredOn }) => occurredOn)).toEqual([
+    expect(result.map(({ occurredOn }) => occurredOn)).toEqual([
       "2026-08-04",
       "2026-08-03",
       "2026-08-02",
@@ -496,23 +438,13 @@ describe("SqliteJournalViewQueries.listJournalChains", () => {
   })
 
   it("returns exact recordedAt values for the presented entries", async () => {
-    const result = await queries.listJournalChains({ bookId, limit: 10 })
+    const result = await queries.listJournalChains({ bookId })
 
     expect(
-      result.items.every(
+      result.every(
         ({ recordedAt }) => recordedAt === "2026-08-04T12:00:00.000Z"
       )
     ).toBe(true)
-  })
-
-  it("returns the next key with the normalized filter fingerprint", async () => {
-    const result = await queries.listJournalChains({
-      bookId,
-      search: "a",
-      limit: 1,
-    })
-
-    expect(result.nextKey?.filterFingerprint).toContain('"search":"a"')
   })
 
   it("does not hydrate technical rows when the page is empty", async () => {
@@ -528,7 +460,6 @@ describe("SqliteJournalViewQueries.listJournalChains", () => {
     await queries.listJournalChains({
       bookId,
       from: { value: "2027-01-01" } as never,
-      limit: 10,
     })
 
     expect(calls[1]).toContain("WHERE 1 = 0")
