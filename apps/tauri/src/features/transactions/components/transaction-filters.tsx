@@ -85,24 +85,6 @@ export function TransactionFilters({
             />
           </span>
         </label>
-        <label className="flex flex-col gap-1 text-sm font-medium">
-          De
-          <input
-            type="date"
-            className="w-full rounded-md border border-input bg-background p-2"
-            value={filters.from}
-            onChange={(event) => update({ from: event.currentTarget.value })}
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm font-medium">
-          Até
-          <input
-            type="date"
-            className="w-full rounded-md border border-input bg-background p-2"
-            value={filters.to}
-            onChange={(event) => update({ to: event.currentTarget.value })}
-          />
-        </label>
         <fieldset className="flex flex-col gap-1 text-sm font-medium sm:col-span-2">
           <legend>Tipo</legend>
           <div className="flex flex-wrap gap-3">
