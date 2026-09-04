@@ -863,6 +863,33 @@ T25 → T26 → T27
 
 ---
 
+## Corrective Verification Cycle 3
+
+#### T30: Exercise cancellation Sheet keyboard close
+
+**What**: Strengthen the cancellation focus-lifecycle test so it closes through the Sheet keyboard path and detects regressions in `onOpenChange` handling.
+**Where**: `apps/tauri/src/features/transactions/components/transaction-delete-dialog.test.tsx`
+**Depends on**: T29 and the discrimination sensor result
+**Reuses**: Existing cancellation focus harness and Base UI Sheet keyboard behavior
+**Requirement**: TXL-53
+
+**Tools**:
+
+- MCP: NONE
+- Skill: `tlc-spec-driven`
+
+**Done when**:
+
+- [x] The cancellation lifecycle test closes the Sheet with `Escape`, proves the dialog unmounts, and proves focus returns to its opener.
+- [x] The focused cancellation suite passes without removing or skipping existing tests.
+- [x] The behavior-level mutant in the cancellation Sheet close callback is killed in the isolated sensor.
+
+**Tests**: integration
+**Gate**: full
+**Commit**: `test(transactions): exercise cancellation keyboard close`
+
+---
+
 ## Phase Execution Map
 
 ```
@@ -875,6 +902,7 @@ Phase 4: T19 → T20 → T21 → T22 → T23 → T24
 Phase 5: T25 → T26 → T27 → T28
 Correction 1: T28 (Verifier gap closure)
 Correction 2: T28 → T29 (Build gate formatting)
+Correction 3: T29 → T30 (Cancellation keyboard close)
 ```
 
 Execution is strictly sequential. Phase boundaries are semantic and are never split across workers. With 27 tasks, the proposed packing is five sequential whole-phase batches of 6, 6, 6, 6, and 3 tasks. Execute must offer the user a choice between inline execution and approved batch sub-agents before dispatching any worker. A fresh independent Verifier still runs after the final task in either mode.

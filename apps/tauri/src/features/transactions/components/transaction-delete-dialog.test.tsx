@@ -211,7 +211,7 @@ describe("TransactionDeleteDialog", () => {
       )
     )
 
-    fireEvent.click(screen.getByRole("button", { name: "Voltar" }))
+    fireEvent.keyDown(document, { key: "Escape", code: "Escape" })
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
     expect(document.activeElement).toBe(trigger)
   })
