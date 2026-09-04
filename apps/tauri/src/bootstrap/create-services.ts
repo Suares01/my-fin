@@ -206,7 +206,11 @@ export function createMyFinServices(
     },
     journal: {
       list: new ListJournalEntries(booksRepository, ledgerQueries),
-      listChains: new ListJournalChains(booksRepository, journalViewQueries),
+      listChains: new ListJournalChains(
+        booksRepository,
+        journalViewQueries,
+        options.clock
+      ),
       getChain: new GetJournalChainDetail(booksRepository, journalViewQueries),
       reverse: new ReverseJournalEntry(
         transactionManager,
