@@ -1,0 +1,45 @@
+{
+  "schema": 1,
+  "promote_threshold": 2,
+  "window_days": 45,
+  "quarantine_threshold": 2,
+  "next_id": 3,
+  "lessons": [
+    {
+      "id": "L-001",
+      "key": "ac_gap::run ui visibility tests against the committed diff or a clean checkout never rely on unrelated dirty worktree changes",
+      "text": "Run UI visibility tests against the committed diff or a clean checkout, never rely on unrelated dirty worktree changes.",
+      "signal": "ac_gap",
+      "scope": "tauri transactions",
+      "status": "candidate",
+      "features": [
+        "transaction-period-query"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "TPQ-08; apps/tauri/src/features/transactions/components/transaction-filters.tsx:88-105 (tauri transactions)"
+      ],
+      "created": "2026-09-04T15:02:02Z",
+      "last_seen": "2026-09-04T15:02:02Z"
+    },
+    {
+      "id": "L-002",
+      "key": "gate_fail::when a query hook changes from paginated to single list results update every consuming page and run its clean typecheck",
+      "text": "When a query hook changes from paginated to single-list results, update every consuming page and run its clean typecheck.",
+      "signal": "gate_fail",
+      "scope": "tauri transactions",
+      "status": "candidate",
+      "features": [
+        "transaction-period-query"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "apps/tauri/src/features/transactions/components/transactions-page.tsx:93-96 (tauri transactions)"
+      ],
+      "created": "2026-09-04T15:07:51Z",
+      "last_seen": "2026-09-04T15:07:51Z"
+    }
+  ]
+}
