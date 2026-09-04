@@ -836,6 +836,33 @@ T25 → T26 → T27
 
 ---
 
+## Corrective Verification Cycle 2
+
+#### T29: Restore the Tauri feature lint gate
+
+**What**: Apply the repository's Prettier formatting to the transaction route and shell integration tests so the documented Tauri lint gate can execute cleanly.
+**Where**: `apps/tauri/src/layout/app-shell.test.tsx`, `apps/tauri/src/routes/app-routes.test.tsx`
+**Depends on**: T28 and the Build gate result
+**Reuses**: Existing Prettier configuration; no behavior changes
+**Requirement**: TXL-01, TXL-52
+
+**Tools**:
+
+- MCP: NONE
+- Skill: `tlc-spec-driven`
+
+**Done when**:
+
+- [x] The two transaction navigation test files conform to the repository Prettier/ESLint rules without changing their assertions or behavior.
+- [x] The Tauri test suite and documented Tauri lint gate pass.
+- [x] No existing test is removed or skipped.
+
+**Tests**: integration
+**Gate**: build
+**Commit**: `style(transactions): satisfy tauri lint gate`
+
+---
+
 ## Phase Execution Map
 
 ```
@@ -847,6 +874,7 @@ Phase 3: T13 → T14 → T15 → T16 → T17 → T18
 Phase 4: T19 → T20 → T21 → T22 → T23 → T24
 Phase 5: T25 → T26 → T27 → T28
 Correction 1: T28 (Verifier gap closure)
+Correction 2: T28 → T29 (Build gate formatting)
 ```
 
 Execution is strictly sequential. Phase boundaries are semantic and are never split across workers. With 27 tasks, the proposed packing is five sequential whole-phase batches of 6, 6, 6, 6, and 3 tasks. Execute must offer the user a choice between inline execution and approved batch sub-agents before dispatching any worker. A fresh independent Verifier still runs after the final task in either mode.
@@ -855,7 +883,7 @@ Execution is strictly sequential. Phase boundaries are semantic and are never sp
 
 | Requirement range | Owning tasks                    |
 | ----------------- | ------------------------------- |
-| TXL-01            | T25, T26, T27                   |
+| TXL-01            | T25, T26, T27, T29              |
 | TXL-02–TXL-10     | T4, T5, T20, T21, T22, T24      |
 | TXL-11–TXL-24     | T2, T7–T10, T13–T17, T23, T24   |
 | TXL-25–TXL-31     | T2, T5, T11, T15–T17, T21, T23  |
@@ -897,6 +925,8 @@ Coverage target: 59 of 59 requirements have at least one implementation task and
 | T25  | 1 public entry-point file                 | ✅ Granular |
 | T26  | 1 route file change                       | ✅ Granular |
 | T27  | 1 shell file change                       | ✅ Granular |
+| T28  | 2 focused dialog integration assertions  | ✅ Granular |
+| T29  | 2 mechanical test-file formatting fixes  | ✅ Granular |
 
 ## Diagram-Definition Cross-Check
 

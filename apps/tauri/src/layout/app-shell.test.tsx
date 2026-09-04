@@ -51,7 +51,9 @@ function setViewport(width: number) {
 
 function renderShell(path: string) {
   mocks.books.mockReturnValue({
-    data: [{ id: "book-1", name: "Casa", baseCurrency: "BRL", timezone: "UTC" }],
+    data: [
+      { id: "book-1", name: "Casa", baseCurrency: "BRL", timezone: "UTC" },
+    ],
     isPending: false,
     isError: false,
   })
@@ -96,12 +98,12 @@ describe("ApplicationShell navigation", () => {
     setViewport(375)
     renderShell("/transactions")
     await waitFor(() =>
-      expect(screen.getByRole("button", { name: "Toggle Sidebar" })).toBeTruthy()
+      expect(
+        screen.getByRole("button", { name: "Toggle Sidebar" })
+      ).toBeTruthy()
     )
     fireEvent.click(screen.getByRole("button", { name: "Toggle Sidebar" }))
-    await waitFor(() =>
-      expect(navigationLink("Transações")).toBeTruthy()
-    )
+    await waitFor(() => expect(navigationLink("Transações")).toBeTruthy())
   })
 
   it("marks transactions as active at its route", () => {
@@ -114,7 +116,9 @@ describe("ApplicationShell navigation", () => {
     setViewport(1024)
     renderShell("/transactions")
     expect(navigationLink("Transações")).toBeTruthy()
-    expect(screen.getByLabelText("breadcrumb").textContent).toContain("Transações")
+    expect(screen.getByLabelText("breadcrumb").textContent).toContain(
+      "Transações"
+    )
   })
 
   it("keeps the transactions destination keyboard-focusable and navigable", () => {

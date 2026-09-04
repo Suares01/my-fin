@@ -24,7 +24,8 @@ vi.mock("../features/transactions", async () => {
       const { session } = useActiveBook()
       return (
         <h1>
-          Transações do livro {session.status === "ACTIVE" ? session.bookId : ""}
+          Transações do livro{" "}
+          {session.status === "ACTIVE" ? session.bookId : ""}
         </h1>
       )
     },
