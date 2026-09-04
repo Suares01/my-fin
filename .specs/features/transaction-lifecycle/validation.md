@@ -3,7 +3,7 @@
 **Date**: 2026-09-04
 **Spec**: `.specs/features/transaction-lifecycle/spec.md`
 **Diff range**: `3339b1f..6d69b99`
-**Verifier**: independent sub-agent (author != verifier)
+**Verifier**: standalone fresh-eyes verifier (fallback without sub-agent support)
 **Verdict**: PASS
 
 ---
@@ -93,7 +93,7 @@ Evidence is assertion-level. A row without an assertion is a gap under evidence-
 
 ## Discrimination Sensor
 
-Baseline real-worktree porcelain was empty. Each mutation ran only in detached scratch worktree `/tmp/my-fin-txl-sensor-87322f2`; the scratch was restored then removed. The real porcelain matched the empty baseline after cleanup.
+Baseline real-worktree porcelain was `?? .specs/features/transaction-lifecycle/validation.md` while this report was being prepared. Each mutation ran only in disposable checkout copies under `/tmp`; those copies were removed. The real porcelain matched the baseline after cleanup.
 
 | # | Mutation | Scratch file:line | Focused command | Killed? |
 | --- | --- | --- | --- | --- |
