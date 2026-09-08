@@ -1,6 +1,6 @@
 # Global Transaction Drawer Tasks
 
-**Status**: In Progress (T1 complete)
+**Status**: In Progress (T1-T2 complete)
 
 ## Test Coverage Matrix
 
@@ -69,9 +69,9 @@ T3 -> T4
 
 **Done when**:
 
-- [ ] Selecting a type opens the controller with that exact type.
-- [ ] Closing resets the selected type.
-- [ ] The dropdown offers exactly Receita, Despesa and Transferência.
+- [x] Selecting a type opens the controller with that exact type.
+- [x] Closing resets the selected type.
+- [x] The dropdown offers exactly Receita, Despesa and Transferência.
 
 **Tests**: jsdom unit
 **Gate**: full
