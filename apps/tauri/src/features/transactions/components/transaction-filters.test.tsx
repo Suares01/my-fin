@@ -31,10 +31,24 @@ describe("TransactionFilters", () => {
     )
   })
 
-  it("does not render internal period inputs", () => {
-    renderFilters()
-    expect(screen.queryByLabelText("De")).toBeNull()
-    expect(screen.queryByLabelText("Até")).toBeNull()
+  it("emits the start date", () => {
+    const { props } = renderFilters()
+    fireEvent.change(screen.getByLabelText("De"), {
+      target: { value: "2026-09-01" },
+    })
+    expect(props.onChange).toHaveBeenCalledWith(
+      expect.objectContaining({ from: "2026-09-01" })
+    )
+  })
+
+  it("emits the end date", () => {
+    const { props } = renderFilters()
+    fireEvent.change(screen.getByLabelText("Até"), {
+      target: { value: "2026-09-30" },
+    })
+    expect(props.onChange).toHaveBeenCalledWith(
+      expect.objectContaining({ to: "2026-09-30" })
+    )
   })
 
   it("emits selected transaction types", () => {

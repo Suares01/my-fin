@@ -15,7 +15,10 @@ type TransactionListProps = {
   readonly status: TransactionStatusFilter
   readonly isPending?: boolean
   readonly isError?: boolean
+  readonly hasNextPage?: boolean
+  readonly isFetchingNextPage?: boolean
   readonly onRetry: () => void
+  readonly onLoadMore: () => void
   readonly onResetFilters: () => void
   readonly onCreate: () => void
   readonly onEdit: (chainId: string) => void
@@ -36,7 +39,10 @@ export function TransactionList({
   status,
   isPending = false,
   isError = false,
+  hasNextPage = false,
+  isFetchingNextPage = false,
   onRetry,
+  onLoadMore,
   onResetFilters,
   onCreate,
   onEdit,
@@ -168,6 +174,18 @@ export function TransactionList({
           ))}
         </tbody>
       </table>
+      {hasNextPage && (
+        <Button
+          type="button"
+          variant="outline"
+          disabled={isFetchingNextPage}
+          onClick={onLoadMore}
+        >
+          {isFetchingNextPage
+            ? "Carregando mais resultados"
+            : "Carregar mais resultados"}
+        </Button>
+      )}
     </div>
   )
 }
