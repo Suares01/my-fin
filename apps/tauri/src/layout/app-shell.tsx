@@ -63,6 +63,7 @@ import { useBooks } from "../features/books/hooks"
 import { useActiveBook } from "../providers"
 import { BOOK_SWITCHER_NAVIGATION_STATE } from "../features/books/hooks/use-book-page-navigation"
 import { useBookRouteNavigation } from "../features/books/hooks/use-book-route-navigation"
+import { TransactionCreateQuickAction } from "../features/transactions/components/transaction-create-quick-action"
 
 // Base nav item - used by simple sidebars
 type NavItem = {
@@ -411,13 +412,16 @@ export function ApplicationShell({ className }: ApplicationShellProps) {
       <AppSidebar />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 border-b border-border/80">
-          <div className="flex items-center gap-2 px-4">
+          <div className="flex flex-1 items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
             <Separator
               orientation="vertical"
               className="mr-2 h-4 data-[orientation=vertical]:h-4"
             />
             <AutoBreadcrumb />
+          </div>
+          <div className="pr-4">
+            <TransactionCreateQuickAction />
           </div>
         </header>
         <div className="flex w-full flex-1 flex-col p-4 sm:p-6">

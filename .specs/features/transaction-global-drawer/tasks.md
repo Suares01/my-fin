@@ -1,6 +1,6 @@
 # Global Transaction Drawer Tasks
 
-**Status**: In Progress (T1-T3 complete)
+**Status**: Done
 
 ## Test Coverage Matrix
 
@@ -105,9 +105,9 @@ T3 -> T4
 
 **Done when**:
 
-- [ ] The action is available in the shell only with an active book.
-- [ ] The Transactions page no longer owns a creation CTA or creation state.
-- [ ] Existing edit and deletion components are untouched.
+- [x] The action is available in the shell only with an active book.
+- [x] The Transactions page no longer owns a creation CTA or creation state.
+- [x] Existing edit and deletion components are untouched.
 
 **Tests**: jsdom integration
 **Gate**: build

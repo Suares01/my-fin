@@ -1,5 +1,4 @@
 import type { JournalChainListItem } from "@workspace/application"
-import { Button } from "@workspace/ui/components/button"
 import { useMemo, useState } from "react"
 import { useActiveBook } from "../../../providers/use-active-book.js"
 import { filterTransactionChainsByStatus } from "../transaction-list-model.js"
@@ -11,13 +10,9 @@ import {
 } from "./transaction-filters.js"
 import { TransactionSummary } from "./transaction-summary.js"
 import { TransactionTable } from "./transaction-table.js"
-import type { TransactionOverlayState } from "./transaction-overlay.js"
 
 function TransactionsPageContent({ bookId }: { readonly bookId: string }) {
   const [filters, setFilters] = useState(emptyTransactionFilters)
-  const [, setOverlay] = useState<TransactionOverlayState>({
-    kind: "closed",
-  })
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
@@ -30,7 +25,7 @@ function TransactionsPageContent({ bookId }: { readonly bookId: string }) {
   )
   return (
     <section key={bookId} className="motion-reveal flex w-full flex-col gap-6">
-      <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <header className="flex flex-col gap-3">
         <div>
           <p className="text-xs font-medium tracking-[0.16em] text-muted-foreground uppercase">
             Livro ativo
@@ -42,13 +37,6 @@ function TransactionsPageContent({ bookId }: { readonly bookId: string }) {
             Acompanhe e opere seu histórico financeiro.
           </p>
         </div>
-        <Button
-          type="button"
-          className="w-full sm:w-auto"
-          onClick={() => setOverlay({ kind: "create" })}
-        >
-          Nova transação
-        </Button>
       </header>
       <TransactionSummary items={items} />
       <TransactionFilters

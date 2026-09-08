@@ -49,7 +49,7 @@ function setViewport(width: number) {
     }) as MediaQueryList
 }
 
-function renderShell(path: string) {
+function renderShell(path: string, bookId: string | null = "book-1") {
   mocks.books.mockReturnValue({
     data: [
       { id: "book-1", name: "Casa", baseCurrency: "BRL", timezone: "UTC" },
@@ -57,9 +57,11 @@ function renderShell(path: string) {
     isPending: false,
     isError: false,
   })
-  mocks.activeBook.mockReturnValue({
-    session: { status: "ACTIVE", bookId: "book-1" },
-  })
+  mocks.activeBook.mockReturnValue(
+    bookId
+      ? { session: { status: "ACTIVE", bookId } }
+      : { session: { status: "UNRESOLVED" } }
+  )
   mocks.navigation.mockReturnValue({ activateAndOpenDashboard: vi.fn() })
 
   return render(
@@ -142,5 +144,15 @@ describe("ApplicationShell navigation", () => {
     setViewport(1024)
     renderShell("/transactions")
     expect(screen.getByRole("link", { name: "Categorias" })).toBeTruthy()
+  })
+
+  it("shows the global transaction action with an active book", () => {
+    renderShell("/dashboard")
+    expect(screen.getByRole("button", { name: "Criar transação" })).toBeTruthy()
+  })
+
+  it("hides the global transaction action without an active book", () => {
+    renderShell("/dashboard", null)
+    expect(screen.queryByRole("button", { name: "Criar transação" })).toBeNull()
   })
 })

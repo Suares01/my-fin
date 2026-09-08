@@ -1,11 +1,13 @@
 /* @vitest-environment jsdom */
 import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
+
 const mocks = vi.hoisted(() => ({
   activeBook: vi.fn(),
   chains: vi.fn(),
   options: vi.fn(),
 }))
+
 vi.mock("../../../providers/use-active-book.js", () => ({
   useActiveBook: () => mocks.activeBook(),
 }))
@@ -13,7 +15,7 @@ vi.mock("../hooks/use-transaction-chains.js", () => ({
   useTransactionChains: () => mocks.chains(),
 }))
 vi.mock("../hooks/use-transaction-form-options.js", () => ({
-  useTransactionFormOptions: () => mocks.options(),
+  useTransactionFormOptions: (type: string) => mocks.options(type),
 }))
 vi.mock("./transaction-summary.js", () => ({
   TransactionSummary: ({ items }: { items: unknown[] }) => (
@@ -25,59 +27,51 @@ vi.mock("./transaction-filters.js", async (importOriginal) => {
     await importOriginal<typeof import("./transaction-filters.js")>()
   return {
     ...actual,
-    TransactionFilters: ({
-      onChange,
-      onReset,
-    }: {
-      onChange: (value: unknown) => void
-      onReset: () => void
-    }) => (
-      <div>
-        <button onClick={() => onChange({})}>Alterar filtros</button>
-        <button onClick={onReset}>Limpar filtros</button>
-      </div>
+    TransactionFilters: ({ onReset }: { onReset: () => void }) => (
+      <button type="button" onClick={onReset}>
+        Limpar filtros
+      </button>
     ),
   }
 })
-vi.mock("./transaction-list.js", () => ({
-  TransactionList: (props: {
-    items: unknown[]
-    onCreate: () => void
-    onRetry: () => void
+vi.mock("./transaction-table.js", () => ({
+  TransactionTable: ({
+    transactions,
+    onLoadMore,
+  }: {
+    transactions: unknown[]
     onLoadMore: () => void
   }) => (
     <div>
-      Lista {props.items.length}
-      <button onClick={props.onCreate}>Criar na lista</button>
-      <button onClick={props.onRetry}>Tentar novamente</button>
-      <button onClick={props.onLoadMore}>Carregar mais resultados</button>
+      Tabela {transactions.length}
+      <button type="button" onClick={onLoadMore}>
+        Carregar mais resultados
+      </button>
     </div>
   ),
 }))
-vi.mock("./transaction-overlay.js", () => ({
-  TransactionOverlay: ({
-    state,
-    onSuccess,
-  }: {
-    state: { kind: string }
-    onSuccess: () => void
-  }) => (
-    <div>
-      Overlay {state.kind}
-      <button onClick={onSuccess}>Concluir</button>
-    </div>
-  ),
-}))
+
 import { TransactionsPage } from "./transactions-page.js"
+
 function item() {
   return {
     chainId: "chain-1",
+    presentedEntryId: "entry-1",
+    presentedVersion: 1,
     status: "ACTIVE",
     type: "INCOME",
+    occurredOn: "2026-09-08",
+    recordedAt: "2026-09-08T12:00:00.000Z",
+    sequence: "1",
+    description: "Receita",
+    origin: "MANUAL",
     amountMinor: "100",
     currency: "BRL",
+    financialAccounts: [],
+    categories: [],
   }
 }
+
 function setup(bookId: string | null = "book-1") {
   mocks.activeBook.mockReturnValue(
     bookId
@@ -86,114 +80,49 @@ function setup(bookId: string | null = "book-1") {
   )
   mocks.chains.mockReturnValue({
     data: { items: [item()] },
-    isPending: false,
-    isError: false,
-    hasNextPage: false,
+    hasNextPage: true,
     isFetchingNextPage: false,
-    refetch: vi.fn(),
     fetchNextPage: vi.fn(),
   })
   mocks.options.mockReturnValue({ accounts: [], categories: [] })
   return render(<TransactionsPage />)
 }
+
 describe("TransactionsPage", () => {
   afterEach(() => {
     cleanup()
     vi.clearAllMocks()
   })
-  it("renders header", () => {
+
+  it("renders the transaction content", () => {
     setup()
     expect(screen.getByRole("heading", { name: "Transações" })).toBeTruthy()
-  })
-  it("renders create action", () => {
-    setup()
-    expect(screen.getByRole("button", { name: "Nova transação" })).toBeTruthy()
-  })
-  it("renders summary", () => {
-    setup()
     expect(screen.getByText("Resumo 1")).toBeTruthy()
+    expect(screen.getByText("Tabela 1")).toBeTruthy()
   })
-  it("renders list", () => {
+
+  it("does not retain a local creation action", () => {
     setup()
-    expect(screen.getByText("Lista 1")).toBeTruthy()
+    expect(screen.queryByRole("button", { name: "Nova transação" })).toBeNull()
   })
-  it("opens create overlay from header", () => {
+
+  it("uses the active-book query and form options", () => {
     setup()
-    fireEvent.click(screen.getByRole("button", { name: "Nova transação" }))
-    expect(screen.getByText("Overlay create")).toBeTruthy()
+    expect(mocks.chains).toHaveBeenCalledOnce()
+    expect(mocks.options).toHaveBeenCalledWith("INCOME")
   })
-  it("opens create overlay from empty-list action", () => {
-    setup()
-    fireEvent.click(screen.getByRole("button", { name: "Criar na lista" }))
-    expect(screen.getByText("Overlay create")).toBeTruthy()
-  })
-  it("offers reload guidance after command success", () => {
-    setup()
-    fireEvent.click(screen.getByRole("button", { name: "Concluir" }))
-    expect(
-      screen.getByText(/Algumas projeções precisam ser recarregadas/)
-    ).toBeTruthy()
-  })
-  it("reloads projections without another command", () => {
-    setup()
-    const refetch = mocks.chains().refetch
-    fireEvent.click(screen.getByRole("button", { name: "Concluir" }))
-    fireEvent.click(screen.getByRole("button", { name: "Atualizar agora" }))
-    expect(refetch).toHaveBeenCalledTimes(1)
-  })
-  it("passes retry through to query", () => {
-    setup()
-    const refetch = mocks.chains().refetch
-    fireEvent.click(screen.getByRole("button", { name: "Tentar novamente" }))
-    expect(refetch).toHaveBeenCalledTimes(1)
-  })
-  it("passes pagination through to query", () => {
+
+  it("passes pagination to the transaction table", () => {
     setup()
     const fetchNextPage = mocks.chains().fetchNextPage
     fireEvent.click(
       screen.getByRole("button", { name: "Carregar mais resultados" })
     )
-    expect(fetchNextPage).toHaveBeenCalledTimes(1)
+    expect(fetchNextPage).toHaveBeenCalledOnce()
   })
-  it("shows unresolved book guidance", () => {
+
+  it("shows unresolved-book guidance", () => {
     setup(null)
     expect(screen.getByText(/Selecione um livro/)).toBeTruthy()
-  })
-  it("keeps header action full width on mobile", () => {
-    setup()
-    expect(
-      screen.getByRole("button", { name: "Nova transação" }).className
-    ).toContain("w-full")
-  })
-  it("uses the active book options", () => {
-    setup()
-    expect(mocks.options).toHaveBeenCalled()
-  })
-  it("uses the active book transaction query", () => {
-    setup()
-    expect(mocks.chains).toHaveBeenCalled()
-  })
-  it("clears filters through the filter action", () => {
-    setup()
-    fireEvent.click(screen.getByRole("button", { name: "Limpar filtros" }))
-    expect(screen.getByText("Lista 1")).toBeTruthy()
-  })
-  it("accepts filter updates", () => {
-    setup()
-    fireEvent.click(screen.getByRole("button", { name: "Alterar filtros" }))
-    expect(screen.getByText("Resumo 0")).toBeTruthy()
-  })
-  it("closes overlay on successful command", () => {
-    setup()
-    fireEvent.click(screen.getByRole("button", { name: "Nova transação" }))
-    fireEvent.click(screen.getByRole("button", { name: "Concluir" }))
-    expect(screen.getByText("Overlay closed")).toBeTruthy()
-  })
-  it("renders at desktop content width", () => {
-    setup()
-    expect(
-      screen.getByRole("heading", { name: "Transações" }).closest("section")
-        ?.className
-    ).toContain("max-w-6xl")
   })
 })
