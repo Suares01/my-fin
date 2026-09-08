@@ -88,7 +88,9 @@ export function TransactionCreateDrawer({
           <DrawerBackdrop data-slot="transaction-create-drawer-backdrop" />
           <DrawerContent className="data-[vaul-drawer-direction=right]:sm:max-w-xl">
             <DrawerHeader>
-              <DrawerTitle>Criar {transactionTypeLabel(transactionType)}</DrawerTitle>
+              <DrawerTitle>
+                Criar {transactionTypeLabel(transactionType)}
+              </DrawerTitle>
               <DrawerDescription>
                 Preencha os dados para registrar a transação.
               </DrawerDescription>

@@ -1,5 +1,11 @@
 /* @vitest-environment jsdom */
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import type { ExpenseTransactionDraft } from "./expense-form.js"
 import type { IncomeTransactionDraft } from "./income-form.js"
@@ -53,28 +59,47 @@ vi.mock("./income-form.js", () => ({
   }) => (
     <div>
       <p>Formulário de receita</p>
-      <button type="button" onClick={() => void onSubmit(incomeDraft).catch(() => undefined)}>
+      <button
+        type="button"
+        onClick={() => void onSubmit(incomeDraft).catch(() => undefined)}
+      >
         Salvar receita
       </button>
-      <button type="button" onClick={onCancel}>Cancelar receita</button>
+      <button type="button" onClick={onCancel}>
+        Cancelar receita
+      </button>
     </div>
   ),
 }))
 vi.mock("./expense-form.js", () => ({
-  ExpenseForm: ({ onSubmit }: { onSubmit: (draft: ExpenseTransactionDraft) => Promise<void> }) => (
+  ExpenseForm: ({
+    onSubmit,
+  }: {
+    onSubmit: (draft: ExpenseTransactionDraft) => Promise<void>
+  }) => (
     <div>
       <p>Formulário de despesa</p>
-      <button type="button" onClick={() => void onSubmit(expenseDraft).catch(() => undefined)}>
+      <button
+        type="button"
+        onClick={() => void onSubmit(expenseDraft).catch(() => undefined)}
+      >
         Salvar despesa
       </button>
     </div>
   ),
 }))
 vi.mock("./transfer-form.js", () => ({
-  TransferForm: ({ onSubmit }: { onSubmit: (draft: TransferTransactionDraft) => Promise<void> }) => (
+  TransferForm: ({
+    onSubmit,
+  }: {
+    onSubmit: (draft: TransferTransactionDraft) => Promise<void>
+  }) => (
     <div>
       <p>Formulário de transferência</p>
-      <button type="button" onClick={() => void onSubmit(transferDraft).catch(() => undefined)}>
+      <button
+        type="button"
+        onClick={() => void onSubmit(transferDraft).catch(() => undefined)}
+      >
         Salvar transferência
       </button>
     </div>
@@ -88,7 +113,9 @@ function mutation(mutateAsync = vi.fn().mockResolvedValue({})) {
 }
 
 function renderDrawer(
-  type: React.ComponentProps<typeof TransactionCreateDrawer>["transactionType"] = "INCOME",
+  type: React.ComponentProps<
+    typeof TransactionCreateDrawer
+  >["transactionType"] = "INCOME",
   onOpenChange = vi.fn()
 ) {
   return {
@@ -122,9 +149,9 @@ describe("TransactionCreateDrawer", () => {
       document.querySelector('[data-slot="transaction-create-drawer-backdrop"]')
     ).toBeTruthy()
     expect(
-      document.querySelector('[data-slot="drawer-content"]')?.getAttribute(
-        "data-vaul-drawer-direction"
-      )
+      document
+        .querySelector('[data-slot="drawer-content"]')
+        ?.getAttribute("data-vaul-drawer-direction")
     ).toBe("right")
   })
 
@@ -153,7 +180,10 @@ describe("TransactionCreateDrawer", () => {
     fireEvent.click(screen.getByRole("button", { name: "Salvar receita" }))
 
     await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false))
-    expect(mutateAsync).toHaveBeenCalledWith({ bookId: "book-1", draft: incomeDraft })
+    expect(mutateAsync).toHaveBeenCalledWith({
+      bookId: "book-1",
+      draft: incomeDraft,
+    })
   })
 
   it("keeps the drawer open when the mutation rejects", async () => {
