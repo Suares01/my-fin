@@ -147,11 +147,13 @@ describe("TransactionsPage", () => {
     fireEvent.click(screen.getByRole("button", { name: "Tentar novamente" }))
     expect(refetch).toHaveBeenCalledTimes(1)
   })
-  it("does not expose a pagination action", () => {
+  it("passes pagination through to query", () => {
     setup()
-    expect(
-      screen.queryByRole("button", { name: "Carregar mais resultados" })
-    ).toBeNull()
+    const fetchNextPage = mocks.chains().fetchNextPage
+    fireEvent.click(
+      screen.getByRole("button", { name: "Carregar mais resultados" })
+    )
+    expect(fetchNextPage).toHaveBeenCalledTimes(1)
   })
   it("shows unresolved book guidance", () => {
     setup(null)

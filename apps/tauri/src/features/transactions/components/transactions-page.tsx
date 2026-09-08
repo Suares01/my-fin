@@ -90,10 +90,10 @@ function TransactionsPageContent({ bookId }: { readonly bookId: string }) {
         status={filters.status}
         isPending={chains.isPending}
         isError={chains.isError}
-        hasNextPage={false}
-        isFetchingNextPage={false}
+        hasNextPage={chains.hasNextPage}
+        isFetchingNextPage={chains.isFetchingNextPage}
         onRetry={() => void chains.refetch()}
-        onLoadMore={() => undefined}
+        onLoadMore={() => void chains.fetchNextPage()}
         onResetFilters={() => setFilters(emptyTransactionFilters)}
         onCreate={() => setOverlay({ kind: "create" })}
         onEdit={() => undefined}
