@@ -99,7 +99,7 @@ describe("journal view query contracts", () => {
       listJournalEntries: async () => ({ items: [], nextKey: null }),
     }
     const queries: JournalViewQueries = {
-      listJournalChains: async () => [],
+      listJournalChains: async () => ({ items: [], nextKey: null }),
       getJournalChainDetail: async () => null,
     }
 
@@ -109,8 +109,13 @@ describe("journal view query contracts", () => {
       Parameters<JournalViewQueries["listJournalChains"]>[0]
     >().toMatchTypeOf<{
       bookId: string
-      from?: unknown
-      to?: unknown
+      limit: number
+      cursor?: {
+        occurredOn: string
+        sequence: string
+        chainId: string
+        filterFingerprint: string
+      }
     }>()
     expectTypeOf<
       ReturnType<JournalViewQueries["getJournalChainDetail"]>

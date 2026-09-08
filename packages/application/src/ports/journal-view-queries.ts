@@ -5,7 +5,7 @@ import type {
   LedgerAccountId,
   LocalDate,
 } from "@workspace/domain"
-import type { AccountSummaryView } from "./ledger-read-queries.js"
+import type { AccountSummaryView, QuerySlice } from "./ledger-read-queries.js"
 
 export type JournalBusinessType =
   | "OPENING_BALANCE"
@@ -36,6 +36,13 @@ export interface JournalChainListItem {
   }
 }
 
+export interface JournalChainCursorKey {
+  readonly occurredOn: string
+  readonly sequence: string
+  readonly chainId: string
+  readonly filterFingerprint: string
+}
+
 export interface ListJournalChainsInput {
   readonly bookId: BookId
   readonly from?: LocalDate
@@ -45,6 +52,8 @@ export interface ListJournalChainsInput {
   readonly types?: readonly JournalBusinessType[]
   readonly origins?: readonly JournalEntryOrigin[]
   readonly search?: string
+  readonly limit: number
+  readonly cursor?: JournalChainCursorKey
 }
 
 export interface JournalPostingView {
@@ -80,7 +89,7 @@ export interface GetJournalChainDetailInput {
 export interface JournalViewQueries {
   listJournalChains(
     input: ListJournalChainsInput
-  ): Promise<readonly JournalChainListItem[]>
+  ): Promise<QuerySlice<JournalChainListItem, JournalChainCursorKey>>
   getJournalChainDetail(
     input: GetJournalChainDetailInput
   ): Promise<JournalChainDetail | null>

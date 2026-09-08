@@ -61,6 +61,7 @@ export type {
 export type {
   GetJournalChainDetailInput,
   JournalBusinessType,
+  JournalChainCursorKey,
   JournalChainDetail,
   JournalChainListItem,
   JournalChainStatus,
