@@ -57,10 +57,10 @@ Criar transações exige hoje uma ação local e um overlay parcialmente descone
 | Requirement ID | Story | Phase | Status |
 | --- | --- | --- | --- |
 | GTD-01 | P1: Criar uma transação | Tasks | Pending |
-| GTD-02 | P1: Criar uma transação | Tasks | Implementing |
-| GTD-03 | P1: Criar uma transação | Tasks | Pending |
-| GTD-04 | P1: Criar uma transação | Tasks | Pending |
-| GTD-05 | P1: Criar uma transação | Tasks | Pending |
+| GTD-02 | P1: Criar uma transação | Tasks | Verified |
+| GTD-03 | P1: Criar uma transação | Tasks | Verified |
+| GTD-04 | P1: Criar uma transação | Tasks | Verified |
+| GTD-05 | P1: Criar uma transação | Tasks | Verified |
 | GTD-06 | P1: Criar uma transação | Tasks | Pending |
 | GTD-07 | P1: Criar uma transação | Tasks | Pending |
 

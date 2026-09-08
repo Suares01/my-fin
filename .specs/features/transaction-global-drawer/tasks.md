@@ -1,6 +1,6 @@
 # Global Transaction Drawer Tasks
 
-**Status**: In Progress (T1-T2 complete)
+**Status**: In Progress (T1-T3 complete)
 
 ## Test Coverage Matrix
 
@@ -87,9 +87,9 @@ T3 -> T4
 
 **Done when**:
 
-- [ ] Each selected type renders only its dedicated form.
-- [ ] A successful mutation closes the drawer.
-- [ ] A rejected mutation leaves the drawer open and exposes the existing form error path.
+- [x] Each selected type renders only its dedicated form.
+- [x] A successful mutation closes the drawer.
+- [x] A rejected mutation leaves the drawer open and exposes the existing form error path.
 
 **Tests**: jsdom integration
 **Gate**: full
