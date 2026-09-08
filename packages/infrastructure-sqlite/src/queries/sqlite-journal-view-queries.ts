@@ -9,6 +9,8 @@ import type {
   JournalPostingView,
   JournalViewQueries,
   ListJournalChainsInput,
+  QuerySlice,
+  JournalChainCursorKey,
 } from "@workspace/application"
 import type { LedgerAccountKind } from "@workspace/domain"
 import type { SqliteDatabase, SqliteReader } from "../database/index.js"
@@ -53,20 +55,36 @@ export class SqliteJournalViewQueries implements Pick<
 
   public async listJournalChains(
     input: ListJournalChainsInput
-  ): Promise<readonly JournalChainListItem[]> {
+  ): Promise<QuerySlice<JournalChainListItem, JournalChainCursorKey>> {
     return this.executor.readTransaction(async (reader) => {
       const rows = await this.readPage(reader, input)
+      const hasMore = rows.length > input.limit
+      const pageRows = hasMore ? rows.slice(0, input.limit) : rows
       const postings = await this.readPostings(
         reader,
         input.bookId,
-        rows.map((row) =>
+        pageRows.map((row) =>
           readString(row.presented_entry_id, "presented_entry_id")
         )
       )
-      return rows.map((row) => {
+      const items = pageRows.map((row) => {
         const entryId = readString(row.presented_entry_id, "presented_entry_id")
         return toChainItem(row, postings.get(entryId) ?? [])
       })
+      const last = items.at(-1)
+      return {
+        items,
+        nextKey:
+          hasMore && last !== undefined
+            ? {
+                occurredOn: last.occurredOn,
+                sequence: last.sequence,
+                chainId: last.chainId,
+                filterFingerprint:
+                  input.cursor?.filterFingerprint ?? filterFingerprint(input),
+              }
+            : null,
+      }
     })
   }
 
@@ -189,6 +207,23 @@ export class SqliteJournalViewQueries implements Pick<
       sql += " AND instr(presented_search.search_text, ?) > 0"
       parameters.push(input.search)
     }
+    if (input.cursor !== undefined) {
+      sql +=
+        " AND (presented.occurred_on < ? OR (presented.occurred_on = ? AND (" +
+        "length(presented.sequence) < length(?) OR " +
+        "(length(presented.sequence) = length(?) AND (" +
+        "presented.sequence < ? OR (presented.sequence = ? AND presented.chain_id < ?))))))"
+      parameters.push(
+        input.cursor.occurredOn,
+        input.cursor.occurredOn,
+        input.cursor.sequence,
+        input.cursor.sequence,
+        input.cursor.sequence,
+        input.cursor.sequence,
+        input.cursor.chainId
+      )
+    }
+
     sql = sql.replace(
       "FROM presented WHERE 1 = 1",
       "FROM presented JOIN journal_entries presented_search " +
@@ -197,7 +232,8 @@ export class SqliteJournalViewQueries implements Pick<
     )
     sql +=
       " ORDER BY presented.occurred_on DESC, length(presented.sequence) DESC, " +
-      "presented.sequence DESC, presented.chain_id DESC"
+      "presented.sequence DESC, presented.chain_id DESC LIMIT ?"
+    parameters.push(input.limit + 1)
     return reader.query<JournalChainPageRow>(sql, parameters)
   }
 
@@ -461,6 +497,18 @@ function amountFor(
   }
   const amount = BigInt(readString(financial.amount_minor, "amount_minor"))
   return (amount < 0n ? -amount : amount).toString()
+}
+
+function filterFingerprint(input: ListJournalChainsInput): string {
+  return JSON.stringify({
+    from: input.from?.value ?? null,
+    to: input.to?.value ?? null,
+    accountIds: input.accountIds ?? [],
+    categoryIds: input.categoryIds ?? [],
+    types: input.types ?? [],
+    origins: input.origins ?? [],
+    search: input.search ?? null,
+  })
 }
 
 function isFinancialKind(kind: LedgerAccountKind): boolean {
