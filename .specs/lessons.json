@@ -1,0 +1,63 @@
+{
+  "schema": 1,
+  "promote_threshold": 2,
+  "window_days": 45,
+  "quarantine_threshold": 2,
+  "next_id": 4,
+  "lessons": [
+    {
+      "id": "L-001",
+      "key": "ac_gap::drawer integration tests must assert explicit behavioral root props such as non modal mode not only rendered visual artifacts",
+      "text": "Drawer integration tests must assert explicit behavioral root props such as non-modal mode, not only rendered visual artifacts.",
+      "signal": "ac_gap",
+      "scope": "apps/tauri transactions drawer",
+      "status": "candidate",
+      "features": [
+        "transaction-global-drawer"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "validation.md:24|GTD-02 (apps/tauri transactions drawer)"
+      ],
+      "created": "2026-09-08T18:53:23Z",
+      "last_seen": "2026-09-08T18:53:23Z"
+    },
+    {
+      "id": "L-002",
+      "key": "ac_gap::when a container forwards mutation errors to a form tests must assert the visible error path and retained controlled values after rejection",
+      "text": "When a container forwards mutation errors to a form, tests must assert the visible error path and retained controlled values after rejection.",
+      "signal": "ac_gap",
+      "scope": "apps/tauri transactions forms",
+      "status": "candidate",
+      "features": [
+        "transaction-global-drawer"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "validation.md:27|GTD-05 (apps/tauri transactions forms)"
+      ],
+      "created": "2026-09-08T18:53:23Z",
+      "last_seen": "2026-09-08T18:53:23Z"
+    },
+    {
+      "id": "L-003",
+      "key": "surviving_mutant::error flow tests must start without an error state and prove the error appears only after the failing action",
+      "text": "Error-flow tests must start without an error state and prove the error appears only after the failing action.",
+      "signal": "surviving_mutant",
+      "scope": "transactions",
+      "status": "candidate",
+      "features": [
+        "transaction-global-drawer"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "apps/tauri/src/features/transactions/components/income-form.tsx:95 (transactions)"
+      ],
+      "created": "2026-09-08T19:03:41Z",
+      "last_seen": "2026-09-08T19:03:41Z"
+    }
+  ]
+}
