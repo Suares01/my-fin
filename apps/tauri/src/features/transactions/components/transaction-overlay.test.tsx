@@ -12,6 +12,41 @@ import {
   TransactionOverlay,
   type TransactionOverlayState,
 } from "./transaction-overlay.js"
+vi.mock("../hooks/use-record-income.js", () => ({
+  useRecordIncome: () => ({
+    isPending: false,
+    error: null,
+    mutateAsync: vi.fn(),
+  }),
+}))
+vi.mock("../hooks/use-record-expense.js", () => ({
+  useRecordExpense: () => ({
+    isPending: false,
+    error: null,
+    mutateAsync: vi.fn(),
+  }),
+}))
+vi.mock("../hooks/use-transfer-money.js", () => ({
+  useTransferMoney: () => ({
+    isPending: false,
+    error: null,
+    mutateAsync: vi.fn(),
+  }),
+}))
+vi.mock("../hooks/use-amend-transaction.js", () => ({
+  useAmendTransaction: () => ({
+    isPending: false,
+    error: null,
+    mutateAsync: vi.fn(),
+  }),
+}))
+vi.mock("../hooks/use-reverse-transaction.js", () => ({
+  useReverseTransaction: () => ({
+    isPending: false,
+    error: null,
+    mutateAsync: vi.fn(),
+  }),
+}))
 vi.mock("./income-form.js", () => ({
   IncomeForm: () => <div>Formulário de receita</div>,
 }))

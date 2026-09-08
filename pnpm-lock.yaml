@@ -47,6 +47,9 @@ importers:
       lucide-react:
         specifier: ^1.33.0
         version: 1.33.0(react@19.2.6)
+      motion:
+        specifier: ^13.1.1
+        version: 13.1.1(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       react:
         specifier: ^19.1.0
         version: 19.2.6
@@ -340,6 +343,9 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
+      cn:
+        specifier: ^0.2.5
+        version: 0.2.5
       lucide-react:
         specifier: ^1.33.0
         version: 1.33.0(react@19.2.6)
@@ -2143,6 +2149,11 @@ packages:
   clsx@2.1.1:
     resolution: {integrity: sha512-eYm0QWBtUrBWZWG0d386OGAw16Z995PiOVo2B7bjWSbHedGl5e0ZWaq65kOGgUSNesEIDkB9ISbTg/JK9dhCZA==}
     engines: {node: '>=6'}
+
+  cn@0.2.5:
+    resolution: {integrity: sha512-OCjZtMeQfXbI4Es1+EIjkd77gvWzaE689gD8KhfexlqjClC06qR1MQBR+Z35ZMSPNEBWyHiItW1Soy0UvwNv9w==}
+    engines: {node: '>=20'}
+    hasBin: true
 
   code-block-writer@13.0.3:
     resolution: {integrity: sha512-Oofo0pq3IKnsFtuHqSF7TqBfr71aeyZDVJ0HpmqB7FBM2qEigL0iPONSCZSO9pE9dZTAxANe5XHG9Uy0YMv8cg==}
@@ -5619,6 +5630,8 @@ snapshots:
   cli-width@4.1.0: {}
 
   clsx@2.1.1: {}
+
+  cn@0.2.5: {}
 
   code-block-writer@13.0.3: {}
 

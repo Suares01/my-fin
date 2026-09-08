@@ -1,18 +1,32 @@
-import { Button } from "@workspace/ui/components/button"
-import { Search } from "lucide-react"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@workspace/ui/components/select"
+import { SearchIcon } from "lucide-react"
 import type { TransactionFormOption } from "../hooks/use-transaction-form-options.js"
 import type {
   TransactionFilters as TransactionFiltersState,
-  TransactionStatusFilter,
   TransactionType,
 } from "../transaction-list-model.js"
+import { Input } from "@workspace/ui/components/input"
+import { useMemo } from "react"
+import { cn } from "@workspace/ui/lib/utils"
+
+const ALL_TRANSACTION_TYPES = [
+  "INCOME",
+  "EXPENSE",
+  "TRANSFER",
+] as const satisfies readonly TransactionType[]
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const emptyTransactionFilters: TransactionFiltersState = {
   from: "",
   to: "",
   search: "",
-  types: ["INCOME", "EXPENSE", "TRANSFER"],
+  types: ALL_TRANSACTION_TYPES,
   accountIds: [],
   categoryIds: [],
   status: "ALL",
@@ -24,16 +38,6 @@ const typeLabels: ReadonlyArray<{ value: TransactionType; label: string }> = [
   { value: "TRANSFER", label: "Transferência" },
 ]
 
-const statusLabels: ReadonlyArray<{
-  value: TransactionStatusFilter
-  label: string
-}> = [
-  { value: "ALL", label: "Todos os status" },
-  { value: "ACTIVE", label: "Ativa" },
-  { value: "EDITED", label: "Editada" },
-  { value: "CANCELLED", label: "Cancelada" },
-]
-
 type TransactionFiltersProps = {
   readonly filters: TransactionFiltersState
   readonly accounts: readonly TransactionFormOption[]
@@ -42,165 +46,102 @@ type TransactionFiltersProps = {
   readonly onReset: () => void
 }
 
-function nextTypes(
-  types: readonly TransactionType[],
-  type: TransactionType,
-  checked: boolean
-): readonly TransactionType[] {
-  return checked
-    ? [...new Set([...types, type])]
-    : types.filter((value) => value !== type)
-}
-
 export function TransactionFilters({
   filters,
-  accounts,
   categories,
   onChange,
-  onReset,
 }: TransactionFiltersProps) {
   const update = (patch: Partial<TransactionFiltersState>) =>
     onChange({ ...filters, ...patch })
 
+  function onChangeSearch(event: React.ChangeEvent<HTMLInputElement>) {
+    update({ search: event.currentTarget.value })
+  }
+
+  function onChangeCategories(value: string[]) {
+    update({ categoryIds: value })
+  }
+
+  const categoryOptions = useMemo(
+    () =>
+      categories.map((category) => ({
+        value: category.id,
+        label: category.name,
+      })),
+    [categories]
+  )
+  const selectedType = ALL_TRANSACTION_TYPES.every((type) =>
+    filters.types.includes(type)
+  )
+    ? "ALL"
+    : filters.types.length === 1
+      ? filters.types[0]
+      : undefined
+
   return (
-    <section
-      className="rounded-xl border border-border p-4"
-      aria-label="Filtros de transações"
-    >
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <label className="flex flex-col gap-1 text-sm font-medium sm:col-span-2">
-          Buscar
-          <span className="relative">
-            <Search
-              className="pointer-events-none absolute top-2.5 left-3 size-4 text-muted-foreground"
-              aria-hidden="true"
-            />
-            <input
-              type="search"
-              className="w-full rounded-md border border-input bg-background py-2 pr-3 pl-9"
-              value={filters.search}
-              onChange={(event) =>
-                update({ search: event.currentTarget.value })
-              }
-            />
-          </span>
-        </label>
-        <label className="flex flex-col gap-1 text-sm font-medium">
-          De
-          <input
-            type="date"
-            className="w-full rounded-md border border-input bg-background p-2"
-            value={filters.from}
-            onChange={(event) => update({ from: event.currentTarget.value })}
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm font-medium">
-          Até
-          <input
-            type="date"
-            className="w-full rounded-md border border-input bg-background p-2"
-            value={filters.to}
-            onChange={(event) => update({ to: event.currentTarget.value })}
-          />
-        </label>
-        <fieldset className="flex flex-col gap-1 text-sm font-medium sm:col-span-2">
-          <legend>Tipo</legend>
-          <div className="flex flex-wrap gap-3">
-            {typeLabels.map(({ value, label }) => (
-              <label
-                key={value}
-                className="flex items-center gap-1.5 font-normal"
-              >
-                <input
-                  type="checkbox"
-                  checked={filters.types.includes(value)}
-                  onChange={(event) =>
-                    update({
-                      types: nextTypes(
-                        filters.types,
-                        value,
-                        event.currentTarget.checked
-                      ),
-                    })
-                  }
-                />
-                {label}
-              </label>
-            ))}
-          </div>
-        </fieldset>
-        <label className="flex flex-col gap-1 text-sm font-medium">
-          Conta
-          <select
-            className="w-full rounded-md border border-input bg-background p-2"
-            value={filters.accountIds[0] ?? ""}
-            onChange={(event) =>
-              update({
-                accountIds: event.currentTarget.value
-                  ? [event.currentTarget.value]
-                  : [],
-              })
-            }
-          >
-            <option value="">Todas as contas</option>
-            {accounts.map((account) => (
-              <option key={account.id} value={account.id}>
-                {account.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1 text-sm font-medium">
-          Categoria
-          <select
-            className="w-full rounded-md border border-input bg-background p-2"
-            value={filters.categoryIds[0] ?? ""}
-            onChange={(event) =>
-              update({
-                categoryIds: event.currentTarget.value
-                  ? [event.currentTarget.value]
-                  : [],
-              })
-            }
-          >
-            <option value="">Todas as categorias</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1 text-sm font-medium">
-          Status
-          <select
-            className="w-full rounded-md border border-input bg-background p-2"
-            value={filters.status}
-            onChange={(event) =>
-              update({
-                status: event.currentTarget.value as TransactionStatusFilter,
-              })
-            }
-          >
-            {statusLabels.map(({ value, label }) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </label>
+    <section className="flex flex-wrap items-center gap-2">
+      {/* Search */}
+      <div className="relative w-full sm:min-w-[200px] sm:flex-1">
+        <SearchIcon className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          placeholder="Search transactions..."
+          value={filters.search}
+          onChange={onChangeSearch}
+          className="pl-8"
+        />
       </div>
-      <p className="mt-3 text-sm text-muted-foreground" role="status">
-        O status filtra somente os resultados carregados.
-      </p>
-      <Button
-        type="button"
-        variant="outline"
-        className="mt-3 w-full sm:w-auto"
-        onClick={onReset}
+
+      {/* Category */}
+      <Select
+        items={categoryOptions}
+        value={filters.categoryIds as string[]}
+        onValueChange={onChangeCategories}
+        multiple
       >
-        Limpar filtros
-      </Button>
+        <SelectTrigger>
+          <SelectValue placeholder="Todas" />
+        </SelectTrigger>
+        <SelectContent>
+          {categories.map((cat) => (
+            <SelectItem key={cat.id} value={cat.id}>
+              {cat.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      {/* Type Toggle */}
+      <div className="flex items-center rounded-lg border border-border p-0.5">
+        <button
+          type="button"
+          onClick={() => update({ types: ALL_TRANSACTION_TYPES })}
+          aria-pressed={selectedType === "ALL"}
+          className={cn(
+            "rounded-md px-3 py-1 text-sm font-medium capitalize transition-colors",
+            selectedType === "ALL"
+              ? "bg-primary text-primary-foreground"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          Todos
+        </button>
+        {typeLabels.map((opt) => (
+          <button
+            key={opt.value}
+            type="button"
+            onClick={() => update({ types: [opt.value] })}
+            aria-pressed={selectedType === opt.value}
+            className={cn(
+              "rounded-md px-3 py-1 text-sm font-medium capitalize transition-colors",
+              selectedType === opt.value
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
     </section>
   )
 }

@@ -1,4 +1,9 @@
 import type { JournalChainDetail } from "@workspace/application"
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@workspace/ui/components/alert"
 import { Button } from "@workspace/ui/components/button"
 import {
   Sheet,
@@ -8,9 +13,15 @@ import {
   SheetTitle,
 } from "@workspace/ui/components/sheet"
 import { useEffect } from "react"
-import { IncomeForm } from "./income-form.js"
-import { ExpenseForm } from "./expense-form.js"
-import { TransferForm } from "./transfer-form.js"
+import { editDraftFromDetail } from "../transaction-form-model.js"
+import { useAmendTransaction } from "../hooks/use-amend-transaction.js"
+import { useRecordExpense } from "../hooks/use-record-expense.js"
+import { useRecordIncome } from "../hooks/use-record-income.js"
+import { useReverseTransaction } from "../hooks/use-reverse-transaction.js"
+import { useTransferMoney } from "../hooks/use-transfer-money.js"
+import { IncomeForm, type IncomeTransactionDraft } from "./income-form.js"
+import { ExpenseForm, type ExpenseTransactionDraft } from "./expense-form.js"
+import { TransferForm, type TransferTransactionDraft } from "./transfer-form.js"
 import { TransactionDeleteDialog } from "./transaction-delete-dialog.js"
 
 export type TransactionOverlayState =
@@ -35,6 +46,12 @@ export function TransactionOverlay({
   onStateChange,
   onSuccess,
 }: TransactionOverlayProps) {
+  const recordIncome = useRecordIncome()
+  const recordExpense = useRecordExpense()
+  const transferMoney = useTransferMoney()
+  const amendTransaction = useAmendTransaction()
+  const reverseTransaction = useReverseTransaction()
+
   useEffect(() => {
     onStateChange({ kind: "closed" })
   }, [bookId, onStateChange])
@@ -44,38 +61,126 @@ export function TransactionOverlay({
     return (
       <TransactionDeleteDialog
         detail={state.detail}
-        onConfirm={async () => {
+        pending={reverseTransaction.isPending}
+        submitError={reverseTransaction.error}
+        onConfirm={async ({ occurredOn, description }) => {
+          if (bookId === null) return
+          await reverseTransaction.mutateAsync({
+            bookId,
+            chainId: state.detail.chainId,
+            presentedEntryId: state.detail.presentedEntryId,
+            presentedVersion: state.detail.presentedVersion,
+            presentedOccurredOn: state.detail.occurredOn,
+            occurredOn,
+            description,
+            previousDetail: state.detail,
+          })
           onSuccess()
           close()
         }}
         onCancel={close}
       />
     )
+  const detail = state.kind === "create" ? undefined : state.detail
+  const editDraft =
+    detail === undefined ? undefined : editDraftFromDetail(detail)
+  if (editDraft?.ok === false)
+    return (
+      <Alert variant="destructive">
+        <AlertTitle>Não foi possível editar a transação</AlertTitle>
+        <AlertDescription>
+          Os dados atuais da transação não permitem uma edição segura.
+        </AlertDescription>
+      </Alert>
+    )
+  const submitIncome = async (draft: IncomeTransactionDraft) => {
+    if (bookId === null) return
+    if (detail !== undefined) {
+      await amendTransaction.mutateAsync({
+        bookId,
+        chainId: detail.chainId,
+        presentedEntryId: detail.presentedEntryId,
+        presentedVersion: detail.presentedVersion,
+        replacement: draft,
+        previousDetail: detail,
+      })
+    } else {
+      await recordIncome.mutateAsync({ bookId, draft })
+    }
+    onSuccess()
+    close()
+  }
+  const submitExpense = async (draft: ExpenseTransactionDraft) => {
+    if (bookId === null) return
+    if (detail !== undefined) {
+      await amendTransaction.mutateAsync({
+        bookId,
+        chainId: detail.chainId,
+        presentedEntryId: detail.presentedEntryId,
+        presentedVersion: detail.presentedVersion,
+        replacement: draft,
+        previousDetail: detail,
+      })
+    } else {
+      await recordExpense.mutateAsync({ bookId, draft })
+    }
+    onSuccess()
+    close()
+  }
+  const submitTransfer = async (draft: TransferTransactionDraft) => {
+    if (bookId === null) return
+    if (detail !== undefined) {
+      await amendTransaction.mutateAsync({
+        bookId,
+        chainId: detail.chainId,
+        presentedEntryId: detail.presentedEntryId,
+        presentedVersion: detail.presentedVersion,
+        replacement: draft,
+        previousDetail: detail,
+      })
+    } else {
+      await transferMoney.mutateAsync({ bookId, draft })
+    }
+    onSuccess()
+    close()
+  }
   const content =
     state.kind === "create" ? (
       <CreateChooser onChoose={(kind) => onStateChange({ kind })} />
     ) : state.kind === "income" ? (
       <IncomeForm
-        onSubmit={async () => {
-          onSuccess()
-          close()
-        }}
+        initialDraft={
+          editDraft?.ok === true && detail?.type === "INCOME"
+            ? (editDraft.draft as IncomeTransactionDraft)
+            : undefined
+        }
+        pending={recordIncome.isPending || amendTransaction.isPending}
+        submitError={recordIncome.error ?? amendTransaction.error}
+        onSubmit={submitIncome}
         onCancel={close}
       />
     ) : state.kind === "expense" ? (
       <ExpenseForm
-        onSubmit={async () => {
-          onSuccess()
-          close()
-        }}
+        initialDraft={
+          editDraft?.ok === true && detail?.type === "EXPENSE"
+            ? (editDraft.draft as ExpenseTransactionDraft)
+            : undefined
+        }
+        pending={recordExpense.isPending || amendTransaction.isPending}
+        submitError={recordExpense.error ?? amendTransaction.error}
+        onSubmit={submitExpense}
         onCancel={close}
       />
     ) : (
       <TransferForm
-        onSubmit={async () => {
-          onSuccess()
-          close()
-        }}
+        initialDraft={
+          editDraft?.ok === true && detail?.type === "TRANSFER"
+            ? (editDraft.draft as TransferTransactionDraft)
+            : undefined
+        }
+        pending={transferMoney.isPending || amendTransaction.isPending}
+        submitError={transferMoney.error ?? amendTransaction.error}
+        onSubmit={submitTransfer}
         onCancel={close}
       />
     )
@@ -87,6 +192,7 @@ export function TransactionOverlay({
         : state.kind === "expense"
           ? "Despesa"
           : "Transferência"
+
   return (
     <Sheet
       open

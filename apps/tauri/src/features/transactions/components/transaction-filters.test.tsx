@@ -53,9 +53,26 @@ describe("TransactionFilters", () => {
 
   it("emits selected transaction types", () => {
     const { props } = renderFilters()
-    fireEvent.click(screen.getByLabelText("Receita"))
+    fireEvent.click(screen.getByRole("button", { name: "Receita" }))
     expect(props.onChange).toHaveBeenCalledWith(
-      expect.objectContaining({ types: ["EXPENSE", "TRANSFER"] })
+      expect.objectContaining({ types: ["INCOME"] })
+    )
+  })
+
+  it("selects Todos by default", () => {
+    renderFilters()
+    expect(
+      screen.getByRole("button", { name: "Todos" }).getAttribute("aria-pressed")
+    ).toBe("true")
+  })
+
+  it("emits all transaction types when Todos is selected", () => {
+    const { props } = renderFilters()
+    fireEvent.click(screen.getByRole("button", { name: "Todos" }))
+    expect(props.onChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        types: ["INCOME", "EXPENSE", "TRANSFER"],
+      })
     )
   })
 

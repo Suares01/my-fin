@@ -1,8 +1,4 @@
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from "@workspace/ui/components/alert"
+import type { JournalChainListItem } from "@workspace/application"
 import { Button } from "@workspace/ui/components/button"
 import { useMemo, useState } from "react"
 import { useActiveBook } from "../../../providers/use-active-book.js"
@@ -13,19 +9,18 @@ import {
   emptyTransactionFilters,
   TransactionFilters,
 } from "./transaction-filters.js"
-import { TransactionList } from "./transaction-list.js"
-import {
-  TransactionOverlay,
-  type TransactionOverlayState,
-} from "./transaction-overlay.js"
 import { TransactionSummary } from "./transaction-summary.js"
+import { TransactionTable } from "./transaction-table.js"
+import type { TransactionOverlayState } from "./transaction-overlay.js"
 
 function TransactionsPageContent({ bookId }: { readonly bookId: string }) {
   const [filters, setFilters] = useState(emptyTransactionFilters)
-  const [overlay, setOverlay] = useState<TransactionOverlayState>({
+  const [, setOverlay] = useState<TransactionOverlayState>({
     kind: "closed",
   })
-  const [refreshWarning, setRefreshWarning] = useState(false)
+  const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+
   const chains = useTransactionChains(filters)
   const options = useTransactionFormOptions("INCOME")
   const items = useMemo(
@@ -33,12 +28,8 @@ function TransactionsPageContent({ bookId }: { readonly bookId: string }) {
       filterTransactionChainsByStatus(chains.data?.items ?? [], filters.status),
     [chains.data?.items, filters.status]
   )
-
   return (
-    <section
-      key={bookId}
-      className="motion-reveal flex w-full max-w-6xl flex-col gap-6"
-    >
+    <section key={bookId} className="motion-reveal flex w-full flex-col gap-6">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-xs font-medium tracking-[0.16em] text-muted-foreground uppercase">
@@ -59,24 +50,6 @@ function TransactionsPageContent({ bookId }: { readonly bookId: string }) {
           Nova transação
         </Button>
       </header>
-      {refreshWarning && (
-        <Alert>
-          <AlertTitle>Transação salva</AlertTitle>
-          <AlertDescription>
-            Algumas projeções precisam ser recarregadas.{" "}
-            <Button
-              type="button"
-              variant="link"
-              onClick={() => {
-                setRefreshWarning(false)
-                void chains.refetch()
-              }}
-            >
-              Atualizar agora
-            </Button>
-          </AlertDescription>
-        </Alert>
-      )}
       <TransactionSummary items={items} />
       <TransactionFilters
         filters={filters}
@@ -85,28 +58,15 @@ function TransactionsPageContent({ bookId }: { readonly bookId: string }) {
         onChange={setFilters}
         onReset={() => setFilters(emptyTransactionFilters)}
       />
-      <TransactionList
-        items={items}
-        status={filters.status}
-        isPending={chains.isPending}
-        isError={chains.isError}
+      <TransactionTable
+        transactions={items as JournalChainListItem[]}
+        expandedId={expandedId}
+        selectedIds={selectedIds}
+        setExpandedId={setExpandedId}
+        setSelectedIds={setSelectedIds}
         hasNextPage={chains.hasNextPage}
         isFetchingNextPage={chains.isFetchingNextPage}
-        onRetry={() => void chains.refetch()}
         onLoadMore={() => void chains.fetchNextPage()}
-        onResetFilters={() => setFilters(emptyTransactionFilters)}
-        onCreate={() => setOverlay({ kind: "create" })}
-        onEdit={() => undefined}
-        onDelete={() => undefined}
-      />
-      <TransactionOverlay
-        bookId={bookId}
-        state={overlay}
-        onStateChange={setOverlay}
-        onSuccess={() => {
-          setOverlay({ kind: "closed" })
-          setRefreshWarning(true)
-        }}
       />
     </section>
   )

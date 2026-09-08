@@ -2,7 +2,7 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import type { JournalChainListItem } from "@workspace/application"
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { TransactionList } from "./transaction-list.js"
+import { TransactionList } from "./transaction-table.js"
 vi.mock("./transaction-row-details.js", () => ({
   TransactionRowDetails: () => <div>Detalhe expandido</div>,
 }))

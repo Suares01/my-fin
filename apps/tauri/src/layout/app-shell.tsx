@@ -420,8 +420,8 @@ export function ApplicationShell({ className }: ApplicationShellProps) {
             <AutoBreadcrumb />
           </div>
         </header>
-        <div className="flex flex-1 flex-col p-4 sm:p-6">
-          <div className="min-h-[100vh] flex-1 rounded-xl md:min-h-min">
+        <div className="flex w-full flex-1 flex-col p-4 sm:p-6">
+          <div className="mr-0 min-h-[100vh] w-full flex-1 rounded-xl md:min-h-min">
             <Outlet />
           </div>
         </div>
