@@ -14,21 +14,21 @@ vi.mock("../hooks/use-record-income.js", () => ({
   useRecordIncome: () => ({
     mutateAsync: state.mutateAsync,
     isPending: false,
-    error: null,
+    error: undefined,
   }),
 }))
 vi.mock("../hooks/use-record-expense.js", () => ({
   useRecordExpense: () => ({
     mutateAsync: vi.fn(),
     isPending: false,
-    error: null,
+    error: undefined,
   }),
 }))
 vi.mock("../hooks/use-transfer-money.js", () => ({
   useTransferMoney: () => ({
     mutateAsync: vi.fn(),
     isPending: false,
-    error: null,
+    error: undefined,
   }),
 }))
 
@@ -83,6 +83,8 @@ describe("TransactionCreateDrawer service failures", () => {
       />
     )
     fillIncomeForm()
+
+    expect(screen.queryByText("Não foi possível salvar a transação")).toBeNull()
 
     fireEvent.click(screen.getByRole("button", { name: "Salvar receita" }))
 
