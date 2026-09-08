@@ -10,7 +10,6 @@ import { ActiveBookProvider } from "../../../providers/active-book-provider.js"
 import { useActiveBook } from "../../../providers/use-active-book.js"
 import { MyFinQueryProvider } from "../../../providers/query-provider.js"
 import type { TransactionFilters } from "../transaction-list-model.js"
-import { transactionKeys } from "./transaction-keys.js"
 import { useTransactionChains } from "./use-transaction-chains.js"
 
 const filters: TransactionFilters = {
@@ -55,7 +54,10 @@ function services(): MyFinServices {
     transfers: {} as never,
     journal: {
       listChains: {
-        execute: vi.fn().mockResolvedValue({ ok: true, value: [item()] }),
+        execute: vi.fn().mockResolvedValue({
+          ok: true,
+          value: { items: [item()], nextCursor: null },
+        }),
       },
     } as never,
     insights: {} as never,
@@ -92,80 +94,88 @@ describe("useTransactionChains", () => {
     const { result } = renderHook(() => useTransactionChains(filters), {
       wrapper: wrapperFor(serviceFacade, new QueryClient(), null),
     })
-
     expect(result.current.fetchStatus).toBe("idle")
     expect(serviceFacade.journal.listChains.execute).not.toHaveBeenCalled()
   })
 
-  it("queries the active book once without a pagination input", async () => {
+  it("queries the active book with fixed transaction types and page size", async () => {
     const serviceFacade = services()
     const { result } = renderHook(() => useTransactionChains(filters), {
       wrapper: wrapperFor(serviceFacade, new QueryClient()),
     })
-
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-
-    expect(serviceFacade.journal.listChains.execute).toHaveBeenCalledTimes(1)
     expect(serviceFacade.journal.listChains.execute).toHaveBeenCalledWith({
       bookId: "book-1",
       types: ["EXPENSE", "INCOME", "TRANSFER"],
+      limit: 20,
     })
   })
 
-  it("exposes all items returned by the single query", async () => {
+  it("never sends OPENING_BALANCE in the fixed transaction query boundary", async () => {
     const serviceFacade = services()
-    vi.mocked(serviceFacade.journal.listChains.execute).mockResolvedValue({
-      ok: true,
-      value: [item(), item({ chainId: "chain-2" })],
-    })
+    const { result } = renderHook(
+      () => useTransactionChains({ ...filters, types: ["INCOME", "TRANSFER"] }),
+      { wrapper: wrapperFor(serviceFacade, new QueryClient()) }
+    )
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    expect(serviceFacade.journal.listChains.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ types: ["INCOME", "TRANSFER"] })
+    )
+  })
+
+  it("passes only the opaque cursor returned by the previous page", async () => {
+    const serviceFacade = services()
+    vi.mocked(serviceFacade.journal.listChains.execute)
+      .mockResolvedValueOnce({
+        ok: true,
+        value: { items: [item()], nextCursor: "opaque-next" },
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        value: { items: [item({ chainId: "chain-2" })], nextCursor: null },
+      })
     const { result } = renderHook(() => useTransactionChains(filters), {
       wrapper: wrapperFor(serviceFacade, new QueryClient()),
     })
-
-    await waitFor(() => expect(result.current.isSuccess).toBe(true))
-
-    expect(result.current.data?.items.map((chain) => chain.chainId)).toEqual([
-      "chain-1",
-      "chain-2",
-    ])
+    await waitFor(() => expect(result.current.hasNextPage).toBe(true))
+    await act(async () => {
+      await result.current.fetchNextPage()
+    })
+    expect(serviceFacade.journal.listChains.execute).toHaveBeenLastCalledWith(
+      expect.objectContaining({ cursor: "opaque-next" })
+    )
   })
 
-  it("passes a supplied internal period and normalized server filters", async () => {
+  it("deduplicates overlapping chain pages in server order", async () => {
     const serviceFacade = services()
-    const queryClient = new QueryClient()
-    const { result } = renderHook(
-      () =>
-        useTransactionChains({
-          ...filters,
-          from: "2026-09-01",
-          to: "2026-09-30",
-          search: "  Mercado ",
-        }),
-      { wrapper: wrapperFor(serviceFacade, queryClient) }
-    )
-
-    await waitFor(() => expect(result.current.isSuccess).toBe(true))
-
-    expect(serviceFacade.journal.listChains.execute).toHaveBeenCalledWith(
-      expect.objectContaining({
-        from: "2026-09-01",
-        to: "2026-09-30",
-        search: "mercado",
+    vi.mocked(serviceFacade.journal.listChains.execute)
+      .mockResolvedValueOnce({
+        ok: true,
+        value: { items: [item()], nextCursor: "next" },
       })
+      .mockResolvedValueOnce({
+        ok: true,
+        value: {
+          items: [item(), item({ chainId: "chain-2" })],
+          nextCursor: null,
+        },
+      })
+    const { result } = renderHook(() => useTransactionChains(filters), {
+      wrapper: wrapperFor(serviceFacade, new QueryClient()),
+    })
+    await waitFor(() => expect(result.current.hasNextPage).toBe(true))
+    await act(async () => {
+      await result.current.fetchNextPage()
+    })
+    await waitFor(() =>
+      expect(result.current.data?.items.map((chain) => chain.chainId)).toEqual([
+        "chain-1",
+        "chain-2",
+      ])
     )
-    expect(
-      queryClient.getQueryState(
-        transactionKeys.list("book-1", {
-          from: "2026-09-01",
-          to: "2026-09-30",
-          search: "mercado",
-          types: ["EXPENSE", "INCOME", "TRANSFER"],
-        })
-      )
-    ).toBeDefined()
   })
 
-  it("requeries when normalized server filters change", async () => {
+  it("restarts at the first page when normalized server filters change", async () => {
     const serviceFacade = services()
     const { result, rerender } = renderHook(
       ({ currentFilters }) => useTransactionChains(currentFilters),
@@ -175,9 +185,7 @@ describe("useTransactionChains", () => {
       }
     )
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-
     rerender({ currentFilters: { ...filters, search: "  Mercado " } })
-
     await waitFor(() =>
       expect(serviceFacade.journal.listChains.execute).toHaveBeenCalledTimes(2)
     )
@@ -186,7 +194,20 @@ describe("useTransactionChains", () => {
     )
   })
 
-  it("exposes an initial service failure as query error without retrying", async () => {
+  it("exposes an initial service failure as query error", async () => {
+    const serviceFacade = services()
+    vi.mocked(serviceFacade.journal.listChains.execute).mockResolvedValue({
+      ok: false,
+      error: { code: "ENTITY_NOT_FOUND" },
+    } as never)
+    const { result } = renderHook(() => useTransactionChains(filters), {
+      wrapper: wrapperFor(serviceFacade, new QueryClient()),
+    })
+    await waitFor(() => expect(result.current.isError).toBe(true))
+    expect(result.current.data).toBeUndefined()
+  })
+
+  it("disables automatic query retries", async () => {
     const serviceFacade = services()
     vi.mocked(serviceFacade.journal.listChains.execute).mockResolvedValue({
       ok: false,
@@ -198,11 +219,35 @@ describe("useTransactionChains", () => {
     const { result } = renderHook(() => useTransactionChains(filters), {
       wrapper: wrapperFor(serviceFacade, client),
     })
-
     await waitFor(() => expect(result.current.isError).toBe(true))
-
-    expect(result.current.data).toBeUndefined()
     expect(serviceFacade.journal.listChains.execute).toHaveBeenCalledTimes(1)
+  })
+
+  it("recovers an invalid pagination cursor once by requesting page one", async () => {
+    const serviceFacade = services()
+    vi.mocked(serviceFacade.journal.listChains.execute)
+      .mockResolvedValueOnce({
+        ok: true,
+        value: { items: [item()], nextCursor: "bad-cursor" },
+      })
+      .mockResolvedValueOnce({
+        ok: false,
+        error: { code: "INVALID_QUERY" },
+      } as never)
+      .mockResolvedValueOnce({
+        ok: true,
+        value: { items: [item()], nextCursor: null },
+      })
+    const { result } = renderHook(() => useTransactionChains(filters), {
+      wrapper: wrapperFor(serviceFacade, new QueryClient()),
+    })
+    await waitFor(() => expect(result.current.hasNextPage).toBe(true))
+    await act(async () => {
+      await result.current.fetchNextPage()
+    })
+    expect(serviceFacade.journal.listChains.execute).toHaveBeenLastCalledWith(
+      expect.not.objectContaining({ cursor: expect.anything() })
+    )
   })
 
   it("uses a new book-scoped query when the active book changes", async () => {
@@ -216,9 +261,7 @@ describe("useTransactionChains", () => {
       { wrapper: wrapperFor(serviceFacade, queryClient) }
     )
     await waitFor(() => expect(result.current.chains.isSuccess).toBe(true))
-
     act(() => result.current.activeBook.actions.activate("book-2"))
-
     await waitFor(() =>
       expect(serviceFacade.journal.listChains.execute).toHaveBeenCalledTimes(2)
     )

@@ -1,6 +1,7 @@
-import type { JournalChainListItem } from "@workspace/application"
+import type { JournalChainListItem, QueryPage } from "@workspace/application"
 import { describe, expect, it } from "vitest"
 import {
+  dedupeTransactionChainPages,
   filterTransactionChainsByStatus,
   normalizeTransactionServerFilters,
   summarizeTransactionChains,
@@ -77,6 +78,22 @@ describe("transaction list model", () => {
       accountIds: ["account-1", "account-2"],
       categoryIds: ["category-1", "category-2"],
     })
+  })
+
+  it("deduplicates overlapping pages by chain identity while preserving server order", () => {
+    const pages: readonly QueryPage<JournalChainListItem>[] = [
+      { items: [chain(), chain({ chainId: "chain-2" })], nextCursor: "next" },
+      {
+        items: [
+          chain({ chainId: "chain-2", presentedEntryId: "entry-2" }),
+          chain({ chainId: "chain-3" }),
+        ],
+        nextCursor: null,
+      },
+    ]
+    expect(
+      dedupeTransactionChainPages(pages).map((item) => item.chainId)
+    ).toEqual(["chain-1", "chain-2", "chain-3"])
   })
 
   it("keeps every loaded chain for the ALL status selection", () => {

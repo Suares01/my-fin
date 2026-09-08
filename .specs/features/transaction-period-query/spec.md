@@ -63,7 +63,7 @@ busque uma unica lista para que nao haja fluxo de carregar mais resultados.
 **Acceptance Criteria**:
 
 1. WHEN a tela possui um livro ativo THEN o hook SHALL executar uma unica consulta sem `limit` ou `cursor` e disponibilizar os itens retornados. <!-- event-driven -->
-2. The hook SHALL manter a chave de cache limitada ao livro e aos filtros de servidor, incluindo o periodo quando ele for fornecido. <!-- ubiquitous -->
+2. The hook SHALL manter a chave de cache limitada ao livro e aos filtros de servidor, incluindo o periodo efetivamente enviado. <!-- ubiquitous -->
 3. The interface SHALL not render a controle de periodo enquanto o filtro permanecer interno. <!-- ubiquitous -->
 
 **Independent Test**: Montar o hook com livro ativo e confirmar uma unica chamada
@@ -84,9 +84,9 @@ sem cursor, com os itens da resposta expostos diretamente.
 | TPQ-03 | P1: Consultar todas as transacoes mensais | Application | Verified |
 | TPQ-04 | P1: Consultar todas as transacoes mensais | Application | Verified |
 | TPQ-05 | P1: Consultar todas as transacoes mensais | Application | Verified |
-| TPQ-06 | P1: Carregar a lista sem paginacao | React | Verified |
-| TPQ-07 | P1: Carregar a lista sem paginacao | React | Verified |
-| TPQ-08 | P1: Carregar a lista sem paginacao | React | Verified |
+| TPQ-06 | P1: Carregar a lista sem paginacao | Implementing | Pending |
+| TPQ-07 | P1: Carregar a lista sem paginacao | Implementing | Pending |
+| TPQ-08 | P1: Carregar a lista sem paginacao | Implementing | Pending |
 
 **Coverage:** 8 total, 8 mapped to implementation.
 

@@ -2,6 +2,7 @@ import type {
   JournalBusinessType,
   JournalChainListItem,
   JournalChainStatus,
+  QueryPage,
 } from "@workspace/application"
 
 export type TransactionType = Exclude<JournalBusinessType, "OPENING_BALANCE">
@@ -70,6 +71,23 @@ export function normalizeTransactionServerFilters(
     ...(accountIds === undefined ? {} : { accountIds }),
     ...(categoryIds === undefined ? {} : { categoryIds }),
   }
+}
+
+export function dedupeTransactionChainPages(
+  pages: readonly QueryPage<JournalChainListItem>[]
+): readonly JournalChainListItem[] {
+  const chainIds = new Set<string>()
+  const items: JournalChainListItem[] = []
+
+  for (const page of pages) {
+    for (const item of page.items) {
+      if (chainIds.has(item.chainId)) continue
+      chainIds.add(item.chainId)
+      items.push(item)
+    }
+  }
+
+  return items
 }
 
 export function filterTransactionChainsByStatus(
