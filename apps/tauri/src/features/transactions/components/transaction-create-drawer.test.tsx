@@ -49,6 +49,34 @@ vi.mock("../hooks/use-record-expense.js", () => ({
 vi.mock("../hooks/use-transfer-money.js", () => ({
   useTransferMoney: () => mutations.transfer(),
 }))
+vi.mock("@workspace/ui/components/drawer", () => ({
+  Drawer: ({
+    children,
+    direction,
+    modal,
+  }: {
+    children: React.ReactNode
+    direction: string
+    modal: boolean
+  }) => (
+    <div data-direction={direction} data-modal={String(modal)}>
+      {children}
+    </div>
+  ),
+  DrawerBackdrop: (props: React.ComponentProps<"div">) => <div {...props} />,
+  DrawerContent: ({ children }: { children: React.ReactNode }) => (
+    <div data-slot="drawer-content">{children}</div>
+  ),
+  DrawerDescription: ({ children }: { children: React.ReactNode }) => (
+    <p>{children}</p>
+  ),
+  DrawerHeader: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  DrawerTitle: ({ children }: { children: React.ReactNode }) => (
+    <h2>{children}</h2>
+  ),
+}))
 vi.mock("./income-form.js", () => ({
   IncomeForm: ({
     onSubmit,
@@ -149,10 +177,11 @@ describe("TransactionCreateDrawer", () => {
       document.querySelector('[data-slot="transaction-create-drawer-backdrop"]')
     ).toBeTruthy()
     expect(
-      document
-        .querySelector('[data-slot="drawer-content"]')
-        ?.getAttribute("data-vaul-drawer-direction")
+      document.querySelector("[data-direction]")?.getAttribute("data-direction")
     ).toBe("right")
+    expect(
+      document.querySelector("[data-modal]")?.getAttribute("data-modal")
+    ).toBe("false")
   })
 
   it.each([

@@ -39,6 +39,12 @@ T1 -> T2 -> T3
 T3 -> T4
 ```
 
+### Phase 4: Verification correction
+
+```
+T4 -> T5
+```
+
 ## Task Breakdown
 
 ### T1: Add the shared Vaul drawer
@@ -112,3 +118,20 @@ T3 -> T4
 **Tests**: jsdom integration
 **Gate**: build
 **Commit**: `feat(transactions): mount global creation action`
+
+### T5: Close drawer verification gaps
+
+**What**: Prove the non-modal drawer configuration and the visible existing-form error path after a failed mutation.
+**Where**: `apps/tauri/src/features/transactions/components/transaction-create-drawer.test.tsx`
+**Depends on**: T4
+**Reuses**: existing form failure contract from `income-form.test.tsx`.
+**Requirement**: GTD-02, GTD-05
+
+**Done when**:
+
+- [x] The drawer test asserts `direction="right"` and `modal={false}` passed to the shared primitive.
+- [x] An actual income form in the drawer keeps its values and displays `Não foi possível salvar a transação` after the creation mutation rejects.
+
+**Tests**: jsdom integration
+**Gate**: full
+**Commit**: `test(transactions): cover creation drawer failures`
