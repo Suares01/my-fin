@@ -123,9 +123,9 @@ describe("SqliteLedgerAccountRepository", () => {
 
     await repository.add(category)
 
-    expect(
-      (await repository.findById(category.id))?.toSnapshot()
-    ).toEqual(category.toSnapshot())
+    expect((await repository.findById(category.id))?.toSnapshot()).toEqual(
+      category.toSnapshot()
+    )
   })
 
   it("adds and finds common accounts with absent appearance", async () => {
@@ -157,12 +157,10 @@ describe("SqliteLedgerAccountRepository", () => {
     await repository.save(updated, 0)
 
     expect(execute).toHaveBeenCalledOnce()
-    expect(execute.mock.calls[0]?.[0]).toContain(
-      "icon_key = ?, color_hex = ?"
+    expect(execute.mock.calls[0]?.[0]).toContain("icon_key = ?, color_hex = ?")
+    expect((await repository.findById(updated.id))?.toSnapshot()).toEqual(
+      updated.toSnapshot()
     )
-    expect(
-      (await repository.findById(updated.id))?.toSnapshot()
-    ).toEqual(updated.toSnapshot())
   })
 
   it("preserves category identity fields while saving appearance", async () => {
@@ -181,17 +179,17 @@ describe("SqliteLedgerAccountRepository", () => {
 
     await repository.save(updated, 0)
 
-    expect(
-      (await repository.findById(updated.id))?.toSnapshot()
-    ).toMatchObject({
-      id: initial.id,
-      bookId: initial.bookId,
-      kind: "INCOME",
-      status: "ACTIVE",
-      iconKey: "briefcase",
-      colorHex: "10b981",
-      version: 1,
-    })
+    expect((await repository.findById(updated.id))?.toSnapshot()).toMatchObject(
+      {
+        id: initial.id,
+        bookId: initial.bookId,
+        kind: "INCOME",
+        status: "ACTIVE",
+        iconKey: "briefcase",
+        colorHex: "10b981",
+        version: 1,
+      }
+    )
   })
 
   it("rejects a stale appearance save without partial state or facts", async () => {
@@ -223,9 +221,9 @@ describe("SqliteLedgerAccountRepository", () => {
       code: "OPTIMISTIC_CONCURRENCY_FAILURE",
     })
     expect(facts.recorded).toEqual([])
-    expect(
-      (await repository.findById(initial.id))?.toSnapshot()
-    ).toEqual(persisted.toSnapshot())
+    expect((await repository.findById(initial.id))?.toSnapshot()).toEqual(
+      persisted.toSnapshot()
+    )
   })
 
   it("keeps appearance absent when a common account is renamed", async () => {

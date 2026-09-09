@@ -157,7 +157,9 @@ describe("category visual metadata migration", () => {
       )
     ).rejects.toThrow()
     await expect(
-      database!.query("SELECT kind, icon_key, color_hex FROM ledger_accounts WHERE id = 'asset-1'")
+      database!.query(
+        "SELECT kind, icon_key, color_hex FROM ledger_accounts WHERE id = 'asset-1'"
+      )
     ).resolves.toEqual([{ kind: "ASSET", icon_key: null, color_hex: null }])
   })
 
@@ -171,7 +173,9 @@ describe("category visual metadata migration", () => {
       )
     ).rejects.toThrow()
     await expect(
-      database!.query("SELECT kind, icon_key, color_hex FROM ledger_accounts WHERE id = 'expense-1'")
+      database!.query(
+        "SELECT kind, icon_key, color_hex FROM ledger_accounts WHERE id = 'expense-1'"
+      )
     ).resolves.toEqual([
       { kind: "EXPENSE", icon_key: "label-dollar", color_hex: "f43f5e" },
     ])
@@ -208,12 +212,8 @@ describe("category visual metadata migration", () => {
       new SqliteMigrationRunner(database!, [...V1_TO_V3, broken]).migrate()
     ).rejects.toThrow()
     await expect(
-      database!.query<{ name: string }>(
-        "PRAGMA table_info(ledger_accounts)"
-      )
-    ).resolves.not.toEqual(
-      expect.arrayContaining([{ name: "icon_key" }])
-    )
+      database!.query<{ name: string }>("PRAGMA table_info(ledger_accounts)")
+    ).resolves.not.toEqual(expect.arrayContaining([{ name: "icon_key" }]))
     await expect(
       database!.query<{ name: string }>(
         "SELECT name FROM sqlite_schema WHERE type = 'trigger' AND name LIKE 'trg_category_visual_metadata_%'"

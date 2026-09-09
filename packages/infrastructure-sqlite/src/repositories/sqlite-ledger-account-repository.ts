@@ -118,8 +118,8 @@ export class SqliteLedgerAccountRepository implements LedgerAccountRepository {
     try {
       result = await this.executor.execute(
         "UPDATE ledger_accounts SET name = ?, normalized_name = ?, " +
-        "status = ?, system_purpose = ?, icon_key = ?, color_hex = ?, " +
-        "version = ? " +
+          "status = ?, system_purpose = ?, icon_key = ?, color_hex = ?, " +
+          "version = ? " +
           "WHERE id = ? AND version = ? AND kind = ?",
         [
           values.name,

@@ -129,7 +129,11 @@ function createIncomeUseCase(
   )
   return {
     execute: (input) =>
-      useCase.execute({ ...input, iconKey: "label-dollar", colorHex: "10b981" }),
+      useCase.execute({
+        ...input,
+        iconKey: "label-dollar",
+        colorHex: "10b981",
+      }),
   }
 }
 
@@ -143,7 +147,11 @@ function createExpenseUseCase(
   )
   return {
     execute: (input) =>
-      useCase.execute({ ...input, iconKey: "label-dollar", colorHex: "f43f5e" }),
+      useCase.execute({
+        ...input,
+        iconKey: "label-dollar",
+        colorHex: "f43f5e",
+      }),
   }
 }
 
