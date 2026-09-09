@@ -255,11 +255,11 @@ Como o plano excede oito tarefas, o Execute deve oferecer esses três workers de
 
 **Done when:**
 
-- [ ] Categoria ativa é arquivada com appearance preservada e uma transição versionada.
-- [ ] Categoria já arquivada com versão atual é no-op.
-- [ ] Conta financeira/sistema, livro incorreto e stale version são rejeitados sem escrita/fato.
-- [ ] Pelo menos 5 casos de integração novos cobrem os branches; o total não diminui.
-- [ ] Full Application passa.
+- [x] Categoria ativa é arquivada com appearance preservada e uma transição versionada.
+- [x] Categoria já arquivada com versão atual é no-op.
+- [x] Conta financeira/sistema, livro incorreto e stale version são rejeitados sem escrita/fato.
+- [x] Pelo menos 5 casos de integração novos cobrem os branches; o total não diminui.
+- [x] Full Application passa.
 
 **Tests:** integration
 **Gate:** Full Application

@@ -283,15 +283,15 @@ Toda ambiguidade foi resolvida pela solicitação, pelo código existente ou pel
 | CAT-27 | P1: Criar categoria | Tasks | In Tasks |
 | CAT-28 | P1: Criar categoria | Tasks | In Tasks |
 | CAT-29 | P1: Atualizar categoria | Tasks | T5 complete |
-| CAT-30 | P1: Atualizar categoria | Tasks | T5 complete |
-| CAT-31 | P1: Atualizar categoria | Tasks | T5 complete |
+| CAT-30 | P1: Atualizar categoria | Tasks | T5/T6 complete |
+| CAT-31 | P1: Atualizar categoria | Tasks | T5/T6 complete |
 | CAT-32 | P1: Atualizar categoria | Tasks | T5 complete |
 | CAT-33 | P1: Atualizar categoria | Tasks | T1/T4/T5 complete |
 | CAT-34 | P1: Atualizar categoria | Tasks | T1/T5 complete |
 | CAT-35 | P1: Atualizar categoria | Tasks | T1/T5 complete |
 | CAT-36 | P1: Atualizar categoria | Tasks | T2/T4/T5 complete |
-| CAT-37 | P1: Atualizar categoria | Tasks | T2 complete |
-| CAT-38 | P1: Atualizar categoria | Tasks | T3/T4/T5 complete |
+| CAT-37 | P1: Atualizar categoria | Tasks | T2/T6 complete |
+| CAT-38 | P1: Atualizar categoria | Tasks | T3/T4/T5/T6 complete |
 | CAT-39 | P1: Editar na UI | Tasks | In Tasks |
 | CAT-40 | P1: Editar na UI | Tasks | In Tasks |
 | CAT-41 | P1: Editar na UI | Tasks | In Tasks |
