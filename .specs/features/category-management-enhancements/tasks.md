@@ -718,12 +718,12 @@ Como o plano excede oito tarefas, o Execute deve oferecer esses três workers de
 
 **Done when:**
 
-- [ ] Filete e stroke usam `#${colorHex}`; nome e Badge mantêm tipo legível sem depender da cor.
-- [ ] Chave desconhecida mostra fallback e preserva todas as ações.
-- [ ] Ativo oferece editar/arquivar; arquivado oferece editar/reativar; labels incluem o nome.
-- [ ] Cada gesto dispara uma mutation; pending desabilita repetição e falha usa toast sem remover o card.
-- [ ] Pelo menos 7 casos de componente novos cobrem aparência, fallback, status, payload e erro; o total não diminui.
-- [ ] Quick Tauri passa.
+- [x] Filete e stroke usam `#${colorHex}`; nome e Badge mantêm tipo legível sem depender da cor.
+- [x] Chave desconhecida mostra fallback e preserva todas as ações.
+- [x] Ativo oferece editar/arquivar; arquivado oferece editar/reativar; labels incluem o nome.
+- [x] Cada gesto dispara uma mutation; pending desabilita repetição e falha usa toast sem remover o card.
+- [x] Pelo menos 7 casos de componente novos cobrem aparência, fallback, status, payload e erro; o total não diminui.
+- [x] Quick Tauri passa.
 
 **Tests:** component integration
 **Gate:** Quick Tauri

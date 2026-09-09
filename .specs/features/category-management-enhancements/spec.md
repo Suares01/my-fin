@@ -292,7 +292,7 @@ Toda ambiguidade foi resolvida pela solicitação, pelo código existente ou pel
 | CAT-36 | P1: Atualizar categoria | Tasks | T2/T4/T5 complete |
 | CAT-37 | P1: Atualizar categoria | Tasks | T2/T6/T7/T13 complete |
 | CAT-38 | P1: Atualizar categoria | Tasks | T3/T4/T5/T6/T7/T11 complete |
-| CAT-39 | P1: Editar na UI | Tasks | In Tasks |
+| CAT-39 | P1: Editar na UI | Tasks | T24 card action complete; panel integration remains in T25 |
 | CAT-40 | P1: Editar na UI | Tasks | T22 form prefill complete; panel coverage remains in T25 |
 | CAT-41 | P1: Editar na UI | Tasks | T21/T22 complete |
 | CAT-42 | P1: Editar na UI | Tasks | T16/T22 complete |
@@ -304,25 +304,25 @@ Toda ambiguidade foi resolvida pela solicitação, pelo código existente ou pel
 | CAT-48 | P1: Arquivadas e reativação | Tasks | T23 model defaults complete; page default remains in T25 |
 | CAT-49 | P1: Arquivadas e reativação | Tasks | T23 model matrix complete; page coverage remains in T25 |
 | CAT-50 | P1: Arquivadas e reativação | Tasks | T23 model matrix complete; page coverage remains in T25 |
-| CAT-51 | P1: Arquivadas e reativação | Tasks | In Tasks |
-| CAT-52 | P1: Arquivadas e reativação | Tasks | In Tasks |
-| CAT-53 | P1: Arquivadas e reativação | Tasks | T16 complete |
+| CAT-51 | P1: Arquivadas e reativação | Tasks | T24 complete |
+| CAT-52 | P1: Arquivadas e reativação | Tasks | T24 complete |
+| CAT-53 | P1: Arquivadas e reativação | Tasks | T16/T24 complete |
 | CAT-54 | P1: Arquivadas e reativação | Tasks | T14/T16 complete |
-| CAT-55 | P1: Arquivadas e reativação | Tasks | T16 complete |
+| CAT-55 | P1: Arquivadas e reativação | Tasks | T16/T24 complete |
 | CAT-56 | P1: Arquivadas e reativação | Tasks | T23 empty result complete; UI empty state remains in T25 |
 | CAT-57 | P1: Arquivadas e reativação | Tasks | In Tasks |
-| CAT-58 | P2: Acessibilidade visual | Tasks | In Tasks |
-| CAT-59 | P2: Acessibilidade visual | Tasks | In Tasks |
-| CAT-60 | P2: Acessibilidade visual | Tasks | T20 complete; card action coverage remains in T24 |
+| CAT-58 | P2: Acessibilidade visual | Tasks | T24 complete |
+| CAT-59 | P2: Acessibilidade visual | Tasks | T24 complete |
+| CAT-60 | P2: Acessibilidade visual | Tasks | T20/T24 complete |
 | CAT-61 | P2: Acessibilidade visual | Tasks | T23 readonly options complete; keyboard UI coverage remains in T25 |
 | CAT-62 | P2: Acessibilidade visual | Tasks | In Tasks |
-| CAT-63 | P2: Acessibilidade visual | Tasks | T17 complete |
+| CAT-63 | P2: Acessibilidade visual | Tasks | T17/T24 complete |
 | CAT-64 | Edge case: troca de livro | Tasks | In Tasks |
 | CAT-65 | Edge case: cache por livro | Tasks | T14/T15/T16 complete |
 | CAT-66 | Edge case: invalidação parcial | Tasks | T14/T15/T16 complete |
 | CAT-67 | Edge case: conta-gotas | Tasks | T18/T19 complete |
 | CAT-68 | Edge case: cor manual | Tasks | T19/T21 complete; form integration remains in T22 |
-| CAT-69 | Edge case: reativação repetida | Tasks | T7/T11/T16 complete |
+| CAT-69 | Edge case: reativação repetida | Tasks | T7/T11/T16 complete; UI action coverage in T24 |
 | CAT-70 | P1: Persistir metadados | Tasks | T1/T9/T10/T11 complete |
 | CAT-71 | P1: Atualizar categoria | Tasks | T1/T5 complete |
 | CAT-72 | P1: Criar categoria | Tasks | T22 complete |

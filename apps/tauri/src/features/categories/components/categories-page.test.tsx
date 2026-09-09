@@ -17,6 +17,7 @@ const state = vi.hoisted(() => ({
   createExpense: vi.fn(),
   updateCategory: vi.fn(),
   archiveCategory: vi.fn(),
+  reactivateCategory: vi.fn(),
 }))
 
 const hooks = vi.hoisted(() => ({
@@ -45,6 +46,10 @@ vi.mock("../hooks", () => ({
   }),
   useArchiveCategory: () => ({
     mutateAsync: state.archiveCategory,
+    isPending: false,
+  }),
+  useReactivateCategory: () => ({
+    mutateAsync: state.reactivateCategory,
     isPending: false,
   }),
 }))
@@ -93,6 +98,7 @@ describe("CategoriesPage", () => {
     state.createExpense.mockReset()
     state.updateCategory.mockReset()
     state.archiveCategory.mockReset()
+    state.reactivateCategory.mockReset()
   })
 
   it("filters active categories by type and excludes archived categories", () => {
