@@ -1,5 +1,5 @@
 import type { JournalChainListItem } from "@workspace/application"
-import { useMemo, useState } from "react"
+import { useDeferredValue, useMemo, useState } from "react"
 import { useActiveBook } from "../../../providers/use-active-book.js"
 import { filterTransactionChainsByStatus } from "../transaction-list-model.js"
 import { useTransactionChains } from "../hooks/use-transaction-chains.js"
@@ -16,7 +16,12 @@ function TransactionsPageContent({ bookId }: { readonly bookId: string }) {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
-  const chains = useTransactionChains(filters)
+  const deferredSearch = useDeferredValue(filters.search)
+  const queryFilters = useMemo(
+    () => ({ ...filters, search: deferredSearch }),
+    [filters, deferredSearch]
+  )
+  const chains = useTransactionChains(queryFilters)
   const options = useTransactionFormOptions("INCOME")
   const items = useMemo(
     () =>
