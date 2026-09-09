@@ -230,11 +230,11 @@ Como o plano excede oito tarefas, o Execute deve oferecer esses três workers de
 
 **Done when:**
 
-- [ ] Mudanças isoladas e combinadas geram uma versão, um save e um `CategoryUpdated`.
-- [ ] No-op retorna DTO sem save, versão ou fato novos.
-- [ ] Conta financeira/sistema, outro livro, stale version, duplicidade e entradas inválidas não alteram estado/fatos.
-- [ ] Pelo menos 9 casos de integração novos cobrem todos os outcomes; o total não diminui.
-- [ ] Full Application passa.
+- [x] Mudanças isoladas e combinadas geram uma versão, um save e um `CategoryUpdated`.
+- [x] No-op retorna DTO sem save, versão ou fato novos.
+- [x] Conta financeira/sistema, outro livro, stale version, duplicidade e entradas inválidas não alteram estado/fatos.
+- [x] Pelo menos 9 casos de integração novos cobrem todos os outcomes; o total não diminui.
+- [x] Full Application passa.
 
 **Tests:** integration
 **Gate:** Full Application
