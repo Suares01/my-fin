@@ -385,11 +385,11 @@ Como o plano excede oito tarefas, o Execute deve oferecer esses três workers de
 
 **Done when:**
 
-- [ ] Add/find/save preservam appearance de categoria e ausência em contas comuns/sistema.
-- [ ] Update de três campos usa um statement CAS e não altera kind/book/status/system purpose.
-- [ ] Conflito/rejeição não registra fatos nem persiste estado parcial.
-- [ ] Pelo menos 6 casos de integração novos cobrem round trip, save, CAS e constraints; o total não diminui.
-- [ ] Focused SQLite Repository T11 passa.
+- [x] Add/find/save preservam appearance de categoria e ausência em contas comuns/sistema.
+- [x] Update de três campos usa um statement CAS e não altera kind/book/status/system purpose.
+- [x] Conflito/rejeição não registra fatos nem persiste estado parcial.
+- [x] Pelo menos 6 casos de integração novos cobrem round trip, save, CAS e constraints; o total não diminui.
+- [x] Focused SQLite Repository T11 passa.
 
 **Tests:** integration
 **Gate:** Focused SQLite Repository T11

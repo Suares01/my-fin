@@ -12,7 +12,7 @@ import {
   bookIdFromString,
   ledgerAccountIdFromString,
 } from "@workspace/domain"
-import { afterEach, beforeEach, describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { initializeSqliteDatabase } from "../../src/database/initialize-sqlite-database.js"
 import { SqliteFinancialBookRepository } from "../../src/repositories/sqlite-financial-book-repository.js"
 import { SqliteLedgerAccountRepository } from "../../src/repositories/sqlite-ledger-account-repository.js"
@@ -115,6 +115,136 @@ describe("SqliteLedgerAccountRepository", () => {
 
     expect(loaded).not.toBe(account)
     expect(loaded?.toSnapshot()).toEqual(accountSnapshot())
+  })
+
+  it("adds and finds managed category appearance exactly", async () => {
+    const repository = new SqliteLedgerAccountRepository(database)
+    const category = restoredAccount({ kind: "EXPENSE" })
+
+    await repository.add(category)
+
+    expect(
+      (await repository.findById(category.id))?.toSnapshot()
+    ).toEqual(category.toSnapshot())
+  })
+
+  it("adds and finds common accounts with absent appearance", async () => {
+    const repository = new SqliteLedgerAccountRepository(database)
+    const account = restoredAccount({ kind: "ASSET" })
+
+    await repository.add(account)
+
+    const snapshot = (await repository.findById(account.id))?.toSnapshot()
+    expect(snapshot).not.toHaveProperty("iconKey")
+    expect(snapshot).not.toHaveProperty("colorHex")
+  })
+
+  it("saves category name and appearance in one optimistic update", async () => {
+    const repository = new SqliteLedgerAccountRepository(database)
+    const initial = restoredAccount({ kind: "EXPENSE" })
+    const updated = restoredAccount({
+      kind: "EXPENSE",
+      status: "ARCHIVED",
+      name: "Food",
+      normalizedName: "food",
+      iconKey: "briefcase",
+      colorHex: "10b981",
+      version: 1,
+    })
+    await repository.add(initial)
+    const execute = vi.spyOn(database, "execute")
+
+    await repository.save(updated, 0)
+
+    expect(execute).toHaveBeenCalledOnce()
+    expect(execute.mock.calls[0]?.[0]).toContain(
+      "icon_key = ?, color_hex = ?"
+    )
+    expect(
+      (await repository.findById(updated.id))?.toSnapshot()
+    ).toEqual(updated.toSnapshot())
+  })
+
+  it("preserves category identity fields while saving appearance", async () => {
+    const repository = new SqliteLedgerAccountRepository(database)
+    const initial = restoredAccount({ kind: "INCOME" })
+    const updated = restoredAccount({
+      kind: "INCOME",
+      status: "ACTIVE",
+      name: "Salary",
+      normalizedName: "salary",
+      iconKey: "briefcase",
+      colorHex: "10b981",
+      version: 1,
+    })
+    await repository.add(initial)
+
+    await repository.save(updated, 0)
+
+    expect(
+      (await repository.findById(updated.id))?.toSnapshot()
+    ).toMatchObject({
+      id: initial.id,
+      bookId: initial.bookId,
+      kind: "INCOME",
+      status: "ACTIVE",
+      iconKey: "briefcase",
+      colorHex: "10b981",
+      version: 1,
+    })
+  })
+
+  it("rejects a stale appearance save without partial state or facts", async () => {
+    const facts = new RecordingFacts()
+    const repository = new SqliteLedgerAccountRepository(database, facts)
+    const initial = restoredAccount({ kind: "EXPENSE" })
+    const persisted = restoredAccount({
+      kind: "EXPENSE",
+      name: "Persisted",
+      normalizedName: "persisted",
+      iconKey: "briefcase",
+      colorHex: "10b981",
+      version: 1,
+    })
+    const stale = restoredAccount({
+      kind: "EXPENSE",
+      name: "Stale",
+      normalizedName: "stale",
+      iconKey: "label-dollar",
+      colorHex: "f43f5e",
+      version: 1,
+    })
+    await repository.add(initial)
+    facts.pull()
+    await repository.save(persisted, 0)
+    facts.pull()
+
+    await expect(repository.save(stale, 0)).rejects.toMatchObject({
+      code: "OPTIMISTIC_CONCURRENCY_FAILURE",
+    })
+    expect(facts.recorded).toEqual([])
+    expect(
+      (await repository.findById(initial.id))?.toSnapshot()
+    ).toEqual(persisted.toSnapshot())
+  })
+
+  it("keeps appearance absent when a common account is renamed", async () => {
+    const repository = new SqliteLedgerAccountRepository(database)
+    const initial = restoredAccount({ kind: "LIABILITY" })
+    const updated = restoredAccount({
+      kind: "LIABILITY",
+      name: "Card",
+      normalizedName: "card",
+      version: 1,
+    })
+    await repository.add(initial)
+
+    await repository.save(updated, 0)
+
+    const snapshot = (await repository.findById(updated.id))?.toSnapshot()
+    expect(snapshot).toMatchObject({ name: "Card", version: 1 })
+    expect(snapshot).not.toHaveProperty("iconKey")
+    expect(snapshot).not.toHaveProperty("colorHex")
   })
 
   it("finds system purposes only within the requested book", async () => {

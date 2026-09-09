@@ -26,7 +26,8 @@ export class SqliteLedgerAccountRepository implements LedgerAccountRepository {
   public async findById(id: LedgerAccountId): Promise<LedgerAccount | null> {
     const rows = await this.executor.query<LedgerAccountRow>(
       "SELECT id, book_id, name, normalized_name, kind, status, " +
-        "system_purpose, version FROM ledger_accounts WHERE id = ?",
+        "system_purpose, version, icon_key, color_hex " +
+        "FROM ledger_accounts WHERE id = ?",
       [id]
     )
     const row = rows[0]
@@ -39,7 +40,7 @@ export class SqliteLedgerAccountRepository implements LedgerAccountRepository {
   ): Promise<LedgerAccount | null> {
     const rows = await this.executor.query<LedgerAccountRow>(
       "SELECT id, book_id, name, normalized_name, kind, status, " +
-        "system_purpose, version FROM ledger_accounts " +
+        "system_purpose, version, icon_key, color_hex FROM ledger_accounts " +
         "WHERE book_id = ? AND system_purpose = ?",
       [bookId, purpose]
     )
@@ -79,7 +80,8 @@ export class SqliteLedgerAccountRepository implements LedgerAccountRepository {
       await this.executor.execute(
         "INSERT INTO ledger_accounts " +
           "(id, book_id, name, normalized_name, kind, status, " +
-          "system_purpose, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+          "system_purpose, version, icon_key, color_hex) " +
+          "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         [
           values.id,
           values.book_id,
@@ -89,6 +91,8 @@ export class SqliteLedgerAccountRepository implements LedgerAccountRepository {
           values.status,
           values.system_purpose,
           values.version,
+          values.icon_key,
+          values.color_hex,
         ]
       )
     } catch (error) {
@@ -114,13 +118,16 @@ export class SqliteLedgerAccountRepository implements LedgerAccountRepository {
     try {
       result = await this.executor.execute(
         "UPDATE ledger_accounts SET name = ?, normalized_name = ?, " +
-          "status = ?, system_purpose = ?, version = ? " +
+        "status = ?, system_purpose = ?, icon_key = ?, color_hex = ?, " +
+        "version = ? " +
           "WHERE id = ? AND version = ? AND kind = ?",
         [
           values.name,
           values.normalized_name,
           values.status,
           values.system_purpose,
+          values.icon_key,
+          values.color_hex,
           values.version,
           values.id,
           expectedVersion,
