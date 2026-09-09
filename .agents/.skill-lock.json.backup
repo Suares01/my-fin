@@ -6,7 +6,20 @@
       "source": "local",
       "contentHash": "9f4c793556001f3210a2d9fe3b41bf24e82e581c522d8dd50f65addfee169a29",
       "installedAt": "2026-09-03T12:31:13.869Z",
-      "updatedAt": "2026-09-03T12:31:13.869Z",
+      "updatedAt": "2026-09-03T12:31:13.877Z",
+      "agents": [
+        "codex",
+        "github-copilot"
+      ],
+      "method": "copy",
+      "global": false
+    },
+    "codenavi": {
+      "name": "codenavi",
+      "source": "local",
+      "contentHash": "23ac05b7f2d8df8311129d41432eba248bdcf14e9ace3f17c581976f7d888ada",
+      "installedAt": "2026-09-09T18:07:01.194Z",
+      "updatedAt": "2026-09-09T18:07:01.194Z",
       "agents": [
         "codex"
       ],
