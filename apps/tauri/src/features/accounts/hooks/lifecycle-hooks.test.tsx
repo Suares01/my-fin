@@ -16,7 +16,7 @@ import { ActiveBookProvider } from "../../../providers/active-book-provider.js"
 import {
   useArchiveCategory,
   useReactivateCategory,
-  useRenameCategory,
+  useUpdateCategory,
 } from "../../categories/hooks/use-category-lifecycle.js"
 import { categoryKeys } from "../../categories/hooks/category-keys.js"
 
@@ -35,8 +35,14 @@ const accountCommand = {
 } as const
 const categoryCommand = {
   bookId: "book-1",
-  accountId: "category-1",
+  categoryId: "category-1",
   expectedVersion: 4,
+} as const
+const categoryUpdateCommand = {
+  ...categoryCommand,
+  name: "Categoria nova",
+  iconKey: "restaurant",
+  colorHex: "abcdef",
 } as const
 
 function services(): MyFinServices {
@@ -51,7 +57,7 @@ function services(): MyFinServices {
       reactivate: handler(),
     } as never,
     categories: {
-      rename: handler(),
+      update: handler(),
       archive: handler(),
       reactivate: handler(),
     } as never,
@@ -163,19 +169,18 @@ describe("account and category lifecycle hooks", () => {
     expect(invalidate).not.toHaveBeenCalled()
   })
 
-  it("renames a category without submitting kind", async () => {
+  it("updates a category without submitting kind", async () => {
     const serviceFacade = services()
-    const { result } = renderHook(() => useRenameCategory(), {
+    const { result } = renderHook(() => useUpdateCategory(), {
       wrapper: wrapperFor(serviceFacade, new QueryClient()),
     })
-    const command = { ...categoryCommand, name: "Categoria nova" }
     await act(async () => {
-      await result.current.mutateAsync(command)
+      await result.current.mutateAsync(categoryUpdateCommand)
     })
-    expect(serviceFacade.categories.rename.execute).toHaveBeenCalledWith(
-      command
+    expect(serviceFacade.categories.update.execute).toHaveBeenCalledWith(
+      categoryUpdateCommand
     )
-    expect(serviceFacade.categories.rename.execute).not.toHaveBeenCalledWith(
+    expect(serviceFacade.categories.update.execute).not.toHaveBeenCalledWith(
       expect.objectContaining({ kind: expect.anything() })
     )
   })
@@ -210,11 +215,14 @@ describe("account and category lifecycle hooks", () => {
     const serviceFacade = services()
     const queryClient = new QueryClient()
     const invalidate = vi.spyOn(queryClient, "invalidateQueries")
-    const { result } = renderHook(() => useRenameCategory(), {
+    const { result } = renderHook(() => useUpdateCategory(), {
       wrapper: wrapperFor(serviceFacade, queryClient),
     })
     await act(async () => {
-      await result.current.mutateAsync({ ...categoryCommand, name: "Nova" })
+      await result.current.mutateAsync({
+        ...categoryUpdateCommand,
+        name: "Nova",
+      })
     })
     expect(invalidate).toHaveBeenCalledWith({
       queryKey: categoryKeys.all("book-1"),
@@ -238,13 +246,13 @@ describe("account and category lifecycle hooks", () => {
       await result.current.mutateAsync(categoryCommand)
     })
     await waitFor(() =>
-      expect(result.current.data).toMatchObject({
+      expect(result.current.data?.value).toMatchObject({
         id: "category-1",
         version: 5,
         status: "ACTIVE",
       })
     )
-    expect(result.current.data).not.toHaveProperty("amountMinor")
+    expect(result.current.data?.value).not.toHaveProperty("amountMinor")
   })
 
   it("does not retry category lifecycle failures", async () => {
@@ -309,6 +317,8 @@ describe("account and category lifecycle hooks", () => {
     await act(async () => {
       await result.current.mutateAsync(categoryCommand)
     })
-    await waitFor(() => expect(result.current.data?.status).toBe("ARCHIVED"))
+    await waitFor(() =>
+      expect(result.current.data?.value.status).toBe("ARCHIVED")
+    )
   })
 })

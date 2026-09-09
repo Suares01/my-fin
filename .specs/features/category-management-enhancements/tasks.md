@@ -511,11 +511,11 @@ Como o plano excede oito tarefas, o Execute deve oferecer esses três workers de
 
 **Done when:**
 
-- [ ] Update/archive/reactivate usam `categoryId`, versão atual e uma chamada por ação.
-- [ ] Conflito invalida detalhe e bloqueia replay implícito.
-- [ ] Falha preserva item/form; refresh parcial não reclassifica mutation persistida como falha.
-- [ ] Pelo menos 7 casos de hook novos cobrem os três serviços e edge cases; o total não diminui.
-- [ ] Quick Tauri passa.
+- [x] Update/archive/reactivate usam `categoryId`, versão atual e uma chamada por ação.
+- [x] Conflito invalida detalhe e bloqueia replay implícito.
+- [x] Falha preserva item/form; refresh parcial não reclassifica mutation persistida como falha.
+- [x] Pelo menos 7 casos de hook novos cobrem os três serviços e edge cases; o total não diminui.
+- [x] Quick Tauri passa.
 
 **Tests:** hook integration
 **Gate:** Quick Tauri

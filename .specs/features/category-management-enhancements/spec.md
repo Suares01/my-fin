@@ -295,20 +295,20 @@ Toda ambiguidade foi resolvida pela solicitação, pelo código existente ou pel
 | CAT-39 | P1: Editar na UI | Tasks | In Tasks |
 | CAT-40 | P1: Editar na UI | Tasks | In Tasks |
 | CAT-41 | P1: Editar na UI | Tasks | In Tasks |
-| CAT-42 | P1: Editar na UI | Tasks | In Tasks |
+| CAT-42 | P1: Editar na UI | Tasks | T16 complete |
 | CAT-43 | P1: Editar na UI | Tasks | In Tasks |
-| CAT-44 | P1: Editar na UI | Tasks | T14 complete; lifecycle coverage remains in T16 |
+| CAT-44 | P1: Editar na UI | Tasks | T14/T16 complete |
 | CAT-45 | P1: Editar na UI | Tasks | In Tasks |
-| CAT-46 | P1: Editar na UI | Tasks | In Tasks |
+| CAT-46 | P1: Editar na UI | Tasks | T16 complete |
 | CAT-47 | P1: Arquivadas e reativação | Tasks | T12 complete; remaining UI coverage in T23 |
 | CAT-48 | P1: Arquivadas e reativação | Tasks | In Tasks |
 | CAT-49 | P1: Arquivadas e reativação | Tasks | In Tasks |
 | CAT-50 | P1: Arquivadas e reativação | Tasks | In Tasks |
 | CAT-51 | P1: Arquivadas e reativação | Tasks | In Tasks |
 | CAT-52 | P1: Arquivadas e reativação | Tasks | In Tasks |
-| CAT-53 | P1: Arquivadas e reativação | Tasks | In Tasks |
-| CAT-54 | P1: Arquivadas e reativação | Tasks | T14 complete; lifecycle coverage remains in T16 |
-| CAT-55 | P1: Arquivadas e reativação | Tasks | In Tasks |
+| CAT-53 | P1: Arquivadas e reativação | Tasks | T16 complete |
+| CAT-54 | P1: Arquivadas e reativação | Tasks | T14/T16 complete |
+| CAT-55 | P1: Arquivadas e reativação | Tasks | T16 complete |
 | CAT-56 | P1: Arquivadas e reativação | Tasks | In Tasks |
 | CAT-57 | P1: Arquivadas e reativação | Tasks | In Tasks |
 | CAT-58 | P2: Acessibilidade visual | Tasks | In Tasks |
@@ -318,11 +318,11 @@ Toda ambiguidade foi resolvida pela solicitação, pelo código existente ou pel
 | CAT-62 | P2: Acessibilidade visual | Tasks | In Tasks |
 | CAT-63 | P2: Acessibilidade visual | Tasks | In Tasks |
 | CAT-64 | Edge case: troca de livro | Tasks | In Tasks |
-| CAT-65 | Edge case: cache por livro | Tasks | T14/T15 complete; lifecycle coverage remains in T16 |
-| CAT-66 | Edge case: invalidação parcial | Tasks | T14/T15 complete; lifecycle coverage remains in T16 |
+| CAT-65 | Edge case: cache por livro | Tasks | T14/T15/T16 complete |
+| CAT-66 | Edge case: invalidação parcial | Tasks | T14/T15/T16 complete |
 | CAT-67 | Edge case: conta-gotas | Tasks | In Tasks |
 | CAT-68 | Edge case: cor manual | Tasks | In Tasks |
-| CAT-69 | Edge case: reativação repetida | Tasks | T7/T11 complete |
+| CAT-69 | Edge case: reativação repetida | Tasks | T7/T11/T16 complete |
 | CAT-70 | P1: Persistir metadados | Tasks | T1/T9/T10/T11 complete |
 | CAT-71 | P1: Atualizar categoria | Tasks | T1/T5 complete |
 | CAT-72 | P1: Criar categoria | Tasks | In Tasks |

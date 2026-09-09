@@ -1,52 +1,91 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
+import type {
+  ArchiveCategoryCommand,
+  CategoryDto,
+  ReactivateCategoryCommand,
+  UpdateCategoryCommand,
+} from "@workspace/application"
 import { useMyFin } from "../../../providers"
 import {
-  AccountDto,
-  ArchiveLedgerAccountCommand,
-  ReactivateLedgerAccountCommand,
-  RenameLedgerAccountCommand,
-} from "@workspace/application"
-import { invalidateLifecycleQueries } from "../../query-invalidation"
+  invalidateCategoryQueries,
+  type CategoryInvalidationOutcome,
+} from "./category-invalidation.js"
+import { categoryKeys } from "./category-keys.js"
+import type { CategoryMutationResult } from "./category-mutation.js"
 
-type LifecycleAction = "rename" | "archive" | "reactivate"
+type ApplicationResult =
+  | { readonly ok: true; readonly value: CategoryDto }
+  | { readonly ok: false; readonly error: Error }
 
-function useCategoryLifecycle<
-  TCommand extends { readonly bookId: string; readonly accountId: string },
->(action: LifecycleAction) {
-  const services = useMyFin()
+type CategoryLifecycleCommand = {
+  readonly bookId: string
+  readonly categoryId: string
+}
+
+function useCategoryLifecycleMutation<TCommand extends CategoryLifecycleCommand>(
+  execute: (command: TCommand) => Promise<ApplicationResult>
+) {
   const queryClient = useQueryClient()
 
-  return useMutation<AccountDto, Error, TCommand>({
+  return useMutation<CategoryMutationResult, Error, TCommand>({
     mutationFn: async (command) => {
-      const handler = services.categories[action] as unknown as {
-        execute(
-          input: TCommand
-        ): Promise<
-          { ok: true; value: AccountDto } | { ok: false; error: Error }
-        >
+      const result = await execute(command)
+      if (!result.ok) {
+        if (isConcurrencyConflict(result.error)) {
+          await queryClient
+            .invalidateQueries({
+              queryKey: categoryKeys.detail(
+                command.bookId,
+                command.categoryId
+              ),
+              exact: true,
+            })
+            .catch(() => undefined)
+        }
+        throw result.error
       }
-      const result = await handler.execute(command)
-      if (!result.ok) throw result.error
-      return result.value
+
+      const refresh = await invalidateCategoryQueries(queryClient, {
+        bookId: command.bookId,
+      })
+      return toMutationResult(result.value, refresh)
     },
     retry: false,
-    onSuccess: (_category, command) =>
-      invalidateLifecycleQueries(queryClient, {
-        bookId: command.bookId,
-        accountId: command.accountId,
-        scope: "category",
-      }).then(() => undefined),
   })
 }
 
-export function useRenameCategory() {
-  return useCategoryLifecycle<RenameLedgerAccountCommand>("rename")
+function toMutationResult(
+  value: CategoryDto,
+  refresh: CategoryInvalidationOutcome
+): CategoryMutationResult {
+  return { value, refresh, refreshWarning: !refresh.ok }
+}
+
+function isConcurrencyConflict(error: Error): boolean {
+  return (
+    "code" in error &&
+    (error as Error & { readonly code?: unknown }).code ===
+      "OPTIMISTIC_CONCURRENCY_FAILURE"
+  )
+}
+
+export function useUpdateCategory() {
+  const services = useMyFin()
+  return useCategoryLifecycleMutation<UpdateCategoryCommand>((command) =>
+    services.categories.update.execute(command)
+  )
 }
 
 export function useArchiveCategory() {
-  return useCategoryLifecycle<ArchiveLedgerAccountCommand>("archive")
+  const services = useMyFin()
+  return useCategoryLifecycleMutation<ArchiveCategoryCommand>((command) =>
+    services.categories.archive.execute(command)
+  )
 }
 
 export function useReactivateCategory() {
-  return useCategoryLifecycle<ReactivateLedgerAccountCommand>("reactivate")
+  const services = useMyFin()
+  return useCategoryLifecycleMutation<ReactivateCategoryCommand>((command) =>
+    services.categories.reactivate.execute(command)
+  )
 }

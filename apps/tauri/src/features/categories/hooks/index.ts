@@ -9,5 +9,5 @@ export { useIncomeCategories } from "./use-income-categories.js"
 export {
   useArchiveCategory,
   useReactivateCategory,
-  useRenameCategory,
+  useUpdateCategory,
 } from "./use-category-lifecycle.js"
