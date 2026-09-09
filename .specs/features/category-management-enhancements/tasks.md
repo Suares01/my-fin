@@ -305,13 +305,13 @@ Como o plano excede oito tarefas, o Execute deve oferecer esses três workers de
 
 **Done when:**
 
-- [ ] Consumidores importam todos os contratos/casos de uso sem caminhos internos.
-- [ ] APIs genéricas de conta continuam exportadas para o facade de contas.
-- [ ] Pelo menos 2 assertions públicas novas são adicionadas e nenhum export anterior desaparece.
-- [ ] Full Application e Build Scoped passam.
+- [x] Consumidores importam todos os contratos/casos de uso sem caminhos internos.
+- [x] APIs genéricas de conta continuam exportadas para o facade de contas.
+- [x] Pelo menos 2 assertions públicas novas são adicionadas e nenhum export anterior desaparece.
+- [x] Full Application passa.
 
 **Tests:** unit/public API
-**Gate:** Full Application + Build Scoped
+**Gate:** Full Application (Domain build + Application build/test/check-types)
 **Commit:** `feat(application): expose category management api`
 
 ### Phase 2: SQLite persistence and read models

@@ -2,6 +2,11 @@ import { readdirSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 import * as api from "./index.js"
 import { describe, expect, it } from "vitest"
+import type {
+  ApplicationEventType,
+  CategoryDto,
+  CreateCategoryCommand,
+} from "./index.js"
 
 function sourceFiles(directory: string): readonly string[] {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -36,6 +41,42 @@ describe("application public query API", () => {
     expect(api.ReactivateLedgerAccount).toBeTypeOf("function")
     expect(Object.keys(api)).not.toContain("FixedClock")
     expect(Object.keys(api)).not.toContain("SequentialIdGenerator")
+  })
+
+  it("exports the dedicated category services and preserves generic account services", () => {
+    expect(api.CreateIncomeCategory).toBeTypeOf("function")
+    expect(api.CreateExpenseCategory).toBeTypeOf("function")
+    expect(api.UpdateCategory).toBeTypeOf("function")
+    expect(api.ArchiveCategory).toBeTypeOf("function")
+    expect(api.ReactivateCategory).toBeTypeOf("function")
+    expect(api.RenameLedgerAccount).toBeTypeOf("function")
+    expect(api.ArchiveLedgerAccount).toBeTypeOf("function")
+    expect(api.ReactivateLedgerAccount).toBeTypeOf("function")
+  })
+
+  it("exports category contracts and the CategoryUpdated event type", () => {
+    const command: CreateCategoryCommand = {
+      bookId: "book-1",
+      name: "Food",
+      kind: "EXPENSE",
+      iconKey: "restaurant",
+      colorHex: "f43f5e",
+    }
+    const dto: CategoryDto = {
+      id: "category-1",
+      bookId: "book-1",
+      name: "Food",
+      kind: "EXPENSE",
+      status: "ACTIVE",
+      iconKey: "restaurant",
+      colorHex: "f43f5e",
+      version: 0,
+    }
+    const eventType: ApplicationEventType = "CategoryUpdated"
+
+    expect(command.iconKey).toBe("restaurant")
+    expect(dto.colorHex).toBe("f43f5e")
+    expect(eventType).toBe("CategoryUpdated")
   })
 
   it("exports the catalog handlers without exposing infrastructure adapters", () => {
