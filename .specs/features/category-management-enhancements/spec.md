@@ -277,9 +277,9 @@ Toda ambiguidade foi resolvida pela solicitação, pelo código existente ou pel
 | CAT-21 | P1: Criar categoria | Tasks | In Tasks |
 | CAT-22 | P1: Criar categoria | Tasks | In Tasks |
 | CAT-23 | P1: Criar categoria | Tasks | In Tasks |
-| CAT-24 | P1: Criar categoria | Tasks | T2/T4 complete |
-| CAT-25 | P1: Criar categoria | Tasks | In Tasks |
-| CAT-26 | P1: Criar categoria | Tasks | T14 complete; creation coverage remains in T15 |
+| CAT-24 | P1: Criar categoria | Tasks | T2/T4/T15 complete |
+| CAT-25 | P1: Criar categoria | Tasks | T15 complete |
+| CAT-26 | P1: Criar categoria | Tasks | T14/T15 complete; lifecycle coverage remains in T16 |
 | CAT-27 | P1: Criar categoria | Tasks | In Tasks |
 | CAT-28 | P1: Criar categoria | Tasks | In Tasks |
 | CAT-29 | P1: Atualizar categoria | Tasks | T5 complete |
@@ -318,8 +318,8 @@ Toda ambiguidade foi resolvida pela solicitação, pelo código existente ou pel
 | CAT-62 | P2: Acessibilidade visual | Tasks | In Tasks |
 | CAT-63 | P2: Acessibilidade visual | Tasks | In Tasks |
 | CAT-64 | Edge case: troca de livro | Tasks | In Tasks |
-| CAT-65 | Edge case: cache por livro | Tasks | T14 complete; mutation coverage remains in T15/T16 |
-| CAT-66 | Edge case: invalidação parcial | Tasks | T14 complete; mutation coverage remains in T15/T16 |
+| CAT-65 | Edge case: cache por livro | Tasks | T14/T15 complete; lifecycle coverage remains in T16 |
+| CAT-66 | Edge case: invalidação parcial | Tasks | T14/T15 complete; lifecycle coverage remains in T16 |
 | CAT-67 | Edge case: conta-gotas | Tasks | In Tasks |
 | CAT-68 | Edge case: cor manual | Tasks | In Tasks |
 | CAT-69 | Edge case: reativação repetida | Tasks | T7/T11 complete |

@@ -16,7 +16,16 @@ import { MyFinServices } from "../../../bootstrap/create-services.js"
 import { MyFinQueryProvider } from "../../../providers/query-provider.js"
 import { MyFinProvider } from "../../../providers/my-fin-provider.js"
 
-const category = { id: "category-1", name: "Mercado", kind: "EXPENSE" } as const
+const category = {
+  id: "category-1",
+  bookId: "book-1",
+  name: "Mercado",
+  kind: "EXPENSE",
+  status: "ACTIVE",
+  iconKey: "label-dollar",
+  colorHex: "f43f5e",
+  version: 0,
+} as const
 
 function services(): MyFinServices {
   return {
@@ -156,7 +165,13 @@ describe("expense category hooks", () => {
     const { result } = renderHook(() => useCreateExpenseCategory(), {
       wrapper: wrapperFor(serviceFacade, queryClient),
     })
-    const command = { bookId: "book-1", name: "Mercado", kind: "EXPENSE" }
+    const command = {
+      bookId: "book-1",
+      name: "Mercado",
+      kind: "EXPENSE",
+      iconKey: "label-dollar",
+      colorHex: "f43f5e",
+    } as const
     await act(async () => {
       await result.current.mutateAsync(command)
     })
@@ -164,6 +179,125 @@ describe("expense category hooks", () => {
       command
     )
     expect(result.current.failureCount).toBe(0)
+  })
+
+  it("submits one complete EXPENSE command and returns its CategoryDto", async () => {
+    const serviceFacade = services()
+    const { result } = renderHook(() => useCreateExpenseCategory(), {
+      wrapper: wrapperFor(serviceFacade, new QueryClient()),
+    })
+    const command = {
+      bookId: "book-1",
+      name: "Mercado",
+      kind: "EXPENSE" as const,
+      iconKey: "restaurant",
+      colorHex: "abcdef",
+    }
+
+    await expect(result.current.mutateAsync(command)).resolves.toMatchObject({
+      value: category,
+      refresh: { ok: true, failedScopes: [] },
+      refreshWarning: false,
+    })
+    expect(serviceFacade.categories.createExpense.execute).toHaveBeenCalledOnce()
+    expect(serviceFacade.categories.createExpense.execute).toHaveBeenCalledWith(
+      command
+    )
+  })
+
+  it("submits one complete INCOME command without automatic retry", async () => {
+    const serviceFacade = services()
+    const { result } = renderHook(() => useCreateIncomeCategory(), {
+      wrapper: wrapperFor(serviceFacade, new QueryClient()),
+    })
+    const command = {
+      bookId: "book-1",
+      name: "Salário",
+      kind: "INCOME" as const,
+      iconKey: "briefcase",
+      colorHex: "10b981",
+    }
+
+    await expect(result.current.mutateAsync(command)).resolves.toMatchObject({
+      value: { kind: "INCOME" },
+      refresh: { ok: true, failedScopes: [] },
+      refreshWarning: false,
+    })
+    expect(serviceFacade.categories.createIncome.execute).toHaveBeenCalledOnce()
+    expect(serviceFacade.categories.createIncome.execute).toHaveBeenCalledWith(
+      command
+    )
+    expect(result.current.failureCount).toBe(0)
+  })
+
+  it("keeps the created DTO when one category refresh fails", async () => {
+    const serviceFacade = services()
+    const queryClient = new QueryClient()
+    vi.spyOn(queryClient, "invalidateQueries").mockRejectedValueOnce(
+      new Error("refresh failed")
+    )
+    const { result } = renderHook(() => useCreateExpenseCategory(), {
+      wrapper: wrapperFor(serviceFacade, queryClient),
+    })
+
+    await expect(
+      result.current.mutateAsync({
+        bookId: "book-1",
+        name: "Mercado",
+        kind: "EXPENSE",
+        iconKey: "label-dollar",
+        colorHex: "f43f5e",
+      })
+    ).resolves.toMatchObject({
+      value: category,
+      refresh: { ok: false, failedScopes: ["management"] },
+      refreshWarning: true,
+    })
+  })
+
+  it("uses the original income command book for every refresh key", async () => {
+    const serviceFacade = services()
+    const queryClient = new QueryClient()
+    const invalidate = vi.spyOn(queryClient, "invalidateQueries")
+    const { result } = renderHook(() => useCreateIncomeCategory(), {
+      wrapper: wrapperFor(serviceFacade, queryClient, "book-1"),
+    })
+
+    await result.current.mutateAsync({
+      bookId: "book-2",
+      name: "Salário",
+      kind: "INCOME",
+      iconKey: "briefcase",
+      colorHex: "10b981",
+    })
+
+    expect(invalidate).toHaveBeenCalledTimes(3)
+    const queryKeys = invalidate.mock.calls.map(([input]) => input.queryKey)
+    expect(queryKeys).not.toContainEqual(expect.arrayContaining(["book-1"]))
+    expect(queryKeys).toContainEqual(expect.arrayContaining(["book-2"]))
+  })
+
+  it("does not invalidate after a category service failure", async () => {
+    const serviceFacade = services()
+    vi.mocked(serviceFacade.categories.createExpense.execute).mockResolvedValue(
+      { ok: false, error: new Error("duplicate") } as never
+    )
+    const queryClient = new QueryClient()
+    const invalidate = vi.spyOn(queryClient, "invalidateQueries")
+    const { result } = renderHook(() => useCreateExpenseCategory(), {
+      wrapper: wrapperFor(serviceFacade, queryClient),
+    })
+
+    await expect(
+      result.current.mutateAsync({
+        bookId: "book-1",
+        name: "Mercado",
+        kind: "EXPENSE",
+        iconKey: "label-dollar",
+        colorHex: "f43f5e",
+      })
+    ).rejects.toThrow("duplicate")
+    expect(invalidate).not.toHaveBeenCalled()
   })
 
   it("invalidates the expense selector and category lists for the successful book", async () => {
@@ -178,16 +312,23 @@ describe("expense category hooks", () => {
         bookId: "book-1",
         name: "Mercado",
         kind: "EXPENSE",
+        iconKey: "label-dollar",
+        colorHex: "f43f5e",
       })
+    })
+    expect(invalidate).toHaveBeenCalledWith({
+      queryKey: categoryKeys.all("book-1"),
+      exact: false,
+    })
+    expect(invalidate).toHaveBeenCalledWith({
+      queryKey: categoryKeys.incomeCategories("book-1"),
+      exact: true,
     })
     expect(invalidate).toHaveBeenCalledWith({
       queryKey: categoryKeys.expenseCategories("book-1"),
       exact: true,
     })
-    expect(invalidate).toHaveBeenCalledWith({
-      queryKey: categoryKeys.all("book-1"),
-    })
-    expect(invalidate).toHaveBeenCalledTimes(2)
+    expect(invalidate).toHaveBeenCalledTimes(3)
   })
 
   it("invalidates the income selector and category lists after an income category is created", async () => {
@@ -202,15 +343,23 @@ describe("expense category hooks", () => {
         bookId: "book-1",
         name: "Salário",
         kind: "INCOME",
+        iconKey: "label-dollar",
+        colorHex: "10b981",
       })
+    })
+    expect(invalidate).toHaveBeenCalledWith({
+      queryKey: categoryKeys.all("book-1"),
+      exact: false,
     })
     expect(invalidate).toHaveBeenCalledWith({
       queryKey: categoryKeys.incomeCategories("book-1"),
       exact: true,
     })
     expect(invalidate).toHaveBeenCalledWith({
-      queryKey: categoryKeys.all("book-1"),
+      queryKey: categoryKeys.expenseCategories("book-1"),
+      exact: true,
     })
+    expect(invalidate).toHaveBeenCalledTimes(3)
   })
 
   it("does not invalidate when category creation fails", async () => {
@@ -229,6 +378,8 @@ describe("expense category hooks", () => {
           bookId: "book-1",
           name: "Mercado",
           kind: "EXPENSE",
+          iconKey: "label-dollar",
+          colorHex: "f43f5e",
         })
       })
     ).rejects.toThrow("duplicate")

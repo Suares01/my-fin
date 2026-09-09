@@ -486,11 +486,11 @@ Como o plano excede oito tarefas, o Execute deve oferecer esses três workers de
 
 **Done when:**
 
-- [ ] Receita/despesa enviam uma vez o command completo e não fazem retry automático.
-- [ ] Sucesso retorna DTO mesmo se alguma invalidação falhar e expõe orientação de refresh.
-- [ ] Todas as keys usam o `bookId` original do command.
-- [ ] Pelo menos 5 casos de hook novos cobrem os outcomes; o total não diminui.
-- [ ] Quick Tauri passa.
+- [x] Receita/despesa enviam uma vez o command completo e não fazem retry automático.
+- [x] Sucesso retorna DTO mesmo se alguma invalidação falhar e expõe orientação de refresh.
+- [x] Todas as keys usam o `bookId` original do command.
+- [x] Pelo menos 5 casos de hook novos cobrem os outcomes; o total não diminui.
+- [x] Quick Tauri passa.
 
 **Tests:** hook integration
 **Gate:** Quick Tauri
