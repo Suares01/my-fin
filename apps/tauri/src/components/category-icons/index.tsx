@@ -52,66 +52,7 @@ import type { CategoryIconComponent } from "./types"
 
 export type { CategoryIconComponent, CategoryIconProps } from "./types"
 
-export const categoryIconNames = [
-  "aeroplane",
-  "badge-decagram-percent",
-  "bar-chart-dollar",
-  "basket-shopping",
-  "bike",
-  "book",
-  "box-gift",
-  "briefcase-plus",
-  "briefcase",
-  "burger-drink",
-  "bus",
-  "busket-ball",
-  "cake",
-  "calendar-days",
-  "capsule",
-  "car",
-  "cart",
-  "certificate-badge",
-  "cloud",
-  "credit-card-multiple",
-  "dollar-circle",
-  "refresh-circle",
-  "link-angular-right",
-  "dollar",
-  "dumbbell",
-  "ellipsis",
-  "game-pad",
-  "graduation-cap",
-  "hand-taking-dollar",
-  "home",
-  "hospital",
-  "island",
-  "knife-fork",
-  "label-dollar",
-  "map-marker",
-  "monitor",
-  "pencil",
-  "notebook",
-  "paw-print",
-  "refresh-dollar",
-  "stopwatch",
-  "pix",
-  "shirt",
-  "surfboard",
-  "tickets",
-  "train",
-  "trophy",
-  "wallet",
-  "wheelbarrow-empty",
-] as const
-
-export type CategoryIconName = (typeof categoryIconNames)[number]
-
-export type CategoryIconEntry = {
-  name: CategoryIconName
-  Icon: CategoryIconComponent
-}
-
-export const categoryIconsLibrary = {
+export const categoryIconsLibrary = Object.freeze({
   aeroplane: Aeroplane,
   "badge-decagram-percent": BadgeDecagramPercent,
   "bar-chart-dollar": BarChartDollar,
@@ -161,17 +102,28 @@ export const categoryIconsLibrary = {
   trophy: Trophy,
   wallet: Wallet,
   "wheelbarrow-empty": WheelbarrowEmpty,
-} satisfies Record<CategoryIconName, CategoryIconComponent>
+} satisfies Record<string, CategoryIconComponent>)
+
+export type CategoryIconName = keyof typeof categoryIconsLibrary
+
+export type CategoryIconEntry = {
+  name: CategoryIconName
+  Icon: CategoryIconComponent
+}
+
+export const categoryIconNames = Object.freeze(
+  Object.keys(categoryIconsLibrary) as CategoryIconName[]
+)
 
 const categoryIconLookup: Readonly<
   Record<string, CategoryIconComponent | undefined>
 > = categoryIconsLibrary
 
-const categoryIconEntries: CategoryIconEntry[] = categoryIconNames.map(
-  (name) => ({
+const categoryIconEntries = Object.freeze(
+  categoryIconNames.map((name) => ({
     name,
     Icon: categoryIconsLibrary[name],
-  })
+  }))
 )
 
 export function isCategoryIconName(
@@ -196,5 +148,5 @@ export function getCategoryIconOrFallback(
 }
 
 export function getCategoryIconEntries(): CategoryIconEntry[] {
-  return [...categoryIconEntries]
+  return categoryIconEntries.map((entry) => ({ ...entry }))
 }

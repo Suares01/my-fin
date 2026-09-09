@@ -536,11 +536,11 @@ Como o plano excede oito tarefas, o Execute deve oferecer esses três workers de
 
 **Done when:**
 
-- [ ] Existe um único objeto chave→componente; names e entries são derivados em ordem determinística.
-- [ ] Lookup válido é direto; desconhecido resolve `label-dollar`; coleções externas não mutam a fonte.
-- [ ] Consumidores recebem componentes, não strings.
-- [ ] Pelo menos 5 casos unitários novos cobrem primeira/meio/última chave, unicidade, ordem e fallback; o total não diminui.
-- [ ] Quick Tauri e Build Scoped passam.
+- [x] Existe um único objeto chave→componente; names e entries são derivados em ordem determinística.
+- [x] Lookup válido é direto; desconhecido resolve `label-dollar`; coleções externas não mutam a fonte.
+- [x] Consumidores recebem componentes, não strings.
+- [x] Pelo menos 5 casos unitários novos cobrem primeira/meio/última chave, unicidade, ordem e fallback; o total não diminui.
+- [x] Quick Tauri e Build Scoped passam.
 
 **Tests:** unit
 **Gate:** Quick Tauri + Build Scoped

@@ -264,12 +264,12 @@ Toda ambiguidade foi resolvida pela solicitação, pelo código existente ou pel
 | CAT-08 | P1: Persistir metadados | Tasks | T9 complete |
 | CAT-09 | P1: Persistir metadados | Tasks | T1/T4 complete |
 | CAT-10 | P1: Persistir metadados | Tasks | T1/T4 complete |
-| CAT-11 | P1: Catálogo de ícones | Tasks | In Tasks |
-| CAT-12 | P1: Catálogo de ícones | Tasks | In Tasks |
-| CAT-13 | P1: Catálogo de ícones | Tasks | In Tasks |
-| CAT-14 | P1: Catálogo de ícones | Tasks | In Tasks |
-| CAT-15 | P1: Catálogo de ícones | Tasks | In Tasks |
-| CAT-16 | P1: Catálogo de ícones | Tasks | In Tasks |
+| CAT-11 | P1: Catálogo de ícones | Tasks | T17 complete |
+| CAT-12 | P1: Catálogo de ícones | Tasks | T17 complete |
+| CAT-13 | P1: Catálogo de ícones | Tasks | T17 complete |
+| CAT-14 | P1: Catálogo de ícones | Tasks | T17 complete |
+| CAT-15 | P1: Catálogo de ícones | Tasks | T17 complete |
+| CAT-16 | P1: Catálogo de ícones | Tasks | T17 complete |
 | CAT-17 | P1: Criar categoria | Tasks | In Tasks |
 | CAT-18 | P1: Criar categoria | Tasks | In Tasks |
 | CAT-19 | P1: Criar categoria | Tasks | In Tasks |
@@ -316,7 +316,7 @@ Toda ambiguidade foi resolvida pela solicitação, pelo código existente ou pel
 | CAT-60 | P2: Acessibilidade visual | Tasks | In Tasks |
 | CAT-61 | P2: Acessibilidade visual | Tasks | In Tasks |
 | CAT-62 | P2: Acessibilidade visual | Tasks | In Tasks |
-| CAT-63 | P2: Acessibilidade visual | Tasks | In Tasks |
+| CAT-63 | P2: Acessibilidade visual | Tasks | T17 complete |
 | CAT-64 | Edge case: troca de livro | Tasks | In Tasks |
 | CAT-65 | Edge case: cache por livro | Tasks | T14/T15/T16 complete |
 | CAT-66 | Edge case: invalidação parcial | Tasks | T14/T15/T16 complete |
