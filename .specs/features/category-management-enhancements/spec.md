@@ -283,15 +283,15 @@ Toda ambiguidade foi resolvida pela solicitação, pelo código existente ou pel
 | CAT-27 | P1: Criar categoria | Tasks | In Tasks |
 | CAT-28 | P1: Criar categoria | Tasks | In Tasks |
 | CAT-29 | P1: Atualizar categoria | Tasks | T5 complete |
-| CAT-30 | P1: Atualizar categoria | Tasks | T5/T6 complete |
-| CAT-31 | P1: Atualizar categoria | Tasks | T5/T6 complete |
+| CAT-30 | P1: Atualizar categoria | Tasks | T5/T6/T7 complete |
+| CAT-31 | P1: Atualizar categoria | Tasks | T5/T6/T7 complete |
 | CAT-32 | P1: Atualizar categoria | Tasks | T5 complete |
 | CAT-33 | P1: Atualizar categoria | Tasks | T1/T4/T5 complete |
 | CAT-34 | P1: Atualizar categoria | Tasks | T1/T5 complete |
 | CAT-35 | P1: Atualizar categoria | Tasks | T1/T5 complete |
 | CAT-36 | P1: Atualizar categoria | Tasks | T2/T4/T5 complete |
-| CAT-37 | P1: Atualizar categoria | Tasks | T2/T6 complete |
-| CAT-38 | P1: Atualizar categoria | Tasks | T3/T4/T5/T6 complete |
+| CAT-37 | P1: Atualizar categoria | Tasks | T2/T6/T7 complete |
+| CAT-38 | P1: Atualizar categoria | Tasks | T3/T4/T5/T6/T7 complete |
 | CAT-39 | P1: Editar na UI | Tasks | In Tasks |
 | CAT-40 | P1: Editar na UI | Tasks | In Tasks |
 | CAT-41 | P1: Editar na UI | Tasks | In Tasks |
@@ -322,7 +322,7 @@ Toda ambiguidade foi resolvida pela solicitação, pelo código existente ou pel
 | CAT-66 | Edge case: invalidação parcial | Tasks | In Tasks |
 | CAT-67 | Edge case: conta-gotas | Tasks | In Tasks |
 | CAT-68 | Edge case: cor manual | Tasks | In Tasks |
-| CAT-69 | Edge case: reativação repetida | Tasks | In Tasks |
+| CAT-69 | Edge case: reativação repetida | Tasks | T7 complete |
 | CAT-70 | P1: Persistir metadados | Tasks | T1 complete |
 | CAT-71 | P1: Atualizar categoria | Tasks | T1/T5 complete |
 | CAT-72 | P1: Criar categoria | Tasks | In Tasks |
