@@ -410,11 +410,11 @@ Como o plano excede oito tarefas, o Execute deve oferecer esses três workers de
 
 **Done when:**
 
-- [ ] As quatro formas de leitura retornam `iconKey` e `colorHex` exatos.
-- [ ] Status, exclusão de system accounts e ordenação existentes permanecem intactos.
-- [ ] Row visual inválida falha como corrupção em vez de omitir silenciosamente campos.
-- [ ] Pelo menos 5 casos de integração novos cobrem todos os query shapes; o total não diminui.
-- [ ] Full SQLite e Build Scoped passam.
+- [x] As quatro formas de leitura retornam `iconKey` e `colorHex` exatos.
+- [x] Status, exclusão de system accounts e ordenação existentes permanecem intactos.
+- [x] Row visual inválida falha como corrupção em vez de omitir silenciosamente campos.
+- [x] Pelo menos 5 casos de integração novos cobrem todos os query shapes; o total não diminui.
+- [x] Full SQLite e Build Scoped passam.
 
 **Tests:** integration
 **Gate:** Full SQLite + Build Scoped

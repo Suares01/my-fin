@@ -257,7 +257,7 @@ Toda ambiguidade foi resolvida pela solicitação, pelo código existente ou pel
 | CAT-01 | P1: Persistir metadados | Tasks | T1/T4/T10 complete |
 | CAT-02 | P1: Persistir metadados | Tasks | T1/T10 complete |
 | CAT-03 | P1: Persistir metadados | Tasks | T9/T11 complete |
-| CAT-04 | P1: Persistir metadados | Tasks | T2/T10 complete |
+| CAT-04 | P1: Persistir metadados | Tasks | T2/T10/T12 complete |
 | CAT-05 | P1: Persistir metadados | Tasks | T9 complete |
 | CAT-06 | P1: Persistir metadados | Tasks | T9 complete |
 | CAT-07 | P1: Persistir metadados | Tasks | T1/T10 complete |
@@ -300,7 +300,7 @@ Toda ambiguidade foi resolvida pela solicitação, pelo código existente ou pel
 | CAT-44 | P1: Editar na UI | Tasks | In Tasks |
 | CAT-45 | P1: Editar na UI | Tasks | In Tasks |
 | CAT-46 | P1: Editar na UI | Tasks | In Tasks |
-| CAT-47 | P1: Arquivadas e reativação | Tasks | In Tasks |
+| CAT-47 | P1: Arquivadas e reativação | Tasks | T12 complete; remaining UI coverage in T23 |
 | CAT-48 | P1: Arquivadas e reativação | Tasks | In Tasks |
 | CAT-49 | P1: Arquivadas e reativação | Tasks | In Tasks |
 | CAT-50 | P1: Arquivadas e reativação | Tasks | In Tasks |

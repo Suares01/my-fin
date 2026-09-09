@@ -162,7 +162,13 @@ describe("SQLite catalog queries", () => {
         bookId: bookIdFromString("book-1"),
       })
     ).resolves.toEqual([
-      { id: "category-user", name: "Mercado", kind: "EXPENSE" },
+      {
+        id: "category-user",
+        name: "Mercado",
+        kind: "EXPENSE",
+        iconKey: "label-dollar",
+        colorHex: "f43f5e",
+      },
     ])
   })
 
@@ -193,9 +199,27 @@ describe("SQLite catalog queries", () => {
         bookId: bookIdFromString("book-1"),
       })
     ).resolves.toEqual([
-      { id: "category-aluguel", name: "Aluguel", kind: "EXPENSE" },
-      { id: "category-casa", name: "Casa", kind: "EXPENSE" },
-      { id: "category-b", name: "Água", kind: "EXPENSE" },
+      {
+        id: "category-aluguel",
+        name: "Aluguel",
+        kind: "EXPENSE",
+        iconKey: "label-dollar",
+        colorHex: "f43f5e",
+      },
+      {
+        id: "category-casa",
+        name: "Casa",
+        kind: "EXPENSE",
+        iconKey: "label-dollar",
+        colorHex: "f43f5e",
+      },
+      {
+        id: "category-b",
+        name: "Água",
+        kind: "EXPENSE",
+        iconKey: "label-dollar",
+        colorHex: "f43f5e",
+      },
     ])
   })
 
@@ -220,7 +244,15 @@ describe("SQLite catalog queries", () => {
       new SqliteCategoryCatalogQueries(currentDatabase).listExpenseCategories({
         bookId: bookIdFromString("book-2"),
       })
-    ).resolves.toEqual([{ id: "category-2", name: "Casa", kind: "EXPENSE" }])
+    ).resolves.toEqual([
+      {
+        id: "category-2",
+        name: "Casa",
+        kind: "EXPENSE",
+        iconKey: "label-dollar",
+        colorHex: "f43f5e",
+      },
+    ])
   })
 
   it("uses one parametrized category statement", async () => {
@@ -235,7 +267,7 @@ describe("SQLite catalog queries", () => {
 
     expect(query).toHaveBeenCalledOnce()
     expect(query.mock.calls[0]).toEqual([
-      "SELECT id, name, kind FROM ledger_accounts WHERE book_id = ? AND kind = 'EXPENSE' AND status = 'ACTIVE' AND system_purpose IS NULL ORDER BY normalized_name COLLATE BINARY ASC, id ASC",
+      "SELECT id, name, kind, icon_key, color_hex FROM ledger_accounts WHERE book_id = ? AND kind = 'EXPENSE' AND status = 'ACTIVE' AND system_purpose IS NULL ORDER BY normalized_name COLLATE BINARY ASC, id ASC",
       ["book-1"],
     ])
   })
@@ -265,6 +297,28 @@ describe("SQLite catalog queries", () => {
       })
     ).resolves.toEqual([])
     expect(query).toHaveBeenCalledOnce()
+  })
+
+  it("rejects invalid category appearance as corrupted data", async () => {
+    const currentDatabase = await initializedDatabase()
+    vi.spyOn(currentDatabase, "query").mockResolvedValueOnce([
+      {
+        id: "category-invalid-appearance",
+        name: "Invalid",
+        kind: "EXPENSE",
+        status: "ACTIVE",
+        version: 0,
+        icon_key: "label-dollar",
+        color_hex: null,
+      },
+    ])
+
+    await expect(
+      new SqliteCategoryCatalogQueries(currentDatabase).listCategories({
+        bookId: bookIdFromString("book-1"),
+        includeArchived: true,
+      })
+    ).rejects.toThrow()
   })
 
   it("propagates a reader failure without changing its query contract", async () => {
@@ -310,7 +364,13 @@ describe("SQLite catalog queries", () => {
         bookId: bookIdFromString("book-1"),
       })
     ).resolves.toEqual([
-      { id: "income-active", name: "Salário", kind: "INCOME" },
+      {
+        id: "income-active",
+        name: "Salário",
+        kind: "INCOME",
+        iconKey: "label-dollar",
+        colorHex: "10b981",
+      },
     ])
   })
 
@@ -344,9 +404,27 @@ describe("SQLite catalog queries", () => {
         bookId: bookIdFromString("book-1"),
       })
     ).resolves.toEqual([
-      { id: "income-a", name: "Casa A", kind: "INCOME" },
-      { id: "income-z", name: "Casa Z", kind: "INCOME" },
-      { id: "income-b", name: "Água", kind: "INCOME" },
+      {
+        id: "income-a",
+        name: "Casa A",
+        kind: "INCOME",
+        iconKey: "label-dollar",
+        colorHex: "10b981",
+      },
+      {
+        id: "income-z",
+        name: "Casa Z",
+        kind: "INCOME",
+        iconKey: "label-dollar",
+        colorHex: "10b981",
+      },
+      {
+        id: "income-b",
+        name: "Água",
+        kind: "INCOME",
+        iconKey: "label-dollar",
+        colorHex: "10b981",
+      },
     ])
   })
 
@@ -395,6 +473,8 @@ describe("SQLite catalog queries", () => {
         name: "Mercado",
         kind: "EXPENSE",
         status: "ARCHIVED",
+        iconKey: "label-dollar",
+        colorHex: "f43f5e",
         version: 3,
       },
       {
@@ -402,6 +482,8 @@ describe("SQLite catalog queries", () => {
         name: "Salário",
         kind: "INCOME",
         status: "ACTIVE",
+        iconKey: "label-dollar",
+        colorHex: "10b981",
         version: 0,
       },
     ])
@@ -435,6 +517,8 @@ describe("SQLite catalog queries", () => {
         name: "Mercado",
         kind: "EXPENSE",
         status: "ACTIVE",
+        iconKey: "label-dollar",
+        colorHex: "f43f5e",
         version: 0,
       },
     ])
@@ -505,6 +589,8 @@ describe("SQLite catalog queries", () => {
         name: "Casa",
         kind: "EXPENSE",
         status: "ACTIVE",
+        iconKey: "label-dollar",
+        colorHex: "f43f5e",
         version: 0,
       },
     ])
@@ -542,6 +628,8 @@ describe("SQLite catalog queries", () => {
       name: "Mercado",
       kind: "EXPENSE",
       status: "ACTIVE",
+      iconKey: "label-dollar",
+      colorHex: "f43f5e",
       version: 0,
     })
   })
@@ -562,7 +650,15 @@ describe("SQLite catalog queries", () => {
         bookId: bookIdFromString("book-1"),
         categoryId: ledgerAccountIdFromString("category-archived"),
       })
-    ).resolves.toMatchObject({ id: "category-archived", status: "ARCHIVED" })
+    ).resolves.toEqual({
+      id: "category-archived",
+      name: "Antiga",
+      kind: "EXPENSE",
+      status: "ARCHIVED",
+      iconKey: "label-dollar",
+      colorHex: "f43f5e",
+      version: 0,
+    })
   })
 
   it("returns null for a missing category detail", async () => {
@@ -641,7 +737,7 @@ describe("SQLite catalog queries", () => {
 
     expect(query).toHaveBeenCalledOnce()
     expect(query.mock.calls[0]).toEqual([
-      "SELECT id, name, kind, status, version FROM ledger_accounts WHERE book_id = ? AND id = ? AND kind IN ('INCOME', 'EXPENSE') AND system_purpose IS NULL",
+      "SELECT id, name, kind, status, version, icon_key, color_hex FROM ledger_accounts WHERE book_id = ? AND id = ? AND kind IN ('INCOME', 'EXPENSE') AND system_purpose IS NULL",
       ["book-1", "missing"],
     ])
   })
