@@ -614,11 +614,11 @@ Como o plano excede oito tarefas, o Execute deve oferecer esses três workers de
 
 **Done when:**
 
-- [ ] Cada chave aparece exatamente uma vez com nome acessível e estado selecionado.
-- [ ] Teclado altera uma única seleção e o valor registrado no RHF.
-- [ ] Erro e disabled seguem o contrato controlado; componentes resolvidos são passados à apresentação.
-- [ ] Pelo menos 5 casos de componente novos cobrem listagem, seleção, teclado, erro e disabled; o total não diminui.
-- [ ] Quick Tauri passa.
+- [x] Cada chave aparece exatamente uma vez com nome acessível e estado selecionado.
+- [x] Teclado altera uma única seleção e o valor registrado no RHF.
+- [x] Erro e disabled seguem o contrato controlado; componentes resolvidos são passados à apresentação.
+- [x] Pelo menos 5 casos de componente novos cobrem listagem, seleção, teclado, erro e disabled; o total não diminui.
+- [x] Quick Tauri passa.
 
 **Tests:** component integration
 **Gate:** Quick Tauri

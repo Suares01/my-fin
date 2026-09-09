@@ -272,11 +272,11 @@ Toda ambiguidade foi resolvida pela solicitação, pelo código existente ou pel
 | CAT-16 | P1: Catálogo de ícones | Tasks | T17 complete |
 | CAT-17 | P1: Criar categoria | Tasks | In Tasks |
 | CAT-18 | P1: Criar categoria | Tasks | In Tasks |
-| CAT-19 | P1: Criar categoria | Tasks | In Tasks |
+| CAT-19 | P1: Criar categoria | Tasks | T20 complete; form integration remains in T22 |
 | CAT-20 | P1: Criar categoria | Tasks | T18 complete; controlled field coverage remains in T19/T22 |
 | CAT-21 | P1: Criar categoria | Tasks | T18 complete; controlled field coverage remains in T19/T22 |
 | CAT-22 | P1: Criar categoria | Tasks | T18 complete; controlled field coverage remains in T19/T22 |
-| CAT-23 | P1: Criar categoria | Tasks | In Tasks |
+| CAT-23 | P1: Criar categoria | Tasks | T20 complete; form validation remains in T21/T22 |
 | CAT-24 | P1: Criar categoria | Tasks | T2/T4/T15 complete |
 | CAT-25 | P1: Criar categoria | Tasks | T15 complete |
 | CAT-26 | P1: Criar categoria | Tasks | T14/T15 complete; lifecycle coverage remains in T16 |
@@ -313,7 +313,7 @@ Toda ambiguidade foi resolvida pela solicitação, pelo código existente ou pel
 | CAT-57 | P1: Arquivadas e reativação | Tasks | In Tasks |
 | CAT-58 | P2: Acessibilidade visual | Tasks | In Tasks |
 | CAT-59 | P2: Acessibilidade visual | Tasks | In Tasks |
-| CAT-60 | P2: Acessibilidade visual | Tasks | In Tasks |
+| CAT-60 | P2: Acessibilidade visual | Tasks | T20 complete; card action coverage remains in T24 |
 | CAT-61 | P2: Acessibilidade visual | Tasks | In Tasks |
 | CAT-62 | P2: Acessibilidade visual | Tasks | In Tasks |
 | CAT-63 | P2: Acessibilidade visual | Tasks | T17 complete |
@@ -327,7 +327,7 @@ Toda ambiguidade foi resolvida pela solicitação, pelo código existente ou pel
 | CAT-71 | P1: Atualizar categoria | Tasks | T1/T5 complete |
 | CAT-72 | P1: Criar categoria | Tasks | In Tasks |
 | CAT-73 | P1: Criar categoria | Tasks | In Tasks |
-| CAT-74 | P1: Criar categoria | Tasks | In Tasks |
+| CAT-74 | P1: Criar categoria | Tasks | T20 complete; form integration remains in T22 |
 | CAT-75 | P1: Criar categoria | Tasks | T19 complete; form coverage remains in T22 |
 | CAT-76 | P1: Criar categoria | Tasks | T19 complete; form coverage remains in T22 |
 | CAT-77 | P1: Criar categoria | Tasks | T19 complete; form coverage remains in T22 |
