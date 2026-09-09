@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   activeBook: vi.fn(),
   chains: vi.fn(),
   chainsResult: vi.fn(),
+  summary: vi.fn(),
   options: vi.fn(),
 }))
 
@@ -28,9 +29,10 @@ vi.mock("../hooks/use-transaction-form-options.js", () => ({
   useTransactionFormOptions: (type: string) => mocks.options(type),
 }))
 vi.mock("./transaction-summary.js", () => ({
-  TransactionSummary: ({ items }: { items: unknown[] }) => (
-    <div>Resumo {items.length}</div>
-  ),
+  TransactionSummary: ({ filters }: { filters: unknown }) => {
+    mocks.summary(filters)
+    return <div>Resumo</div>
+  },
 }))
 vi.mock("./transaction-filters.js", async (importOriginal) => {
   const actual =
@@ -146,7 +148,7 @@ describe("TransactionsPage", () => {
   it("renders the transaction content", () => {
     setup()
     expect(screen.getByRole("heading", { name: "Transações" })).toBeTruthy()
-    expect(screen.getByText("Resumo 1")).toBeTruthy()
+    expect(screen.getByText("Resumo")).toBeTruthy()
     expect(screen.getByText("Tabela 1")).toBeTruthy()
   })
 
@@ -158,6 +160,7 @@ describe("TransactionsPage", () => {
   it("uses the active-book query and form options", () => {
     setup()
     expect(mocks.chains).toHaveBeenCalledOnce()
+    expect(mocks.summary).toHaveBeenCalledOnce()
     expect(mocks.options).toHaveBeenCalledWith("INCOME")
   })
 
@@ -185,6 +188,17 @@ describe("TransactionsPage", () => {
         search: "",
       })
     )
+    expect(mocks.summary).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        from: "2026-09-01",
+        to: "2026-09-30",
+        types: ["EXPENSE"],
+        accountIds: ["account-1"],
+        categoryIds: ["category-1"],
+        status: "CANCELLED",
+        search: "",
+      })
+    )
 
     fireEvent.click(screen.getByRole("button", { name: "Buscar Mercado" }))
     expect(screen.getByTestId("search-value").textContent).toBe("Mercado")
@@ -199,6 +213,11 @@ describe("TransactionsPage", () => {
           status: "CANCELLED",
           search: "Mercado",
         })
+      )
+    )
+    await waitFor(() =>
+      expect(mocks.summary).toHaveBeenLastCalledWith(
+        expect.objectContaining({ search: "Mercado" })
       )
     )
   })
@@ -236,6 +255,19 @@ describe("TransactionsPage", () => {
     expect(screen.getByTestId("search-value").textContent).toBe("")
     await waitFor(() =>
       expect(mocks.chains).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          from: "",
+          to: "",
+          search: "",
+          types: ["INCOME", "EXPENSE", "TRANSFER"],
+          accountIds: [],
+          categoryIds: [],
+          status: "ALL",
+        })
+      )
+    )
+    await waitFor(() =>
+      expect(mocks.summary).toHaveBeenLastCalledWith(
         expect.objectContaining({
           from: "",
           to: "",

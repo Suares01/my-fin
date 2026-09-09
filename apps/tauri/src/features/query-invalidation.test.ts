@@ -18,6 +18,10 @@ function seedTransactionProjectionFamilies(
   bookId: string
 ) {
   client.setQueryData(transactionKeys.list(bookId, { types: ["INCOME"] }), [])
+  client.setQueryData(
+    transactionKeys.summary(bookId, { types: ["INCOME"] }),
+    {}
+  )
   client.setQueryData(transactionKeys.detail(bookId, "chain-1"), [])
   client.setQueryData(accountKeys.balances(bookId), [])
   client.setQueryData(accountKeys.statement(bookId, "account-1"), [])
@@ -25,7 +29,7 @@ function seedTransactionProjectionFamilies(
 }
 
 describe("refreshTransactionProjections", () => {
-  it("refreshes the transaction list, balances, and insights under the submitted book", async () => {
+  it("refreshes transaction lists, summaries, balances, and insights under the submitted book", async () => {
     const { client, invalidate } = clientWithInvalidation()
     seedTransactionProjectionFamilies(client, "book-1")
     await refreshTransactionProjections(client, {
@@ -34,6 +38,10 @@ describe("refreshTransactionProjections", () => {
     })
     expect(invalidate).toHaveBeenCalledWith({
       queryKey: transactionKeys.lists("book-1"),
+      exact: false,
+    })
+    expect(invalidate).toHaveBeenCalledWith({
+      queryKey: transactionKeys.summaries("book-1"),
       exact: false,
     })
     expect(invalidate).toHaveBeenCalledWith({

@@ -1,115 +1,128 @@
 /* @vitest-environment jsdom */
-import type { JournalChainListItem } from "@workspace/application"
-import { cleanup, render, screen } from "@testing-library/react"
-import { afterEach, describe, expect, it } from "vitest"
+
+import { cleanup, fireEvent, render, screen } from "@testing-library/react"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import type { TransactionFilters } from "../transaction-list-model.js"
+
+const mocks = vi.hoisted(() => ({
+  summary: vi.fn(),
+}))
+
+vi.mock("../hooks/use-transaction-summary.js", () => ({
+  useTransactionSummary: (filters: unknown) => mocks.summary(filters),
+}))
+
 import { TransactionSummary } from "./transaction-summary.js"
 
-function chain(
-  overrides: Partial<JournalChainListItem> = {}
-): JournalChainListItem {
-  return {
-    chainId: "chain-1",
-    presentedEntryId: "entry-1",
-    presentedVersion: 1,
-    type: "INCOME",
-    status: "ACTIVE",
-    occurredOn: "2026-09-03",
-    recordedAt: "2026-09-03T12:00:00.000Z",
-    sequence: "1",
-    description: "Receita",
-    origin: "MANUAL",
-    amountMinor: "10000",
-    currency: "BRL",
-    financialAccounts: [],
-    categories: [],
-    ...overrides,
-  }
+const filters: TransactionFilters = {
+  from: "2026-09-01",
+  to: "2026-09-30",
+  search: "mercado",
+  types: ["EXPENSE"],
+  accountIds: ["account-1"],
+  categoryIds: ["category-1"],
+  status: "CANCELLED",
+}
+
+const data = {
+  incomeMinor: "12345",
+  expenseMinor: "6789",
+  largestTransactionMinor: "9007199254740993",
+  transactionCount: 24,
+  currency: "BRL",
 }
 
 describe("TransactionSummary", () => {
-  afterEach(cleanup)
-
-  it("renders the four loaded-results cards", () => {
-    render(<TransactionSummary items={[chain()]} />)
-
-    expect(screen.getByText("Receitas")).toBeTruthy()
-    expect(screen.getByText("Despesas")).toBeTruthy()
-    expect(screen.getByText("Maior valor")).toBeTruthy()
-    expect(screen.getByText("Transações")).toBeTruthy()
-    expect(screen.getAllByText("resultados carregados")).toHaveLength(4)
+  beforeEach(() => {
+    mocks.summary.mockReturnValue({
+      data,
+      isPending: false,
+      isError: false,
+      refetch: vi.fn(),
+    })
   })
 
-  it("does not invent a currency for empty loaded results", () => {
-    render(<TransactionSummary items={[]} />)
-
-    expect(screen.getAllByText("—")).toHaveLength(3)
-    expect(screen.getByText("0 itens")).toBeTruthy()
+  afterEach(() => {
+    cleanup()
+    vi.clearAllMocks()
   })
 
-  it("shows locally loaded income with a positive sign", () => {
-    render(<TransactionSummary items={[chain({ amountMinor: "12345" })]} />)
+  it("queries and renders the persisted aggregate instead of loaded items", () => {
+    render(<TransactionSummary filters={filters} />)
 
-    expect(
-      screen.getByTestId("transaction-summary-income-BRL").textContent
-    ).toBe("+R$ 123,45")
-  })
-
-  it("shows locally loaded expense with a negative sign", () => {
-    render(
-      <TransactionSummary
-        items={[chain({ type: "EXPENSE", amountMinor: "12345" })]}
-      />
+    expect(mocks.summary).toHaveBeenCalledWith(filters)
+    expect(screen.getByText("Receita total")).toBeTruthy()
+    expect(screen.getByText("Despesa total")).toBeTruthy()
+    expect(screen.getByText("Maior transação")).toBeTruthy()
+    expect(screen.getByText("Total de transações")).toBeTruthy()
+    expect(screen.getByTestId("transaction-summary-income").textContent).toBe(
+      "R$ 123,45"
     )
-
-    expect(
-      screen.getByTestId("transaction-summary-expense-BRL").textContent
-    ).toBe("-R$ 123,45")
-  })
-
-  it("keeps transfers neutral in totals while counting them and selecting their magnitude", () => {
-    render(
-      <TransactionSummary
-        items={[chain({ type: "TRANSFER", amountMinor: "90000" })]}
-      />
+    expect(screen.getByTestId("transaction-summary-expense").textContent).toBe(
+      "R$ 67,89"
     )
-
-    expect(screen.queryByTestId("transaction-summary-income-BRL")).toBeNull()
-    expect(screen.queryByTestId("transaction-summary-expense-BRL")).toBeNull()
     expect(screen.getByTestId("transaction-summary-largest").textContent).toBe(
-      "R$ 900,00"
+      "R$ 90.071.992.547.409,93"
     )
     expect(screen.getByTestId("transaction-summary-count").textContent).toBe(
-      "1 item"
+      "24"
     )
   })
 
-  it("preserves currencies by showing each loaded currency separately", () => {
-    render(
-      <TransactionSummary
-        items={[
-          chain({ amountMinor: "10000", currency: "BRL" }),
-          chain({ chainId: "chain-2", amountMinor: "20000", currency: "USD" }),
-        ]}
-      />
-    )
+  it("renders four skeleton values during the initial query", () => {
+    mocks.summary.mockReturnValue({
+      data: undefined,
+      isPending: true,
+      isError: false,
+      refetch: vi.fn(),
+    })
 
-    expect(
-      screen.getByTestId("transaction-summary-income-BRL").textContent
-    ).toBe("+R$ 100,00")
-    expect(
-      screen.getByTestId("transaction-summary-income-USD").textContent
-    ).toBe("+US$ 200,00")
+    const { container } = render(<TransactionSummary filters={filters} />)
+
+    expect(container.querySelectorAll('[data-slot="skeleton"]')).toHaveLength(4)
+    expect(screen.queryByRole("alert")).toBeNull()
   })
 
-  it("keeps large loaded integer values exact", () => {
-    render(
-      <TransactionSummary
-        items={[chain({ amountMinor: "9007199254740993" })]}
-      />
-    )
+  it("keeps cards valueless and offers an explicit retry after failure", () => {
+    const refetch = vi.fn()
+    mocks.summary.mockReturnValue({
+      data: undefined,
+      isPending: false,
+      isError: true,
+      refetch,
+    })
 
-    expect(
-      screen.getByTestId("transaction-summary-income-BRL").textContent
-    ).toBe("+R$ 90.071.992.547.409,93")
+    render(<TransactionSummary filters={filters} />)
+    fireEvent.click(screen.getByRole("button", { name: "Tentar novamente" }))
+
+    expect(screen.getAllByText("—")).toHaveLength(4)
+    expect(screen.getByRole("alert").textContent).toContain(
+      "Não foi possível carregar o resumo"
+    )
+    expect(refetch).toHaveBeenCalledOnce()
+  })
+
+  it("renders successful empty aggregates as zeros in the book currency", () => {
+    mocks.summary.mockReturnValue({
+      data: {
+        incomeMinor: "0",
+        expenseMinor: "0",
+        largestTransactionMinor: "0",
+        transactionCount: 0,
+        currency: "USD",
+      },
+      isPending: false,
+      isError: false,
+      refetch: vi.fn(),
+    })
+
+    render(<TransactionSummary filters={filters} />)
+
+    expect(screen.getByTestId("transaction-summary-income").textContent).toBe(
+      "US$ 0,00"
+    )
+    expect(screen.getByTestId("transaction-summary-count").textContent).toBe(
+      "0"
+    )
   })
 })

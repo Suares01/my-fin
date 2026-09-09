@@ -34,6 +34,13 @@ export async function refreshTransactionProjections(
         exact: false,
       }),
     ],
+    [
+      "transactions",
+      queryClient.invalidateQueries({
+        queryKey: transactionKeys.summaries(input.bookId),
+        exact: false,
+      }),
+    ],
     ...(input.chainId === undefined
       ? []
       : [

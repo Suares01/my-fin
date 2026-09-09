@@ -27,6 +27,10 @@ export type TransactionServerFilters = {
   readonly categoryIds?: readonly string[]
 }
 
+export type TransactionSummaryFilters = TransactionServerFilters & {
+  readonly status?: JournalChainStatus
+}
+
 export type TransactionSummary = {
   readonly incomeMinor: bigint
   readonly expenseMinor: bigint
@@ -70,6 +74,16 @@ export function normalizeTransactionServerFilters(
     types: normalizeTypes(filters.types),
     ...(accountIds === undefined ? {} : { accountIds }),
     ...(categoryIds === undefined ? {} : { categoryIds }),
+  }
+}
+
+export function normalizeTransactionSummaryFilters(
+  filters: TransactionFilters
+): TransactionSummaryFilters {
+  const serverFilters = normalizeTransactionServerFilters(filters)
+  return {
+    ...serverFilters,
+    ...(filters.status === "ALL" ? {} : { status: filters.status }),
   }
 }
 

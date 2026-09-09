@@ -6,6 +6,7 @@ import {
   GetCategoryDetail,
   GetFinancialBook,
   GetJournalChainDetail,
+  GetJournalChainSummary,
   GetCategorySpending,
   GetMonthlyCashFlow,
   GetNetWorth,
@@ -81,6 +82,7 @@ export interface MyFinServices {
   readonly journal: {
     readonly list: ListJournalEntries
     readonly listChains: ListJournalChains
+    readonly summary: GetJournalChainSummary
     readonly getChain: GetJournalChainDetail
     readonly reverse: ReverseJournalEntry
     readonly amend: AmendJournalEntry
@@ -207,6 +209,7 @@ export function createMyFinServices(
     journal: {
       list: new ListJournalEntries(booksRepository, ledgerQueries),
       listChains: new ListJournalChains(booksRepository, journalViewQueries),
+      summary: new GetJournalChainSummary(booksRepository, journalViewQueries),
       getChain: new GetJournalChainDetail(booksRepository, journalViewQueries),
       reverse: new ReverseJournalEntry(
         transactionManager,

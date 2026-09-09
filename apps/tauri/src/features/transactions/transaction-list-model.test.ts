@@ -4,6 +4,7 @@ import {
   dedupeTransactionChainPages,
   filterTransactionChainsByStatus,
   normalizeTransactionServerFilters,
+  normalizeTransactionSummaryFilters,
   summarizeTransactionChains,
   transactionAmountSign,
   type TransactionFilters,
@@ -62,6 +63,24 @@ describe("transaction list model", () => {
   it("omits empty server filter fields", () => {
     expect(normalizeTransactionServerFilters(filters)).toEqual({
       types: ["EXPENSE", "INCOME", "TRANSFER"],
+    })
+  })
+
+  it("omits ALL status from summary filters", () => {
+    expect(normalizeTransactionSummaryFilters(filters)).toEqual({
+      types: ["EXPENSE", "INCOME", "TRANSFER"],
+    })
+  })
+
+  it("includes a selected status only in summary filters", () => {
+    const selected = { ...filters, status: "CANCELLED" as const }
+
+    expect(normalizeTransactionServerFilters(selected)).not.toHaveProperty(
+      "status"
+    )
+    expect(normalizeTransactionSummaryFilters(selected)).toEqual({
+      types: ["EXPENSE", "INCOME", "TRANSFER"],
+      status: "CANCELLED",
     })
   })
 

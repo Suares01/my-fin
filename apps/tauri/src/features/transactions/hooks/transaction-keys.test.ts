@@ -33,6 +33,24 @@ describe("transaction query keys", () => {
     ])
   })
 
+  it("scopes summary keys by normalized filters and book", () => {
+    const filters = {
+      types: ["EXPENSE"] as const,
+      status: "CANCELLED" as const,
+    }
+
+    expect(transactionKeys.summary("book-1", filters)).toEqual([
+      "books",
+      "book-1",
+      "transactions",
+      "summary",
+      filters,
+    ])
+    expect(transactionKeys.summary("book-1", filters)).not.toEqual(
+      transactionKeys.summary("book-2", filters)
+    )
+  })
+
   it("isolates identical transaction filters and chain identities across books", () => {
     expect(transactionKeys.list("book-1", { types: ["TRANSFER"] })).not.toEqual(
       transactionKeys.list("book-2", { types: ["TRANSFER"] })

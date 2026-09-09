@@ -7,6 +7,7 @@ import {
   GetCategoryDetail,
   GetFinancialBook,
   GetJournalChainDetail,
+  GetJournalChainSummary,
   GetCategorySpending,
   GetMonthlyCashFlow,
   GetNetWorth,
@@ -103,6 +104,7 @@ describe("createMyFinServices", () => {
     expect(Object.keys(services.journal)).toEqual([
       "list",
       "listChains",
+      "summary",
       "getChain",
       "reverse",
       "amend",
@@ -164,6 +166,7 @@ describe("createMyFinServices", () => {
     expect(services.income.record).toBeInstanceOf(RecordIncome)
     expect(services.transfers.record).toBeInstanceOf(TransferMoney)
     expect(services.journal.listChains).toBeInstanceOf(ListJournalChains)
+    expect(services.journal.summary).toBeInstanceOf(GetJournalChainSummary)
     expect(services.journal.getChain).toBeInstanceOf(GetJournalChainDetail)
     expect(services.journal.reverse).toBeInstanceOf(ReverseJournalEntry)
     expect(services.journal.amend).toBeInstanceOf(AmendJournalEntry)

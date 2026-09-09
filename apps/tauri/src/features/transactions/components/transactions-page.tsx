@@ -43,7 +43,7 @@ function TransactionsPageContent({ bookId }: { readonly bookId: string }) {
           </p>
         </div>
       </header>
-      <TransactionSummary items={items} />
+      <TransactionSummary filters={queryFilters} />
       <TransactionFilters
         filters={filters}
         accounts={options.accounts}
