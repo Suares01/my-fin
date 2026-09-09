@@ -32,7 +32,9 @@ describe("category appearance", () => {
   it.each(["", "food dining", "Food", "-food", "food-", "food--dining"])(
     "rejects an invalid icon key: %s",
     (iconKey) => {
-      expect(() => categoryAppearance({ iconKey, colorHex: "f43f5e" })).toThrowError(
+      expect(() =>
+        categoryAppearance({ iconKey, colorHex: "f43f5e" })
+      ).toThrowError(
         expect.objectContaining({ code: "INVALID_CATEGORY_ICON_KEY" })
       )
     }
@@ -41,7 +43,9 @@ describe("category appearance", () => {
   it.each(["", "#f43f5e", "f43", "f43f5e99", "f43f5g", "f43f5e "])(
     "rejects a non-canonical color: %s",
     (colorHex) => {
-      expect(() => categoryAppearance({ iconKey: "food", colorHex })).toThrowError(
+      expect(() =>
+        categoryAppearance({ iconKey: "food", colorHex })
+      ).toThrowError(
         expect.objectContaining({ code: "INVALID_CATEGORY_COLOR" })
       )
     }
@@ -55,7 +59,9 @@ describe("category appearance", () => {
         name: "Food",
         kind: "EXPENSE",
       })
-    ).toThrowError(expect.objectContaining({ code: "CATEGORY_APPEARANCE_REQUIRED" }))
+    ).toThrowError(
+      expect.objectContaining({ code: "CATEGORY_APPEARANCE_REQUIRED" })
+    )
   })
 
   it("rejects appearance on a financial account", () => {
@@ -68,7 +74,9 @@ describe("category appearance", () => {
         iconKey: "cash",
         colorHex: "10b981",
       })
-    ).toThrowError(expect.objectContaining({ code: "CATEGORY_APPEARANCE_FORBIDDEN" }))
+    ).toThrowError(
+      expect.objectContaining({ code: "CATEGORY_APPEARANCE_FORBIDDEN" })
+    )
   })
 
   it("rejects appearance on a system account", () => {
@@ -82,7 +90,9 @@ describe("category appearance", () => {
         iconKey: "cash",
         colorHex: "10b981",
       })
-    ).toThrowError(expect.objectContaining({ code: "CATEGORY_APPEARANCE_FORBIDDEN" }))
+    ).toThrowError(
+      expect.objectContaining({ code: "CATEGORY_APPEARANCE_FORBIDDEN" })
+    )
   })
 
   it("identifies only non-system income and expense accounts as managed", () => {
@@ -189,7 +199,9 @@ describe("category appearance", () => {
         iconKey: "invalid icon",
         colorHex: "f43f5e",
       })
-    ).toThrowError(expect.objectContaining({ code: "INVALID_CATEGORY_ICON_KEY" }))
+    ).toThrowError(
+      expect.objectContaining({ code: "INVALID_CATEGORY_ICON_KEY" })
+    )
 
     expect(account.toSnapshot()).toEqual(before)
     expect(account.pullDomainFacts()).toEqual([])

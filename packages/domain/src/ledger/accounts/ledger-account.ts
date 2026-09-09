@@ -368,5 +368,8 @@ function validateAppearance(
     )
   }
 
-  return categoryAppearance({ iconKey: input.iconKey, colorHex: input.colorHex })
+  return categoryAppearance({
+    iconKey: input.iconKey,
+    colorHex: input.colorHex,
+  })
 }
