@@ -22,9 +22,9 @@ type CategoryLifecycleCommand = {
   readonly categoryId: string
 }
 
-function useCategoryLifecycleMutation<TCommand extends CategoryLifecycleCommand>(
-  execute: (command: TCommand) => Promise<ApplicationResult>
-) {
+function useCategoryLifecycleMutation<
+  TCommand extends CategoryLifecycleCommand,
+>(execute: (command: TCommand) => Promise<ApplicationResult>) {
   const queryClient = useQueryClient()
 
   return useMutation<CategoryMutationResult, Error, TCommand>({
@@ -34,10 +34,7 @@ function useCategoryLifecycleMutation<TCommand extends CategoryLifecycleCommand>
         if (isConcurrencyConflict(result.error)) {
           await queryClient
             .invalidateQueries({
-              queryKey: categoryKeys.detail(
-                command.bookId,
-                command.categoryId
-              ),
+              queryKey: categoryKeys.detail(command.bookId, command.categoryId),
               exact: true,
             })
             .catch(() => undefined)

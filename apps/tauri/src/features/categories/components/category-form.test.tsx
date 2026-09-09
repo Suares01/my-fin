@@ -284,7 +284,11 @@ describe("CategoryForm", () => {
     })
     fireEvent.click(screen.getByRole("button", { name: "Criar categoria" }))
 
-    expect(await screen.findByText("Informe uma cor hexadecimal opaca de seis dígitos.")).toBeTruthy()
+    expect(
+      await screen.findByText(
+        "Informe uma cor hexadecimal opaca de seis dígitos."
+      )
+    ).toBeTruthy()
     expect(state.createExpense).not.toHaveBeenCalled()
   })
 
@@ -292,7 +296,9 @@ describe("CategoryForm", () => {
     render(<CategoryForm />)
     fireEvent.click(screen.getByRole("button", { name: "Criar categoria" }))
 
-    expect(await screen.findByText("Informe um nome para a categoria.")).toBeTruthy()
+    expect(
+      await screen.findByText("Informe um nome para a categoria.")
+    ).toBeTruthy()
     expect(state.createExpense).not.toHaveBeenCalled()
   })
 

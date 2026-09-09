@@ -12,6 +12,8 @@ const categories: readonly CategorySummary[] = [
     name: "Salário",
     kind: "INCOME",
     status: "ACTIVE",
+    iconKey: "wallet",
+    colorHex: "10b981",
     version: 1,
   },
   {
@@ -19,6 +21,8 @@ const categories: readonly CategorySummary[] = [
     name: "Mercado",
     kind: "EXPENSE",
     status: "ACTIVE",
+    iconKey: "cart",
+    colorHex: "f43f5e",
     version: 1,
   },
   {
@@ -26,6 +30,8 @@ const categories: readonly CategorySummary[] = [
     name: "Bônus antigo",
     kind: "INCOME",
     status: "ARCHIVED",
+    iconKey: "wallet",
+    colorHex: "10b981",
     version: 2,
   },
   {
@@ -33,16 +39,15 @@ const categories: readonly CategorySummary[] = [
     name: "Despesa antiga",
     kind: "EXPENSE",
     status: "ARCHIVED",
+    iconKey: "cart",
+    colorHex: "64748b",
     version: 3,
   },
 ]
 
 describe("category-list-model", () => {
   it("defaults to active categories of every type", () => {
-    expect(filterCategories(categories)).toEqual([
-      categories[0],
-      categories[1],
-    ])
+    expect(filterCategories(categories)).toEqual([categories[0], categories[1]])
   })
 
   it("filters archived categories independently from type", () => {

@@ -1,6 +1,6 @@
 /* @vitest-environment jsdom */
 
-import { act, renderHook } from "@testing-library/react"
+import { renderHook } from "@testing-library/react"
 import { QueryClient } from "@tanstack/react-query"
 import { describe, expect, it, vi } from "vitest"
 import type { MyFinServices } from "../../../bootstrap/create-services.js"
@@ -85,13 +85,13 @@ describe("category lifecycle hooks", () => {
       wrapper: wrapperFor(serviceFacade, new QueryClient()),
     })
 
-    await expect(result.current.mutateAsync(updateCommand)).resolves.toMatchObject(
-      {
-        value: category,
-        refresh: { ok: true, failedScopes: [] },
-        refreshWarning: false,
-      }
-    )
+    await expect(
+      result.current.mutateAsync(updateCommand)
+    ).resolves.toMatchObject({
+      value: category,
+      refresh: { ok: true, failedScopes: [] },
+      refreshWarning: false,
+    })
     expect(serviceFacade.categories.update.execute).toHaveBeenCalledOnce()
     expect(serviceFacade.categories.update.execute).toHaveBeenCalledWith(
       updateCommand
@@ -141,7 +141,9 @@ describe("category lifecycle hooks", () => {
       wrapper: wrapperFor(serviceFacade, queryClient),
     })
 
-    await expect(result.current.mutateAsync(updateCommand)).rejects.toBe(conflict)
+    await expect(result.current.mutateAsync(updateCommand)).rejects.toBe(
+      conflict
+    )
 
     expect(invalidate).toHaveBeenCalledWith({
       queryKey: categoryKeys.detail("book-1", "category-1"),
@@ -174,13 +176,13 @@ describe("category lifecycle hooks", () => {
       wrapper: wrapperFor(serviceFacade, queryClient),
     })
 
-    await expect(result.current.mutateAsync(transitionCommand)).resolves.toMatchObject(
-      {
-        value: category,
-        refresh: { ok: false, failedScopes: ["management"] },
-        refreshWarning: true,
-      }
-    )
+    await expect(
+      result.current.mutateAsync(transitionCommand)
+    ).resolves.toMatchObject({
+      value: category,
+      refresh: { ok: false, failedScopes: ["management"] },
+      refreshWarning: true,
+    })
   })
 
   it("uses the command book when the active book differs", async () => {
@@ -193,7 +195,7 @@ describe("category lifecycle hooks", () => {
 
     await result.current.mutateAsync({ ...transitionCommand, bookId: "book-2" })
 
-    const queryKeys = invalidate.mock.calls.map(([input]) => input.queryKey)
+    const queryKeys = invalidate.mock.calls.map(([input]) => input?.queryKey)
     expect(queryKeys).not.toContainEqual(expect.arrayContaining(["book-1"]))
     expect(queryKeys).toContainEqual(expect.arrayContaining(["book-2"]))
   })

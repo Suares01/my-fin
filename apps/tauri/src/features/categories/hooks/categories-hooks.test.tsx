@@ -199,7 +199,9 @@ describe("expense category hooks", () => {
       refresh: { ok: true, failedScopes: [] },
       refreshWarning: false,
     })
-    expect(serviceFacade.categories.createExpense.execute).toHaveBeenCalledOnce()
+    expect(
+      serviceFacade.categories.createExpense.execute
+    ).toHaveBeenCalledOnce()
     expect(serviceFacade.categories.createExpense.execute).toHaveBeenCalledWith(
       command
     )
@@ -272,7 +274,7 @@ describe("expense category hooks", () => {
     })
 
     expect(invalidate).toHaveBeenCalledTimes(3)
-    const queryKeys = invalidate.mock.calls.map(([input]) => input.queryKey)
+    const queryKeys = invalidate.mock.calls.map(([input]) => input?.queryKey)
     expect(queryKeys).not.toContainEqual(expect.arrayContaining(["book-1"]))
     expect(queryKeys).toContainEqual(expect.arrayContaining(["book-2"]))
   })

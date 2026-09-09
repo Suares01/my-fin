@@ -2,6 +2,7 @@ import type { CategorySummary } from "@workspace/application"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
 import { Archive, Pencil, RefreshCcw } from "lucide-react"
+import { createElement } from "react"
 import { toast } from "@workspace/ui/components/toast"
 import { getCategoryIconOrFallback } from "../../../components/category-icons"
 import { useActiveBook } from "../../../providers"
@@ -88,13 +89,15 @@ export function CategoryCard({ category, onEdit }: CategoryCardProps) {
       <div className="flex flex-1 flex-col justify-between p-4 pl-5">
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2">
-            <div className="flex size-8 items-center justify-center rounded-full bg-muted">
-              <Icon
-                aria-hidden="true"
-                data-category-icon="true"
-                className="size-4"
-                style={{ color }}
-              />
+            <div
+              className="flex size-8 items-center justify-center rounded-full bg-muted"
+              data-category-icon="true"
+              style={{ color }}
+            >
+              {createElement(Icon, {
+                "aria-hidden": true,
+                className: "size-4",
+              })}
             </div>
             <span className="text-xs text-muted-foreground">
               {category.kind === "INCOME"

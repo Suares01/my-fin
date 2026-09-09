@@ -4,13 +4,20 @@ import type {
   UpdateCategoryCommand,
 } from "@workspace/application"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Alert, AlertDescription, AlertTitle } from "@workspace/ui/components/alert"
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@workspace/ui/components/alert"
 import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
 import { FieldGroup } from "@workspace/ui/components/field"
 import { Spinner } from "@workspace/ui/components/spinner"
-import { ToggleGroup, ToggleGroupItem } from "@workspace/ui/components/toggle-group"
-import { useEffect, useRef, useState } from "react"
+import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from "@workspace/ui/components/toggle-group"
+import { useEffect, useState } from "react"
 import { Controller, useForm } from "react-hook-form"
 import type { z } from "zod"
 import { toast } from "@workspace/ui/components/toast"
@@ -78,7 +85,6 @@ export function CategoryForm({
   const createExpense = useCreateExpenseCategory()
   const update = useUpdateCategory()
   const [conflictLocked, setConflictLocked] = useState(false)
-  const inFlight = useRef(false)
   const defaultValues = categoryFormValues(mode, initialCategory)
   const form = useForm<CategoryFormInput, unknown, CategoryFormOutput>({
     resolver: zodResolver(categoryFormSchema),
@@ -95,6 +101,8 @@ export function CategoryForm({
 
   useEffect(() => {
     reset(categoryFormValues(mode, initialCategory))
+    // The form is reset when the page supplies a refreshed category after a conflict.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setConflictLocked(false)
   }, [initialCategory, mode, reset])
 
@@ -110,14 +118,12 @@ export function CategoryForm({
   const onSubmit = handleSubmit(async (values) => {
     if (
       activeBookId === null ||
-      inFlight.current ||
       conflictLocked ||
       (mode === "edit" && initialCategory === undefined)
     ) {
       return
     }
 
-    inFlight.current = true
     try {
       const result =
         mode === "edit" && initialCategory !== undefined
@@ -160,15 +166,15 @@ export function CategoryForm({
         title: `Não foi possível ${action} a categoria`,
         description: categoryErrorMessage(error, action),
       })
-    } finally {
-      inFlight.current = false
     }
   })
 
   if (activeBookId === null) {
     return (
       <Alert>
-        <AlertTitle>Selecione um livro antes de {action} a categoria</AlertTitle>
+        <AlertTitle>
+          Selecione um livro antes de {action} a categoria
+        </AlertTitle>
         <AlertDescription>
           O formulário será liberado quando houver um livro ativo.
         </AlertDescription>

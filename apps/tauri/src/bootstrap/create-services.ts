@@ -180,10 +180,7 @@ export function createMyFinServices(
       ),
       update: new UpdateCategory(transactionManager, eventDispatcher),
       archive: new ArchiveCategory(transactionManager, eventDispatcher),
-      reactivate: new ReactivateCategory(
-        transactionManager,
-        eventDispatcher
-      ),
+      reactivate: new ReactivateCategory(transactionManager, eventDispatcher),
     },
     income: {
       record: new RecordIncome(

@@ -744,14 +744,14 @@ Como o plano excede oito tarefas, o Execute deve oferecer esses três workers de
 
 **Done when:**
 
-- [ ] Página consulta `includeArchived: true` e inicia em Ativas/Todas.
-- [ ] Dois ToggleGroups funcionam por teclado e preservam criação/filtros nos empty states adequados.
-- [ ] Create/edit Sheets têm título, valores corretos, fechamento permitido e retorno de foco.
-- [ ] Sucessos movem/atualizam cards; falhas e refresh parcial mantêm estado coerente com feedback seguro.
-- [ ] Troca de livro fecha Sheet, descarta ID/versão anterior e invalida somente o livro do command concluído.
-- [ ] Loading, query error/retry e ausência de resultados são semanticamente distintos.
-- [ ] Pelo menos 10 casos de integração novos cobrem os fluxos completos e o total não diminui.
-- [ ] Final Feature passa; a suíte Tauri completa não adiciona falhas ao baseline de 15.
+- [x] Página consulta `includeArchived: true` e inicia em Ativas/Todas.
+- [x] Dois ToggleGroups funcionam por teclado e preservam criação/filtros nos empty states adequados.
+- [x] Create/edit Sheets têm título, valores corretos, fechamento permitido e retorno de foco.
+- [x] Sucessos movem/atualizam cards; falhas e refresh parcial mantêm estado coerente com feedback seguro.
+- [x] Troca de livro fecha Sheet, descarta ID/versão anterior e invalida somente o livro do command concluído.
+- [x] Loading, query error/retry e ausência de resultados são semanticamente distintos.
+- [x] Pelo menos 10 casos de integração novos cobrem os fluxos completos e o total não diminui.
+- [x] Final Feature passa; a suíte Tauri completa não adiciona falhas ao baseline de 15.
 - [ ] O Verifier independente produz `validation.md`, executa o discrimination sensor e realiza UAT real ou registra com precisão a limitação de runtime.
 
 **Tests:** component integration + interactive UAT

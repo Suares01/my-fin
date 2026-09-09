@@ -158,9 +158,7 @@ describe("createMyFinServices", () => {
     )
     expect(services.categories.update).toBeInstanceOf(UpdateCategory)
     expect(services.categories.archive).toBeInstanceOf(ArchiveCategory)
-    expect(services.categories.reactivate).toBeInstanceOf(
-      ReactivateCategory
-    )
+    expect(services.categories.reactivate).toBeInstanceOf(ReactivateCategory)
   })
 
   it("keeps category lifecycle handlers dedicated to managed categories", () => {
@@ -168,9 +166,7 @@ describe("createMyFinServices", () => {
 
     expect(services.categories.update).toBeInstanceOf(UpdateCategory)
     expect(services.categories.archive).toBeInstanceOf(ArchiveCategory)
-    expect(services.categories.reactivate).toBeInstanceOf(
-      ReactivateCategory
-    )
+    expect(services.categories.reactivate).toBeInstanceOf(ReactivateCategory)
     expect(services.categories.update).not.toBe(services.accounts.rename)
   })
 

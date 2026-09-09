@@ -58,8 +58,10 @@ describe("category icon registry", () => {
 
     expect(categoryIconNames[0]).toBe("aeroplane")
     expect(getCategoryIconEntries()[0]?.name).toBe("aeroplane")
-    expect(getCategoryIconEntries().every((entry) => typeof entry.Icon === "function")).toBe(
-      true
-    )
+    expect(
+      getCategoryIconEntries().every(
+        (entry) => typeof entry.Icon === "function"
+      )
+    ).toBe(true)
   })
 })

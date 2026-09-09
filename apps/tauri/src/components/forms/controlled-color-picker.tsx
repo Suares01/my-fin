@@ -21,6 +21,14 @@ function rgbToHex(rgb: readonly number[]): string {
     .join("")
 }
 
+function isRgbArray(value: unknown): value is readonly number[] {
+  return (
+    Array.isArray(value) &&
+    value.length >= 3 &&
+    value.every((channel) => typeof channel === "number")
+  )
+}
+
 export function ControlledColorPicker<
   TValues extends FieldValues,
   TOutput = TValues,
@@ -52,7 +60,7 @@ export function ControlledColorPicker<
             <ColorPicker
               value={visualValue}
               onChange={(rgb) => {
-                if (!disabled && isHexColor(value)) {
+                if (!disabled && isHexColor(value) && isRgbArray(rgb)) {
                   field.onChange(rgbToHex(rgb))
                 }
               }}

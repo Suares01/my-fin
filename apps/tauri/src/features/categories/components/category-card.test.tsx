@@ -143,7 +143,9 @@ describe("CategoryCard", () => {
     const archived = { ...category, status: "ARCHIVED" as const }
     render(<CategoryCard category={archived} />)
 
-    expect(screen.queryByRole("button", { name: "Arquivar Mercado" })).toBeNull()
+    expect(
+      screen.queryByRole("button", { name: "Arquivar Mercado" })
+    ).toBeNull()
     fireEvent.click(screen.getByRole("button", { name: "Reativar Mercado" }))
 
     await waitFor(() =>
@@ -159,14 +161,12 @@ describe("CategoryCard", () => {
     state.isPending = true
     render(<CategoryCard category={category} />)
 
-    expect(screen.getByRole("button", { name: "Editar Mercado" })).toHaveProperty(
-      "disabled",
-      true
-    )
-    expect(screen.getByRole("button", { name: "Arquivar Mercado" })).toHaveProperty(
-      "disabled",
-      true
-    )
+    expect(
+      screen.getByRole("button", { name: "Editar Mercado" })
+    ).toHaveProperty("disabled", true)
+    expect(
+      screen.getByRole("button", { name: "Arquivar Mercado" })
+    ).toHaveProperty("disabled", true)
   })
 
   it("uses a safe toast when reactivation fails", async () => {

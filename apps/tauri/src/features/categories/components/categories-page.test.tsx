@@ -9,50 +9,69 @@ import {
   waitFor,
 } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { CategoriesPage } from "./categories-page"
-import { filterCategories } from "./category-list-model"
 
 const state = vi.hoisted(() => ({
-  createIncome: vi.fn(),
-  createExpense: vi.fn(),
-  updateCategory: vi.fn(),
-  archiveCategory: vi.fn(),
-  reactivateCategory: vi.fn(),
-}))
-
-const hooks = vi.hoisted(() => ({
-  useCategories: vi.fn(),
+  session: { status: "ACTIVE", bookId: "book-1" } as
+    | { readonly status: "ACTIVE"; readonly bookId: string }
+    | { readonly status: "UNRESOLVED" },
+  query: {
+    isPending: false,
+    isError: false,
+    data: [] as readonly CategorySummary[],
+    refetch: vi.fn(),
+  },
 }))
 
 vi.mock("../../../providers", () => ({
-  useActiveBook: () => ({
-    session: { status: "ACTIVE", bookId: "book-1" },
-  }),
+  useActiveBook: () => ({ session: state.session }),
 }))
 
 vi.mock("../hooks", () => ({
-  useCategories: hooks.useCategories,
-  useCreateIncomeCategory: () => ({
-    mutateAsync: state.createIncome,
-    isPending: false,
-  }),
-  useCreateExpenseCategory: () => ({
-    mutateAsync: state.createExpense,
-    isPending: false,
-  }),
-  useUpdateCategory: () => ({
-    mutateAsync: state.updateCategory,
-    isPending: false,
-  }),
-  useArchiveCategory: () => ({
-    mutateAsync: state.archiveCategory,
-    isPending: false,
-  }),
-  useReactivateCategory: () => ({
-    mutateAsync: state.reactivateCategory,
-    isPending: false,
-  }),
+  useCategories: vi.fn(() => state.query),
 }))
+
+vi.mock("./category-card", () => ({
+  CategoryCard: ({
+    category,
+    onEdit,
+  }: {
+    readonly category: CategorySummary
+    readonly onEdit?: (category: CategorySummary) => void
+  }) => (
+    <article>
+      <h2>{category.name}</h2>
+      <button type="button" onClick={() => onEdit?.(category)}>
+        Editar {category.name}
+      </button>
+    </article>
+  ),
+}))
+
+vi.mock("./category-form", () => ({
+  CategoryForm: ({
+    mode = "create",
+    initialCategory,
+    onSuccess,
+    onCancel,
+  }: {
+    readonly mode?: "create" | "edit"
+    readonly initialCategory?: CategorySummary
+    readonly onSuccess?: (categoryId: string) => void
+    readonly onCancel?: () => void
+  }) => (
+    <div data-testid="category-form">
+      <span>{mode === "edit" ? initialCategory?.name : "novo formulário"}</span>
+      <button type="button" onClick={() => onSuccess?.("category-created")}>
+        {mode === "edit" ? "Salvar categoria" : "Criar categoria"}
+      </button>
+      <button type="button" onClick={onCancel}>
+        Cancelar
+      </button>
+    </div>
+  ),
+}))
+
+import { CategoriesPage } from "./categories-page"
 
 const categories: readonly CategorySummary[] = [
   {
@@ -60,6 +79,8 @@ const categories: readonly CategorySummary[] = [
     name: "Salário",
     kind: "INCOME",
     status: "ACTIVE",
+    iconKey: "wallet",
+    colorHex: "10b981",
     version: 1,
   },
   {
@@ -67,16 +88,29 @@ const categories: readonly CategorySummary[] = [
     name: "Mercado",
     kind: "EXPENSE",
     status: "ACTIVE",
-    version: 1,
+    iconKey: "cart",
+    colorHex: "f43f5e",
+    version: 2,
   },
   {
     id: "archived-1",
     name: "Legada",
     kind: "EXPENSE",
     status: "ARCHIVED",
-    version: 1,
+    iconKey: "archive",
+    colorHex: "64748b",
+    version: 3,
   },
 ]
+
+function renderPage(
+  query: Partial<typeof state.query> = {},
+  session = state.session
+) {
+  state.query = { ...state.query, ...query }
+  state.session = session
+  return render(<CategoriesPage />)
+}
 
 describe("CategoriesPage", () => {
   beforeEach(() => {
@@ -88,83 +122,157 @@ describe("CategoriesPage", () => {
         disconnect() {}
       }
     )
+    state.query = {
+      isPending: false,
+      isError: false,
+      data: categories,
+      refetch: vi.fn(),
+    }
+    state.session = { status: "ACTIVE", bookId: "book-1" }
   })
 
   afterEach(() => {
     cleanup()
     vi.unstubAllGlobals()
-    hooks.useCategories.mockReset()
-    state.createIncome.mockReset()
-    state.createExpense.mockReset()
-    state.updateCategory.mockReset()
-    state.archiveCategory.mockReset()
-    state.reactivateCategory.mockReset()
   })
 
-  it("filters active categories by type and excludes archived categories", () => {
-    expect(filterCategories(categories, "ACTIVE", "INCOME")).toEqual([
-      categories[0],
-    ])
-    expect(filterCategories(categories, "ACTIVE", "EXPENSE")).toEqual([
-      categories[1],
-    ])
-    expect(filterCategories(categories, "ACTIVE", "ALL")).toEqual(
-      categories.slice(0, 2)
-    )
-  })
+  it("queries archived categories and starts with Active and All", () => {
+    renderPage()
 
-  it("queries only active categories", () => {
-    hooks.useCategories.mockReturnValue({
-      isPending: false,
-      isError: false,
-      data: categories,
-    })
-
-    render(<CategoriesPage />)
-
-    expect(hooks.useCategories).toHaveBeenCalledWith(false)
+    expect(
+      screen
+        .getByRole("button", { name: "Ativas" })
+        .getAttribute("aria-pressed")
+    ).toBe("true")
+    expect(
+      screen.getByRole("button", { name: "Todas" }).getAttribute("aria-pressed")
+    ).toBe("true")
     expect(screen.getByText("Salário")).toBeTruthy()
     expect(screen.queryByText("Legada")).toBeNull()
   })
 
-  it("keeps the creation CTA available for an empty filter and closes its drawer", async () => {
-    state.createIncome.mockResolvedValue({ value: { id: "income-2" } })
-    hooks.useCategories.mockReturnValue({
-      isPending: false,
-      isError: false,
-      data: [categories[1]],
-    })
+  it("filters archived categories by status and type independently", () => {
+    renderPage()
 
-    render(<CategoriesPage />)
+    fireEvent.click(screen.getByRole("button", { name: "Arquivadas" }))
+    fireEvent.click(screen.getByRole("button", { name: "Despesas" }))
+
+    expect(screen.getByText("Legada")).toBeTruthy()
+    expect(screen.queryByText("Mercado")).toBeNull()
+    expect(screen.queryByText("Salário")).toBeNull()
+  })
+
+  it("keeps one selected option in each filter group", () => {
+    renderPage()
 
     fireEvent.click(screen.getByRole("button", { name: "Receitas" }))
+    fireEvent.click(screen.getByRole("button", { name: "Arquivadas" }))
+
     expect(
-      screen.getByText("Nenhuma categoria de receita foi encontrada.")
-    ).toBeTruthy()
+      screen
+        .getAllByRole("button")
+        .filter((button) => button.getAttribute("aria-pressed") === "true")
+    ).toHaveLength(2)
+  })
+
+  it("shows a semantic loading state", () => {
+    renderPage({ isPending: true, data: undefined })
+
+    expect(screen.getByLabelText("Carregando categorias")).toBeTruthy()
+    expect(screen.queryByText("Nenhuma categoria")).toBeNull()
+  })
+
+  it("shows a retryable query error", () => {
+    const refetch = vi.fn()
+    renderPage({ isError: true, refetch })
 
     fireEvent.click(
-      screen.getByRole("button", { name: /Adicionar categoria/i })
+      screen.getByRole("button", {
+        name: "Tentar carregar categorias novamente",
+      })
     )
+
+    expect(refetch).toHaveBeenCalledOnce()
+    expect(screen.getByRole("alert")).toBeTruthy()
+  })
+
+  it("preserves the creation CTA for an empty active filter", () => {
+    renderPage({ data: [] })
+
+    expect(screen.getByText(/Nenhuma categoria ativa/)).toBeTruthy()
+    expect(
+      screen.getByRole("button", { name: /Adicionar categoria/i })
+    ).toBeTruthy()
+  })
+
+  it("preserves the creation CTA for an empty archived filter", () => {
+    renderPage({ data: categories })
+    fireEvent.click(screen.getByRole("button", { name: "Arquivadas" }))
+    fireEvent.click(screen.getByRole("button", { name: "Receitas" }))
+
+    expect(screen.getByText(/Nenhuma categoria de receita/)).toBeTruthy()
+    expect(
+      screen.getByRole("button", { name: /Adicionar categoria/i })
+    ).toBeTruthy()
+  })
+
+  it("opens the create sheet with a title and returns focus after cancel", async () => {
+    renderPage()
+    const trigger = screen.getByRole("button", { name: /Adicionar categoria/i })
+    trigger.focus()
+    fireEvent.click(trigger)
+
     expect(screen.getByRole("dialog").textContent).toContain(
       "Adicionar categoria"
     )
-    fireEvent.change(screen.getByLabelText("Nome da categoria"), {
-      target: { value: "Freelance" },
-    })
-    fireEvent.click(screen.getByRole("button", { name: "Receita" }))
-    fireEvent.click(screen.getByRole("button", { name: "Criar categoria" }))
-    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
-
-    fireEvent.click(
-      screen.getByRole("button", { name: /Adicionar categoria/i })
-    )
     fireEvent.click(screen.getByRole("button", { name: "Cancelar" }))
-    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
 
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
+    expect(document.activeElement).toBe(trigger)
+  })
+
+  it("closes the create sheet after a successful form", async () => {
+    renderPage()
     fireEvent.click(
       screen.getByRole("button", { name: /Adicionar categoria/i })
     )
-    fireEvent.keyDown(document, { key: "Escape" })
+    fireEvent.click(screen.getByRole("button", { name: "Criar categoria" }))
+
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
+  })
+
+  it("opens edit with current category values and closes on success", async () => {
+    renderPage()
+    fireEvent.click(screen.getByRole("button", { name: "Editar Mercado" }))
+
+    expect(screen.getByRole("dialog").textContent).toContain("Mercado")
+    expect(screen.getByRole("dialog").textContent).toContain("Editar categoria")
+    fireEvent.click(screen.getByRole("button", { name: "Salvar categoria" }))
+
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
+  })
+
+  it("closes edit on cancel without losing the list", async () => {
+    renderPage()
+    fireEvent.click(screen.getByRole("button", { name: "Editar Mercado" }))
+    fireEvent.click(screen.getByRole("button", { name: "Cancelar" }))
+
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
+    expect(screen.getByText("Mercado")).toBeTruthy()
+  })
+
+  it("closes an open sheet and clears edit state when the book changes", async () => {
+    const rendered = renderPage()
+    fireEvent.click(screen.getByRole("button", { name: "Editar Mercado" }))
+    expect(screen.getByRole("dialog")).toBeTruthy()
+
+    state.session = { status: "ACTIVE", bookId: "book-2" }
+    rendered.rerender(<CategoriesPage />)
+
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
+    fireEvent.click(
+      screen.getByRole("button", { name: /Adicionar categoria/i })
+    )
+    expect(screen.getByRole("dialog").textContent).not.toContain("Mercado")
   })
 })
