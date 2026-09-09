@@ -59,8 +59,7 @@ export interface ListJournalChainsInput extends JournalChainFilterCriteria {
   readonly cursor?: JournalChainCursorKey
 }
 
-export interface GetJournalChainSummaryInput
-  extends JournalChainFilterCriteria {
+export interface GetJournalChainSummaryInput extends JournalChainFilterCriteria {
   readonly status?: JournalChainStatus
 }
 
