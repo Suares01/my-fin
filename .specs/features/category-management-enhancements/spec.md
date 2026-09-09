@@ -254,16 +254,16 @@ Toda ambiguidade foi resolvida pela solicitação, pelo código existente ou pel
 
 | Requirement ID | Story | Phase | Status |
 | --- | --- | --- | --- |
-| CAT-01 | P1: Persistir metadados | Tasks | In Tasks |
-| CAT-02 | P1: Persistir metadados | Tasks | In Tasks |
+| CAT-01 | P1: Persistir metadados | Tasks | T1 complete |
+| CAT-02 | P1: Persistir metadados | Tasks | T1 complete |
 | CAT-03 | P1: Persistir metadados | Tasks | In Tasks |
 | CAT-04 | P1: Persistir metadados | Tasks | In Tasks |
 | CAT-05 | P1: Persistir metadados | Tasks | In Tasks |
 | CAT-06 | P1: Persistir metadados | Tasks | In Tasks |
-| CAT-07 | P1: Persistir metadados | Tasks | In Tasks |
+| CAT-07 | P1: Persistir metadados | Tasks | T1 complete |
 | CAT-08 | P1: Persistir metadados | Tasks | In Tasks |
-| CAT-09 | P1: Persistir metadados | Tasks | In Tasks |
-| CAT-10 | P1: Persistir metadados | Tasks | In Tasks |
+| CAT-09 | P1: Persistir metadados | Tasks | T1 complete |
+| CAT-10 | P1: Persistir metadados | Tasks | T1 complete |
 | CAT-11 | P1: Catálogo de ícones | Tasks | In Tasks |
 | CAT-12 | P1: Catálogo de ícones | Tasks | In Tasks |
 | CAT-13 | P1: Catálogo de ícones | Tasks | In Tasks |
@@ -286,9 +286,9 @@ Toda ambiguidade foi resolvida pela solicitação, pelo código existente ou pel
 | CAT-30 | P1: Atualizar categoria | Tasks | In Tasks |
 | CAT-31 | P1: Atualizar categoria | Tasks | In Tasks |
 | CAT-32 | P1: Atualizar categoria | Tasks | In Tasks |
-| CAT-33 | P1: Atualizar categoria | Tasks | In Tasks |
-| CAT-34 | P1: Atualizar categoria | Tasks | In Tasks |
-| CAT-35 | P1: Atualizar categoria | Tasks | In Tasks |
+| CAT-33 | P1: Atualizar categoria | Tasks | T1 complete |
+| CAT-34 | P1: Atualizar categoria | Tasks | T1 complete |
+| CAT-35 | P1: Atualizar categoria | Tasks | T1 complete |
 | CAT-36 | P1: Atualizar categoria | Tasks | In Tasks |
 | CAT-37 | P1: Atualizar categoria | Tasks | In Tasks |
 | CAT-38 | P1: Atualizar categoria | Tasks | In Tasks |
@@ -323,8 +323,8 @@ Toda ambiguidade foi resolvida pela solicitação, pelo código existente ou pel
 | CAT-67 | Edge case: conta-gotas | Tasks | In Tasks |
 | CAT-68 | Edge case: cor manual | Tasks | In Tasks |
 | CAT-69 | Edge case: reativação repetida | Tasks | In Tasks |
-| CAT-70 | P1: Persistir metadados | Tasks | In Tasks |
-| CAT-71 | P1: Atualizar categoria | Tasks | In Tasks |
+| CAT-70 | P1: Persistir metadados | Tasks | T1 complete |
+| CAT-71 | P1: Atualizar categoria | Tasks | T1 complete |
 | CAT-72 | P1: Criar categoria | Tasks | In Tasks |
 | CAT-73 | P1: Criar categoria | Tasks | In Tasks |
 | CAT-74 | P1: Criar categoria | Tasks | In Tasks |

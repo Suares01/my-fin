@@ -131,11 +131,11 @@ Como o plano excede oito tarefas, o Execute deve oferecer esses três workers de
 
 **Done when:**
 
-- [ ] Categorias gerenciáveis exigem `iconKey` slug e `colorHex` canônico; contas financeiras/sistema rejeitam aparência.
-- [ ] `updateCategory` altera nome/ícone/cor em uma versão e um fato, e valores idênticos são no-op.
-- [ ] Create, restore e snapshot preservam as invariantes sem introduzir fatos na restauração.
-- [ ] Pelo menos 10 casos unitários novos cobrem todos os branches acima e o total do pacote não diminui.
-- [ ] Quick Domain passa.
+- [x] Categorias gerenciáveis exigem `iconKey` slug e `colorHex` canônico; contas financeiras/sistema rejeitam aparência.
+- [x] `updateCategory` altera nome/ícone/cor em uma versão e um fato, e valores idênticos são no-op.
+- [x] Create, restore e snapshot preservam as invariantes sem introduzir fatos na restauração.
+- [x] Pelo menos 10 casos unitários novos cobrem todos os branches acima e o total do pacote não diminui.
+- [x] Quick Domain passa.
 
 **Tests:** unit
 **Gate:** Quick Domain

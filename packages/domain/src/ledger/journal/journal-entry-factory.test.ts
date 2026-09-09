@@ -37,6 +37,9 @@ function account(
     bookId: book.id,
     name: id,
     kind,
+    ...(kind === "INCOME" || kind === "EXPENSE"
+      ? { iconKey: "label-dollar", colorHex: "f43f5e" }
+      : {}),
     ...(systemPurpose === undefined ? {} : { systemPurpose }),
   })
 }

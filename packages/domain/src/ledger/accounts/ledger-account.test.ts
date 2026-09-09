@@ -21,6 +21,9 @@ function createAccount(
     bookId,
     name: "  Caixa  ",
     kind,
+    ...(kind === "INCOME" || kind === "EXPENSE"
+      ? { iconKey: "label-dollar", colorHex: "f43f5e" }
+      : {}),
   })
 }
 

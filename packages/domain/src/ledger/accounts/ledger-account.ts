@@ -1,6 +1,10 @@
 import type { BookId, LedgerAccountId } from "../../shared/identity/ids.js"
 import { AggregateRoot } from "../../shared/kernel/aggregate-root.js"
 import { DomainError } from "../../shared/kernel/domain-error.js"
+import {
+  categoryAppearance,
+  type CategoryAppearance,
+} from "./category-appearance.js"
 
 export const LEDGER_ACCOUNT_KINDS = [
   "ASSET",
@@ -26,6 +30,8 @@ export interface LedgerAccountSnapshot {
   readonly kind: LedgerAccountKind
   readonly status: LedgerAccountStatus
   readonly systemPurpose?: SystemAccountPurpose
+  readonly iconKey?: string
+  readonly colorHex?: string
   readonly version: number
 }
 
@@ -35,6 +41,8 @@ export interface CreateLedgerAccountInput {
   readonly name: string
   readonly kind: LedgerAccountKind
   readonly systemPurpose?: SystemAccountPurpose
+  readonly iconKey?: string
+  readonly colorHex?: string
 }
 
 export function normalizeAccountName(name: string): string {
@@ -53,6 +61,10 @@ export function isCategoryAccount(account: LedgerAccount): boolean {
   return account.kind === "INCOME" || account.kind === "EXPENSE"
 }
 
+export function isManagedCategoryAccount(account: LedgerAccount): boolean {
+  return isCategoryAccount(account) && account.systemPurpose === undefined
+}
+
 export class LedgerAccount extends AggregateRoot<
   LedgerAccountId,
   LedgerAccountSnapshot
@@ -65,6 +77,8 @@ export class LedgerAccount extends AggregateRoot<
     private readonly accountKind: LedgerAccountKind,
     private accountStatus: LedgerAccountStatus,
     private readonly accountSystemPurpose: SystemAccountPurpose | undefined,
+    private accountIconKey: string | undefined,
+    private accountColorHex: string | undefined,
     private accountVersion: number
   ) {
     super(id)
@@ -79,6 +93,8 @@ export class LedgerAccount extends AggregateRoot<
       )
     }
 
+    const appearance = validateAppearance(input)
+
     const account = new LedgerAccount(
       input.id,
       input.bookId,
@@ -87,6 +103,8 @@ export class LedgerAccount extends AggregateRoot<
       input.kind,
       "ACTIVE",
       input.systemPurpose,
+      appearance?.iconKey,
+      appearance?.colorHex,
       0
     )
     account.recordFact({
@@ -99,6 +117,8 @@ export class LedgerAccount extends AggregateRoot<
   }
 
   static restore(snapshot: LedgerAccountSnapshot): LedgerAccount {
+    const appearance = validateAppearance(snapshot)
+
     return new LedgerAccount(
       snapshot.id,
       snapshot.bookId,
@@ -107,6 +127,8 @@ export class LedgerAccount extends AggregateRoot<
       snapshot.kind,
       snapshot.status,
       snapshot.systemPurpose,
+      appearance?.iconKey,
+      appearance?.colorHex,
       snapshot.version
     )
   }
@@ -133,6 +155,14 @@ export class LedgerAccount extends AggregateRoot<
 
   get systemPurpose(): SystemAccountPurpose | undefined {
     return this.accountSystemPurpose
+  }
+
+  get iconKey(): string | undefined {
+    return this.accountIconKey
+  }
+
+  get colorHex(): string | undefined {
+    return this.accountColorHex
   }
 
   get version(): number {
@@ -184,6 +214,43 @@ export class LedgerAccount extends AggregateRoot<
     })
   }
 
+  updateCategory(input: {
+    readonly name: string
+    readonly iconKey: string
+    readonly colorHex: string
+  }): void {
+    this.assertManagedCategory()
+
+    const trimmedName = input.name.trim()
+    if (trimmedName.length === 0) {
+      throw new DomainError(
+        "INVALID_ACCOUNT_NAME",
+        "Account name cannot be empty"
+      )
+    }
+    const appearance = categoryAppearance(input)
+
+    if (
+      trimmedName === this.name &&
+      appearance.iconKey === this.iconKey &&
+      appearance.colorHex === this.colorHex
+    ) {
+      return
+    }
+
+    this.accountName = trimmedName
+    this.accountNormalizedName = normalizeAccountName(trimmedName)
+    this.accountIconKey = appearance.iconKey
+    this.accountColorHex = appearance.colorHex
+    this.accountVersion += 1
+    this.recordFact({
+      type: "CategoryUpdated",
+      aggregateId: this.id,
+      aggregateVersion: this.version,
+      payload: this.categoryPayload(),
+    })
+  }
+
   reactivate(): void {
     this.assertNotSystemAccount()
     if (this.status === "ACTIVE") {
@@ -211,7 +278,28 @@ export class LedgerAccount extends AggregateRoot<
       ...(this.systemPurpose === undefined
         ? {}
         : { systemPurpose: this.systemPurpose }),
+      ...(this.iconKey === undefined ? {} : { iconKey: this.iconKey }),
+      ...(this.colorHex === undefined ? {} : { colorHex: this.colorHex }),
       version: this.version,
+    }
+  }
+
+  toCategorySnapshot(): LedgerAccountSnapshot & {
+    readonly iconKey: string
+    readonly colorHex: string
+  } {
+    this.assertManagedCategory()
+    if (this.iconKey === undefined || this.colorHex === undefined) {
+      throw new DomainError(
+        "CATEGORY_APPEARANCE_REQUIRED",
+        "Managed categories require visual metadata"
+      )
+    }
+
+    return {
+      ...this.toSnapshot(),
+      iconKey: this.iconKey,
+      colorHex: this.colorHex,
     }
   }
 
@@ -224,13 +312,61 @@ export class LedgerAccount extends AggregateRoot<
     }
   }
 
+  private assertManagedCategory(): void {
+    if (!isManagedCategoryAccount(this)) {
+      throw new DomainError(
+        "CATEGORY_ACCOUNT_REQUIRED",
+        "Operation requires a managed category"
+      )
+    }
+  }
+
   private lifecyclePayload() {
+    return this.categoryPayload()
+  }
+
+  private categoryPayload() {
     return {
       bookId: this.bookId,
       kind: this.kind,
       name: this.name,
       normalizedName: this.normalizedName,
       status: this.status,
+      ...(this.iconKey === undefined ? {} : { iconKey: this.iconKey }),
+      ...(this.colorHex === undefined ? {} : { colorHex: this.colorHex }),
     }
   }
+}
+
+function validateAppearance(
+  input: Pick<
+    CreateLedgerAccountInput | LedgerAccountSnapshot,
+    "kind" | "systemPurpose" | "iconKey" | "colorHex"
+  >
+): CategoryAppearance | undefined {
+  const hasIcon = input.iconKey !== undefined
+  const hasColor = input.colorHex !== undefined
+  const hasAppearance = hasIcon || hasColor
+  const isManagedCategory =
+    (input.kind === "INCOME" || input.kind === "EXPENSE") &&
+    input.systemPurpose === undefined
+
+  if (!isManagedCategory) {
+    if (hasAppearance) {
+      throw new DomainError(
+        "CATEGORY_APPEARANCE_FORBIDDEN",
+        "Only managed categories can have visual metadata"
+      )
+    }
+    return undefined
+  }
+
+  if (!hasIcon || !hasColor) {
+    throw new DomainError(
+      "CATEGORY_APPEARANCE_REQUIRED",
+      "Managed categories require visual metadata"
+    )
+  }
+
+  return categoryAppearance({ iconKey: input.iconKey, colorHex: input.colorHex })
 }
