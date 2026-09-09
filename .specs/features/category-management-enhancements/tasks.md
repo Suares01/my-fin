@@ -181,10 +181,10 @@ Como o plano excede oito tarefas, o Execute deve oferecer esses três workers de
 
 **Done when:**
 
-- [ ] A allowlist aceita `CategoryUpdated` e continua rejeitando tipos desconhecidos.
-- [ ] O envelope preserva aggregate ID/version, book ID e appearance resultante.
-- [ ] Pelo menos 2 casos unitários novos cobrem sucesso e proteção da allowlist; o total não diminui.
-- [ ] Quick Application passa.
+- [x] A allowlist aceita `CategoryUpdated` e continua rejeitando tipos desconhecidos.
+- [x] O envelope preserva aggregate ID/version, book ID e appearance resultante.
+- [x] Pelo menos 2 casos unitários novos cobrem sucesso e proteção da allowlist; o total não diminui.
+- [x] Quick Application passa.
 
 **Tests:** unit
 **Gate:** Quick Application

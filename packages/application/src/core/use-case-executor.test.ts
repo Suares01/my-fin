@@ -206,6 +206,67 @@ describe("DomainEventDispatcher", () => {
     ])
   })
 
+  it("publishes CategoryUpdated with the resulting appearance snapshot", async () => {
+    const publisher = new Collector()
+
+    await dispatcher(publisher).dispatch([
+      {
+        type: "CategoryUpdated",
+        aggregateId: "category-1",
+        aggregateVersion: 3,
+        payload: {
+          bookId: "book-1",
+          kind: "EXPENSE",
+          name: "Dining",
+          normalizedName: "dining",
+          status: "ACTIVE",
+          iconKey: "restaurant",
+          colorHex: "abcdef",
+        },
+      },
+    ])
+
+    expect(publisher.events).toEqual([
+      {
+        eventId: "event-1",
+        type: "CategoryUpdated",
+        eventVersion: 1,
+        occurredAt: "2026-08-04T12:00:00.000Z",
+        aggregateId: "category-1",
+        aggregateVersion: 3,
+        bookId: "book-1",
+        payload: {
+          bookId: "book-1",
+          kind: "EXPENSE",
+          name: "Dining",
+          normalizedName: "dining",
+          status: "ACTIVE",
+          iconKey: "restaurant",
+          colorHex: "abcdef",
+        },
+      },
+    ])
+  })
+
+  it("rejects an unknown event type without publishing it", async () => {
+    const publisher = new Collector()
+
+    await expect(
+      dispatcher(publisher).dispatch([
+        {
+          type: "UnknownEvent",
+          aggregateId: "category-1",
+          aggregateVersion: 1,
+          payload: { bookId: "book-1" },
+        },
+      ])
+    ).rejects.toMatchObject({
+      code: "UNEXPECTED_ERROR",
+      message: "Unsupported domain event type: UnknownEvent",
+    })
+    expect(publisher.events).toEqual([])
+  })
+
   it("creates deterministic envelopes in fact order with exact identity and payload", async () => {
     const publisher = new Collector()
 

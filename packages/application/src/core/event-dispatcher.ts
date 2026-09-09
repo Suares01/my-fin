@@ -13,6 +13,7 @@ const EVENT_TYPES: readonly ApplicationEventType[] = [
   "LedgerAccountArchived",
   "LedgerAccountRenamed",
   "LedgerAccountReactivated",
+  "CategoryUpdated",
   "JournalEntryPosted",
   "JournalEntryReversed",
   "JournalEntryAmended",

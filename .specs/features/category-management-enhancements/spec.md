@@ -291,7 +291,7 @@ Toda ambiguidade foi resolvida pela solicitação, pelo código existente ou pel
 | CAT-35 | P1: Atualizar categoria | Tasks | T1 complete |
 | CAT-36 | P1: Atualizar categoria | Tasks | T2 complete |
 | CAT-37 | P1: Atualizar categoria | Tasks | T2 complete |
-| CAT-38 | P1: Atualizar categoria | Tasks | In Tasks |
+| CAT-38 | P1: Atualizar categoria | Tasks | T3 complete |
 | CAT-39 | P1: Editar na UI | Tasks | In Tasks |
 | CAT-40 | P1: Editar na UI | Tasks | In Tasks |
 | CAT-41 | P1: Editar na UI | Tasks | In Tasks |

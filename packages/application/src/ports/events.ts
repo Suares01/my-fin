@@ -6,6 +6,7 @@ export type ApplicationEventType =
   | "LedgerAccountArchived"
   | "LedgerAccountRenamed"
   | "LedgerAccountReactivated"
+  | "CategoryUpdated"
   | "JournalEntryPosted"
   | "JournalEntryReversed"
   | "JournalEntryAmended"
