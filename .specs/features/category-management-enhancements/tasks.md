@@ -639,11 +639,11 @@ Como o plano excede oito tarefas, o Execute deve oferecer esses três workers de
 
 **Done when:**
 
-- [ ] Defaults são `EXPENSE`, `label-dollar`, `f43f5e`.
-- [ ] Schema trimma nome, lower-case apenas cor válida e rejeita todos os formatos manuais proibidos.
-- [ ] Mensagens conhecidas são traduzidas por ação; dados internos nunca aparecem.
-- [ ] Pelo menos 6 casos unitários novos cobrem defaults, transforms, cada campo e error mapping; o total não diminui.
-- [ ] Quick Tauri passa.
+- [x] Defaults são `EXPENSE`, `label-dollar`, `f43f5e`.
+- [x] Schema trimma nome, lower-case apenas cor válida e rejeita todos os formatos manuais proibidos.
+- [x] Mensagens conhecidas são traduzidas por ação; dados internos nunca aparecem.
+- [x] Pelo menos 6 casos unitários novos cobrem defaults, transforms, cada campo e error mapping; o total não diminui.
+- [x] Quick Tauri passa.
 
 **Tests:** unit
 **Gate:** Quick Tauri

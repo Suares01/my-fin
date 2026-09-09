@@ -270,17 +270,17 @@ Toda ambiguidade foi resolvida pela solicitação, pelo código existente ou pel
 | CAT-14 | P1: Catálogo de ícones | Tasks | T17 complete |
 | CAT-15 | P1: Catálogo de ícones | Tasks | T17 complete |
 | CAT-16 | P1: Catálogo de ícones | Tasks | T17 complete |
-| CAT-17 | P1: Criar categoria | Tasks | In Tasks |
-| CAT-18 | P1: Criar categoria | Tasks | In Tasks |
+| CAT-17 | P1: Criar categoria | Tasks | T21 complete; form integration remains in T22 |
+| CAT-18 | P1: Criar categoria | Tasks | T21 complete; form integration remains in T22 |
 | CAT-19 | P1: Criar categoria | Tasks | T20 complete; form integration remains in T22 |
 | CAT-20 | P1: Criar categoria | Tasks | T18 complete; controlled field coverage remains in T19/T22 |
-| CAT-21 | P1: Criar categoria | Tasks | T18 complete; controlled field coverage remains in T19/T22 |
+| CAT-21 | P1: Criar categoria | Tasks | T18/T21 complete; controlled field coverage remains in T19/T22 |
 | CAT-22 | P1: Criar categoria | Tasks | T18 complete; controlled field coverage remains in T19/T22 |
-| CAT-23 | P1: Criar categoria | Tasks | T20 complete; form validation remains in T21/T22 |
-| CAT-24 | P1: Criar categoria | Tasks | T2/T4/T15 complete |
+| CAT-23 | P1: Criar categoria | Tasks | T20/T21 complete; form integration remains in T22 |
+| CAT-24 | P1: Criar categoria | Tasks | T2/T4/T15/T21 complete; command coverage remains in T22 |
 | CAT-25 | P1: Criar categoria | Tasks | T15 complete |
 | CAT-26 | P1: Criar categoria | Tasks | T14/T15 complete; lifecycle coverage remains in T16 |
-| CAT-27 | P1: Criar categoria | Tasks | In Tasks |
+| CAT-27 | P1: Criar categoria | Tasks | T21 complete; mutation feedback remains in T22 |
 | CAT-28 | P1: Criar categoria | Tasks | In Tasks |
 | CAT-29 | P1: Atualizar categoria | Tasks | T5 complete |
 | CAT-30 | P1: Atualizar categoria | Tasks | T5/T6/T7/T13 complete |
@@ -294,11 +294,11 @@ Toda ambiguidade foi resolvida pela solicitação, pelo código existente ou pel
 | CAT-38 | P1: Atualizar categoria | Tasks | T3/T4/T5/T6/T7/T11 complete |
 | CAT-39 | P1: Editar na UI | Tasks | In Tasks |
 | CAT-40 | P1: Editar na UI | Tasks | In Tasks |
-| CAT-41 | P1: Editar na UI | Tasks | In Tasks |
+| CAT-41 | P1: Editar na UI | Tasks | T21 complete; edit UI coverage remains in T22 |
 | CAT-42 | P1: Editar na UI | Tasks | T16 complete |
 | CAT-43 | P1: Editar na UI | Tasks | In Tasks |
 | CAT-44 | P1: Editar na UI | Tasks | T14/T16 complete |
-| CAT-45 | P1: Editar na UI | Tasks | In Tasks |
+| CAT-45 | P1: Editar na UI | Tasks | T21 complete; mutation feedback remains in T22 |
 | CAT-46 | P1: Editar na UI | Tasks | T16 complete |
 | CAT-47 | P1: Arquivadas e reativação | Tasks | T12 complete; remaining UI coverage in T23 |
 | CAT-48 | P1: Arquivadas e reativação | Tasks | In Tasks |
@@ -321,7 +321,7 @@ Toda ambiguidade foi resolvida pela solicitação, pelo código existente ou pel
 | CAT-65 | Edge case: cache por livro | Tasks | T14/T15/T16 complete |
 | CAT-66 | Edge case: invalidação parcial | Tasks | T14/T15/T16 complete |
 | CAT-67 | Edge case: conta-gotas | Tasks | T18/T19 complete |
-| CAT-68 | Edge case: cor manual | Tasks | T19 complete; schema coverage remains in T21/T22 |
+| CAT-68 | Edge case: cor manual | Tasks | T19/T21 complete; form integration remains in T22 |
 | CAT-69 | Edge case: reativação repetida | Tasks | T7/T11/T16 complete |
 | CAT-70 | P1: Persistir metadados | Tasks | T1/T9/T10/T11 complete |
 | CAT-71 | P1: Atualizar categoria | Tasks | T1/T5 complete |
