@@ -437,10 +437,10 @@ Como o plano excede oito tarefas, o Execute deve oferecer esses três workers de
 
 **Done when:**
 
-- [ ] `services.categories` expõe create/update/archive/reactivate dedicados.
-- [ ] `services.accounts` mantém os serviços genéricos sem regressão.
-- [ ] Pelo menos 3 casos/assertions novos provam instâncias e boundary público; o total não diminui.
-- [ ] Quick Tauri passa.
+- [x] `services.categories` expõe create/update/archive/reactivate dedicados.
+- [x] `services.accounts` mantém os serviços genéricos sem regressão.
+- [x] Pelo menos 3 casos/assertions novos provam instâncias e boundary público; o total não diminui.
+- [x] Quick Tauri passa.
 
 **Tests:** unit/integration
 **Gate:** Quick Tauri

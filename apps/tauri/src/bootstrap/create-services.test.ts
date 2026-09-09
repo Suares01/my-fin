@@ -4,6 +4,7 @@ import {
   CreateFinancialAccount,
   CreateFinancialBook,
   CreateIncomeCategory,
+  ArchiveCategory,
   GetCategoryDetail,
   GetFinancialBook,
   GetJournalChainDetail,
@@ -23,6 +24,8 @@ import {
   RecordIncome,
   RecordExpense,
   RenameLedgerAccount,
+  UpdateCategory,
+  ReactivateCategory,
   ReactivateLedgerAccount,
   ReverseJournalEntry,
   AmendJournalEntry,
@@ -94,7 +97,7 @@ describe("createMyFinServices", () => {
       "get",
       "createIncome",
       "createExpense",
-      "rename",
+      "update",
       "archive",
       "reactivate",
     ])
@@ -153,11 +156,22 @@ describe("createMyFinServices", () => {
     expect(services.categories.createExpense).toBeInstanceOf(
       CreateExpenseCategory
     )
-    expect(services.categories.rename).toBeInstanceOf(RenameLedgerAccount)
-    expect(services.categories.archive).toBeInstanceOf(ArchiveLedgerAccount)
+    expect(services.categories.update).toBeInstanceOf(UpdateCategory)
+    expect(services.categories.archive).toBeInstanceOf(ArchiveCategory)
     expect(services.categories.reactivate).toBeInstanceOf(
-      ReactivateLedgerAccount
+      ReactivateCategory
     )
+  })
+
+  it("keeps category lifecycle handlers dedicated to managed categories", () => {
+    const services = createServices()
+
+    expect(services.categories.update).toBeInstanceOf(UpdateCategory)
+    expect(services.categories.archive).toBeInstanceOf(ArchiveCategory)
+    expect(services.categories.reactivate).toBeInstanceOf(
+      ReactivateCategory
+    )
+    expect(services.categories.update).not.toBe(services.accounts.rename)
   })
 
   it("wires income, transfer, journal maintenance and insight handlers", () => {

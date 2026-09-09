@@ -1,5 +1,6 @@
 import {
   CreateExpenseCategory,
+  ArchiveCategory,
   CreateFinancialAccount,
   CreateFinancialBook,
   CreateIncomeCategory,
@@ -23,6 +24,8 @@ import {
   RecordIncome,
   RecordExpense,
   RenameLedgerAccount,
+  UpdateCategory,
+  ReactivateCategory,
   ReactivateLedgerAccount,
   ReverseJournalEntry,
   AmendJournalEntry,
@@ -66,9 +69,9 @@ export interface MyFinServices {
     readonly get: GetCategoryDetail
     readonly createIncome: CreateIncomeCategory
     readonly createExpense: CreateExpenseCategory
-    readonly rename: RenameLedgerAccount
-    readonly archive: ArchiveLedgerAccount
-    readonly reactivate: ReactivateLedgerAccount
+    readonly update: UpdateCategory
+    readonly archive: ArchiveCategory
+    readonly reactivate: ReactivateCategory
   }
   readonly income: {
     readonly record: RecordIncome
@@ -175,9 +178,9 @@ export function createMyFinServices(
         eventDispatcher,
         options.ids
       ),
-      rename: new RenameLedgerAccount(transactionManager, eventDispatcher),
-      archive: new ArchiveLedgerAccount(transactionManager, eventDispatcher),
-      reactivate: new ReactivateLedgerAccount(
+      update: new UpdateCategory(transactionManager, eventDispatcher),
+      archive: new ArchiveCategory(transactionManager, eventDispatcher),
+      reactivate: new ReactivateCategory(
         transactionManager,
         eventDispatcher
       ),
