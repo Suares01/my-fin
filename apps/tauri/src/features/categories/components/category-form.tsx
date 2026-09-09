@@ -1,108 +1,174 @@
-import type { CreateCategoryCommand } from "@workspace/application"
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from "@workspace/ui/components/alert"
+import type {
+  CategorySummary,
+  CreateCategoryCommand,
+  UpdateCategoryCommand,
+} from "@workspace/application"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { Alert, AlertDescription, AlertTitle } from "@workspace/ui/components/alert"
+import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@workspace/ui/components/field"
-import { Input } from "@workspace/ui/components/input"
+import { FieldGroup } from "@workspace/ui/components/field"
 import { Spinner } from "@workspace/ui/components/spinner"
-import {
-  ToggleGroup,
-  ToggleGroupItem,
-} from "@workspace/ui/components/toggle-group"
+import { ToggleGroup, ToggleGroupItem } from "@workspace/ui/components/toggle-group"
+import { useEffect, useRef, useState } from "react"
 import { Controller, useForm } from "react-hook-form"
-import { useState } from "react"
 import type { z } from "zod"
+import { toast } from "@workspace/ui/components/toast"
+import { ControlledColorPicker } from "../../../components/forms/controlled-color-picker"
+import { ControlledField } from "../../../components/forms/controlled-field"
+import { ControlledInput } from "../../../components/forms/controlled-input"
 import { useActiveBook } from "../../../providers"
-import { useCreateExpenseCategory, useCreateIncomeCategory } from "../hooks"
+import {
+  useCreateExpenseCategory,
+  useCreateIncomeCategory,
+  useUpdateCategory,
+} from "../hooks"
+import { CategoryIconField } from "./category-icon-field"
 import {
   categoryErrorMessage,
-  createCategorySchema,
+  categoryFormDefaults,
+  categoryFormSchema,
+  type CategoryFormAction,
 } from "./category-form-model"
 
-type CreateCategoryFormValues = z.input<typeof createCategorySchema>
-
-function fieldMessage(field: "name" | "kind", value: string): true | string {
-  const schema =
-    field === "name"
-      ? createCategorySchema.shape.name
-      : createCategorySchema.shape.kind
-  const result = schema.safeParse(value)
-
-  return result.success
-    ? true
-    : (result.error.issues[0]?.message ?? "Valor inválido.")
-}
+type CategoryFormInput = z.input<typeof categoryFormSchema>
+type CategoryFormOutput = z.output<typeof categoryFormSchema>
 
 type CategoryFormProps = {
+  readonly mode?: "create" | "edit"
+  readonly initialCategory?: CategorySummary
   readonly onSuccess?: (categoryId: string) => void
   readonly onCancel?: () => void
 }
 
-export function CategoryForm({ onSuccess, onCancel }: CategoryFormProps) {
+function categoryFormValues(
+  mode: "create" | "edit",
+  initialCategory?: CategorySummary
+): CategoryFormInput {
+  if (mode === "edit" && initialCategory !== undefined) {
+    return {
+      name: initialCategory.name,
+      kind: initialCategory.kind,
+      iconKey: initialCategory.iconKey,
+      colorHex: initialCategory.colorHex,
+    }
+  }
+
+  return { ...categoryFormDefaults }
+}
+
+function isConflict(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { readonly code?: unknown }).code ===
+      "OPTIMISTIC_CONCURRENCY_FAILURE"
+  )
+}
+
+export function CategoryForm({
+  mode = "create",
+  initialCategory,
+  onSuccess,
+  onCancel,
+}: CategoryFormProps) {
   const { session } = useActiveBook()
   const createIncome = useCreateIncomeCategory()
   const createExpense = useCreateExpenseCategory()
-  const [submitError, setSubmitError] = useState<unknown>(null)
+  const update = useUpdateCategory()
+  const [conflictLocked, setConflictLocked] = useState(false)
+  const inFlight = useRef(false)
+  const defaultValues = categoryFormValues(mode, initialCategory)
+  const form = useForm<CategoryFormInput, unknown, CategoryFormOutput>({
+    resolver: zodResolver(categoryFormSchema),
+    mode: "onSubmit",
+    reValidateMode: "onChange",
+    defaultValues,
+  })
   const {
     control,
-    register,
     handleSubmit,
-    setError,
-    formState: { errors, isSubmitting },
-  } = useForm<CreateCategoryFormValues>({
-    mode: "onBlur",
-    reValidateMode: "onChange",
-    defaultValues: { name: "", kind: "EXPENSE" },
-  })
+    formState: { isSubmitting },
+    reset,
+  } = form
+
+  useEffect(() => {
+    reset(categoryFormValues(mode, initialCategory))
+    setConflictLocked(false)
+  }, [initialCategory, mode, reset])
 
   const activeBookId = session.status === "ACTIVE" ? session.bookId : null
   const pending =
-    isSubmitting || createIncome.isPending || createExpense.isPending
-  const onSubmit = handleSubmit(async (values) => {
-    if (activeBookId === null) return
+    isSubmitting ||
+    createIncome.isPending ||
+    createExpense.isPending ||
+    update.isPending ||
+    conflictLocked
+  const action: CategoryFormAction = mode === "edit" ? "editar" : "criar"
 
-    const parsed = createCategorySchema.safeParse(values)
-    if (!parsed.success) {
-      for (const issue of parsed.error.issues) {
-        const field = issue.path[0]
-        if (field === "name" || field === "kind") {
-          setError(field, { type: "schema", message: issue.message })
-        }
-      }
+  const onSubmit = handleSubmit(async (values) => {
+    if (
+      activeBookId === null ||
+      inFlight.current ||
+      conflictLocked ||
+      (mode === "edit" && initialCategory === undefined)
+    ) {
       return
     }
 
-    const command: CreateCategoryCommand = {
-      bookId: activeBookId,
-      name: parsed.data.name,
-      kind: parsed.data.kind,
-    }
-
+    inFlight.current = true
     try {
-      setSubmitError(null)
-      const category =
-        command.kind === "INCOME"
-          ? await createIncome.mutateAsync(command)
-          : await createExpense.mutateAsync(command)
-      onSuccess?.(category.id)
+      const result =
+        mode === "edit" && initialCategory !== undefined
+          ? await update.mutateAsync({
+              bookId: activeBookId,
+              categoryId: initialCategory.id,
+              expectedVersion: initialCategory.version,
+              name: values.name,
+              iconKey: values.iconKey,
+              colorHex: values.colorHex,
+            } satisfies UpdateCategoryCommand)
+          : await (values.kind === "INCOME"
+              ? createIncome.mutateAsync({
+                  bookId: activeBookId,
+                  name: values.name,
+                  kind: values.kind,
+                  iconKey: values.iconKey,
+                  colorHex: values.colorHex,
+                } satisfies CreateCategoryCommand)
+              : createExpense.mutateAsync({
+                  bookId: activeBookId,
+                  name: values.name,
+                  kind: values.kind,
+                  iconKey: values.iconKey,
+                  colorHex: values.colorHex,
+                } satisfies CreateCategoryCommand))
+
+      if (result.refreshWarning) {
+        toast.add({
+          type: "warning",
+          title: "Categoria salva",
+          description: "Atualize os dados para ver a lista mais recente.",
+        })
+      }
+      onSuccess?.(result.value.id)
     } catch (error) {
-      setSubmitError(error)
+      if (isConflict(error)) setConflictLocked(true)
+      toast.add({
+        type: "error",
+        title: `Não foi possível ${action} a categoria`,
+        description: categoryErrorMessage(error, action),
+      })
+    } finally {
+      inFlight.current = false
     }
   })
 
   if (activeBookId === null) {
     return (
       <Alert>
-        <AlertTitle>Selecione um livro antes de criar a categoria</AlertTitle>
+        <AlertTitle>Selecione um livro antes de {action} a categoria</AlertTitle>
         <AlertDescription>
           O formulário será liberado quando houver um livro ativo.
         </AlertDescription>
@@ -111,57 +177,43 @@ export function CategoryForm({ onSuccess, onCancel }: CategoryFormProps) {
   }
 
   return (
-    <div className="flex w-full flex-col gap-6">
-      {submitError !== null && (
-        <Alert variant="destructive">
-          <AlertTitle>Não foi possível criar a categoria</AlertTitle>
-          <AlertDescription>
-            {categoryErrorMessage(submitError)}
-          </AlertDescription>
-        </Alert>
-      )}
+    <form
+      className="flex w-full flex-col gap-6"
+      noValidate
+      onSubmit={onSubmit}
+      aria-busy={pending}
+    >
+      <FieldGroup>
+        <ControlledInput
+          control={control}
+          name="name"
+          label="Nome da categoria"
+          description="Escolha um nome claro para classificar seus lançamentos."
+          placeholder="Mercado, salário ou transporte"
+          autoComplete="off"
+          disabled={pending}
+        />
 
-      <form
-        className="flex w-full flex-col gap-6"
-        onSubmit={onSubmit}
-        aria-busy={pending}
-      >
-        <FieldGroup>
-          <Field data-invalid={errors.name ? "true" : undefined}>
-            <FieldLabel htmlFor="category-name">Nome da categoria</FieldLabel>
-            <Input
-              id="category-name"
-              autoComplete="off"
-              placeholder="Mercado, salário ou transporte"
-              className="touch-target"
-              aria-invalid={errors.name ? "true" : "false"}
-              aria-describedby="category-name-description category-name-error"
-              disabled={pending}
-              {...register("name", {
-                validate: (value) => fieldMessage("name", value),
-              })}
-            />
-            <FieldDescription id="category-name-description">
-              Escolha um nome claro para classificar seus lançamentos.
-            </FieldDescription>
-            <FieldError id="category-name-error">
-              {errors.name?.message}
-            </FieldError>
-          </Field>
-
-          <Field data-invalid={errors.kind ? "true" : undefined}>
-            <FieldLabel id="category-kind-label">Tipo da categoria</FieldLabel>
-            <Controller
-              control={control}
-              name="kind"
-              rules={{ validate: (value) => fieldMessage("kind", value) }}
-              render={({ field }) => (
+        {mode === "create" ? (
+          <Controller
+            control={control}
+            name="kind"
+            render={({ field, fieldState }) => (
+              <ControlledField
+                id="category-kind"
+                label="Tipo da categoria"
+                description="Use Receita para entradas e Despesa para saídas do seu livro."
+                error={fieldState.error}
+                disabled={pending}
+              >
                 <ToggleGroup
-                  aria-labelledby="category-kind-label"
-                  aria-invalid={errors.kind ? "true" : "false"}
+                  id="category-kind"
+                  aria-label="Tipo da categoria"
+                  aria-invalid={fieldState.invalid}
                   multiple={false}
                   value={field.value ? [field.value] : []}
                   onValueChange={(value) => field.onChange(value[0] ?? "")}
+                  onBlur={field.onBlur}
                   className="w-full sm:w-fit"
                   disabled={pending}
                 >
@@ -178,39 +230,61 @@ export function CategoryForm({ onSuccess, onCancel }: CategoryFormProps) {
                     Receita
                   </ToggleGroupItem>
                 </ToggleGroup>
-              )}
-            />
-            <FieldDescription>
-              Use Receita para entradas e Despesa para saídas do seu livro.
-            </FieldDescription>
-            <FieldError id="category-kind-error">
-              {errors.kind?.message}
-            </FieldError>
-          </Field>
-        </FieldGroup>
+              </ControlledField>
+            )}
+          />
+        ) : (
+          <div className="flex flex-col gap-2">
+            <span className="text-sm font-medium">Tipo da categoria</span>
+            <Badge variant="outline">
+              {initialCategory?.kind === "INCOME" ? "Receita" : "Despesa"}
+            </Badge>
+          </div>
+        )}
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-          {onCancel && (
-            <Button
-              type="button"
-              variant="ghost"
-              className="touch-target w-full sm:w-fit"
-              disabled={pending}
-              onClick={onCancel}
-            >
-              Cancelar
-            </Button>
-          )}
+        <CategoryIconField
+          control={control}
+          name="iconKey"
+          label="Ícone da categoria"
+          description="Escolha um ícone para reconhecer a categoria."
+          disabled={pending}
+        />
+        <ControlledColorPicker
+          control={control}
+          name="colorHex"
+          label="Cor da categoria"
+          description="Use uma cor hexadecimal opaca de seis dígitos."
+          disabled={pending}
+        />
+      </FieldGroup>
+
+      <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+        {onCancel && (
           <Button
+            type="button"
+            variant="ghost"
             className="touch-target w-full sm:w-fit"
-            type="submit"
             disabled={pending}
+            onClick={onCancel}
           >
-            {pending && <Spinner data-icon="inline-start" aria-hidden="true" />}
-            {pending ? "Criando categoria" : "Criar categoria"}
+            Cancelar
           </Button>
-        </div>
-      </form>
-    </div>
+        )}
+        <Button
+          className="touch-target w-full sm:w-fit"
+          type="submit"
+          disabled={pending}
+        >
+          {pending && <Spinner data-icon="inline-start" aria-hidden="true" />}
+          {pending
+            ? mode === "edit"
+              ? "Salvando categoria"
+              : "Criando categoria"
+            : mode === "edit"
+              ? "Salvar categoria"
+              : "Criar categoria"}
+        </Button>
+      </div>
+    </form>
   )
 }

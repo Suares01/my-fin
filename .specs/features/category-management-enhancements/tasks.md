@@ -664,13 +664,13 @@ Como o plano excede oito tarefas, o Execute deve oferecer esses três workers de
 
 **Done when:**
 
-- [ ] Create usa defaults e envia exatamente um command completo ao serviço correto.
-- [ ] Edit preenche valores atuais, mostra kind imutável e envia um `UpdateCategoryCommand` com versão.
-- [ ] Zod bloqueia mutations e associa erros aos quatro campos.
-- [ ] Pending/trava impedem duplo submit; falha preserva valores e usa um toast seguro.
-- [ ] Conflito bloqueia reenvio até nova ação; ausência de livro substitui campos por orientação.
-- [ ] Pelo menos 10 casos de componente novos cobrem ambos os modos e todos os estados; o total não diminui.
-- [ ] Quick Tauri e Build Scoped passam.
+- [x] Create usa defaults e envia exatamente um command completo ao serviço correto.
+- [x] Edit preenche valores atuais, mostra kind imutável e envia um `UpdateCategoryCommand` com versão.
+- [x] Zod bloqueia mutations e associa erros aos quatro campos.
+- [x] Pending/trava impedem duplo submit; falha preserva valores e usa um toast seguro.
+- [x] Conflito bloqueia reenvio até nova ação; ausência de livro substitui campos por orientação.
+- [x] Pelo menos 10 casos de componente novos cobrem ambos os modos e todos os estados; o total não diminui.
+- [x] Quick Tauri e Build Scoped passam.
 
 **Tests:** component integration
 **Gate:** Quick Tauri + Build Scoped

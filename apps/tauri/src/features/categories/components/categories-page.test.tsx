@@ -8,13 +8,14 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react"
-import { afterEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { CategoriesPage } from "./categories-page"
 import { filterCategories } from "./category-list-model"
 
 const state = vi.hoisted(() => ({
   createIncome: vi.fn(),
   createExpense: vi.fn(),
+  updateCategory: vi.fn(),
   archiveCategory: vi.fn(),
 }))
 
@@ -36,6 +37,10 @@ vi.mock("../hooks", () => ({
   }),
   useCreateExpenseCategory: () => ({
     mutateAsync: state.createExpense,
+    isPending: false,
+  }),
+  useUpdateCategory: () => ({
+    mutateAsync: state.updateCategory,
     isPending: false,
   }),
   useArchiveCategory: () => ({
@@ -69,11 +74,24 @@ const categories: readonly CategorySummary[] = [
 ]
 
 describe("CategoriesPage", () => {
+  beforeEach(() => {
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        observe() {}
+        unobserve() {}
+        disconnect() {}
+      }
+    )
+  })
+
   afterEach(() => {
     cleanup()
+    vi.unstubAllGlobals()
     hooks.useCategories.mockReset()
     state.createIncome.mockReset()
     state.createExpense.mockReset()
+    state.updateCategory.mockReset()
     state.archiveCategory.mockReset()
   })
 
@@ -98,7 +116,7 @@ describe("CategoriesPage", () => {
   })
 
   it("keeps the creation CTA available for an empty filter and closes its drawer", async () => {
-    state.createIncome.mockResolvedValue({ id: "income-2" })
+    state.createIncome.mockResolvedValue({ value: { id: "income-2" } })
     hooks.useCategories.mockReturnValue({
       isPending: false,
       isError: false,
