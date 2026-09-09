@@ -1,9 +1,11 @@
 import type {
+  GetJournalChainSummaryInput,
   GetJournalChainDetailInput,
   JournalBusinessType,
   JournalChainDetail,
   JournalChainListItem,
   JournalChainStatus,
+  JournalChainSummary,
   JournalHistoryItem,
   JournalHistoryRole,
   JournalPostingView,
@@ -49,7 +51,7 @@ const JOURNAL_TYPE_SQL =
 
 export class SqliteJournalViewQueries implements Pick<
   JournalViewQueries,
-  "listJournalChains" | "getJournalChainDetail"
+  "listJournalChains" | "getJournalChainDetail" | "getJournalChainSummary"
 > {
   public constructor(private readonly executor: SqliteDatabase) {}
 
@@ -134,79 +136,70 @@ export class SqliteJournalViewQueries implements Pick<
     })
   }
 
+  public async getJournalChainSummary(
+    input: GetJournalChainSummaryInput
+  ): Promise<JournalChainSummary> {
+    return this.executor.readTransaction(async (reader) => {
+      const filtered = buildFilteredPresentedQuery(input)
+      const rows = await reader.query<JournalChainSummaryRow>(
+        "WITH filtered AS (" +
+          filtered.sql +
+          "), chain_amounts AS (" +
+          "SELECT filtered.chain_id, filtered.business_type, " +
+          "CASE WHEN filtered.business_type = 'INCOME' THEN " +
+          "COALESCE(SUM(CASE WHEN amount_account.kind = 'INCOME' " +
+          "THEN -amount_posting.amount_minor ELSE 0 END), 0) " +
+          "WHEN filtered.business_type = 'EXPENSE' THEN " +
+          "COALESCE(SUM(CASE WHEN amount_account.kind = 'EXPENSE' " +
+          "THEN amount_posting.amount_minor ELSE 0 END), 0) " +
+          "ELSE COALESCE(MAX(CASE WHEN amount_account.kind IN ('ASSET', 'LIABILITY') " +
+          "THEN ABS(amount_posting.amount_minor) ELSE 0 END), 0) END AS amount_minor " +
+          "FROM filtered LEFT JOIN postings amount_posting " +
+          "ON amount_posting.book_id = filtered.book_id " +
+          "AND amount_posting.journal_entry_id = filtered.presented_entry_id " +
+          "LEFT JOIN ledger_accounts amount_account " +
+          "ON amount_account.book_id = amount_posting.book_id " +
+          "AND amount_account.id = amount_posting.account_id " +
+          "GROUP BY filtered.chain_id, filtered.business_type" +
+          "), totals AS (" +
+          "SELECT CAST(COALESCE(SUM(CASE WHEN business_type = 'INCOME' " +
+          "THEN amount_minor ELSE 0 END), 0) AS TEXT) AS income_minor, " +
+          "CAST(COALESCE(SUM(CASE WHEN business_type = 'EXPENSE' " +
+          "THEN amount_minor ELSE 0 END), 0) AS TEXT) AS expense_minor, " +
+          "CAST(COALESCE(MAX(amount_minor), 0) AS TEXT) AS largest_transaction_minor, " +
+          "COUNT(*) AS transaction_count FROM chain_amounts" +
+          ") SELECT books.base_currency, totals.income_minor, totals.expense_minor, " +
+          "totals.largest_transaction_minor, totals.transaction_count " +
+          "FROM financial_books books CROSS JOIN totals WHERE books.id = ?",
+        [...filtered.parameters, input.bookId]
+      )
+      const row = rows[0]
+      if (row === undefined) {
+        throw new TypeError("Missing journal chain summary book")
+      }
+      return {
+        incomeMinor: readString(row.income_minor, "income_minor"),
+        expenseMinor: readString(row.expense_minor, "expense_minor"),
+        largestTransactionMinor: readString(
+          row.largest_transaction_minor,
+          "largest_transaction_minor"
+        ),
+        transactionCount: readInteger(
+          row.transaction_count,
+          "transaction_count"
+        ),
+        currency: readString(row.base_currency, "base_currency"),
+      }
+    })
+  }
+
   private async readPage(
     reader: SqliteReader,
     input: ListJournalChainsInput
   ): Promise<readonly JournalChainPageRow[]> {
-    const parameters: (string | number)[] = [input.bookId]
-    let sql =
-      "WITH RECURSIVE chain(root_id, entry_id) AS (" +
-      "SELECT e.id, e.id FROM journal_entries e " +
-      "WHERE e.book_id = ? AND e.reversal_of_id IS NULL AND e.replacement_of_id IS NULL " +
-      "UNION ALL " +
-      "SELECT chain.root_id, next_entry.id FROM chain " +
-      "JOIN journal_entries current_entry ON current_entry.id = chain.entry_id " +
-      "JOIN journal_entries next_entry ON next_entry.id = current_entry.replaced_by_id " +
-      "AND next_entry.book_id = current_entry.book_id " +
-      "WHERE current_entry.replaced_by_id IS NOT NULL" +
-      "), presented AS (" +
-      "SELECT chain.root_id AS chain_id, e.id AS presented_entry_id, " +
-      "e.book_id, e.occurred_on, e.recorded_at, CAST(e.sequence AS TEXT) AS sequence, " +
-      "e.description, e.origin, e.currency, e.version AS presented_version, " +
-      "e.replacement_of_id, e.reversed_by_id " +
-      "FROM chain JOIN journal_entries e ON e.id = chain.entry_id " +
-      "AND e.book_id = ? WHERE e.replaced_by_id IS NULL" +
-      ") SELECT presented.chain_id, presented.presented_entry_id, " +
-      "presented.presented_version, presented.occurred_on, presented.recorded_at, " +
-      "presented.sequence, presented.description, presented.origin, presented.currency, " +
-      "CASE WHEN presented.reversed_by_id IS NOT NULL THEN 'CANCELLED' " +
-      "WHEN presented.replacement_of_id IS NOT NULL THEN 'EDITED' ELSE 'ACTIVE' END AS status, " +
-      `${JOURNAL_TYPE_SQL} AS business_type ` +
-      "FROM presented WHERE 1 = 1"
-    parameters.push(input.bookId)
-
-    if (input.from !== undefined) {
-      sql += " AND presented.occurred_on >= ?"
-      parameters.push(input.from.value)
-    }
-    if (input.to !== undefined) {
-      sql += " AND presented.occurred_on <= ?"
-      parameters.push(input.to.value)
-    }
-    if (input.accountIds !== undefined) {
-      sql +=
-        " AND EXISTS (SELECT 1 FROM postings account_filter " +
-        "JOIN ledger_accounts account_filter_account ON account_filter_account.id = account_filter.account_id " +
-        "AND account_filter_account.book_id = account_filter.book_id " +
-        "WHERE account_filter.book_id = presented.book_id " +
-        "AND account_filter.journal_entry_id = presented.presented_entry_id " +
-        "AND account_filter_account.kind IN ('ASSET', 'LIABILITY') " +
-        `AND account_filter.account_id IN (${input.accountIds.map(() => "?").join(", ")}))`
-      parameters.push(...input.accountIds)
-    }
-    if (input.categoryIds !== undefined) {
-      sql +=
-        " AND EXISTS (SELECT 1 FROM postings category_filter " +
-        "JOIN ledger_accounts category_filter_account ON category_filter_account.id = category_filter.account_id " +
-        "AND category_filter_account.book_id = category_filter.book_id " +
-        "WHERE category_filter.book_id = presented.book_id " +
-        "AND category_filter.journal_entry_id = presented.presented_entry_id " +
-        "AND category_filter_account.kind IN ('INCOME', 'EXPENSE') " +
-        `AND category_filter.account_id IN (${input.categoryIds.map(() => "?").join(", ")}))`
-      parameters.push(...input.categoryIds)
-    }
-    if (input.types !== undefined) {
-      sql += ` AND (${JOURNAL_TYPE_SQL}) IN (${input.types.map(() => "?").join(", ")})`
-      parameters.push(...input.types)
-    }
-    if (input.origins !== undefined) {
-      sql += ` AND presented.origin IN (${input.origins.map(() => "?").join(", ")})`
-      parameters.push(...input.origins)
-    }
-    if (input.search !== undefined) {
-      sql += " AND instr(presented_search.search_text, ?) > 0"
-      parameters.push(input.search)
-    }
+    const filtered = buildFilteredPresentedQuery(input)
+    const parameters = [...filtered.parameters]
+    let sql = filtered.sql
     if (input.cursor !== undefined) {
       sql +=
         " AND (presented.occurred_on < ? OR (presented.occurred_on = ? AND (" +
@@ -224,12 +217,6 @@ export class SqliteJournalViewQueries implements Pick<
       )
     }
 
-    sql = sql.replace(
-      "FROM presented WHERE 1 = 1",
-      "FROM presented JOIN journal_entries presented_search " +
-        "ON presented_search.id = presented.presented_entry_id " +
-        "AND presented_search.book_id = presented.book_id WHERE 1 = 1"
-    )
     sql +=
       " ORDER BY presented.occurred_on DESC, length(presented.sequence) DESC, " +
       "presented.sequence DESC, presented.chain_id DESC LIMIT ?"
@@ -329,6 +316,94 @@ export class SqliteJournalViewQueries implements Pick<
   }
 }
 
+type FilteredPresentedInput = Omit<GetJournalChainSummaryInput, "status"> & {
+  readonly status?: JournalChainStatus
+}
+
+function buildFilteredPresentedQuery(input: FilteredPresentedInput): {
+  readonly sql: string
+  readonly parameters: readonly (string | number)[]
+} {
+  const parameters: (string | number)[] = [input.bookId, input.bookId]
+  let sql =
+    "WITH RECURSIVE chain(root_id, entry_id) AS (" +
+    "SELECT e.id, e.id FROM journal_entries e " +
+    "WHERE e.book_id = ? AND e.reversal_of_id IS NULL AND e.replacement_of_id IS NULL " +
+    "UNION ALL " +
+    "SELECT chain.root_id, next_entry.id FROM chain " +
+    "JOIN journal_entries current_entry ON current_entry.id = chain.entry_id " +
+    "JOIN journal_entries next_entry ON next_entry.id = current_entry.replaced_by_id " +
+    "AND next_entry.book_id = current_entry.book_id " +
+    "WHERE current_entry.replaced_by_id IS NOT NULL" +
+    "), presented AS (" +
+    "SELECT chain.root_id AS chain_id, e.id AS presented_entry_id, " +
+    "e.book_id, e.occurred_on, e.recorded_at, CAST(e.sequence AS TEXT) AS sequence, " +
+    "e.description, e.origin, e.currency, e.version AS presented_version, " +
+    "e.replacement_of_id, e.reversed_by_id " +
+    "FROM chain JOIN journal_entries e ON e.id = chain.entry_id " +
+    "AND e.book_id = ? WHERE e.replaced_by_id IS NULL" +
+    ") SELECT presented.chain_id, presented.presented_entry_id, presented.book_id, " +
+    "presented.presented_version, presented.occurred_on, presented.recorded_at, " +
+    "presented.sequence, presented.description, presented.origin, presented.currency, " +
+    `${JOURNAL_STATUS_SQL} AS status, ${JOURNAL_TYPE_SQL} AS business_type ` +
+    "FROM presented JOIN journal_entries presented_search " +
+    "ON presented_search.id = presented.presented_entry_id " +
+    "AND presented_search.book_id = presented.book_id WHERE 1 = 1"
+
+  if (input.from !== undefined) {
+    sql += " AND presented.occurred_on >= ?"
+    parameters.push(input.from.value)
+  }
+  if (input.to !== undefined) {
+    sql += " AND presented.occurred_on <= ?"
+    parameters.push(input.to.value)
+  }
+  if (input.accountIds !== undefined) {
+    sql +=
+      " AND EXISTS (SELECT 1 FROM postings account_filter " +
+      "JOIN ledger_accounts account_filter_account ON account_filter_account.id = account_filter.account_id " +
+      "AND account_filter_account.book_id = account_filter.book_id " +
+      "WHERE account_filter.book_id = presented.book_id " +
+      "AND account_filter.journal_entry_id = presented.presented_entry_id " +
+      "AND account_filter_account.kind IN ('ASSET', 'LIABILITY') " +
+      `AND account_filter.account_id IN (${input.accountIds.map(() => "?").join(", ")}))`
+    parameters.push(...input.accountIds)
+  }
+  if (input.categoryIds !== undefined) {
+    sql +=
+      " AND EXISTS (SELECT 1 FROM postings category_filter " +
+      "JOIN ledger_accounts category_filter_account ON category_filter_account.id = category_filter.account_id " +
+      "AND category_filter_account.book_id = category_filter.book_id " +
+      "WHERE category_filter.book_id = presented.book_id " +
+      "AND category_filter.journal_entry_id = presented.presented_entry_id " +
+      "AND category_filter_account.kind IN ('INCOME', 'EXPENSE') " +
+      `AND category_filter.account_id IN (${input.categoryIds.map(() => "?").join(", ")}))`
+    parameters.push(...input.categoryIds)
+  }
+  if (input.types !== undefined) {
+    sql += ` AND (${JOURNAL_TYPE_SQL}) IN (${input.types.map(() => "?").join(", ")})`
+    parameters.push(...input.types)
+  }
+  if (input.origins !== undefined) {
+    sql += ` AND presented.origin IN (${input.origins.map(() => "?").join(", ")})`
+    parameters.push(...input.origins)
+  }
+  if (input.search !== undefined) {
+    sql += " AND instr(presented_search.search_text, ?) > 0"
+    parameters.push(input.search)
+  }
+  if (input.status !== undefined) {
+    sql += ` AND (${JOURNAL_STATUS_SQL}) = ?`
+    parameters.push(input.status)
+  }
+
+  return { sql, parameters }
+}
+
+const JOURNAL_STATUS_SQL =
+  "CASE WHEN presented.reversed_by_id IS NOT NULL THEN 'CANCELLED' " +
+  "WHEN presented.replacement_of_id IS NOT NULL THEN 'EDITED' ELSE 'ACTIVE' END"
+
 type JournalChainPageRow = {
   readonly chain_id: unknown
   readonly presented_entry_id: unknown
@@ -341,6 +416,14 @@ type JournalChainPageRow = {
   readonly currency: unknown
   readonly status: unknown
   readonly business_type: unknown
+}
+
+type JournalChainSummaryRow = {
+  readonly income_minor: unknown
+  readonly expense_minor: unknown
+  readonly largest_transaction_minor: unknown
+  readonly transaction_count: unknown
+  readonly base_currency: unknown
 }
 
 type JournalDetailHistoryRow = JournalChainPageRow & {

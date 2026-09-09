@@ -432,6 +432,166 @@ describe("SqliteJournalViewQueries.listJournalChains", () => {
     ])
   })
 
+  it("aggregates every filtered chain independently of the list page size", async () => {
+    for (let index = 0; index < 21; index += 1) {
+      await scenario.recordIncome({
+        accountId: checking,
+        categoryId: salary,
+        amountMinor: "1",
+        description: `Extra income ${index}`,
+      })
+    }
+
+    const result = await queries.getJournalChainSummary({
+      bookId,
+      types: ["INCOME", "EXPENSE", "TRANSFER"],
+    })
+
+    expect(result).toEqual({
+      incomeMinor: "2521",
+      expenseMinor: "700",
+      largestTransactionMinor: "2500",
+      transactionCount: 24,
+      currency: "BRL",
+    })
+  })
+
+  it("applies the list criteria together when aggregating", async () => {
+    const result = await queries.getJournalChainSummary({
+      bookId,
+      from: { value: "2026-08-03" } as never,
+      to: { value: "2026-08-03" } as never,
+      accountIds: [checking] as never,
+      categoryIds: [food] as never,
+      types: ["EXPENSE"],
+      origins: ["MANUAL"],
+      search: "café",
+    })
+
+    expect(result).toEqual({
+      incomeMinor: "0",
+      expenseMinor: "700",
+      largestTransactionMinor: "700",
+      transactionCount: 1,
+      currency: "BRL",
+    })
+  })
+
+  it("counts transfers and uses their magnitude without changing income or expense", async () => {
+    const result = await queries.getJournalChainSummary({
+      bookId,
+      accountIds: [savings] as never,
+      types: ["TRANSFER"],
+    })
+
+    expect(result).toEqual({
+      incomeMinor: "0",
+      expenseMinor: "0",
+      largestTransactionMinor: "300",
+      transactionCount: 1,
+      currency: "BRL",
+    })
+  })
+
+  it("filters cancelled chains while preserving their presented amount", async () => {
+    await scenario.reverse({ journalEntryId: expenseId })
+
+    const result = await queries.getJournalChainSummary({
+      bookId,
+      types: ["EXPENSE"],
+      status: "CANCELLED",
+    })
+
+    expect(result).toEqual({
+      incomeMinor: "0",
+      expenseMinor: "700",
+      largestTransactionMinor: "700",
+      transactionCount: 1,
+      currency: "BRL",
+    })
+  })
+
+  it("aggregates the effective replacement for edited chains", async () => {
+    await insertReplacement(scenario, expenseId, checking, food)
+
+    const result = await queries.getJournalChainSummary({
+      bookId,
+      types: ["EXPENSE"],
+      status: "EDITED",
+    })
+
+    expect(result).toEqual({
+      incomeMinor: "0",
+      expenseMinor: "800",
+      largestTransactionMinor: "800",
+      transactionCount: 1,
+      currency: "BRL",
+    })
+  })
+
+  it("returns zero totals and the book currency when no chain matches", async () => {
+    const result = await queries.getJournalChainSummary({
+      bookId,
+      search: "does-not-exist",
+    })
+
+    expect(result).toEqual({
+      incomeMinor: "0",
+      expenseMinor: "0",
+      largestTransactionMinor: "0",
+      transactionCount: 0,
+      currency: "BRL",
+    })
+  })
+
+  it("isolates books and returns the requested book base currency", async () => {
+    await scenario.database.execute(
+      "INSERT INTO financial_books (id, name, base_currency, timezone, version) VALUES (?, ?, ?, ?, ?)",
+      ["book-2", "Dollar book", "USD", "UTC", 0]
+    )
+
+    const result = await queries.getJournalChainSummary({
+      bookId: "book-2" as never,
+    })
+
+    expect(result).toEqual({
+      incomeMinor: "0",
+      expenseMinor: "0",
+      largestTransactionMinor: "0",
+      transactionCount: 0,
+      currency: "USD",
+    })
+  })
+
+  it("preserves aggregate amounts beyond JavaScript safe integers", async () => {
+    await scenario.database.execute(
+      "UPDATE postings SET amount_minor = CASE WHEN amount_minor < 0 THEN ? ELSE ? END " +
+        "WHERE journal_entry_id = ?",
+      ["-9007199254740993", "9007199254740993", incomeId]
+    )
+
+    const result = await queries.getJournalChainSummary({
+      bookId,
+      types: ["INCOME"],
+    })
+
+    expect(result.incomeMinor).toBe("9007199254740993")
+    expect(result.largestTransactionMinor).toBe("9007199254740993")
+  })
+
+  it("executes one aggregate statement without list hydration", async () => {
+    const original = scenario.database.queryOnConnection.bind(scenario.database)
+    const spy = vi
+      .spyOn(scenario.database, "queryOnConnection")
+      .mockImplementation((sql, parameters) => original(sql, parameters))
+
+    await queries.getJournalChainSummary({ bookId })
+
+    expect(spy).toHaveBeenCalledTimes(1)
+    expect(spy.mock.calls[0]?.[0]).toContain("chain_amounts")
+    spy.mockRestore()
+  })
+
   it("does not leak a different book into the result", async () => {
     await scenario.database.execute(
       "INSERT INTO financial_books (id, name, base_currency, timezone, version) VALUES (?, ?, ?, ?, ?)",
