@@ -461,11 +461,11 @@ Como o plano excede oito tarefas, o Execute deve oferecer esses três workers de
 
 **Done when:**
 
-- [ ] Um sucesso invalida prefixo de gestão/detalhe e ambas as keys de selector do `bookId` recebido.
-- [ ] Falha parcial retorna scopes falhos sem rejeitar o sucesso persistido.
-- [ ] Troca do livro ativo não redireciona as keys.
-- [ ] Pelo menos 5 casos unitários novos cobrem sucesso total, falhas parciais e isolamento; o total não diminui.
-- [ ] Quick Tauri passa.
+- [x] Um sucesso invalida prefixo de gestão/detalhe e ambas as keys de selector do `bookId` recebido.
+- [x] Falha parcial retorna scopes falhos sem rejeitar o sucesso persistido.
+- [x] Troca do livro ativo não redireciona as keys.
+- [x] Pelo menos 5 casos unitários novos cobrem sucesso total, falhas parciais e isolamento; o total não diminui.
+- [x] Quick Tauri passa.
 
 **Tests:** unit
 **Gate:** Quick Tauri

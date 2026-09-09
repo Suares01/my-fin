@@ -1,4 +1,5 @@
 export { categoryKeys } from "./category-keys.js"
+export { invalidateCategoryQueries } from "./category-invalidation.js"
 export { useCreateExpenseCategory } from "./use-create-expense-category.js"
 export { useCreateIncomeCategory } from "./use-create-income-category.js"
 export { useExpenseCategories } from "./use-expense-categories.js"
