@@ -20,7 +20,10 @@ function command(overrides: Record<string, unknown> = {}) {
   }
 }
 
-function archiveCategory(harness: ReturnType<typeof createHarness>, version = 1) {
+function archiveCategory(
+  harness: ReturnType<typeof createHarness>,
+  version = 1
+) {
   harness.store.putAccount({
     ...harness.store.getAccount("account-5" as never)!,
     status: "ARCHIVED",
@@ -94,7 +97,9 @@ describe("ReactivateCategory", () => {
     const before = harness.store.snapshot()
     harness.publisher.clear()
 
-    const result = await useCase(harness).execute(command({ expectedVersion: 0 }))
+    const result = await useCase(harness).execute(
+      command({ expectedVersion: 0 })
+    )
 
     expect(result).toMatchObject({
       ok: true,

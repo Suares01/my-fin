@@ -270,16 +270,19 @@ describe("UpdateCategory", () => {
     ["name", { name: "   " }, "INVALID_ACCOUNT_NAME"],
     ["icon", { iconKey: "invalid icon" }, "INVALID_CATEGORY_ICON_KEY"],
     ["color", { colorHex: "#abcdef" }, "INVALID_CATEGORY_COLOR"],
-  ] as const)("rejects an invalid %s before writing", async (_label, values, code) => {
-    const harness = createHarness()
-    await createBook(harness)
-    await createExpenseCategory(harness)
-    const before = harness.store.snapshot()
+  ] as const)(
+    "rejects an invalid %s before writing",
+    async (_label, values, code) => {
+      const harness = createHarness()
+      await createBook(harness)
+      await createExpenseCategory(harness)
+      const before = harness.store.snapshot()
 
-    const result = await useCase(harness).execute(command(values))
+      const result = await useCase(harness).execute(command(values))
 
-    expect(result).toMatchObject({ ok: false, error: { code } })
-    expect(harness.store.snapshot()).toEqual(before)
-    expect(harness.publisher.events).toEqual([])
-  })
+      expect(result).toMatchObject({ ok: false, error: { code } })
+      expect(harness.store.snapshot()).toEqual(before)
+      expect(harness.publisher.events).toEqual([])
+    }
+  )
 })

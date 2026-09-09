@@ -71,7 +71,9 @@ describe("ArchiveCategory", () => {
     const before = harness.store.snapshot()
     harness.publisher.clear()
 
-    const result = await useCase(harness).execute(command({ expectedVersion: 2 }))
+    const result = await useCase(harness).execute(
+      command({ expectedVersion: 2 })
+    )
 
     expect(result).toMatchObject({
       ok: true,
