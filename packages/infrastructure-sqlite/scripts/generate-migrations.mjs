@@ -86,7 +86,8 @@ export function renderGeneratedMigrations(migrations) {
         "  {",
         "    version: " + migration.version + ",",
         "    name: " + JSON.stringify(migration.name) + ",",
-        "    checksum: " + JSON.stringify(migration.checksum) + ",",
+        "    checksum:",
+        "      " + JSON.stringify(migration.checksum) + ",",
         "    sql: " + JSON.stringify(migration.sql) + ",",
         "  },",
       ].join("\n")
@@ -95,11 +96,11 @@ export function renderGeneratedMigrations(migrations) {
 
   return [
     "// generated, do not edit",
-    'import type { SqliteMigration } from "./migrations.js";',
+    'import type { SqliteMigration } from "./migrations.js"',
     "",
     "export const sqliteMigrations: readonly SqliteMigration[] = [",
     records,
-    "];",
+    "]",
     "",
   ].join("\n")
 }
