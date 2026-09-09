@@ -563,11 +563,11 @@ Como o plano excede oito tarefas, o Execute deve oferecer esses três workers de
 
 **Done when:**
 
-- [ ] Valor externo e reset reconstituem os canais HSL corretos.
-- [ ] Uma sincronização equivalente não emite valor diferente nem dirty state falso.
-- [ ] Alpha recebido continua representável internamente, mas a composição opaca pode descartá-lo.
-- [ ] Pelo menos 4 casos de integração novos cobrem valor inicial, mudança externa, reset e ausência de eco; o total não diminui.
-- [ ] Quick UI e Quick Tauri passam.
+- [x] Valor externo e reset reconstituem os canais HSL corretos.
+- [x] Uma sincronização equivalente não emite valor diferente nem dirty state falso.
+- [x] Alpha recebido continua representável internamente, mas a composição opaca pode descartá-lo.
+- [x] Pelo menos 4 casos de integração novos cobrem valor inicial, mudança externa, reset e ausência de eco; o total não diminui.
+- [x] Quick UI e Quick Tauri passam.
 
 **Tests:** component integration
 **Gate:** Quick UI + Quick Tauri

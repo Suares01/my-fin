@@ -273,9 +273,9 @@ Toda ambiguidade foi resolvida pela solicitação, pelo código existente ou pel
 | CAT-17 | P1: Criar categoria | Tasks | In Tasks |
 | CAT-18 | P1: Criar categoria | Tasks | In Tasks |
 | CAT-19 | P1: Criar categoria | Tasks | In Tasks |
-| CAT-20 | P1: Criar categoria | Tasks | In Tasks |
-| CAT-21 | P1: Criar categoria | Tasks | In Tasks |
-| CAT-22 | P1: Criar categoria | Tasks | In Tasks |
+| CAT-20 | P1: Criar categoria | Tasks | T18 complete; controlled field coverage remains in T19/T22 |
+| CAT-21 | P1: Criar categoria | Tasks | T18 complete; controlled field coverage remains in T19/T22 |
+| CAT-22 | P1: Criar categoria | Tasks | T18 complete; controlled field coverage remains in T19/T22 |
 | CAT-23 | P1: Criar categoria | Tasks | In Tasks |
 | CAT-24 | P1: Criar categoria | Tasks | T2/T4/T15 complete |
 | CAT-25 | P1: Criar categoria | Tasks | T15 complete |
@@ -320,7 +320,7 @@ Toda ambiguidade foi resolvida pela solicitação, pelo código existente ou pel
 | CAT-64 | Edge case: troca de livro | Tasks | In Tasks |
 | CAT-65 | Edge case: cache por livro | Tasks | T14/T15/T16 complete |
 | CAT-66 | Edge case: invalidação parcial | Tasks | T14/T15/T16 complete |
-| CAT-67 | Edge case: conta-gotas | Tasks | In Tasks |
+| CAT-67 | Edge case: conta-gotas | Tasks | T18 complete; controlled field coverage remains in T19 |
 | CAT-68 | Edge case: cor manual | Tasks | In Tasks |
 | CAT-69 | Edge case: reativação repetida | Tasks | T7/T11/T16 complete |
 | CAT-70 | P1: Persistir metadados | Tasks | T1/T9/T10/T11 complete |

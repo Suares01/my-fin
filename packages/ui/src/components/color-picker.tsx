@@ -64,42 +64,55 @@ export const ColorPicker = ({
   className,
   ...props
 }: ColorPickerProps) => {
-  const selectedColor = Color(value)
-  const defaultColor = Color(defaultValue)
+  const initialColor = Color(value ?? defaultValue)
 
-  const [hue, setHue] = useState(selectedColor.hue() || defaultColor.hue() || 0)
-  const [saturation, setSaturation] = useState(
-    selectedColor.saturationl() || defaultColor.saturationl() || 100
-  )
-  const [lightness, setLightness] = useState(
-    selectedColor.lightness() || defaultColor.lightness() || 50
-  )
-  const [alpha, setAlpha] = useState(
-    selectedColor.alpha() * 100 || defaultColor.alpha() * 100
-  )
+  const [hue, setHue] = useState(initialColor.hue())
+  const [saturation, setSaturation] = useState(initialColor.saturationl())
+  const [lightness, setLightness] = useState(initialColor.lightness())
+  const [alpha, setAlpha] = useState(initialColor.alpha() * 100)
   const [mode, setMode] = useState("hex")
+  const previousValue = useRef(value)
+  const isInitialRender = useRef(true)
 
   // Update color when controlled value changes
   useEffect(() => {
-    if (value) {
-      const color = Color.rgb(value).rgb().object()
+    if (value !== previousValue.current) {
+      previousValue.current = value
+      const color = Color(value ?? defaultValue)
+        .hsl()
+        .object()
 
-      setHue(color.r)
-      setSaturation(color.g)
-      setLightness(color.b)
-      setAlpha(color.a)
+      setHue(color.h)
+      setSaturation(color.s)
+      setLightness(color.l)
+      setAlpha(Color(value ?? defaultValue).alpha() * 100)
+      return
     }
-  }, [value])
 
-  // Notify parent of changes
-  useEffect(() => {
-    if (onChange) {
-      const color = Color.hsl(hue, saturation, lightness).alpha(alpha / 100)
+    if (isInitialRender.current) {
+      isInitialRender.current = false
+      return
+    }
+
+    const color = Color.hsl(hue, saturation, lightness).alpha(alpha / 100)
+    const controlledColor = value === undefined ? undefined : Color(value)
+    const hasSameValue =
+      controlledColor !== undefined &&
+      color
+        .rgb()
+        .array()
+        .every((channel, index) => {
+          const expected = controlledColor.rgb().array()[index]
+          return Math.abs(channel - expected) < 0.0001
+        }) &&
+      Math.abs(color.alpha() - controlledColor.alpha()) < 0.0001
+
+    if (onChange && !hasSameValue) {
       const rgba = color.rgb().array()
 
       onChange([rgba[0], rgba[1], rgba[2], alpha / 100])
     }
-  }, [hue, saturation, lightness, alpha, onChange])
+  }, [alpha, hue, lightness, onChange, saturation, value])
 
   return (
     <ColorPickerContext.Provider
@@ -315,7 +328,7 @@ export const ColorPickerOutput = ({
   const { mode, setMode } = useColorPicker()
 
   return (
-    <Select onValueChange={setMode} value={mode}>
+    <Select onValueChange={(value) => setMode(value ?? "hex")} value={mode}>
       <SelectTrigger className="h-8 w-20 shrink-0 text-xs" {...(props as any)}>
         <SelectValue placeholder="Mode" />
       </SelectTrigger>
