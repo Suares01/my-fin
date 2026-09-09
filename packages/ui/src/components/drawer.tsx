@@ -21,10 +21,7 @@ function DrawerPortal({
   return <DrawerPrimitive.Portal data-slot="drawer-portal" {...props} />
 }
 
-function DrawerBackdrop({
-  className,
-  ...props
-}: React.ComponentProps<"div">) {
+function DrawerBackdrop({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <DrawerPortal>
       <div

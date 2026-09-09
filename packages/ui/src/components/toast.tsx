@@ -221,7 +221,8 @@ export {
   ToastProvider,
   ToastTitle,
   ToastViewport,
-  createToastManager,
-  toast,
-  useToastManager,
 }
+
+/* eslint-disable react-refresh/only-export-components */
+export { createToastManager, toast, useToastManager }
+/* eslint-enable react-refresh/only-export-components */
