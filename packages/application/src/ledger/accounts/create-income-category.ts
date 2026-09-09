@@ -4,6 +4,7 @@ import {
   normalizeAccountName,
 } from "@workspace/domain"
 import type {
+  CategoryDto,
   CreateCategoryCommand,
   IdGenerator,
   TransactionManager,
@@ -58,17 +59,26 @@ export class CreateIncomeCategory {
           bookId: book.id,
           name: command.name,
           kind: "INCOME",
+          iconKey: command.iconKey,
+          colorHex: command.colorHex,
         })
         await repositories.accounts.add(category)
-        return {
-          id: category.id,
-          bookId: category.bookId,
-          name: category.name,
-          kind: category.kind,
-          status: category.status,
-          version: category.version,
-        }
+        return toCategoryDto(category)
       },
     })
+  }
+}
+
+function toCategoryDto(category: LedgerAccount): CategoryDto {
+  const snapshot = category.toCategorySnapshot()
+  return {
+    id: snapshot.id,
+    bookId: snapshot.bookId,
+    name: snapshot.name,
+    kind: "INCOME",
+    status: snapshot.status,
+    iconKey: snapshot.iconKey,
+    colorHex: snapshot.colorHex,
+    version: snapshot.version,
   }
 }

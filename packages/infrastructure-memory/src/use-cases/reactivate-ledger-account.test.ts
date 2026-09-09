@@ -96,7 +96,13 @@ describe("ReactivateLedgerAccount", () => {
       harness.transactionManager,
       harness.dispatcher,
       harness.ids
-    ).execute({ bookId: "book-1", name: "Salary", kind: "INCOME" })
+    ).execute({
+      bookId: "book-1",
+      name: "Salary",
+      kind: "INCOME",
+      iconKey: "briefcase",
+      colorHex: "10b981",
+    })
     archiveAccount(harness)
 
     const result = await useCase(harness).execute({

@@ -205,11 +205,11 @@ Como o plano excede oito tarefas, o Execute deve oferecer esses três workers de
 
 **Done when:**
 
-- [ ] Ambos os casos de uso gravam e retornam `iconKey`/`colorHex` canônicos.
-- [ ] Cor/ícone inválidos, kind incorreto, livro ausente e duplicidade deixam store e publisher intactos.
-- [ ] O fato de criação contém o snapshot visual completo.
-- [ ] Pelo menos 6 casos de integração novos distribuem happy/error paths entre receita e despesa; o total não diminui.
-- [ ] Full Application passa.
+- [x] Ambos os casos de uso gravam e retornam `iconKey`/`colorHex` canônicos.
+- [x] Cor/ícone inválidos, kind incorreto, livro ausente e duplicidade deixam store e publisher intactos.
+- [x] O fato de criação contém o snapshot visual completo.
+- [x] Pelo menos 6 casos de integração novos distribuem happy/error paths entre receita e despesa; o total não diminui.
+- [x] Full Application passa.
 
 **Tests:** integration
 **Gate:** Full Application

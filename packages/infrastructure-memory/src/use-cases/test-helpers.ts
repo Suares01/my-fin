@@ -70,7 +70,13 @@ export async function createExpenseCategory(
     harness.transactionManager,
     harness.dispatcher,
     harness.ids
-  ).execute({ bookId: "book-1", name: "Food", kind: "EXPENSE" })
+  ).execute({
+    bookId: "book-1",
+    name: "Food",
+    kind: "EXPENSE",
+    iconKey: "restaurant",
+    colorHex: "f43f5e",
+  })
   if (!result.ok) {
     throw new Error(`Expense category fixture failed: ${result.error.code}`)
   }
@@ -85,7 +91,13 @@ export async function createIncomeCategory(
     harness.transactionManager,
     harness.dispatcher,
     harness.ids
-  ).execute({ bookId: "book-1", name: "Salary", kind: "INCOME" })
+  ).execute({
+    bookId: "book-1",
+    name: "Salary",
+    kind: "INCOME",
+    iconKey: "briefcase",
+    colorHex: "10b981",
+  })
   if (!result.ok) {
     throw new Error(`Income category fixture failed: ${result.error.code}`)
   }
