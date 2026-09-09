@@ -165,7 +165,13 @@ async function createExpenseCategory(adapter: CashFlowAdapter): Promise<void> {
     adapter.transactionManager,
     adapter.dispatcher,
     adapter.ids
-  ).execute({ bookId: "book-1", name: "Food", kind: "EXPENSE" })
+  ).execute({
+    bookId: "book-1",
+    name: "Food",
+    kind: "EXPENSE",
+    iconKey: "label-dollar",
+    colorHex: "f43f5e",
+  })
   expect(result).toMatchObject({
     ok: true,
     value: { bookId: "book-1", kind: "EXPENSE" },
@@ -178,7 +184,13 @@ async function createIncomeCategory(adapter: CashFlowAdapter): Promise<void> {
     adapter.transactionManager,
     adapter.dispatcher,
     adapter.ids
-  ).execute({ bookId: "book-1", name: "Salary", kind: "INCOME" })
+  ).execute({
+    bookId: "book-1",
+    name: "Salary",
+    kind: "INCOME",
+    iconKey: "label-dollar",
+    colorHex: "10b981",
+  })
   expect(result).toMatchObject({
     ok: true,
     value: { bookId: "book-1", kind: "INCOME" },

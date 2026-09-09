@@ -162,7 +162,13 @@ export async function createFinancialQueryScenario(
         transactionManager,
         dispatcher,
         ids
-      ).execute({ bookId: "book-1", name, kind: "EXPENSE" })
+      ).execute({
+        bookId: "book-1",
+        name,
+        kind: "EXPENSE",
+        iconKey: "label-dollar",
+        colorHex: "f43f5e",
+      })
       const category = unwrap(result, "expense category fixture")
       clearPublishedEvents(publisher)
       return category
@@ -172,7 +178,13 @@ export async function createFinancialQueryScenario(
         transactionManager,
         dispatcher,
         ids
-      ).execute({ bookId: "book-1", name, kind: "INCOME" })
+      ).execute({
+        bookId: "book-1",
+        name,
+        kind: "INCOME",
+        iconKey: "label-dollar",
+        colorHex: "10b981",
+      })
       const category = unwrap(result, "income category fixture")
       clearPublishedEvents(publisher)
       return category

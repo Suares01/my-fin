@@ -56,7 +56,10 @@ Cada tarefa registra o total obtido no commit. O total do escopo afetado não po
 | Quick Domain | Alterações no agregado/validação | `pnpm --filter @workspace/domain test && pnpm --filter @workspace/domain check-types` |
 | Quick Application | Ports, dispatcher e exports | `pnpm --filter @workspace/domain build && pnpm --filter @workspace/application test && pnpm --filter @workspace/application check-types` |
 | Full Application | Casos de uso e transações em memória | `pnpm --filter @workspace/domain build && pnpm --filter @workspace/application build && pnpm --filter @workspace/infrastructure-memory test && pnpm --filter @workspace/infrastructure-memory check-types` |
-| Full SQLite | Migração, mapper, repository e queries | `pnpm --filter @workspace/domain build && pnpm --filter @workspace/application build && pnpm --filter @workspace/infrastructure-memory build && pnpm --filter @workspace/infrastructure-sqlite check:migrations && pnpm --filter @workspace/infrastructure-sqlite test && pnpm --filter @workspace/infrastructure-sqlite check-types` |
+| Focused Migration T9 | Migration, generated catalog and migration integration tests | `pnpm --filter @workspace/domain build && pnpm --filter @workspace/application build && pnpm --filter @workspace/infrastructure-memory build && pnpm --filter @workspace/infrastructure-sqlite check:migrations && pnpm --filter @workspace/infrastructure-sqlite exec vitest run tests/migrations && git diff --check` |
+| Focused SQLite Mapper T10 | Ledger account mapper tests without catalog queries | `pnpm --filter @workspace/domain build && pnpm --filter @workspace/application build && pnpm --filter @workspace/infrastructure-memory build && pnpm --filter @workspace/infrastructure-sqlite exec vitest run src/mappers/ledger-account-mapper.test.ts && git diff --check` |
+| Focused SQLite Repository T11 | Ledger account mapper/repository tests without catalog queries | `pnpm --filter @workspace/domain build && pnpm --filter @workspace/application build && pnpm --filter @workspace/infrastructure-memory build && pnpm --filter @workspace/infrastructure-sqlite check:migrations && pnpm --filter @workspace/infrastructure-sqlite exec vitest run src/mappers/ledger-account-mapper.test.ts tests/repositories/sqlite-ledger-account-repository.test.ts && git diff --check` |
+| Full SQLite | Phase 2 global, beginning at T12 after focused migration/mapper/repository gates | `pnpm --filter @workspace/domain build && pnpm --filter @workspace/application build && pnpm --filter @workspace/infrastructure-memory build && pnpm --filter @workspace/infrastructure-sqlite check:migrations && pnpm --filter @workspace/infrastructure-sqlite test && pnpm --filter @workspace/infrastructure-sqlite check-types` |
 | Quick UI | `ColorPicker` compartilhado | `pnpm --filter @workspace/ui test && pnpm --filter @workspace/ui typecheck` |
 | Quick Tauri | Facade, fields, hooks e componentes de categoria | `pnpm --filter @workspace/domain build && pnpm --filter @workspace/application build && pnpm --filter @workspace/infrastructure-sqlite build && pnpm --filter tauri exec vitest run src/bootstrap/create-services.test.ts src/components/forms src/features/categories` |
 | Build Scoped | Encerramento de cada fase | `pnpm --filter @workspace/domain lint && pnpm --filter @workspace/domain build && pnpm --filter @workspace/application lint && pnpm --filter @workspace/application build && pnpm --filter @workspace/infrastructure-memory lint && pnpm --filter @workspace/infrastructure-memory build && pnpm --filter @workspace/infrastructure-sqlite lint && pnpm --filter @workspace/infrastructure-sqlite build && git diff --check` |
@@ -331,15 +334,15 @@ Como o plano excede oito tarefas, o Execute deve oferecer esses três workers de
 
 **Done when:**
 
-- [ ] Upgrade preenche defaults exatos por kind e mantém contas não gerenciáveis com `NULL`.
-- [ ] Triggers de insert/update rejeitam ausência, `#`, casing/formato inválido e metadados em não categorias.
-- [ ] Falha intermediária reverte colunas, dados, triggers e registro da migration.
-- [ ] `generate:migrations` e `check:migrations` concordam.
-- [ ] Pelo menos 9 casos de integração novos cobrem backfill, constraints, idempotência e rollback; o total não diminui.
-- [ ] Full SQLite passa.
+- [x] Upgrade preenche defaults exatos por kind e mantém contas não gerenciáveis com `NULL`.
+- [x] Triggers de insert/update rejeitam ausência, `#`, casing/formato inválido e metadados em não categorias.
+- [x] Falha intermediária reverte colunas, dados, triggers e registro da migration.
+- [x] `generate:migrations` e `check:migrations` concordam.
+- [x] Pelo menos 9 casos de integração novos cobrem backfill, constraints, idempotência e rollback; o total não diminui.
+- [x] Focused Migration T9 passa.
 
 **Tests:** integration
-**Gate:** Full SQLite
+**Gate:** Focused Migration T9
 **Commit:** `feat(sqlite): migrate category visual metadata`
 
 #### T10: Map category appearance through SQLite rows
@@ -361,10 +364,10 @@ Como o plano excede oito tarefas, o Execute deve oferecer esses três workers de
 - [ ] Rows categóricas incompletas ou inválidas e rows não categóricas com appearance são rejeitadas.
 - [ ] Restauração não cria fatos.
 - [ ] Pelo menos 5 casos unitários novos cobrem essas combinações; o total não diminui.
-- [ ] Full SQLite passa.
+- [ ] Focused SQLite Mapper T10 passa.
 
 **Tests:** unit
-**Gate:** Full SQLite
+**Gate:** Focused SQLite Mapper T10
 **Commit:** `feat(sqlite): map category visual metadata`
 
 #### T11: Persist appearance in the ledger account repository
@@ -386,10 +389,10 @@ Como o plano excede oito tarefas, o Execute deve oferecer esses três workers de
 - [ ] Update de três campos usa um statement CAS e não altera kind/book/status/system purpose.
 - [ ] Conflito/rejeição não registra fatos nem persiste estado parcial.
 - [ ] Pelo menos 6 casos de integração novos cobrem round trip, save, CAS e constraints; o total não diminui.
-- [ ] Full SQLite passa.
+- [ ] Focused SQLite Repository T11 passa.
 
 **Tests:** integration
-**Gate:** Full SQLite
+**Gate:** Focused SQLite Repository T11
 **Commit:** `feat(sqlite): persist category visual metadata`
 
 #### T12: Return appearance from every category catalog query

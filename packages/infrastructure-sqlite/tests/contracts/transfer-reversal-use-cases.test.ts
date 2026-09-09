@@ -150,12 +150,24 @@ async function createCategory(
           adapter.transactionManager,
           adapter.dispatcher,
           adapter.ids
-        ).execute({ bookId: "book-1", name: "Salary", kind })
+        ).execute({
+          bookId: "book-1",
+          name: "Salary",
+          kind,
+          iconKey: "label-dollar",
+          colorHex: "10b981",
+        })
       : await new CreateExpenseCategory(
           adapter.transactionManager,
           adapter.dispatcher,
           adapter.ids
-        ).execute({ bookId: "book-1", name: "Food", kind })
+        ).execute({
+          bookId: "book-1",
+          name: "Food",
+          kind,
+          iconKey: "label-dollar",
+          colorHex: "f43f5e",
+        })
   expect(result).toMatchObject({ ok: true })
   adapter.publisher.clear()
   return result.ok ? result.value.id : "missing"

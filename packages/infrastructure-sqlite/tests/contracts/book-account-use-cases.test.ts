@@ -119,20 +119,32 @@ function createAccountUseCase(adapter: UseCaseAdapter): CreateFinancialAccount {
   )
 }
 
-function createIncomeUseCase(adapter: UseCaseAdapter): CreateIncomeCategory {
-  return new CreateIncomeCategory(
+function createIncomeUseCase(
+  adapter: UseCaseAdapter
+): Pick<CreateIncomeCategory, "execute"> {
+  const useCase = new CreateIncomeCategory(
     adapter.transactionManager,
     adapter.dispatcher,
     adapter.ids
   )
+  return {
+    execute: (input) =>
+      useCase.execute({ ...input, iconKey: "label-dollar", colorHex: "10b981" }),
+  }
 }
 
-function createExpenseUseCase(adapter: UseCaseAdapter): CreateExpenseCategory {
-  return new CreateExpenseCategory(
+function createExpenseUseCase(
+  adapter: UseCaseAdapter
+): Pick<CreateExpenseCategory, "execute"> {
+  const useCase = new CreateExpenseCategory(
     adapter.transactionManager,
     adapter.dispatcher,
     adapter.ids
   )
+  return {
+    execute: (input) =>
+      useCase.execute({ ...input, iconKey: "label-dollar", colorHex: "f43f5e" }),
+  }
 }
 
 async function createBook(adapter: UseCaseAdapter): Promise<void> {

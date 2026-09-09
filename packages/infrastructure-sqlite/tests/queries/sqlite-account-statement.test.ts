@@ -36,6 +36,11 @@ function makeAccount(
     normalizedName: name.toLowerCase(),
     kind,
     status: "ACTIVE",
+    ...(kind === "INCOME"
+      ? { iconKey: "label-dollar", colorHex: "10b981" }
+      : kind === "EXPENSE"
+        ? { iconKey: "label-dollar", colorHex: "f43f5e" }
+        : {}),
     version: 0,
   })
 }

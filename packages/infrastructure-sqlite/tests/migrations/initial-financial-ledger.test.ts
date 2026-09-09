@@ -16,6 +16,8 @@ const ACCOUNT_COLUMNS = [
   "status",
   "system_purpose",
   "version",
+  "icon_key",
+  "color_hex",
 ]
 const SEQUENCE_COLUMNS = ["book_id", "last_sequence"]
 const ENTRY_COLUMNS = [
@@ -159,6 +161,8 @@ describe("initial financial ledger migration", () => {
     )
 
     expect(triggers.map(({ name }) => name).sort()).toEqual([
+      "trg_category_visual_metadata_insert",
+      "trg_category_visual_metadata_update",
       "trg_journal_entries_replaced_by_same_book_insert",
       "trg_journal_entries_replaced_by_same_book_update",
       "trg_journal_entries_replacement_of_same_book_insert",

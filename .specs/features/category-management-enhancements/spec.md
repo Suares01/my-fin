@@ -256,12 +256,12 @@ Toda ambiguidade foi resolvida pela solicitação, pelo código existente ou pel
 | --- | --- | --- | --- |
 | CAT-01 | P1: Persistir metadados | Tasks | T1/T4 complete |
 | CAT-02 | P1: Persistir metadados | Tasks | T1 complete |
-| CAT-03 | P1: Persistir metadados | Tasks | In Tasks |
+| CAT-03 | P1: Persistir metadados | Tasks | T9 complete |
 | CAT-04 | P1: Persistir metadados | Tasks | T2 complete |
-| CAT-05 | P1: Persistir metadados | Tasks | In Tasks |
-| CAT-06 | P1: Persistir metadados | Tasks | In Tasks |
+| CAT-05 | P1: Persistir metadados | Tasks | T9 complete |
+| CAT-06 | P1: Persistir metadados | Tasks | T9 complete |
 | CAT-07 | P1: Persistir metadados | Tasks | T1 complete |
-| CAT-08 | P1: Persistir metadados | Tasks | In Tasks |
+| CAT-08 | P1: Persistir metadados | Tasks | T9 complete |
 | CAT-09 | P1: Persistir metadados | Tasks | T1/T4 complete |
 | CAT-10 | P1: Persistir metadados | Tasks | T1/T4 complete |
 | CAT-11 | P1: Catálogo de ícones | Tasks | In Tasks |
@@ -323,7 +323,7 @@ Toda ambiguidade foi resolvida pela solicitação, pelo código existente ou pel
 | CAT-67 | Edge case: conta-gotas | Tasks | In Tasks |
 | CAT-68 | Edge case: cor manual | Tasks | In Tasks |
 | CAT-69 | Edge case: reativação repetida | Tasks | T7 complete |
-| CAT-70 | P1: Persistir metadados | Tasks | T1 complete |
+| CAT-70 | P1: Persistir metadados | Tasks | T1/T9 complete |
 | CAT-71 | P1: Atualizar categoria | Tasks | T1/T5 complete |
 | CAT-72 | P1: Criar categoria | Tasks | In Tasks |
 | CAT-73 | P1: Criar categoria | Tasks | In Tasks |

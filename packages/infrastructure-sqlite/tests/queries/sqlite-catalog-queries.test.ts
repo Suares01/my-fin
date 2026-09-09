@@ -47,8 +47,8 @@ describe("SQLite catalog queries", () => {
   ) {
     await currentDatabase.execute(
       "INSERT INTO ledger_accounts " +
-        "(id, book_id, name, normalized_name, kind, status, system_purpose, version) " +
-        "VALUES (?, ?, ?, ?, ?, ?, ?, 0)",
+        "(id, book_id, name, normalized_name, kind, status, system_purpose, version, icon_key, color_hex) " +
+        "VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?)",
       [
         values.id,
         values.bookId,
@@ -57,6 +57,14 @@ describe("SQLite catalog queries", () => {
         values.kind ?? "EXPENSE",
         values.status ?? "ACTIVE",
         values.systemPurpose ?? null,
+        values.systemPurpose === null || values.systemPurpose === undefined
+          ? "label-dollar"
+          : null,
+        values.systemPurpose === null || values.systemPurpose === undefined
+          ? values.kind === "INCOME"
+            ? "10b981"
+            : "f43f5e"
+          : null,
       ]
     )
   }

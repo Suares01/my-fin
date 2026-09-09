@@ -156,12 +156,24 @@ async function createCategory(
           adapter.transactionManager,
           adapter.dispatcher,
           adapter.ids
-        ).execute({ bookId: "book-1", name, kind })
+        ).execute({
+          bookId: "book-1",
+          name,
+          kind,
+          iconKey: "label-dollar",
+          colorHex: "10b981",
+        })
       : await new CreateExpenseCategory(
           adapter.transactionManager,
           adapter.dispatcher,
           adapter.ids
-        ).execute({ bookId: "book-1", name, kind })
+        ).execute({
+          bookId: "book-1",
+          name,
+          kind,
+          iconKey: "label-dollar",
+          colorHex: "f43f5e",
+        })
   if (!result.ok) throw new Error(result.error.code)
   adapter.publisher.clear()
   return result.value

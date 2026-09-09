@@ -29,6 +29,7 @@ describe("financial query migrations", () => {
       { version: 1, name: "initial_financial_ledger" },
       { version: 2, name: "financial_query_indexes" },
       { version: 3, name: "journal_amendment_search" },
+      { version: 4, name: "category_visual_metadata" },
     ])
     expect(
       sqliteMigrations.every(({ checksum }) => /^[a-f0-9]{64}$/.test(checksum))
@@ -48,6 +49,7 @@ describe("financial query migrations", () => {
       { version: 1, name: "initial_financial_ledger" },
       { version: 2, name: "financial_query_indexes" },
       { version: 3, name: "journal_amendment_search" },
+      { version: 4, name: "category_visual_metadata" },
     ])
   })
 
@@ -62,7 +64,12 @@ describe("financial query migrations", () => {
       current.query<{ version: number }>(
         "SELECT version FROM schema_migrations ORDER BY version"
       )
-    ).resolves.toEqual([{ version: 1 }, { version: 2 }, { version: 3 }])
+    ).resolves.toEqual([
+      { version: 1 },
+      { version: 2 },
+      { version: 3 },
+      { version: 4 },
+    ])
   })
 
   it("rejects a tampered V2 checksum before changing the schema", async () => {

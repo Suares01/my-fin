@@ -21,14 +21,21 @@ import { BetterSqliteDatabase } from "../support/better-sqlite-database.js"
 function accountSnapshot(
   overrides: Partial<LedgerAccountSnapshot> = {}
 ): LedgerAccountSnapshot {
+  const kind = overrides.kind ?? "ASSET"
+  const systemPurpose = overrides.systemPurpose
   return {
     id: ledgerAccountIdFromString("account-1"),
     bookId: bookIdFromString("book-1"),
     name: "Cash",
     normalizedName: "cash",
-    kind: "ASSET",
+    kind,
     status: "ACTIVE",
     version: 0,
+    ...(systemPurpose === undefined && kind === "INCOME"
+      ? { iconKey: "label-dollar", colorHex: "10b981" }
+      : systemPurpose === undefined && kind === "EXPENSE"
+        ? { iconKey: "label-dollar", colorHex: "f43f5e" }
+        : {}),
     ...overrides,
   }
 }
