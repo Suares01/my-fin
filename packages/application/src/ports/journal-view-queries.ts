@@ -43,7 +43,7 @@ export interface JournalChainCursorKey {
   readonly filterFingerprint: string
 }
 
-export interface ListJournalChainsInput {
+export interface JournalChainFilterCriteria {
   readonly bookId: BookId
   readonly from?: LocalDate
   readonly to?: LocalDate
@@ -52,8 +52,24 @@ export interface ListJournalChainsInput {
   readonly types?: readonly JournalBusinessType[]
   readonly origins?: readonly JournalEntryOrigin[]
   readonly search?: string
+}
+
+export interface ListJournalChainsInput extends JournalChainFilterCriteria {
   readonly limit: number
   readonly cursor?: JournalChainCursorKey
+}
+
+export interface GetJournalChainSummaryInput
+  extends JournalChainFilterCriteria {
+  readonly status?: JournalChainStatus
+}
+
+export interface JournalChainSummary {
+  readonly incomeMinor: string
+  readonly expenseMinor: string
+  readonly largestTransactionMinor: string
+  readonly transactionCount: number
+  readonly currency: string
 }
 
 export interface JournalPostingView {
@@ -93,4 +109,7 @@ export interface JournalViewQueries {
   getJournalChainDetail(
     input: GetJournalChainDetailInput
   ): Promise<JournalChainDetail | null>
+  getJournalChainSummary(
+    input: GetJournalChainSummaryInput
+  ): Promise<JournalChainSummary>
 }

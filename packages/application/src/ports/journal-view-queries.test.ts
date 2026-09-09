@@ -2,6 +2,7 @@ import type {
   AccountSummaryView,
   JournalChainDetail,
   JournalChainListItem,
+  JournalChainSummary,
   JournalViewQueries,
   LedgerReadQueries,
 } from "./index.js"
@@ -29,6 +30,14 @@ const listItem: JournalChainListItem = {
   financialAccounts: [account],
   categories: [],
   transfer: { source: account, destination: { ...account, id: "account-2" } },
+}
+
+const summary: JournalChainSummary = {
+  incomeMinor: "1200",
+  expenseMinor: "300",
+  largestTransactionMinor: "900",
+  transactionCount: 4,
+  currency: "BRL",
 }
 
 describe("journal view query contracts", () => {
@@ -101,6 +110,7 @@ describe("journal view query contracts", () => {
     const queries: JournalViewQueries = {
       listJournalChains: async () => ({ items: [], nextKey: null }),
       getJournalChainDetail: async () => null,
+      getJournalChainSummary: async () => summary,
     }
 
     expect(rawQueries.listJournalEntries).toBeTypeOf("function")
@@ -120,5 +130,9 @@ describe("journal view query contracts", () => {
     expectTypeOf<
       ReturnType<JournalViewQueries["getJournalChainDetail"]>
     >().toEqualTypeOf<Promise<JournalChainDetail | null>>()
+    expectTypeOf<
+      ReturnType<JournalViewQueries["getJournalChainSummary"]>
+    >().toEqualTypeOf<Promise<JournalChainSummary>>()
+    expect(queries.getJournalChainSummary).toBeTypeOf("function")
   })
 })

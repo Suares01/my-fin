@@ -5,8 +5,11 @@ import {
   type LedgerAccountId,
 } from "@workspace/domain"
 import type {
+  GetJournalChainSummaryInput,
   JournalBusinessType,
   JournalChainCursorKey,
+  JournalChainFilterCriteria,
+  JournalChainStatus,
   ListJournalChainsInput,
 } from "../ports/index.js"
 import { invalidQuery } from "./query-validation.js"
@@ -21,11 +24,16 @@ const JOURNAL_CHAIN_ORIGINS = [
   "MANUAL",
   "SYSTEM",
 ] as const satisfies readonly JournalEntryOrigin[]
+const JOURNAL_CHAIN_STATUSES = [
+  "ACTIVE",
+  "EDITED",
+  "CANCELLED",
+] as const satisfies readonly JournalChainStatus[]
 const JOURNAL_CHAIN_CURSOR_PREFIX = "jc1"
 const DEFAULT_JOURNAL_CHAIN_LIMIT = 20
 const DECIMAL_PATTERN = /^(0|[1-9]\d*)$/
 
-export interface ListJournalChainsQuery {
+export interface JournalChainFilterQuery {
   readonly bookId: string
   readonly from?: string
   readonly to?: string
@@ -34,8 +42,15 @@ export interface ListJournalChainsQuery {
   readonly types?: readonly string[]
   readonly origins?: readonly string[]
   readonly search?: string
+}
+
+export interface ListJournalChainsQuery extends JournalChainFilterQuery {
   readonly limit?: number
   readonly cursor?: string
+}
+
+export interface GetJournalChainSummaryQuery extends JournalChainFilterQuery {
+  readonly status?: string
 }
 
 export type NormalizedJournalChainFilters = Omit<
@@ -43,9 +58,51 @@ export type NormalizedJournalChainFilters = Omit<
   "bookId"
 >
 
+export type NormalizedJournalChainCriteria = Omit<
+  JournalChainFilterCriteria,
+  "bookId"
+>
+
+export type NormalizedJournalChainSummaryFilters = Omit<
+  GetJournalChainSummaryInput,
+  "bookId"
+>
+
 export function normalizeJournalChainFilters(
   query: ListJournalChainsQuery
 ): NormalizedJournalChainFilters {
+  const criteria = normalizeJournalChainCriteria(query)
+  const limit = parseLimit(query.limit)
+  const filterFingerprint = journalChainFilterFingerprint(criteria)
+  const cursor =
+    query.cursor === undefined
+      ? undefined
+      : decodeJournalChainCursor(query.cursor)
+  if (cursor !== undefined && cursor.filterFingerprint !== filterFingerprint) {
+    throw invalidQuery("cursor")
+  }
+
+  return {
+    ...criteria,
+    limit,
+    ...(cursor === undefined ? {} : { cursor }),
+  }
+}
+
+export function normalizeJournalChainSummaryFilters(
+  query: GetJournalChainSummaryQuery
+): NormalizedJournalChainSummaryFilters {
+  const criteria = normalizeJournalChainCriteria(query)
+  const status = parseStatus(query.status)
+  return {
+    ...criteria,
+    ...(status === undefined ? {} : { status }),
+  }
+}
+
+function normalizeJournalChainCriteria(
+  query: JournalChainFilterQuery
+): NormalizedJournalChainCriteria {
   const from = parseDate(query.from, "from")
   const to = parseDate(query.to, "to")
   if (from !== undefined && to !== undefined && from.compareTo(to) > 0) {
@@ -57,24 +114,6 @@ export function normalizeJournalChainFilters(
   const types = parseEnumList(query.types, JOURNAL_CHAIN_TYPES, "types")
   const origins = parseEnumList(query.origins, JOURNAL_CHAIN_ORIGINS, "origins")
   const search = parseSearch(query.search)
-  const limit = parseLimit(query.limit)
-  const filterFingerprint = fingerprint({
-    from: from?.value,
-    to: to?.value,
-    accountIds,
-    categoryIds,
-    types,
-    origins,
-    search,
-  })
-  const cursor =
-    query.cursor === undefined
-      ? undefined
-      : decodeJournalChainCursor(query.cursor)
-  if (cursor !== undefined && cursor.filterFingerprint !== filterFingerprint) {
-    throw invalidQuery("cursor")
-  }
-
   return {
     ...(from === undefined ? {} : { from }),
     ...(to === undefined ? {} : { to }),
@@ -83,8 +122,6 @@ export function normalizeJournalChainFilters(
     ...(types === undefined ? {} : { types }),
     ...(origins === undefined ? {} : { origins }),
     ...(search === undefined ? {} : { search }),
-    limit,
-    ...(cursor === undefined ? {} : { cursor }),
   }
 }
 
@@ -214,6 +251,17 @@ function parseSearch(value: unknown): string | undefined {
     throw invalidQuery("search")
   }
   return normalized
+}
+
+function parseStatus(value: unknown): JournalChainStatus | undefined {
+  if (value === undefined) return undefined
+  if (
+    typeof value !== "string" ||
+    !JOURNAL_CHAIN_STATUSES.includes(value as JournalChainStatus)
+  ) {
+    throw invalidQuery("status")
+  }
+  return value as JournalChainStatus
 }
 
 function parseLimit(value: number | undefined): number {

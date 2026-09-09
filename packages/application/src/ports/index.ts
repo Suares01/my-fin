@@ -59,11 +59,14 @@ export type {
   StatementCursorKey,
 } from "./ledger-read-queries.js"
 export type {
+  GetJournalChainSummaryInput,
   GetJournalChainDetailInput,
   JournalBusinessType,
   JournalChainCursorKey,
   JournalChainDetail,
+  JournalChainFilterCriteria,
   JournalChainListItem,
+  JournalChainSummary,
   JournalChainStatus,
   JournalHistoryItem,
   JournalHistoryRole,

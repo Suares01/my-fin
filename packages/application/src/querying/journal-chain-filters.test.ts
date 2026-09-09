@@ -5,6 +5,7 @@ import {
   encodeJournalChainCursor,
   journalChainFilterFingerprint,
   normalizeJournalChainFilters,
+  normalizeJournalChainSummaryFilters,
 } from "./journal-chain-filters.js"
 
 function expectInvalid(action: () => unknown): void {
@@ -23,6 +24,31 @@ const baseQuery = {
 }
 
 describe("journal chain filter normalization", () => {
+  it("normalizes summary criteria without pagination and accepts status", () => {
+    expect(
+      normalizeJournalChainSummaryFilters({
+        bookId: "book-1",
+        from: "2026-08-01",
+        to: "2026-08-31",
+        accountIds: [" account-2 ", "account-1"],
+        categoryIds: ["category-1"],
+        types: ["TRANSFER", "EXPENSE"],
+        origins: ["MANUAL"],
+        search: " Café ",
+        status: "CANCELLED",
+      })
+    ).toEqual({
+      from: expect.objectContaining({ value: "2026-08-01" }),
+      to: expect.objectContaining({ value: "2026-08-31" }),
+      accountIds: ["account-1", "account-2"],
+      categoryIds: ["category-1"],
+      types: ["EXPENSE", "TRANSFER"],
+      origins: ["MANUAL"],
+      search: "café",
+      status: "CANCELLED",
+    })
+  })
+
   it("uses the default limit when omitted", () => {
     expect(normalizeJournalChainFilters({ bookId: "book-1" }).limit).toBe(20)
   })
@@ -185,6 +211,15 @@ describe("journal chain filter normalization", () => {
 })
 
 describe("journal chain filter rejection", () => {
+  it.each(["ALL", "REVERSED", ""])(
+    "rejects unsupported summary status %s",
+    (status) => {
+      expectInvalid(() =>
+        normalizeJournalChainSummaryFilters({ bookId: "book-1", status })
+      )
+    }
+  )
+
   it.each([
     ["invalid from date", { from: "2026-02-30" }],
     ["invalid to date", { to: "2026-02-30" }],
