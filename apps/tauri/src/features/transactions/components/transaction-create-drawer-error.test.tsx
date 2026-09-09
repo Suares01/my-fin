@@ -1,5 +1,9 @@
+import {
+  renderTransactionForm as render,
+  selectOption,
+} from "../testing/form-test-utils"
 /* @vitest-environment jsdom */
-import { cleanup, fireEvent, render, screen } from "@testing-library/react"
+import { cleanup, fireEvent, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 const state = vi.hoisted(() => ({
@@ -35,18 +39,15 @@ vi.mock("../hooks/use-transfer-money.js", () => ({
 import { TransactionCreateDrawer } from "./transaction-create-drawer.js"
 
 function fillIncomeForm() {
-  fireEvent.change(screen.getByLabelText("Conta"), {
-    target: { value: "account-1" },
-  })
-  fireEvent.change(screen.getByLabelText("Categoria"), {
-    target: { value: "category-1" },
-  })
+  selectOption("Conta", "Carteira")
+  selectOption("Categoria", "Salário")
   fireEvent.change(screen.getByLabelText("Valor"), {
     target: { value: "10,00" },
   })
-  fireEvent.change(screen.getByLabelText("Data"), {
-    target: { value: "2026-09-08" },
-  })
+  fireEvent.click(screen.getByLabelText("Data"))
+  fireEvent.click(
+    screen.getByRole("button", { name: /terça-feira, 8 de setembro de 2026/ })
+  )
   fireEvent.change(screen.getByLabelText("Descrição"), {
     target: { value: "Salário" },
   })
@@ -54,6 +55,8 @@ function fillIncomeForm() {
 
 describe("TransactionCreateDrawer service failures", () => {
   beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["Date"] })
+    vi.setSystemTime(new Date(2026, 8, 8, 12))
     state.options = {
       bookId: "book-1",
       baseCurrency: "BRL",
@@ -69,6 +72,7 @@ describe("TransactionCreateDrawer service failures", () => {
   })
   afterEach(() => {
     cleanup()
+    vi.useRealTimers()
     vi.clearAllMocks()
   })
 

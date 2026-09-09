@@ -6,13 +6,14 @@ import {
 } from "@workspace/ui/components/alert"
 import { Button } from "@workspace/ui/components/button"
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@workspace/ui/components/sheet"
-import { useEffect } from "react"
+  Drawer,
+  DrawerBackdrop,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+} from "@workspace/ui/components/drawer"
+import { useEffect, useRef } from "react"
 import { editDraftFromDetail } from "../transaction-form-model.js"
 import { useAmendTransaction } from "../hooks/use-amend-transaction.js"
 import { useRecordExpense } from "../hooks/use-record-expense.js"
@@ -51,9 +52,11 @@ export function TransactionOverlay({
   const transferMoney = useTransferMoney()
   const amendTransaction = useAmendTransaction()
   const reverseTransaction = useReverseTransaction()
+  const previousBookId = useRef(bookId)
 
   useEffect(() => {
-    onStateChange({ kind: "closed" })
+    if (previousBookId.current !== bookId) onStateChange({ kind: "closed" })
+    previousBookId.current = bookId
   }, [bookId, onStateChange])
   if (state.kind === "closed") return null
   const close = () => onStateChange({ kind: "closed" })
@@ -194,24 +197,28 @@ export function TransactionOverlay({
           : "Transferência"
 
   return (
-    <Sheet
+    <Drawer
+      direction="right"
+      modal={false}
       open
       onOpenChange={(open) => {
         if (!open) close()
       }}
     >
-      <SheetContent
-        side="right"
-        className="w-full sm:max-w-xl"
+      <DrawerBackdrop data-slot="transaction-lifecycle-drawer-backdrop" />
+      <DrawerContent
+        className="w-full data-[vaul-drawer-direction=right]:sm:max-w-xl"
         aria-label={title}
       >
-        <SheetHeader>
-          <SheetTitle>{title}</SheetTitle>
-          <SheetDescription>Preencha os dados da transação.</SheetDescription>
-        </SheetHeader>
-        <div className="overflow-y-auto p-6">{content}</div>
-      </SheetContent>
-    </Sheet>
+        <DrawerHeader>
+          <DrawerTitle>{title}</DrawerTitle>
+          <DrawerDescription>Preencha os dados da transação.</DrawerDescription>
+        </DrawerHeader>
+        <div className="flex min-h-0 flex-1 overflow-y-auto px-4 pb-4">
+          {content}
+        </div>
+      </DrawerContent>
+    </Drawer>
   )
 }
 

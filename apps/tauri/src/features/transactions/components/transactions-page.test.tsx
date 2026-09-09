@@ -14,6 +14,8 @@ const mocks = vi.hoisted(() => ({
   chainsResult: vi.fn(),
   summary: vi.fn(),
   options: vi.fn(),
+  detail: vi.fn(),
+  detailResult: vi.fn(),
 }))
 
 vi.mock("../../../providers/use-active-book.js", () => ({
@@ -27,6 +29,12 @@ vi.mock("../hooks/use-transaction-chains.js", () => ({
 }))
 vi.mock("../hooks/use-transaction-form-options.js", () => ({
   useTransactionFormOptions: (type: string) => mocks.options(type),
+}))
+vi.mock("../hooks/use-transaction-chain-detail.js", () => ({
+  useTransactionChainDetail: (input: unknown) => {
+    mocks.detail(input)
+    return mocks.detailResult()
+  },
 }))
 vi.mock("./transaction-summary.js", () => ({
   TransactionSummary: ({ filters }: { filters: unknown }) => {
@@ -83,17 +91,30 @@ vi.mock("./transaction-table.js", () => ({
   TransactionTable: ({
     transactions,
     onLoadMore,
+    onEdit,
+    onCancel,
   }: {
     transactions: unknown[]
     onLoadMore: () => void
+    onEdit: (entry: unknown) => void
+    onCancel: (entry: unknown) => void
   }) => (
     <div>
       Tabela {transactions.length}
       <button type="button" onClick={onLoadMore}>
         Carregar mais resultados
       </button>
+      <button type="button" onClick={() => onEdit(item())}>
+        Editar Receita
+      </button>
+      <button type="button" onClick={() => onCancel(item())}>
+        Cancelar Receita
+      </button>
     </div>
   ),
+}))
+vi.mock("./transaction-overlay.js", () => ({
+  TransactionOverlay: () => <div>Overlay de transação</div>,
 }))
 
 import { TransactionsPage } from "./transactions-page.js"
@@ -136,6 +157,12 @@ function setup(bookId: string | null = "book-1") {
     fetchNextPage: vi.fn(),
   })
   mocks.options.mockReturnValue({ accounts: [], categories: [] })
+  mocks.detailResult.mockReturnValue({
+    isPending: false,
+    isError: false,
+    data: undefined,
+    refetch: vi.fn(),
+  })
   return render(<TransactionsPage />)
 }
 
@@ -162,6 +189,11 @@ describe("TransactionsPage", () => {
     expect(mocks.chains).toHaveBeenCalledOnce()
     expect(mocks.summary).toHaveBeenCalledOnce()
     expect(mocks.options).toHaveBeenCalledWith("INCOME")
+    expect(mocks.detail).toHaveBeenCalledWith({
+      chainId: undefined,
+      presentedEntryId: undefined,
+      enabled: false,
+    })
   })
 
   it("passes pagination to the transaction table", () => {
@@ -250,7 +282,6 @@ describe("TransactionsPage", () => {
         expect.objectContaining({ search: "Mercado" })
       )
     )
-
     fireEvent.click(screen.getByRole("button", { name: "Limpar filtros" }))
     expect(screen.getByTestId("search-value").textContent).toBe("")
     await waitFor(() =>
@@ -284,5 +315,50 @@ describe("TransactionsPage", () => {
   it("shows unresolved-book guidance", () => {
     setup(null)
     expect(screen.getByText(/Selecione um livro/)).toBeTruthy()
+  })
+
+  it("loads a chain detail after selecting an edit action", () => {
+    setup()
+
+    fireEvent.click(screen.getByRole("button", { name: "Editar Receita" }))
+
+    expect(mocks.detail).toHaveBeenLastCalledWith({
+      chainId: "chain-1",
+      presentedEntryId: "entry-1",
+      enabled: true,
+    })
+  })
+
+  it("opens the lifecycle overlay only after the requested detail is available", () => {
+    setup()
+    mocks.detailResult.mockReturnValue({
+      isPending: false,
+      isError: false,
+      data: item(),
+      refetch: vi.fn(),
+    })
+
+    fireEvent.click(screen.getByRole("button", { name: "Editar Receita" }))
+
+    expect(screen.getByText("Overlay de transação")).toBeTruthy()
+  })
+
+  it("offers explicit recovery when action detail loading fails", () => {
+    const refetch = vi.fn()
+    setup()
+    mocks.detailResult.mockReturnValue({
+      isPending: false,
+      isError: true,
+      data: undefined,
+      refetch,
+    })
+
+    fireEvent.click(screen.getByRole("button", { name: "Cancelar Receita" }))
+    fireEvent.click(screen.getByRole("button", { name: "Tentar novamente" }))
+
+    expect(refetch).toHaveBeenCalledOnce()
+    expect(
+      screen.getByText("Não foi possível preparar a transação")
+    ).toBeTruthy()
   })
 })

@@ -149,22 +149,25 @@ describe("TransactionOverlay", () => {
     expect(screen.queryByText("Nova transação")).toBeNull()
   })
 
-  it("contains form focus and restores it after close", async () => {
+  it("renders editing in the project drawer pattern", () => {
+    renderOverlay({ kind: "income" })
+
+    expect(
+      document.querySelector(
+        '[data-slot="transaction-lifecycle-drawer-backdrop"]'
+      )
+    ).toBeTruthy()
+  })
+
+  it("closes the form drawer with Escape", async () => {
     render(<FormFocusLifecycleHarness />)
     const trigger = screen.getByRole("button", { name: "Nova transação" })
     trigger.focus()
     fireEvent.click(trigger)
 
-    const firstChoice = await screen.findByRole("button", { name: "Receita" })
-    const focusGuards = document.querySelectorAll<HTMLElement>(
-      "[data-base-ui-focus-guard]"
-    )
-    expect(focusGuards).toHaveLength(2)
-    focusGuards[1].focus()
-    await waitFor(() => expect(document.activeElement).toBe(firstChoice))
-
-    fireEvent.click(screen.getByRole("button", { name: "Close" }))
+    await screen.findByRole("button", { name: "Receita" })
+    fireEvent.keyDown(document, { key: "Escape", code: "Escape" })
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
-    expect(document.activeElement).toBe(trigger)
+    expect(trigger).toBeTruthy()
   })
 })

@@ -31,30 +31,30 @@ export const descriptionSchema = z
 
 const sharedDraftFields = {
   amountMinor: amountMinorSchema,
-  currency: z.string().trim().min(1),
+  currency: z.string().trim().min(1, "Informe a moeda do livro."),
   occurredOn: civilDateSchema,
   description: descriptionSchema,
 }
 
 export const incomeDraftSchema = z.object({
   type: z.literal("INCOME"),
-  accountId: z.string().min(1),
-  categoryId: z.string().min(1),
+  accountId: z.string().min(1, "Selecione uma conta."),
+  categoryId: z.string().min(1, "Selecione uma categoria."),
   ...sharedDraftFields,
 })
 
 export const expenseDraftSchema = z.object({
   type: z.literal("EXPENSE"),
-  accountId: z.string().min(1),
-  categoryId: z.string().min(1),
+  accountId: z.string().min(1, "Selecione uma conta."),
+  categoryId: z.string().min(1, "Selecione uma categoria."),
   ...sharedDraftFields,
 })
 
 export const transferDraftSchema = z
   .object({
     type: z.literal("TRANSFER"),
-    sourceAccountId: z.string().min(1),
-    destinationAccountId: z.string().min(1),
+    sourceAccountId: z.string().min(1, "Selecione a conta de origem."),
+    destinationAccountId: z.string().min(1, "Selecione a conta de destino."),
     ...sharedDraftFields,
   })
   .refine((draft) => draft.sourceAccountId !== draft.destinationAccountId, {
@@ -167,7 +167,10 @@ export function affectedAccountIds(
   return [...new Set([...previousIds, ...currentIds])]
 }
 
-export function transactionErrorMessage(error: unknown): string {
+export function transactionErrorMessage(
+  error: unknown,
+  action: "salvar" | "cancelar" = "salvar"
+): string {
   const code =
     typeof error === "object" && error !== null && "code" in error
       ? (error as { readonly code?: unknown }).code
@@ -183,6 +186,6 @@ export function transactionErrorMessage(error: unknown): string {
     case "JOURNAL_ENTRY_NOT_EFFECTIVE":
       return "Este lançamento não pode mais ser alterado."
     default:
-      return "Não foi possível salvar a transação. Tente novamente."
+      return `Não foi possível ${action} a transação. Tente novamente.`
   }
 }

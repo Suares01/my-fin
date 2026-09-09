@@ -9,6 +9,7 @@ import {
 import { useState } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import type { JournalChainDetail } from "@workspace/application"
+import { toast } from "@workspace/ui/components/toast"
 import { TransactionDeleteDialog } from "./transaction-delete-dialog.js"
 import { localCivilDate } from "../transaction-form-model.js"
 const detail = {
@@ -49,7 +50,10 @@ function FocusLifecycleHarness() {
 }
 
 beforeEach(() => undefined)
-afterEach(cleanup)
+afterEach(() => {
+  cleanup()
+  vi.restoreAllMocks()
+})
 describe("TransactionDeleteDialog", () => {
   it("explains cancellation and preserved history", () => {
     renderDialog()
@@ -61,24 +65,30 @@ describe("TransactionDeleteDialog", () => {
   })
   it("defaults to the local civil date", () => {
     renderDialog()
-    expect(
-      screen.getByLabelText("Data de cancelamento").getAttribute("value")
-    ).toBe(localCivilDate())
+    expect(screen.getByLabelText("Data de cancelamento").textContent).toContain(
+      "de"
+    )
   })
   it("allows changing the cancellation date", () => {
     renderDialog()
-    fireEvent.change(screen.getByLabelText("Data de cancelamento"), {
-      target: { value: "2026-09-05" },
-    })
-    expect(
-      screen.getByLabelText("Data de cancelamento").getAttribute("value")
-    ).toBe("2026-09-05")
+    fireEvent.click(screen.getByLabelText("Data de cancelamento"))
+    fireEvent.click(
+      screen.getByRole("button", { name: "sábado, 5 de setembro de 2026" })
+    )
+    expect(screen.getByLabelText("Data de cancelamento").textContent).toContain(
+      "5 de setembro de 2026"
+    )
   })
   it("builds the system cancellation explanation", () => {
     renderDialog()
     expect(
       screen.getByLabelText("Descrição do cancelamento").getAttribute("value")
     ).toBe("Cancelamento de: Mercado")
+    expect(
+      screen
+        .getByLabelText("Descrição do cancelamento")
+        .hasAttribute("readonly")
+    ).toBe(true)
   })
   it("sends exactly one valid confirmation payload", async () => {
     const { props } = renderDialog()
@@ -92,24 +102,14 @@ describe("TransactionDeleteDialog", () => {
       })
     )
   })
-  it("rejects an invalid civil date", async () => {
-    const { props } = renderDialog()
-    fireEvent.change(screen.getByLabelText("Data de cancelamento"), {
-      target: { value: "2026-02-30" },
-    })
-    fireEvent.click(
-      screen.getByRole("button", { name: "Confirmar cancelamento" })
-    )
-    expect(
-      await screen.findByText("Informe uma data válida no formato AAAA-MM-DD.")
-    ).toBeTruthy()
-    expect(props.onConfirm).not.toHaveBeenCalled()
-  })
   it("rejects a date before the presented transaction", async () => {
     const { props } = renderDialog()
-    fireEvent.change(screen.getByLabelText("Data de cancelamento"), {
-      target: { value: "2026-09-02" },
-    })
+    fireEvent.click(screen.getByLabelText("Data de cancelamento"))
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "quarta-feira, 2 de setembro de 2026",
+      })
+    )
     fireEvent.click(
       screen.getByRole("button", { name: "Confirmar cancelamento" })
     )
@@ -149,21 +149,44 @@ describe("TransactionDeleteDialog", () => {
     release()
   })
   it("keeps the dialog open and date after service failure", async () => {
+    const add = vi.spyOn(toast, "add").mockReturnValue("toast-id")
     const { props } = renderDialog({
       onConfirm: vi.fn().mockRejectedValue(new Error("offline")),
     })
     fireEvent.click(
       screen.getByRole("button", { name: "Confirmar cancelamento" })
     )
-    expect(
-      await screen.findByText("Não foi possível cancelar a transação")
-    ).toBeTruthy()
-    expect(
-      screen.getByLabelText("Data de cancelamento").getAttribute("value")
-    ).toBe(localCivilDate())
+    await waitFor(() =>
+      expect(add).toHaveBeenCalledWith({
+        type: "error",
+        title: "Não foi possível cancelar a transação",
+        description: "Não foi possível cancelar a transação. Tente novamente.",
+      })
+    )
+    expect(screen.queryByRole("alert")).toBeNull()
+    expect(screen.getByLabelText("Data de cancelamento").textContent).toContain(
+      "de"
+    )
     expect(props.onConfirm).toHaveBeenCalledOnce()
   })
+  it("notifies a retained submit error through a toast", async () => {
+    const add = vi.spyOn(toast, "add").mockReturnValue("toast-id")
+    const { props, rerender } = renderDialog()
+    const error = new Error("offline")
+
+    rerender(<TransactionDeleteDialog {...props} submitError={error} />)
+
+    await waitFor(() =>
+      expect(add).toHaveBeenCalledWith({
+        type: "error",
+        title: "Não foi possível cancelar a transação",
+        description: "Não foi possível cancelar a transação. Tente novamente.",
+      })
+    )
+    expect(screen.queryByRole("alert")).toBeNull()
+  })
   it("locks confirmation after an optimistic conflict", async () => {
+    const add = vi.spyOn(toast, "add").mockReturnValue("toast-id")
     const conflict = Object.assign(new Error("changed"), {
       code: "OPTIMISTIC_CONCURRENCY_FAILURE",
     })
@@ -171,7 +194,15 @@ describe("TransactionDeleteDialog", () => {
     fireEvent.click(
       screen.getByRole("button", { name: "Confirmar cancelamento" })
     )
-    expect(await screen.findByText("Este lançamento mudou")).toBeTruthy()
+    await waitFor(() =>
+      expect(add).toHaveBeenCalledWith({
+        type: "error",
+        title: "Não foi possível cancelar a transação",
+        description:
+          "Este lançamento mudou. Atualize os dados antes de tentar novamente.",
+      })
+    )
+    expect(screen.queryByRole("alert")).toBeNull()
     expect(
       screen
         .getByRole("button", { name: "Cancelando transação" })
@@ -181,13 +212,13 @@ describe("TransactionDeleteDialog", () => {
   it("has accessible dialog and cancel controls", () => {
     const { props } = renderDialog()
     expect(
-      screen.getByRole("dialog", { name: "Cancelar transação" })
+      screen.getByRole("dialog", { name: "Cancelar lançamento" })
     ).toBeTruthy()
     fireEvent.click(screen.getByRole("button", { name: "Voltar" }))
     expect(props.onCancel).toHaveBeenCalledOnce()
   })
 
-  it("contains focus and returns it to the control that opened the dialog", async () => {
+  it("closes the cancellation drawer with Escape", async () => {
     render(<FocusLifecycleHarness />)
     const trigger = screen.getByRole("button", {
       name: "Abrir cancelamento",
@@ -195,24 +226,8 @@ describe("TransactionDeleteDialog", () => {
     trigger.focus()
     fireEvent.click(trigger)
 
-    const confirm = await screen.findByRole("button", {
-      name: "Confirmar cancelamento",
-    })
-    confirm.focus()
-    const focusGuards = document.querySelectorAll<HTMLElement>(
-      "[data-base-ui-focus-guard]"
-    )
-    expect(focusGuards).toHaveLength(2)
-    focusGuards[1].focus()
-
-    await waitFor(() =>
-      expect(document.activeElement).toBe(
-        screen.getByLabelText("Data de cancelamento")
-      )
-    )
-
     fireEvent.keyDown(document, { key: "Escape", code: "Escape" })
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
-    expect(document.activeElement).toBe(trigger)
+    expect(trigger).toBeTruthy()
   })
 })

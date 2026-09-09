@@ -101,7 +101,7 @@ export function TransactionRowDetails({
             variant="destructive"
             onClick={() => onDelete(detail)}
           >
-            Excluir
+            Cancelar lançamento
           </Button>
         </div>
       )}

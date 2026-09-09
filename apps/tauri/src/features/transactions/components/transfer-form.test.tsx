@@ -1,8 +1,9 @@
+import { renderTransactionForm as render } from "../testing/form-test-utils"
 /* @vitest-environment jsdom */
 import {
+  act,
   cleanup,
   fireEvent,
-  render,
   screen,
   waitFor,
 } from "@testing-library/react"
@@ -37,26 +38,39 @@ function renderForm(
   return { props, ...render(<TransferForm {...props} />) }
 }
 function fill(destination = "a2") {
-  fireEvent.change(screen.getByLabelText("Conta de origem"), {
-    target: { value: "a1" },
-  })
-  fireEvent.change(screen.getByLabelText("Conta de destino"), {
-    target: { value: destination },
-  })
+  selectOption("Conta de origem", "Carteira")
+  selectOption("Conta de destino", destination === "a1" ? "Carteira" : "Banco")
   fireEvent.change(screen.getByLabelText("Valor"), {
     target: { value: "10,00" },
   })
-  fireEvent.change(screen.getByLabelText("Data"), {
-    target: { value: "2026-09-03" },
-  })
+  selectDate()
   fireEvent.change(screen.getByLabelText("Descrição"), {
     target: { value: "Reserva" },
   })
 }
+function selectOption(label: string, option: string) {
+  fireEvent.click(screen.getByRole("combobox", { name: label }))
+  const optionElement = screen.getByRole("option", { name: option })
+  fireEvent.pointerDown(optionElement)
+  fireEvent.click(optionElement)
+}
+function selectDate() {
+  fireEvent.click(screen.getByLabelText("Data"))
+  fireEvent.click(
+    screen.getByRole("button", {
+      name: "quinta-feira, 3 de setembro de 2026",
+    })
+  )
+}
 beforeEach(() => {
+  vi.useFakeTimers({ toFake: ["Date"] })
+  vi.setSystemTime(new Date(2026, 8, 8, 12))
   state.options = { ...base, refresh: vi.fn() }
 })
-afterEach(cleanup)
+afterEach(() => {
+  cleanup()
+  vi.useRealTimers()
+})
 describe("TransferForm", () => {
   it("emits exactly the validated transfer draft", async () => {
     const { props } = renderForm()
@@ -125,9 +139,11 @@ describe("TransferForm", () => {
       ],
     }
     renderForm()
-    expect(screen.getAllByRole("option", { name: "Conta nova" })).toHaveLength(
-      2
-    )
+    selectOption("Conta de origem", "Conta nova")
+    selectOption("Conta de destino", "Conta nova")
+    expect(
+      screen.getAllByText("Conta nova", { selector: "span" })
+    ).toHaveLength(2)
   })
   it("shows amount validation without submitting", async () => {
     const { props } = renderForm()
@@ -180,7 +196,11 @@ describe("TransferForm", () => {
     fireEvent.click(
       screen.getByRole("button", { name: "Salvar transferência" })
     )
-    expect(await screen.findByText("Este lançamento mudou")).toBeTruthy()
+    expect(
+      await screen.findByText(
+        "Este lançamento mudou. Atualize os dados antes de tentar novamente."
+      )
+    ).toBeTruthy()
     expect(
       screen
         .getByRole("button", { name: "Salvar transferência" })
@@ -204,5 +224,133 @@ describe("TransferForm", () => {
     fireEvent.click(screen.getByRole("button", { name: "Cancelar" }))
     expect(props.onCancel).toHaveBeenCalledOnce()
     expect(props.onSubmit).not.toHaveBeenCalled()
+  })
+
+  it("revalidates changed fields after the first submit and focuses the first error", async () => {
+    renderForm()
+    fireEvent.change(screen.getByLabelText("Descrição"), {
+      target: { value: " " },
+    })
+    fireEvent.blur(screen.getByLabelText("Descrição"))
+    expect(screen.queryByText("Informe uma descrição.")).toBeNull()
+    fireEvent.click(
+      screen.getByRole("button", { name: "Salvar transferência" })
+    )
+    expect(await screen.findByText("Informe uma descrição.")).toBeTruthy()
+    await waitFor(() =>
+      expect(document.activeElement).toBe(
+        screen.getByLabelText("Conta de origem")
+      )
+    )
+    fireEvent.change(screen.getByLabelText("Descrição"), {
+      target: { value: "Corrigido" },
+    })
+    await waitFor(() =>
+      expect(screen.queryByText("Informe uma descrição.")).toBeNull()
+    )
+  })
+  it("waits for onSubmit without external pending and prevents concurrent submissions", async () => {
+    let finish!: () => void
+    const onSubmit = vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          finish = resolve
+        })
+    )
+    renderForm({ onSubmit })
+    fill()
+    const button = screen.getByRole("button", { name: "Salvar transferência" })
+    fireEvent.click(button)
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledOnce())
+    expect(
+      screen
+        .getByRole("button", { name: "Salvando transferência" })
+        .hasAttribute("disabled")
+    ).toBe(true)
+    for (const name of ["Valor", "Data", "Descrição"])
+      expect(screen.getByLabelText(name).hasAttribute("disabled")).toBe(true)
+    fireEvent.click(button)
+    expect(onSubmit).toHaveBeenCalledOnce()
+    await act(async () => finish())
+    await waitFor(() =>
+      expect(
+        screen
+          .getByRole("button", { name: "Salvar transferência" })
+          .hasAttribute("disabled")
+      ).toBe(false)
+    )
+  })
+  it("uses the book currency when options arrive asynchronously", async () => {
+    state.options = { ...base, loading: true, baseCurrency: undefined }
+    const { props, rerender } = renderForm()
+    state.options = { ...base, baseCurrency: "USD" }
+    rerender(<TransferForm {...props} />)
+    fill()
+    fireEvent.click(
+      screen.getByRole("button", { name: "Salvar transferência" })
+    )
+    await waitFor(() =>
+      expect(props.onSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({ currency: "USD", amountMinor: "1000" })
+      )
+    )
+    expect(
+      (screen.getByLabelText("Valor") as HTMLInputElement).value.replace(
+        /\s/g,
+        " "
+      )
+    ).toBe("US$ 10,00")
+  })
+  it("preserves edits when options refresh", () => {
+    const { props, rerender } = renderForm()
+    fill()
+    const previous = (screen.getByLabelText("Descrição") as HTMLInputElement)
+      .value
+    state.options = {
+      ...base,
+      accounts: base.accounts.map((account) => ({
+        ...account,
+        name: "Renomeada",
+      })),
+    }
+    rerender(<TransferForm {...props} />)
+    expect((screen.getByLabelText("Descrição") as HTMLInputElement).value).toBe(
+      previous
+    )
+  })
+  it("blocks unsafe edit amounts and allows closing", () => {
+    const { props } = renderForm({
+      initialDraft: {
+        type: "TRANSFER",
+        sourceAccountId: "a1",
+        destinationAccountId: "a2",
+        amountMinor: "9223372036854775807",
+        currency: "BRL",
+        occurredOn: "2026-09-03",
+        description: "Antes",
+      },
+    })
+    expect(
+      screen.getByText("Valor acima do limite seguro do formulário")
+    ).toBeTruthy()
+    expect(screen.queryByLabelText("Valor")).toBeNull()
+    fireEvent.click(screen.getByRole("button", { name: "Fechar" }))
+    expect(props.onCancel).toHaveBeenCalledOnce()
+    expect(props.onSubmit).not.toHaveBeenCalled()
+  })
+
+  it("revalidates destination when source changes after a rejected submit", async () => {
+    renderForm()
+    fill("a1")
+    fireEvent.click(
+      screen.getByRole("button", { name: "Salvar transferência" })
+    )
+    expect(await screen.findByText("Escolha contas diferentes.")).toBeTruthy()
+    selectOption("Conta de origem", "Banco")
+    await waitFor(() =>
+      expect(screen.queryByText("Escolha contas diferentes.")).toBeNull()
+    )
+    selectOption("Conta de origem", "Carteira")
+    expect(await screen.findByText("Escolha contas diferentes.")).toBeTruthy()
   })
 })

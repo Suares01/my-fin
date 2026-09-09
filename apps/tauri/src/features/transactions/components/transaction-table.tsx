@@ -1,5 +1,10 @@
 import { AnimatePresence, motion } from "motion/react"
-import { FileTextIcon, MoreHorizontalIcon } from "lucide-react"
+import {
+  FileTextIcon,
+  MoreHorizontalIcon,
+  PencilIcon,
+  Undo2Icon,
+} from "lucide-react"
 import { JournalChainListItem } from "@workspace/application"
 import {
   Table,
@@ -15,6 +20,13 @@ import { cn } from "@workspace/ui/lib/utils"
 import { FormattedMoney } from "@workspace/ui/money"
 import { Button } from "@workspace/ui/components/button"
 import { Skeleton } from "@workspace/ui/components/skeleton"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@workspace/ui/components/dropdown-menu"
 import { useState } from "react"
 import {
   transactionAmountSign,
@@ -22,6 +34,7 @@ import {
   type TransactionType,
 } from "../transaction-list-model.js"
 import { TransactionRowDetails } from "./transaction-row-details.js"
+import { format } from "date-fns"
 
 interface TransactionTableProps {
   transactions: readonly JournalChainListItem[]
@@ -32,6 +45,9 @@ interface TransactionTableProps {
   hasNextPage?: boolean
   isFetchingNextPage?: boolean
   onLoadMore?: () => void
+  onEdit?: (transaction: JournalChainListItem) => void
+  onCancel?: (transaction: JournalChainListItem) => void
+  actionPendingChainId?: string
 }
 
 function statusBadge(status: JournalChainListItem["status"]) {
@@ -58,6 +74,9 @@ export function TransactionTable({
   hasNextPage = false,
   isFetchingNextPage = false,
   onLoadMore,
+  onEdit,
+  onCancel,
+  actionPendingChainId,
 }: TransactionTableProps) {
   const allSelected =
     transactions.length > 0 &&
@@ -134,6 +153,9 @@ export function TransactionTable({
                     onToggleExpand={() =>
                       setExpandedId(isExpanded ? null : tx.chainId)
                     }
+                    onEdit={onEdit}
+                    onCancel={onCancel}
+                    actionPending={actionPendingChainId === tx.chainId}
                   />
                 )
               })}
@@ -353,13 +375,24 @@ function TransactionRow({
   isExpanded,
   onToggleSelect,
   onToggleExpand,
+  onEdit,
+  onCancel,
+  actionPending,
 }: {
   tx: JournalChainListItem
   isSelected: boolean
   isExpanded: boolean
   onToggleSelect: () => void
   onToggleExpand: () => void
+  onEdit?: (transaction: JournalChainListItem) => void
+  onCancel?: (transaction: JournalChainListItem) => void
+  actionPending: boolean
 }) {
+  const canOperate =
+    (tx.status === "ACTIVE" || tx.status === "EDITED") &&
+    onEdit !== undefined &&
+    onCancel !== undefined
+
   return (
     <>
       <TableRow
@@ -415,7 +448,9 @@ function TransactionRow({
         </TableCell>
 
         <TableCell className="hidden md:table-cell">
-          <span className="text-sm text-muted-foreground">{tx.occurredOn}</span>
+          <span className="text-sm text-muted-foreground">
+            {format(tx.occurredOn, "dd/MM/yyyy")}
+          </span>
         </TableCell>
 
         <TableCell className="hidden lg:table-cell">
@@ -423,16 +458,51 @@ function TransactionRow({
         </TableCell>
 
         <TableCell>
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            className="opacity-0 transition-opacity group-hover:opacity-100"
-            onClick={(e) => {
-              e.stopPropagation()
-            }}
-          >
-            <MoreHorizontalIcon className="size-4" />
-          </Button>
+          {canOperate && (
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-xs"
+                    aria-label={`Ações para ${tx.description}`}
+                    title={`Ações para ${tx.description}`}
+                    disabled={actionPending}
+                    className="opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+                    onClick={(event) => event.stopPropagation()}
+                  />
+                }
+              >
+                <MoreHorizontalIcon />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuGroup>
+                  <DropdownMenuItem
+                    className="hover:cursor-pointer"
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      onEdit(tx)
+                    }}
+                  >
+                    <PencilIcon />
+                    Editar
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="hover:cursor-pointer"
+                    variant="destructive"
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      onCancel(tx)
+                    }}
+                  >
+                    <Undo2Icon />
+                    Cancelar
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </TableCell>
       </TableRow>
 

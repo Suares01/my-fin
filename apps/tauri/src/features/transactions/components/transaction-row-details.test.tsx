@@ -116,7 +116,9 @@ describe("TransactionRowDetails", () => {
     mockDetail.mockReturnValue({ data: detail })
     renderDetails("ACTIVE")
     expect(screen.getByRole("button", { name: "Editar" })).toBeTruthy()
-    expect(screen.getByRole("button", { name: "Excluir" })).toBeTruthy()
+    expect(
+      screen.getByRole("button", { name: "Cancelar lançamento" })
+    ).toBeTruthy()
   })
   it("exposes actions for edited chains", () => {
     mockDetail.mockReturnValue({ data: detail })
@@ -127,6 +129,8 @@ describe("TransactionRowDetails", () => {
     mockDetail.mockReturnValue({ data: detail })
     renderDetails("CANCELLED")
     expect(screen.queryByRole("button", { name: "Editar" })).toBeNull()
-    expect(screen.queryByRole("button", { name: "Excluir" })).toBeNull()
+    expect(
+      screen.queryByRole("button", { name: "Cancelar lançamento" })
+    ).toBeNull()
   })
 })

@@ -44,6 +44,7 @@ export function useTransactionFormOptions(type: TransactionFormType) {
     (book.isLoading ||
       accounts.isLoading ||
       (type !== "TRANSFER" && categories.isLoading))
+
   const error =
     book.error ??
     accounts.error ??

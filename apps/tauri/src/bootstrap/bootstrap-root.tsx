@@ -11,6 +11,7 @@ import { Spinner } from "@workspace/ui/components/spinner"
 import { MyFinProviders } from "../providers/index.js"
 import { useBootstrap, type UseBootstrapOptions } from "./use-bootstrap.js"
 import type { BootstrapError } from "../bootstrap/create-runtime.js"
+import { Toaster } from "@workspace/ui/components/toast"
 
 export type BootstrapRootProps = {
   readonly children: ReactNode
@@ -32,9 +33,12 @@ export function BootstrapRoot({
   }
 
   return (
-    <MyFinProviders services={state.runtime.services}>
-      {children}
-    </MyFinProviders>
+    <>
+      <MyFinProviders services={state.runtime.services}>
+        {children}
+      </MyFinProviders>
+      <Toaster />
+    </>
   )
 }
 
