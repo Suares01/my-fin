@@ -96,9 +96,15 @@ describe("CategoriesPage", () => {
   })
 
   it("filters active categories by type and excludes archived categories", () => {
-    expect(filterCategories(categories, "INCOME")).toEqual([categories[0]])
-    expect(filterCategories(categories, "EXPENSE")).toEqual([categories[1]])
-    expect(filterCategories(categories, "ALL")).toEqual(categories.slice(0, 2))
+    expect(filterCategories(categories, "ACTIVE", "INCOME")).toEqual([
+      categories[0],
+    ])
+    expect(filterCategories(categories, "ACTIVE", "EXPENSE")).toEqual([
+      categories[1],
+    ])
+    expect(filterCategories(categories, "ACTIVE", "ALL")).toEqual(
+      categories.slice(0, 2)
+    )
   })
 
   it("queries only active categories", () => {

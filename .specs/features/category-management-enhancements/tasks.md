@@ -693,11 +693,11 @@ Como o plano excede oito tarefas, o Execute deve oferecer esses três workers de
 
 **Done when:**
 
-- [ ] Defaults são `ACTIVE` e `ALL`.
-- [ ] Toda combinação status×tipo retorna somente os itens correspondentes sem mutar a entrada.
-- [ ] Opções fornecem labels para dois `ToggleGroup` exclusivos.
-- [ ] Pelo menos 5 casos unitários novos cobrem matriz completa e vazio; o total não diminui.
-- [ ] Quick Tauri passa.
+- [x] Defaults são `ACTIVE` e `ALL`.
+- [x] Toda combinação status×tipo retorna somente os itens correspondentes sem mutar a entrada.
+- [x] Opções fornecem labels para dois `ToggleGroup` exclusivos.
+- [x] Pelo menos 5 casos unitários novos cobrem matriz completa e vazio; o total não diminui.
+- [x] Quick Tauri passa.
 
 **Tests:** unit
 **Gate:** Quick Tauri

@@ -2,7 +2,18 @@ import type { CategorySummary } from "@workspace/application"
 
 export type CategoryFilter = "ALL" | "INCOME" | "EXPENSE"
 
-export const categoryFilters: ReadonlyArray<{
+export type CategoryStatusFilter = "ACTIVE" | "ARCHIVED"
+export type CategoryTypeFilter = CategoryFilter
+
+export const categoryStatusFilters: ReadonlyArray<{
+  readonly value: CategoryStatusFilter
+  readonly label: string
+}> = [
+  { value: "ACTIVE", label: "Ativas" },
+  { value: "ARCHIVED", label: "Arquivadas" },
+]
+
+export const categoryTypeFilters: ReadonlyArray<{
   readonly value: CategoryFilter
   readonly label: string
 }> = [
@@ -11,13 +22,16 @@ export const categoryFilters: ReadonlyArray<{
   { value: "EXPENSE", label: "Despesas" },
 ]
 
+export const categoryFilters = categoryTypeFilters
+
 export function filterCategories(
   categories: readonly CategorySummary[],
-  filter: CategoryFilter
+  statusFilter: CategoryStatusFilter = "ACTIVE",
+  typeFilter: CategoryTypeFilter = "ALL"
 ): readonly CategorySummary[] {
   return categories.filter(
     (category) =>
-      category.status === "ACTIVE" &&
-      (filter === "ALL" || category.kind === filter)
+      category.status === statusFilter &&
+      (typeFilter === "ALL" || category.kind === typeFilter)
   )
 }

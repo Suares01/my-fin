@@ -300,21 +300,21 @@ Toda ambiguidade foi resolvida pela solicitação, pelo código existente ou pel
 | CAT-44 | P1: Editar na UI | Tasks | T14/T16 complete |
 | CAT-45 | P1: Editar na UI | Tasks | T21/T22 complete |
 | CAT-46 | P1: Editar na UI | Tasks | T16/T22 complete |
-| CAT-47 | P1: Arquivadas e reativação | Tasks | T12 complete; remaining UI coverage in T23 |
-| CAT-48 | P1: Arquivadas e reativação | Tasks | In Tasks |
-| CAT-49 | P1: Arquivadas e reativação | Tasks | In Tasks |
-| CAT-50 | P1: Arquivadas e reativação | Tasks | In Tasks |
+| CAT-47 | P1: Arquivadas e reativação | Tasks | T12 complete; UI includeArchived coverage remains in T25 |
+| CAT-48 | P1: Arquivadas e reativação | Tasks | T23 model defaults complete; page default remains in T25 |
+| CAT-49 | P1: Arquivadas e reativação | Tasks | T23 model matrix complete; page coverage remains in T25 |
+| CAT-50 | P1: Arquivadas e reativação | Tasks | T23 model matrix complete; page coverage remains in T25 |
 | CAT-51 | P1: Arquivadas e reativação | Tasks | In Tasks |
 | CAT-52 | P1: Arquivadas e reativação | Tasks | In Tasks |
 | CAT-53 | P1: Arquivadas e reativação | Tasks | T16 complete |
 | CAT-54 | P1: Arquivadas e reativação | Tasks | T14/T16 complete |
 | CAT-55 | P1: Arquivadas e reativação | Tasks | T16 complete |
-| CAT-56 | P1: Arquivadas e reativação | Tasks | In Tasks |
+| CAT-56 | P1: Arquivadas e reativação | Tasks | T23 empty result complete; UI empty state remains in T25 |
 | CAT-57 | P1: Arquivadas e reativação | Tasks | In Tasks |
 | CAT-58 | P2: Acessibilidade visual | Tasks | In Tasks |
 | CAT-59 | P2: Acessibilidade visual | Tasks | In Tasks |
 | CAT-60 | P2: Acessibilidade visual | Tasks | T20 complete; card action coverage remains in T24 |
-| CAT-61 | P2: Acessibilidade visual | Tasks | In Tasks |
+| CAT-61 | P2: Acessibilidade visual | Tasks | T23 readonly options complete; keyboard UI coverage remains in T25 |
 | CAT-62 | P2: Acessibilidade visual | Tasks | In Tasks |
 | CAT-63 | P2: Acessibilidade visual | Tasks | T17 complete |
 | CAT-64 | Edge case: troca de livro | Tasks | In Tasks |

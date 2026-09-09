@@ -102,7 +102,7 @@ export function CategoriesPage() {
   const [selectedFilter, setSelectedFilter] = useState<CategoryFilter>("ALL")
   const [isCreateDrawerOpen, setIsCreateDrawerOpen] = useState(false)
   const filteredCategories = useMemo(
-    () => filterCategories(query.data ?? [], selectedFilter),
+    () => filterCategories(query.data ?? [], "ACTIVE", selectedFilter),
     [query.data, selectedFilter]
   )
 
