@@ -1,5 +1,6 @@
 import {
   LedgerAccount,
+  categoryAppearance,
   type LedgerAccountSnapshot,
   type SystemAccountPurpose,
 } from "@workspace/domain"
@@ -29,6 +30,8 @@ export type LedgerAccountRow = {
   readonly status: unknown
   readonly system_purpose: unknown
   readonly version: unknown
+  readonly icon_key: unknown
+  readonly color_hex: unknown
 }
 
 export type LedgerAccountPersistence = {
@@ -40,10 +43,18 @@ export type LedgerAccountPersistence = {
   readonly status: LedgerAccountSnapshot["status"]
   readonly system_purpose: SystemAccountPurpose | null
   readonly version: number
+  readonly icon_key: string | null
+  readonly color_hex: string | null
 }
 
 export const LedgerAccountMapper = {
   toDomain(row: LedgerAccountRow): LedgerAccount {
+    const kind = readEnum(row.kind, ACCOUNT_KINDS, "kind")
+    const systemPurpose =
+      row.system_purpose === null
+        ? undefined
+        : readEnum(row.system_purpose, SYSTEM_PURPOSES, "system_purpose")
+    const appearance = readAppearance(row, kind, systemPurpose)
     const snapshot: LedgerAccountSnapshot = {
       id: readNonEmptyString(row.id, "id") as LedgerAccountSnapshot["id"],
       bookId: readNonEmptyString(
@@ -55,17 +66,10 @@ export const LedgerAccountMapper = {
         row.normalized_name,
         "normalized_name"
       ),
-      kind: readEnum(row.kind, ACCOUNT_KINDS, "kind"),
+      kind,
       status: readEnum(row.status, ACCOUNT_STATUSES, "status"),
-      ...(row.system_purpose === null
-        ? {}
-        : {
-            systemPurpose: readEnum(
-              row.system_purpose,
-              SYSTEM_PURPOSES,
-              "system_purpose"
-            ),
-          }),
+      ...(systemPurpose === undefined ? {} : { systemPurpose }),
+      ...appearance,
       version: readVersion(row.version),
     }
 
@@ -83,8 +87,47 @@ export const LedgerAccountMapper = {
       status: snapshot.status,
       system_purpose: snapshot.systemPurpose ?? null,
       version: snapshot.version,
+      icon_key: snapshot.iconKey ?? null,
+      color_hex: snapshot.colorHex ?? null,
     }
   },
+}
+
+function readAppearance(
+  row: LedgerAccountRow,
+  kind: LedgerAccountSnapshot["kind"],
+  systemPurpose: SystemAccountPurpose | undefined
+): Partial<Pick<LedgerAccountSnapshot, "iconKey" | "colorHex">> {
+  const hasIcon = row.icon_key !== null && row.icon_key !== undefined
+  const hasColor = row.color_hex !== null && row.color_hex !== undefined
+  const managed =
+    (kind === "INCOME" || kind === "EXPENSE") && systemPurpose === undefined
+
+  if (!managed) {
+    if (hasIcon || hasColor) {
+      throw new TypeError(
+        "Invalid ledger_accounts visual metadata for non-category account"
+      )
+    }
+    return {}
+  }
+
+  if (typeof row.icon_key !== "string" || typeof row.color_hex !== "string") {
+    throw new TypeError("Invalid ledger_accounts visual metadata")
+  }
+
+  try {
+    const appearance = categoryAppearance({
+      iconKey: row.icon_key,
+      colorHex: row.color_hex,
+    })
+    if (appearance.colorHex !== row.color_hex) {
+      throw new Error("non-canonical color")
+    }
+    return appearance
+  } catch {
+    throw new TypeError("Invalid ledger_accounts visual metadata")
+  }
 }
 
 function readNonEmptyString(value: unknown, field: string): string {

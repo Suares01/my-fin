@@ -360,11 +360,11 @@ Como o plano excede oito tarefas, o Execute deve oferecer esses três workers de
 
 **Done when:**
 
-- [ ] Categoria válida round-trips os dois campos; conta comum round-trips ambos como `NULL`/ausentes.
-- [ ] Rows categóricas incompletas ou inválidas e rows não categóricas com appearance são rejeitadas.
-- [ ] Restauração não cria fatos.
-- [ ] Pelo menos 5 casos unitários novos cobrem essas combinações; o total não diminui.
-- [ ] Focused SQLite Mapper T10 passa.
+- [x] Categoria válida round-trips os dois campos; conta comum round-trips ambos como `NULL`/ausentes.
+- [x] Rows categóricas incompletas ou inválidas e rows não categóricas com appearance são rejeitadas.
+- [x] Restauração não cria fatos.
+- [x] Pelo menos 5 casos unitários novos cobrem essas combinações; o total não diminui.
+- [x] Focused SQLite Mapper T10 passa.
 
 **Tests:** unit
 **Gate:** Focused SQLite Mapper T10
