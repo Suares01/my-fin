@@ -320,19 +320,19 @@ Toda ambiguidade foi resolvida pela solicitação, pelo código existente ou pel
 | CAT-64 | Edge case: troca de livro | Tasks | In Tasks |
 | CAT-65 | Edge case: cache por livro | Tasks | T14/T15/T16 complete |
 | CAT-66 | Edge case: invalidação parcial | Tasks | T14/T15/T16 complete |
-| CAT-67 | Edge case: conta-gotas | Tasks | T18 complete; controlled field coverage remains in T19 |
-| CAT-68 | Edge case: cor manual | Tasks | In Tasks |
+| CAT-67 | Edge case: conta-gotas | Tasks | T18/T19 complete |
+| CAT-68 | Edge case: cor manual | Tasks | T19 complete; schema coverage remains in T21/T22 |
 | CAT-69 | Edge case: reativação repetida | Tasks | T7/T11/T16 complete |
 | CAT-70 | P1: Persistir metadados | Tasks | T1/T9/T10/T11 complete |
 | CAT-71 | P1: Atualizar categoria | Tasks | T1/T5 complete |
 | CAT-72 | P1: Criar categoria | Tasks | In Tasks |
 | CAT-73 | P1: Criar categoria | Tasks | In Tasks |
 | CAT-74 | P1: Criar categoria | Tasks | In Tasks |
-| CAT-75 | P1: Criar categoria | Tasks | In Tasks |
-| CAT-76 | P1: Criar categoria | Tasks | In Tasks |
-| CAT-77 | P1: Criar categoria | Tasks | In Tasks |
-| CAT-78 | P1: Criar categoria | Tasks | In Tasks |
-| CAT-79 | P1: Criar categoria | Tasks | In Tasks |
+| CAT-75 | P1: Criar categoria | Tasks | T19 complete; form coverage remains in T22 |
+| CAT-76 | P1: Criar categoria | Tasks | T19 complete; form coverage remains in T22 |
+| CAT-77 | P1: Criar categoria | Tasks | T19 complete; form coverage remains in T22 |
+| CAT-78 | P1: Criar categoria | Tasks | T19 complete; form coverage remains in T22 |
+| CAT-79 | P1: Criar categoria | Tasks | T19 complete; form coverage remains in T22 |
 
 **Coverage:** 79 requisitos, 79 mapeados no design e em tasks, 0 pendentes de decomposição.
 

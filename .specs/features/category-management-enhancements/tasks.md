@@ -588,12 +588,12 @@ Como o plano excede oito tarefas, o Execute deve oferecer esses três workers de
 
 **Done when:**
 
-- [ ] Campo delega label/description/error/disabled a `ControlledField`.
-- [ ] UI não renderiza alpha, percentual ou seletor de formato; saída válida é `rrggbb` minúsculo.
-- [ ] Entrada manual inválida permanece visível para Zod; conta-gotas descarta alpha.
-- [ ] Reset sincroniza sem emissão divergente e disabled bloqueia todas as mudanças.
-- [ ] Pelo menos 7 casos de componente novos cobrem integração, formatos, reset, erro e disabled; o total não diminui.
-- [ ] Quick Tauri passa.
+- [x] Campo delega label/description/error/disabled a `ControlledField`.
+- [x] UI não renderiza alpha, percentual ou seletor de formato; saída válida é `rrggbb` minúsculo.
+- [x] Entrada manual inválida permanece visível para Zod; conta-gotas descarta alpha.
+- [x] Reset sincroniza sem emissão divergente e disabled bloqueia todas as mudanças.
+- [x] Pelo menos 7 casos de componente novos cobrem integração, formatos, reset, erro e disabled; o total não diminui.
+- [x] Quick Tauri passa.
 
 **Tests:** component integration
 **Gate:** Quick Tauri
