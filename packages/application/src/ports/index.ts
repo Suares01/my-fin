@@ -1,10 +1,12 @@
 export type {
   AccountBalanceQuery,
+  ArchiveCategoryCommand,
   ArchiveLedgerAccountCommand,
   AmendJournalEntryCommand,
   AmendJournalEntryResult,
   AccountDto,
   BookDto,
+  CategoryDto,
   CreateCategoryCommand,
   CreateFinancialAccountCommand,
   CreateFinancialBookCommand,
@@ -12,10 +14,12 @@ export type {
   JournalEntryCommand,
   JournalEntryDto,
   RenameLedgerAccountCommand,
+  ReactivateCategoryCommand,
   ReactivateLedgerAccountCommand,
   ReverseJournalEntryCommand,
   SetOpeningBalanceCommand,
   TransferMoneyCommand,
+  UpdateCategoryCommand,
 } from "./commands.js"
 export type {
   ApplicationEventType,

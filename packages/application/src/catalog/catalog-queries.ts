@@ -11,12 +11,16 @@ export interface ExpenseCategorySummary {
   readonly id: string
   readonly name: string
   readonly kind: "EXPENSE"
+  readonly iconKey: string
+  readonly colorHex: string
 }
 
 export interface IncomeCategorySummary {
   readonly id: string
   readonly name: string
   readonly kind: "INCOME"
+  readonly iconKey: string
+  readonly colorHex: string
 }
 
 export interface CategorySummary {
@@ -24,6 +28,8 @@ export interface CategorySummary {
   readonly name: string
   readonly kind: "INCOME" | "EXPENSE"
   readonly status: "ACTIVE" | "ARCHIVED"
+  readonly iconKey: string
+  readonly colorHex: string
   readonly version: number
 }
 

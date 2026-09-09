@@ -13,7 +13,30 @@ export interface CreateFinancialAccountCommand {
 export interface CreateCategoryCommand {
   readonly bookId: string
   readonly name: string
-  readonly kind: string
+  readonly kind: "INCOME" | "EXPENSE"
+  readonly iconKey: string
+  readonly colorHex: string
+}
+
+export interface UpdateCategoryCommand {
+  readonly bookId: string
+  readonly categoryId: string
+  readonly expectedVersion: number
+  readonly name: string
+  readonly iconKey: string
+  readonly colorHex: string
+}
+
+export interface ArchiveCategoryCommand {
+  readonly bookId: string
+  readonly categoryId: string
+  readonly expectedVersion: number
+}
+
+export interface ReactivateCategoryCommand {
+  readonly bookId: string
+  readonly categoryId: string
+  readonly expectedVersion: number
 }
 
 export interface JournalEntryCommand {
@@ -135,6 +158,17 @@ export interface AccountDto {
   readonly name: string
   readonly kind: string
   readonly status: string
+  readonly version: number
+}
+
+export interface CategoryDto {
+  readonly id: string
+  readonly bookId: string
+  readonly name: string
+  readonly kind: "INCOME" | "EXPENSE"
+  readonly status: "ACTIVE" | "ARCHIVED"
+  readonly iconKey: string
+  readonly colorHex: string
   readonly version: number
 }
 

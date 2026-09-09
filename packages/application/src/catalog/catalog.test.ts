@@ -34,7 +34,13 @@ const bookSummaries: readonly FinancialBookSummary[] = [
 ]
 
 const categorySummaries: readonly ExpenseCategorySummary[] = [
-  { id: "category-1", name: "Mercado", kind: "EXPENSE" },
+  {
+    id: "category-1",
+    name: "Mercado",
+    kind: "EXPENSE",
+    iconKey: "label-dollar",
+    colorHex: "f43f5e",
+  },
 ]
 
 const managedCategories: readonly CategorySummary[] = [
@@ -43,6 +49,8 @@ const managedCategories: readonly CategorySummary[] = [
     name: "Salário",
     kind: "INCOME",
     status: "ACTIVE",
+    iconKey: "briefcase",
+    colorHex: "10b981",
     version: 0,
   },
   {
@@ -50,6 +58,8 @@ const managedCategories: readonly CategorySummary[] = [
     name: "Mercado",
     kind: "EXPENSE",
     status: "ARCHIVED",
+    iconKey: "label-dollar",
+    colorHex: "f43f5e",
     version: 2,
   },
 ]

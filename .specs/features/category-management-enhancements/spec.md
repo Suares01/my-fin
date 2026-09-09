@@ -257,7 +257,7 @@ Toda ambiguidade foi resolvida pela solicitação, pelo código existente ou pel
 | CAT-01 | P1: Persistir metadados | Tasks | T1 complete |
 | CAT-02 | P1: Persistir metadados | Tasks | T1 complete |
 | CAT-03 | P1: Persistir metadados | Tasks | In Tasks |
-| CAT-04 | P1: Persistir metadados | Tasks | In Tasks |
+| CAT-04 | P1: Persistir metadados | Tasks | T2 complete |
 | CAT-05 | P1: Persistir metadados | Tasks | In Tasks |
 | CAT-06 | P1: Persistir metadados | Tasks | In Tasks |
 | CAT-07 | P1: Persistir metadados | Tasks | T1 complete |
@@ -277,7 +277,7 @@ Toda ambiguidade foi resolvida pela solicitação, pelo código existente ou pel
 | CAT-21 | P1: Criar categoria | Tasks | In Tasks |
 | CAT-22 | P1: Criar categoria | Tasks | In Tasks |
 | CAT-23 | P1: Criar categoria | Tasks | In Tasks |
-| CAT-24 | P1: Criar categoria | Tasks | In Tasks |
+| CAT-24 | P1: Criar categoria | Tasks | T2 complete |
 | CAT-25 | P1: Criar categoria | Tasks | In Tasks |
 | CAT-26 | P1: Criar categoria | Tasks | In Tasks |
 | CAT-27 | P1: Criar categoria | Tasks | In Tasks |
@@ -289,8 +289,8 @@ Toda ambiguidade foi resolvida pela solicitação, pelo código existente ou pel
 | CAT-33 | P1: Atualizar categoria | Tasks | T1 complete |
 | CAT-34 | P1: Atualizar categoria | Tasks | T1 complete |
 | CAT-35 | P1: Atualizar categoria | Tasks | T1 complete |
-| CAT-36 | P1: Atualizar categoria | Tasks | In Tasks |
-| CAT-37 | P1: Atualizar categoria | Tasks | In Tasks |
+| CAT-36 | P1: Atualizar categoria | Tasks | T2 complete |
+| CAT-37 | P1: Atualizar categoria | Tasks | T2 complete |
 | CAT-38 | P1: Atualizar categoria | Tasks | In Tasks |
 | CAT-39 | P1: Editar na UI | Tasks | In Tasks |
 | CAT-40 | P1: Editar na UI | Tasks | In Tasks |

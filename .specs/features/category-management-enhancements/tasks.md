@@ -156,11 +156,11 @@ Como o plano excede oito tarefas, o Execute deve oferecer esses três workers de
 
 **Done when:**
 
-- [ ] `CreateCategoryCommand` exige kind literal, ícone e cor.
-- [ ] Os três commands dedicados usam `categoryId`; update inclui nome, aparência e `expectedVersion`.
-- [ ] `CategoryDto` e todos os summaries expõem aparência obrigatória; `AccountDto` não expõe esses campos.
-- [ ] Pelo menos 2 casos de contrato/public API são adicionados e o total não diminui.
-- [ ] Quick Application passa.
+- [x] `CreateCategoryCommand` exige kind literal, ícone e cor.
+- [x] Os três commands dedicados usam `categoryId`; update inclui nome, aparência e `expectedVersion`.
+- [x] `CategoryDto` e todos os summaries expõem aparência obrigatória; `AccountDto` não expõe esses campos.
+- [x] Pelo menos 2 casos de contrato/public API são adicionados e o total não diminui.
+- [x] Quick Application passa.
 
 **Tests:** unit/type contract
 **Gate:** Quick Application
