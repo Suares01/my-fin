@@ -1,14 +1,21 @@
-import { useId } from "react"
+import { useId, useRef, useState } from "react"
 import { Controller, type FieldValues } from "react-hook-form"
 import {
   ColorPicker,
-  ColorPickerEyeDropper,
+  ColorPickerFormat,
   ColorPickerHue,
   ColorPickerSelection,
 } from "@workspace/ui/components/color-picker"
 import { Input } from "@workspace/ui/components/input"
 import { ControlledField } from "./controlled-field"
 import type { ControlledFieldProps } from "./controlled-field-props"
+import { cn } from "@workspace/ui/lib/utils"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@workspace/ui/components/popover"
+import { Button } from "@workspace/ui/components/button"
 
 function isHexColor(value: string): boolean {
   return /^[0-9a-f]{6}$/i.test(value)
@@ -40,6 +47,8 @@ export function ControlledColorPicker<
   disabled,
 }: ControlledFieldProps<TValues, string, TOutput>) {
   const id = useId()
+  const popoverContainerRef = useRef<HTMLDivElement>(null)
+  const [open, setOpen] = useState(false)
 
   return (
     <Controller
@@ -56,48 +65,94 @@ export function ControlledColorPicker<
             description={description}
             error={fieldState.error}
             disabled={disabled}
+            labelInline
           >
-            <ColorPicker
-              value={visualValue}
-              onChange={(rgb) => {
-                if (!disabled && isHexColor(value) && isRgbArray(rgb)) {
-                  field.onChange(rgbToHex(rgb))
+            <div ref={popoverContainerRef} className="relative w-full">
+              <Popover open={open && !disabled} onOpenChange={setOpen}>
+                <PopoverTrigger
+                  render={
+                    <Button
+                      ref={field.ref}
+                      name={field.name}
+                      onBlur={field.onBlur}
+                      id={id}
+                      type="button"
+                      variant="outline"
+                      disabled={disabled}
+                      aria-invalid={fieldState.invalid}
+                      aria-describedby={
+                        [
+                          description && `${id}-description`,
+                          fieldState.error && `${id}-error`,
+                        ]
+                          .filter(Boolean)
+                          .join(" ") || undefined
+                      }
+                      className="w-1/2"
+                      style={
+                        visualValue
+                          ? { backgroundColor: visualValue }
+                          : undefined
+                      }
+                    />
+                  }
+                >
+                  <div className="w-full text-center">{visualValue}</div>
+                </PopoverTrigger>
+                <PopoverContent
+                  container={popoverContainerRef}
+                  data-vaul-no-drag
+                  className="p-4"
+                >
+                  <ColorPicker
+                    value={visualValue}
+                    onChange={(rgb) => {
+                      if (!disabled && isHexColor(value) && isRgbArray(rgb)) {
+                        field.onChange(rgbToHex(rgb))
+                      }
+                    }}
+                    className="h-auto gap-3"
+                  >
+                    <ColorPickerSelection
+                      aria-disabled={disabled}
+                      className={cn("h-40 rounded-lg", {
+                        "pointer-events-none opacity-50": disabled,
+                      })}
+                    />
+                    <ColorPickerHue
+                      aria-label="Matiz da cor"
+                      disabled={disabled}
+                    />
+
+                    <div className="flex items-center gap-2">
+                      <ColorPickerFormat />
+                    </div>
+                  </ColorPicker>
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <Input
+              {...field}
+              className="hidden"
+              id={id}
+              value={value}
+              disabled={disabled}
+              aria-invalid={fieldState.invalid}
+              aria-describedby={
+                [
+                  description && `${id}-description`,
+                  fieldState.error && `${id}-error`,
+                ]
+                  .filter(Boolean)
+                  .join(" ") || undefined
+              }
+              onChange={(event) => {
+                if (!disabled) {
+                  field.onChange(event.target.value)
                 }
               }}
-              className="h-auto gap-3"
-            >
-              <ColorPickerSelection
-                aria-disabled={disabled}
-                className={disabled ? "pointer-events-none opacity-50" : ""}
-              />
-              <ColorPickerHue aria-label="Matiz da cor" disabled={disabled} />
-              <div className="flex items-center gap-2">
-                <ColorPickerEyeDropper
-                  aria-label="Escolher cor com conta-gotas"
-                  disabled={disabled}
-                />
-                <Input
-                  {...field}
-                  id={id}
-                  value={value}
-                  disabled={disabled}
-                  aria-invalid={fieldState.invalid}
-                  aria-describedby={
-                    [
-                      description && `${id}-description`,
-                      fieldState.error && `${id}-error`,
-                    ]
-                      .filter(Boolean)
-                      .join(" ") || undefined
-                  }
-                  onChange={(event) => {
-                    if (!disabled) {
-                      field.onChange(event.target.value)
-                    }
-                  }}
-                />
-              </div>
-            </ColorPicker>
+            />
           </ControlledField>
         )
       }}

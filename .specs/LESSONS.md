@@ -32,6 +32,12 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: apps/tauri/src/features/transactions/components/income-form.tsx:95 (transactions)
 - last seen: 2026-09-08T19:03:41Z
 
+### L-004 - User-facing lifecycle requirements need an assertion at the same integration seam for migration, pending, conflict, cache-movement, and keyboard outcomes.
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `categories/ui` · harmful: 0
+- features: category-management-enhancements
+- evidence: CAT-15 (categories/ui)
+- last seen: 2026-09-09T22:54:17Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

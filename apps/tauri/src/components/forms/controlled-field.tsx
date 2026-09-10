@@ -6,6 +6,7 @@ import {
   FieldError,
   FieldLabel,
 } from "@workspace/ui/components/field"
+import { cn } from "@workspace/ui/lib/utils"
 
 export function ControlledField({
   id,
@@ -14,6 +15,7 @@ export function ControlledField({
   error,
   disabled,
   children,
+  labelInline = false,
 }: {
   readonly id: string
   readonly label: string
@@ -21,11 +23,19 @@ export function ControlledField({
   readonly error?: FormFieldError
   readonly disabled?: boolean
   readonly children: ReactNode
+  readonly labelInline?: boolean
 }) {
   return (
     <Field data-invalid={Boolean(error)} data-disabled={disabled}>
-      <FieldLabel htmlFor={id}>{label}</FieldLabel>
-      {children}
+      <div
+        className={cn("flex", {
+          "flex-row gap-2": labelInline,
+          "flex-col gap-1": !labelInline,
+        })}
+      >
+        <FieldLabel htmlFor={id}>{label}</FieldLabel>
+        {children}
+      </div>
       {description && !error && (
         <FieldDescription id={`${id}-description`}>
           {description}

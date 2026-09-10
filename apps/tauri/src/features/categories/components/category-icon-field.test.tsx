@@ -57,6 +57,7 @@ afterEach(cleanup)
 describe("CategoryIconField", () => {
   it("renders every registry icon exactly once with an accessible name", () => {
     render(<IconForm />)
+    fireEvent.click(screen.getByRole("button", { name: "Ícone da categoria" }))
 
     const radios = screen.getAllByRole("radio")
 
@@ -65,7 +66,7 @@ describe("CategoryIconField", () => {
       categoryIconNames.map((name) => `Ícone ${name}`)
     )
     expect(
-      radios.filter((radio) => (radio as HTMLInputElement).checked)
+      radios.filter((radio) => radio.getAttribute("aria-checked") === "true")
     ).toHaveLength(1)
     expect(getCategoryIconEntries()).toHaveLength(radios.length)
   })
@@ -74,6 +75,7 @@ describe("CategoryIconField", () => {
     const onSubmit = vi.fn()
     render(<IconForm onSubmit={onSubmit} />)
 
+    fireEvent.click(screen.getByRole("button", { name: "Ícone da categoria" }))
     fireEvent.click(screen.getByRole("radio", { name: "Ícone home" }))
     fireEvent.click(screen.getByRole("button", { name: "Enviar" }))
 
@@ -87,13 +89,14 @@ describe("CategoryIconField", () => {
 
   it("moves one selection with the arrow keys", () => {
     render(<IconForm />)
+    fireEvent.click(screen.getByRole("button", { name: "Ícone da categoria" }))
     const current = screen.getByRole("radio", { name: "Ícone label-dollar" })
     const next = screen.getByRole("radio", { name: "Ícone map-marker" })
 
     fireEvent.keyDown(current, { key: "ArrowRight" })
 
-    expect((current as HTMLInputElement).checked).toBe(false)
-    expect((next as HTMLInputElement).checked).toBe(true)
+    expect(current.getAttribute("aria-checked")).toBe("false")
+    expect(next.getAttribute("aria-checked")).toBe("true")
   })
 
   it("shows a field error through the controlled field", () => {
@@ -104,16 +107,14 @@ describe("CategoryIconField", () => {
     expect(screen.getByRole("alert").textContent).toContain("Escolha um ícone.")
   })
 
-  it("disables every radio and preserves the selected value", () => {
+  it("disables the trigger and prevents opening the picker", () => {
     render(<IconForm disabled />)
-    const current = screen.getByRole("radio", { name: "Ícone label-dollar" })
+    const trigger = screen.getByRole("button", {
+      name: "Ícone da categoria",
+    })
 
-    expect(
-      screen
-        .getAllByRole("radio")
-        .every((radio) => (radio as HTMLInputElement).disabled)
-    ).toBe(true)
-    fireEvent.click(current)
-    expect((current as HTMLInputElement).checked).toBe(true)
+    expect((trigger as HTMLButtonElement).disabled).toBe(true)
+    fireEvent.click(trigger)
+    expect(screen.queryByRole("radiogroup")).toBeNull()
   })
 })

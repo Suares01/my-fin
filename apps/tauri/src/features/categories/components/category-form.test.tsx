@@ -80,9 +80,12 @@ describe("CategoryForm", () => {
     expect(
       (screen.getByLabelText("Cor da categoria") as HTMLInputElement).value
     ).toBe("f43f5e")
+    fireEvent.click(screen.getByRole("button", { name: "Ícone da categoria" }))
     expect(
-      screen.getByRole("radio", { name: "Ícone label-dollar" })
-    ).toHaveProperty("checked", true)
+      screen
+        .getByRole("radio", { name: "Ícone label-dollar" })
+        .getAttribute("aria-checked")
+    ).toBe("true")
     expect(
       screen
         .getByRole("button", { name: "Despesa" })
@@ -193,6 +196,7 @@ describe("CategoryForm", () => {
     fireEvent.change(screen.getByLabelText("Nome da categoria"), {
       target: { value: "  Lazer  " },
     })
+    fireEvent.click(screen.getByRole("button", { name: "Ícone da categoria" }))
     fireEvent.click(screen.getByRole("radio", { name: "Ícone home" }))
     fireEvent.change(screen.getByLabelText("Cor da categoria"), {
       target: { value: "ABCDEF" },
@@ -232,10 +236,12 @@ describe("CategoryForm", () => {
     expect(
       (screen.getByLabelText("Cor da categoria") as HTMLInputElement).value
     ).toBe("abcdef")
-    expect(screen.getByRole("radio", { name: "Ícone cart" })).toHaveProperty(
-      "checked",
-      true
-    )
+    fireEvent.click(screen.getByRole("button", { name: "Ícone da categoria" }))
+    expect(
+      screen
+        .getByRole("radio", { name: "Ícone cart" })
+        .getAttribute("aria-checked")
+    ).toBe("true")
     expect(screen.queryByRole("button", { name: "Despesa" })).toBeNull()
     expect(screen.getByText("Despesa")).toBeTruthy()
   })

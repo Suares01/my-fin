@@ -5,13 +5,6 @@ import {
   AlertTitle,
 } from "@workspace/ui/components/alert"
 import { Button } from "@workspace/ui/components/button"
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@workspace/ui/components/sheet"
 import { Skeleton } from "@workspace/ui/components/skeleton"
 import {
   ToggleGroup,
@@ -30,6 +23,14 @@ import {
   type CategoryStatusFilter,
   type CategoryTypeFilter,
 } from "./category-list-model"
+import {
+  Drawer,
+  DrawerBackdrop,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+} from "@workspace/ui/components/drawer"
 
 function PageIntroSkeleton() {
   return (
@@ -75,7 +76,7 @@ function CategoryFilters({
         className="flex flex-wrap items-center gap-2"
         aria-label="Filtrar categorias por status"
       >
-        <span className="text-sm font-medium">Status</span>
+        <span className="sr-only text-sm font-medium">Status</span>
         <ToggleGroup
           value={[statusFilter]}
           aria-label="Filtrar categorias por status"
@@ -97,7 +98,7 @@ function CategoryFilters({
         className="flex flex-wrap items-center gap-2"
         aria-label="Filtrar categorias por tipo"
       >
-        <span className="text-sm font-medium">Tipo</span>
+        <span className="sr-only text-sm font-medium">Tipo</span>
         <ToggleGroup
           value={[typeFilter]}
           aria-label="Filtrar categorias por tipo"
@@ -263,7 +264,7 @@ export function CategoriesPage() {
   }
 
   return (
-    <section className="motion-reveal flex w-full max-w-6xl flex-col gap-6">
+    <section className="motion-reveal flex w-full flex-col gap-6">
       <PageIntro />
       <CategoryFilters
         statusFilter={statusFilter}
@@ -320,28 +321,38 @@ function CategorySheet({
   const isEdit = mode === "edit"
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right">
-        <SheetHeader>
-          <SheetTitle>
-            {isEdit ? "Editar categoria" : "Adicionar categoria"}
-          </SheetTitle>
-          <SheetDescription>
-            {isEdit
-              ? "Atualize os dados visuais e o nome da categoria."
-              : "Registre uma categoria de receita ou despesa para organizar o livro ativo."}
-          </SheetDescription>
-        </SheetHeader>
-        <div className="flex-1 overflow-y-auto px-6 pb-6">
-          <CategoryForm
-            mode={mode}
-            initialCategory={category}
-            onSuccess={onSuccess}
-            onCancel={() => onOpenChange(false)}
-          />
-        </div>
-      </SheetContent>
-    </Sheet>
+    <Drawer
+      direction="right"
+      modal={false}
+      open={open}
+      onOpenChange={onOpenChange}
+    >
+      {open && (
+        <>
+          <DrawerBackdrop data-slot="category-create-drawer-backdrop" />
+          <DrawerContent className="data-[vaul-drawer-direction=right]:sm:max-w-xl">
+            <DrawerHeader>
+              <DrawerTitle>
+                {isEdit ? "Editar categoria" : "Adicionar categoria"}
+              </DrawerTitle>
+              <DrawerDescription>
+                {isEdit
+                  ? "Atualize os dados visuais e o nome da categoria."
+                  : "Registre uma categoria de receita ou despesa para organizar o livro ativo."}
+              </DrawerDescription>
+            </DrawerHeader>
+            <div className="flex-1 overflow-y-auto px-6 pb-6">
+              <CategoryForm
+                mode={mode}
+                initialCategory={category}
+                onSuccess={onSuccess}
+                onCancel={() => onOpenChange(false)}
+              />
+            </div>
+          </DrawerContent>
+        </>
+      )}
+    </Drawer>
   )
 }
 

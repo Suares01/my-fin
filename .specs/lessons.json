@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 4,
+  "next_id": 5,
   "lessons": [
     {
       "id": "L-001",
@@ -58,6 +58,24 @@
       ],
       "created": "2026-09-08T19:03:41Z",
       "last_seen": "2026-09-08T19:03:41Z"
+    },
+    {
+      "id": "L-004",
+      "key": "spec_precision_gap::user facing lifecycle requirements need an assertion at the same integration seam for migration pending conflict cache movement and keyboard outcomes",
+      "text": "User-facing lifecycle requirements need an assertion at the same integration seam for migration, pending, conflict, cache-movement, and keyboard outcomes.",
+      "signal": "spec_precision_gap",
+      "scope": "categories/ui",
+      "status": "candidate",
+      "features": [
+        "category-management-enhancements"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "CAT-15 (categories/ui)"
+      ],
+      "created": "2026-09-09T22:54:17Z",
+      "last_seen": "2026-09-09T22:54:17Z"
     }
   ]
 }
