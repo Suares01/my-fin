@@ -13,17 +13,13 @@ import { Badge } from "@workspace/ui/components/badge"
 import { Button } from "@workspace/ui/components/button"
 import { FieldGroup } from "@workspace/ui/components/field"
 import { Spinner } from "@workspace/ui/components/spinner"
-import {
-  ToggleGroup,
-  ToggleGroupItem,
-} from "@workspace/ui/components/toggle-group"
 import { useEffect, useState } from "react"
-import { Controller, useForm } from "react-hook-form"
+import { useForm } from "react-hook-form"
 import type { z } from "zod"
 import { toast } from "@workspace/ui/components/toast"
 import { ControlledColorPicker } from "../../../components/forms/controlled-color-picker"
-import { ControlledField } from "../../../components/forms/controlled-field"
 import { ControlledInput } from "../../../components/forms/controlled-input"
+import { ControlledToggleGroup } from "../../../components/forms/controlled-toggle-group"
 import { useActiveBook } from "../../../providers"
 import {
   useCreateExpenseCategory,
@@ -201,43 +197,16 @@ export function CategoryForm({
         />
 
         {mode === "create" ? (
-          <Controller
+          <ControlledToggleGroup
             control={control}
             name="kind"
-            render={({ field, fieldState }) => (
-              <ControlledField
-                id="category-kind"
-                label="Tipo da categoria"
-                description="Use Receita para entradas e Despesa para saídas do seu livro."
-                error={fieldState.error}
-                disabled={pending}
-              >
-                <ToggleGroup
-                  id="category-kind"
-                  aria-label="Tipo da categoria"
-                  aria-invalid={fieldState.invalid}
-                  multiple={false}
-                  value={field.value ? [field.value] : []}
-                  onValueChange={(value) => field.onChange(value[0] ?? "")}
-                  onBlur={field.onBlur}
-                  className="w-full sm:w-fit"
-                  disabled={pending}
-                >
-                  <ToggleGroupItem
-                    value="EXPENSE"
-                    className="touch-target flex-1 sm:flex-none"
-                  >
-                    Despesa
-                  </ToggleGroupItem>
-                  <ToggleGroupItem
-                    value="INCOME"
-                    className="touch-target flex-1 sm:flex-none"
-                  >
-                    Receita
-                  </ToggleGroupItem>
-                </ToggleGroup>
-              </ControlledField>
-            )}
+            label="Tipo da categoria"
+            description="Use Receita para entradas e Despesa para saídas do seu livro."
+            disabled={pending}
+            options={[
+              { value: "EXPENSE", label: "Despesa" },
+              { value: "INCOME", label: "Receita" },
+            ]}
           />
         ) : (
           <div className="flex flex-col gap-2">

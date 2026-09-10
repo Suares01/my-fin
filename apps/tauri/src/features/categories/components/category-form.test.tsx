@@ -98,6 +98,24 @@ describe("CategoryForm", () => {
     ).toBe("false")
   })
 
+  it("keeps the create kind selection available through the shared control", () => {
+    render(<CategoryForm />)
+
+    expect(
+      screen
+        .getByRole("button", { name: "Despesa" })
+        .getAttribute("aria-pressed")
+    ).toBe("true")
+
+    fireEvent.click(screen.getByRole("button", { name: "Receita" }))
+
+    expect(
+      screen
+        .getByRole("button", { name: "Receita" })
+        .getAttribute("aria-pressed")
+    ).toBe("true")
+  })
+
   it("validates the name before sending a command", async () => {
     render(<CategoryForm />)
 

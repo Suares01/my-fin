@@ -61,7 +61,7 @@ O formulário de conta duplica a ligação entre React Hook Form e Zod e exibe f
 | ACRHF-03 | P1: Criar conta com campos validados e reutilizáveis | Execute | Implementing |
 | ACRHF-04 | P1: Criar conta com campos validados e reutilizáveis | Execute | Implementing |
 | ACRHF-05 | P1: Criar conta com campos validados e reutilizáveis | Execute | Verified |
-| ACRHF-06 | P1: Criar conta com campos validados e reutilizáveis | Execute | Implementing |
+| ACRHF-06 | P1: Criar conta com campos validados e reutilizáveis | Execute | Verified |
 | ACRHF-07 | P1: Criar conta com campos validados e reutilizáveis | Execute | Implementing |
 | ACRHF-08 | P1: Criar conta com campos validados e reutilizáveis | Execute | Implementing |
 
