@@ -42,7 +42,7 @@ O formulário de conta duplica a ligação entre React Hook Form e Zod e exibe f
 2. WHEN o usuário envia uma conta válida THEN o sistema SHALL chamar a criação com o `bookId` ativo, o nome sem espaços externos e o tipo selecionado.
 3. WHEN a criação falha THEN o sistema SHALL manter os valores do formulário e emitir um toast de erro com título `Não foi possível criar a conta` e descrição segura de `accountErrorMessage`.
 4. WHILE a criação está pendente THEN o sistema SHALL desabilitar os campos e as ações do formulário.
-5. WHEN um formulário usa `ControlledToggleGroup` THEN o sistema SHALL sincronizar a opção única, o erro, a descrição, o estado desabilitado e o desfoque com React Hook Form.
+5. WHEN um formulário usa `ControlledToggleGroup` THEN o sistema SHALL sincronizar a opção única, o erro, a descrição, o estado desabilitado e marcar o campo como tocado no React Hook Form após o desfoque.
 6. WHEN a categoria está em modo de criação THEN o sistema SHALL usar `ControlledToggleGroup` para o tipo sem alterar a opção inicial ou o comando criado.
 
 **Independent Test**: Enviar contas e categorias válidas, inválidas e com mutação rejeitada nos testes de componente.
@@ -54,16 +54,16 @@ O formulário de conta duplica a ligação entre React Hook Form e Zod e exibe f
 
 ## Requirement Traceability
 
-| Requirement ID | Story | Phase | Status |
+| Requirement ID | Criterion | Phase | Status |
 | --- | --- | --- | --- |
-| ACRHF-01 | P1: Criar conta com campos validados e reutilizáveis | Execute | Verified |
-| ACRHF-02 | P1: Criar conta com campos validados e reutilizáveis | Execute | Verified |
-| ACRHF-03 | P1: Criar conta com campos validados e reutilizáveis | Execute | Verified |
-| ACRHF-04 | P1: Criar conta com campos validados e reutilizáveis | Execute | Verified |
-| ACRHF-05 | P1: Criar conta com campos validados e reutilizáveis | Execute | Verified |
-| ACRHF-06 | P1: Criar conta com campos validados e reutilizáveis | Execute | Verified |
-| ACRHF-07 | P1: Criar conta com campos validados e reutilizáveis | Execute | Verified |
-| ACRHF-08 | P1: Criar conta com campos validados e reutilizáveis | Execute | Verified |
+| ACRHF-01 | P1 AC 1: schema blocks invalid name or kind | Execute | Verified |
+| ACRHF-02 | P1 AC 2: valid command keeps book, normalized name and kind | Execute | Verified |
+| ACRHF-03 | P1 AC 3: rejected creation keeps draft and shows safe toast | Execute | Verified |
+| ACRHF-04 | P1 AC 4: pending state disables every account field and action | Execute | Verified |
+| ACRHF-05 | P1 AC 5: shared toggle synchronizes RHF field state and blur | Execute | Verified |
+| ACRHF-06 | P1 AC 6: category creation reuses the shared toggle | Execute | Verified |
+| ACRHF-07 | Edge case: inactive book shows alert without account fields | Execute | Verified |
+| ACRHF-08 | Edge case: clearing selection stores empty kind for schema validation | Execute | Verified |
 
 **Coverage:** 8 total, 8 mapped to implementation.
 

@@ -146,6 +146,16 @@ describe("AccountForm", () => {
       screen.getByLabelText("Nome da conta").hasAttribute("disabled")
     ).toBe(true)
     expect(
+      screen
+        .getByRole("button", { name: "Ativo" })
+        .getAttribute("aria-disabled")
+    ).toBe("true")
+    expect(
+      screen
+        .getByRole("button", { name: "Passivo" })
+        .getAttribute("aria-disabled")
+    ).toBe("true")
+    expect(
       screen.getByRole("button", { name: "Cancelar" }).hasAttribute("disabled")
     ).toBe(true)
     expect(

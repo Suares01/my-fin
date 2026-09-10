@@ -20,6 +20,7 @@ function ToggleGroupForm({
   readonly onSubmit?: (values: FormValues) => void
 }) {
   const form = useForm<FormValues>({ defaultValues: { kind: defaultKind } })
+  const { touchedFields } = form.formState
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -41,6 +42,7 @@ function ToggleGroupForm({
         Mostrar erro
       </button>
       <button type="submit">Enviar</button>
+      <output>{touchedFields.kind ? "Tocado" : "Não tocado"}</output>
     </form>
   )
 }
@@ -85,6 +87,14 @@ describe("ControlledToggleGroup", () => {
     await waitFor(() =>
       expect(onSubmit).toHaveBeenLastCalledWith({ kind: "" }, expect.anything())
     )
+  })
+
+  it("forwards blur to React Hook Form", async () => {
+    render(<ToggleGroupForm />)
+
+    fireEvent.blur(screen.getByRole("group", { name: "Tipo" }))
+
+    expect(await screen.findByText("Tocado")).toBeTruthy()
   })
 
   it("shows the React Hook Form error and disables every option", () => {
