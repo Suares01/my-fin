@@ -166,7 +166,7 @@ export function AccountsPage() {
   }
 
   return (
-    <section className="motion-reveal flex w-full max-w-6xl flex-col gap-6">
+    <section className="motion-reveal flex w-full flex-col gap-6">
       <PageIntro />
       <AccountSummary accounts={financialAccounts} />
       <AccountFilters
