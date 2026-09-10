@@ -56,14 +56,14 @@ O formulário de conta duplica a ligação entre React Hook Form e Zod e exibe f
 
 | Requirement ID | Story | Phase | Status |
 | --- | --- | --- | --- |
-| ACRHF-01 | P1: Criar conta com campos validados e reutilizáveis | Execute | Implementing |
-| ACRHF-02 | P1: Criar conta com campos validados e reutilizáveis | Execute | Implementing |
-| ACRHF-03 | P1: Criar conta com campos validados e reutilizáveis | Execute | Implementing |
-| ACRHF-04 | P1: Criar conta com campos validados e reutilizáveis | Execute | Implementing |
+| ACRHF-01 | P1: Criar conta com campos validados e reutilizáveis | Execute | Verified |
+| ACRHF-02 | P1: Criar conta com campos validados e reutilizáveis | Execute | Verified |
+| ACRHF-03 | P1: Criar conta com campos validados e reutilizáveis | Execute | Verified |
+| ACRHF-04 | P1: Criar conta com campos validados e reutilizáveis | Execute | Verified |
 | ACRHF-05 | P1: Criar conta com campos validados e reutilizáveis | Execute | Verified |
 | ACRHF-06 | P1: Criar conta com campos validados e reutilizáveis | Execute | Verified |
-| ACRHF-07 | P1: Criar conta com campos validados e reutilizáveis | Execute | Implementing |
-| ACRHF-08 | P1: Criar conta com campos validados e reutilizáveis | Execute | Implementing |
+| ACRHF-07 | P1: Criar conta com campos validados e reutilizáveis | Execute | Verified |
+| ACRHF-08 | P1: Criar conta com campos validados e reutilizáveis | Execute | Verified |
 
 **Coverage:** 8 total, 8 mapped to implementation.
 

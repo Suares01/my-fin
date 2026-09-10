@@ -16,6 +16,7 @@ const state = vi.hoisted(() => ({
   mutateAsync: vi.fn(),
   isPending: false,
   error: null as unknown,
+  toastAdd: vi.fn(),
 }))
 
 vi.mock("../../../providers", () => ({
@@ -31,6 +32,10 @@ vi.mock("../hooks", () => ({
   }),
 }))
 
+vi.mock("@workspace/ui/components/toast", () => ({
+  toast: { add: state.toastAdd },
+}))
+
 import { AccountForm } from "./account-form"
 import { accountErrorMessage } from "./account-form-model"
 
@@ -41,6 +46,7 @@ describe("AccountForm", () => {
     state.mutateAsync.mockReset()
     state.isPending = false
     state.error = null
+    state.toastAdd.mockReset()
   })
 
   it("starts with the name field and Asset selected", () => {
@@ -57,10 +63,10 @@ describe("AccountForm", () => {
     ).toBe("false")
   })
 
-  it("validates the name before sending a command", async () => {
+  it("validates the name through the resolver before sending a command", async () => {
     render(<AccountForm />)
 
-    fireEvent.blur(screen.getByLabelText("Nome da conta"))
+    fireEvent.click(screen.getByRole("button", { name: "Criar conta" }))
 
     expect(
       await screen.findByText("Informe um nome para a conta.")
@@ -114,7 +120,7 @@ describe("AccountForm", () => {
     )
   })
 
-  it("keeps entered values and shows a safe error after failure", async () => {
+  it("keeps entered values and shows a safe toast after failure", async () => {
     state.mutateAsync.mockRejectedValue(new Error("/private/vault.sqlite"))
     render(<AccountForm />)
 
@@ -122,11 +128,12 @@ describe("AccountForm", () => {
     fireEvent.change(name, { target: { value: "Reserva" } })
     fireEvent.click(screen.getByRole("button", { name: "Criar conta" }))
 
-    expect(
-      await screen.findByText(
-        "Não foi possível criar a conta. Tente novamente."
-      )
-    ).toBeTruthy()
+    await waitFor(() => expect(state.toastAdd).toHaveBeenCalledOnce())
+    expect(state.toastAdd).toHaveBeenCalledWith({
+      type: "error",
+      title: "Não foi possível criar a conta",
+      description: "Não foi possível criar a conta. Tente novamente.",
+    })
     expect(name.value).toBe("Reserva")
     expect(screen.queryByText(/vault\.sqlite/)).toBeNull()
   })
