@@ -1,0 +1,2532 @@
+# Investimentos v1 Tasks
+
+## Execution Protocol (MANDATORY -- do not skip)
+
+Implement these tasks with the `tlc-spec-driven` skill: **activate it by name and follow its Execute flow and Critical Rules.** The skill governs the per-task cycle, adequacy review, atomic commits, independent Verifier and discrimination sensor. **If the skill cannot be activated, STOP and tell the user.**
+
+**Design:** [design.md](./design.md), aprovado pelo usuário com “Aprovo design, siga para tasks.md”.
+**Spec:** [spec.md](./spec.md), 148 requisitos aprovados.
+**Status:** Draft, para revisão das tarefas. A autorização atual cobre a criação deste plano; Execute não começou.
+**Total:** 94 tarefas em 16 fases sequenciais. Todas pendentes.
+
+Cada tarefa entrega um componente ou um caso de uso. `Where` indica seu ponto principal; testes, exports, mapper privado e ajustes mecânicos de consumidores do mesmo contrato pertencem ao mesmo commit. Isso não autoriza implementar outro componente antecipadamente. Wrapper fino de um mesmo comando discriminado pode compartilhar tarefa; comportamento econômico distinto tem tarefa própria.
+
+Manter os commits compiláveis. Introduzir ports de forma aditiva até seus adapters estarem prontos; tornar RepositoryContext obrigatório em T40, type público em T41 e restore financeiro estrito em T23. Nenhum stub de sucesso, implementação vazia ou cast para esconder ausência de adapter é permitido. Se surgir dependência que exija outro componente ainda não pronto, corrigir a ordem deste plano antes de seguir.
+
+Ciclo por tarefa: teste derivado da spec → implementação → gate → revisão de adequação → checkbox/rastreabilidade/evidência → commit atômico. Testes e evidência não são adiados para a tarefa seguinte. Nunca apagar, enfraquecer ou ignorar testes para obter verde. Nenhum push/deploy está incluído.
+
+## Test Coverage Matrix
+
+> Generated from codebase, project guidelines, and spec - confirm before Execute. Não foram encontrados AGENTS.md, CONTRIBUTING.md, docs de testes, workflows de CI ou thresholds de cobertura. Aplicam-se os padrões fortes da skill. Manifests dos cinco packages e de apps/tauri fornecem os comandos; eslint.config de cada package integra Prettier. README não especifica testes. Configuração de Vite não define cobertura.
+
+| Code Layer | Required Test Type | Coverage Expectation | Location Pattern | Run Command |
+| --- | --- | --- | --- | --- |
+| Domain | unit | Todos os ramos econômicos e validações dos ACs atribuídos; todos os fixtures normativos pertinentes, com valores literais | packages/domain/src/**/*.test.ts | `pnpm --filter @workspace/domain exec vitest run` |
+| Application | unit | Contratos públicos, variantes impossíveis, códigos/envelopes exatos e falhas pré/pós-commit | packages/application/src/**/*.test.ts | `pnpm --filter @workspace/application exec vitest run` |
+| Command | integration | Happy + erro + edge por AC; CAS, livro, atomicidade, retry e fatos; doubles apenas para injetar falha, valores esperados vêm da spec | packages/infrastructure-memory/src/use-cases/investments/*.test.ts e suites genéricas tocadas | `pnpm --filter @workspace/infrastructure-memory exec vitest run` |
+| Memory | integration | Mesmos contratos do SQLite, clones, ordering, CAS e rollback de todas as coleções | packages/infrastructure-memory/src/**/*.test.ts | `pnpm --filter @workspace/infrastructure-memory exec vitest run` |
+| SQLite | integration | SQLite real via better-sqlite3: roundtrip, constraints, queries-chave, falhas, migrações e grandes valores; unit no mapper quando necessário | packages/infrastructure-sqlite/tests/**/*.test.ts e src/**/*.test.ts | `pnpm --filter @workspace/infrastructure-sqlite exec vitest run` |
+| Integration | integration | Contexto completo, memória/SQLite e adapter Tauri scoped; commit, falha intermediária, concorrência e IPC exato | Suites de transaction/contracts dos adapters e database do Tauri | Gates Full Cross e Native |
+| React | integration | RHF/React Query/Router em jsdom: happy + erro + edge por AC, acessibilidade observável, livro e retry; UAT real complementa layout/foco/persistência | apps/tauri/src/**/*.test.ts e *.test.tsx | `pnpm --filter tauri exec vitest run` |
+| Native UAT | interactive integration | Jornadas N1–N8 abaixo com banco real, reinício, teclado e 360px/1280px; mock não é evidência substituta | Evidência vinculada à tarefa de integração e validation.md do Verifier | `pnpm --filter tauri tauri dev` e roteiro Native |
+
+Amostras lidas: domain/shared/money.test.ts; domain/ledger/accounts/ledger-account.test.ts; application/core/use-case-executor.test.ts; infrastructure-memory/use-cases/amend-journal-entry.test.ts e transaction/in-memory-transaction-manager.test.ts; infrastructure-sqlite/tests/migrations/category-visual-metadata.test.ts e tests/queries/sqlite-net-worth.test.ts; infrastructure-tauri/database/protocol.test.ts; apps/tauri/bootstrap/create-services.test.ts e features/transactions/components/transaction-delete-dialog.test.tsx. Os caminhos abreviados seguem os roots dos packages. Padrão observado: Vitest, testes próximos do código ou tests/ no SQLite, jsdom explícito nos componentes e assertions de valores/códigos exatos.
+
+**Contagem:** não foi executado baseline de software nesta fase documental. Antes de T1, registrar contagens e falhas atuais por suíte. Cada tarefa declara mínimo de cenários novos/estendidos; registrar também nomes e contagens antes/depois para impedir compensar remoção de teste antigo com teste novo. O mínimo não limita a cobertura exigida pelo AC. Suites não podem passar por ausência de testes: usar `exec vitest run`, sem `--passWithNoTests`.
+
+## Gate Check Commands
+
+> Generated from codebase - confirm before Execute. Rodar a partir da raiz. Nos packages, `check-types` é o script real; no app usar os binários locais. Lint já verifica formatação via Prettier. `format --write` não é gate.
+
+| Gate Level | When to Use | Command |
+| --- | --- | --- |
+| Quick Domain | Domain | `pnpm --filter @workspace/domain exec vitest run && pnpm --filter @workspace/domain check-types` |
+| Quick Application | Contratos/executor/dispatcher | `pnpm --filter @workspace/domain build && pnpm --filter @workspace/application exec vitest run && pnpm --filter @workspace/application check-types` |
+| Full Memory | Adapter memory ou Command | `pnpm --filter @workspace/domain build && pnpm --filter @workspace/application build && pnpm --filter @workspace/infrastructure-memory exec vitest run && pnpm --filter @workspace/infrastructure-memory check-types` |
+| Full SQLite | Repository/query/migration SQLite | `pnpm --filter @workspace/domain build && pnpm --filter @workspace/application build && pnpm --filter @workspace/infrastructure-memory build && pnpm --filter @workspace/infrastructure-sqlite exec vitest run && pnpm --filter @workspace/infrastructure-sqlite check:migrations && pnpm --filter @workspace/infrastructure-sqlite check-types` |
+| Full Cross | Contextos ou contrato transversal | Full Memory + Full SQLite + `pnpm --filter @workspace/infrastructure-sqlite build && pnpm --filter @workspace/infrastructure-tauri exec vitest run && pnpm --filter @workspace/infrastructure-tauri check-types` |
+| Full React | Hook/form/componente/facade | Build Dependências abaixo + `pnpm --filter tauri exec vitest run && pnpm --filter tauri exec tsc --noEmit` |
+| Build | Última tarefa de cada fase, além do gate da tarefa | Testes de todos os packages tocados na fase + lint/check-types/build desses packages em ordem de dependência; comandos concretos abaixo; `git diff --check` |
+| Native | T93: N1–N6/N8 e N7 restrito a Investimentos; T94: N7 completo e regressões afetadas | `pnpm --filter tauri tauri dev`; executar N1–N8, com evidência. Se Rust mudar: `cargo test --manifest-path apps/tauri/src-tauri/Cargo.toml` e `cargo fmt --manifest-path apps/tauri/src-tauri/Cargo.toml -- --check` |
+| Final | T94, antes do Verifier | Full Cross + Full React + Build para todos os packages afetados; Native completo após T93/T94. Executar validação independente e sensor depois do commit final |
+
+Build Dependências para o app, cada comando em sequência:
+
+```sh
+pnpm --filter @workspace/domain build
+pnpm --filter @workspace/application build
+pnpm --filter @workspace/infrastructure-memory build
+pnpm --filter @workspace/infrastructure-sqlite build
+pnpm --filter @workspace/infrastructure-tauri build
+```
+
+Para cada package afetado, usar os scripts reais `pnpm --filter @workspace/<package> lint`, `check-types` e `build` (domain, application, infrastructure-memory, infrastructure-sqlite, infrastructure-tauri). Shared UI não tem script build. Se mudar, usar `pnpm --filter @workspace/ui lint` e `typecheck`; não presumir `check-types` nesse package. No app, Build inclui:
+
+```sh
+pnpm --filter tauri exec eslint . --max-warnings 0
+pnpm --filter tauri exec tsc --noEmit
+pnpm --filter tauri build
+```
+
+Uma fase só passa se seus testes e build estiverem verdes. Falha anterior à feature deve ser registrada com reprodução e escopo; não herdar listas antigas de falhas como dispensa automática. Se baseline impedir o gate, resolver a condição ou obter definição explícita antes de Execute continuar. Falta de ambiente nativo deixa Native pendente e impede declarar a feature pronta; não bloqueia a elaboração deste plano.
+
+### Native: roteiro de aceitação
+
+- N1: livro BRL com banco e carteira; criar CDB e duas posições com termos distintos; aplicar de banco, avaliar, resgatar com despesas; conferir saldos, principal e receitas/despesas.
+- N2: abrir patrimônio ausente antes do saldo inicial, observar caixa negativo e total sinalizado; registrar saldo explícito depois e verificar desaparecimento do aviso sem regravar a alocação.
+- N3: venda parcial, avaliação antiga inaplicável, cancelamento produz revisão nova e continua usando custo; amendment com/sem journal nas duas direções preserva história.
+- N4: fechar/reabrir, arquivar com caixa residual, reativar conta/instrumento e conferir restrições de settlement e histórico.
+- N5: fechar/reabrir app usando banco real; conferir profiles/termos/lineage/valores/recibos. Usar valores individuais próximos ao limite e total acima de int64 via IPC.
+- N6: troca de livro com mutation pendente, livro USD vazio, dia/fuso de referência e lançamento futuro; nenhum saldo/resposta pertence ao livro errado.
+- N7: teclado, foco de Drawer/menus, erros, loading, vazio e ações em 360px/1280px; navegar entre Investimentos e Transações, conferir filtros e resumo misto.
+- N8: resposta de commit indeterminada, quando reproduzível com falha controlada no adapter: conservar requestId, consultar recibo e repetir sem duplicar. Falha de publicação também conserva sucesso. Registrar o mecanismo utilizado; não alegar prova nativa baseada só em mock.
+
+## Execution Plan
+
+Execução estritamente sequencial. A dependência da tarefa imediatamente anterior é também uma barreira de gate: por transitividade, todas as dependências técnicas anteriores já estão disponíveis. Não há trabalho paralelo entre fases ou tarefas. Diagramas e campos Depends on registram a mesma cadeia, inclusive as transições entre fases.
+
+### Phase 1: Valores, perfis e identidade
+
+```text
+T1 -> T2 -> T3 -> T4 -> T5
+```
+
+### Phase 2: Aggregates de investimentos
+
+```text
+T6 -> T7 -> T8 -> T9 -> T10
+```
+
+### Phase 3: Plano contábil e fronteiras da aplicação
+
+```text
+T11 -> T12 -> T13 -> T14 -> T15 -> T16
+```
+
+### Phase 4: Schema e migrações
+
+```text
+T17 -> T18 -> T19 -> T20 -> T21 -> T22
+```
+
+### Phase 5: Persistência SQLite dos aggregates
+
+```text
+T23 -> T24 -> T25 -> T26 -> T27 -> T28 -> T29
+```
+
+### Phase 6: Adapters de memória
+
+```text
+T30 -> T31 -> T32 -> T33 -> T34 -> T35 -> T36
+```
+
+### Phase 7: Leituras de escrita e contas financeiras
+
+```text
+T37 -> T38 -> T39 -> T40 -> T41 -> T42 -> T43
+```
+
+### Phase 8: Catálogos e execução idempotente
+
+```text
+T44 -> T45 -> T46 -> T47 -> T48 -> T49
+```
+
+### Phase 9: Abertura e operações
+
+```text
+T50 -> T51 -> T52 -> T53 -> T54 -> T55
+```
+
+### Phase 10: Correções, avaliações e proteção contábil
+
+```text
+T56 -> T57 -> T58 -> T59 -> T60 -> T61
+```
+
+### Phase 11: Consultas de investimentos
+
+```text
+T62 -> T63 -> T64 -> T65 -> T66 -> T67
+```
+
+### Phase 12: Consultas existentes e composição
+
+```text
+T68 -> T69 -> T70 -> T71
+```
+
+### Phase 13: Estado de UI e cadastros
+
+```text
+T72 -> T73 -> T74 -> T75 -> T76 -> T77
+```
+
+### Phase 14: Formulários de abertura e operações
+
+```text
+T78 -> T79 -> T80 -> T81 -> T82 -> T83
+```
+
+### Phase 15: Avaliação, correção e listas
+
+```text
+T84 -> T85 -> T86 -> T87 -> T88
+```
+
+### Phase 16: Históricos e integração da navegação
+
+```text
+T89 -> T90 -> T91 -> T92 -> T93 -> T94
+```
+
+### Phase Execution Map
+
+Transições entre fases, também dependências explícitas:
+
+```text
+T5 -> T6
+T10 -> T11
+T16 -> T17
+T22 -> T23
+T29 -> T30
+T36 -> T37
+T43 -> T44
+T49 -> T50
+T55 -> T56
+T61 -> T62
+T67 -> T68
+T71 -> T72
+T77 -> T78
+T83 -> T84
+T88 -> T89
+```
+
+Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor batches de fases inteiras próximos de 7 tarefas e obter o aceite exigido pela skill antes de despachar workers. Esta etapa não delega nem inicia execução. O Verifier independente após a implementação é obrigatório e não depende de convite adicional.
+
+## Task Breakdown
+
+### Phase 1: Valores, perfis e identidade
+
+### T1: Decimal exato
+
+**What**: Entregar decimal exato conforme os requisitos abaixo.
+**Where**: `packages/domain/src/shared/decimal.ts`
+**Depends on**: None
+**Reuses**: Money e DomainError.
+**Requirement**: INV-82, INV-83
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Normalizar zeros/sinal, somar/subtrair 0.1 e 0.2 exatamente e rejeitar exponencial, entrada longa, precisão/escala excedidas; compare e equals não usam float.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 16 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Quick Domain` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: unit (Domain); testes acompanham o componente nesta tarefa.
+**Gate**: Quick Domain
+**Commit**: `feat(investments-domain): decimal exato`
+
+### T2: Validação dos valores de investimento
+
+**What**: Entregar validação dos valores de investimento conforme os requisitos abaixo.
+**Where**: `packages/domain/src/investments/values/investment-values.ts`
+**Depends on**: T1
+**Reuses**: Decimal de T1, Money e LocalDate.
+**Requirement**: INV-21, INV-24, INV-36, INV-48, INV-82, INV-83, INV-84, INV-123
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Quantity, Percentage, UnitPrice e limite monetário simétrico respeitam a spec; distinguir custo ausente de zero e permitir percentuais acima de 100.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 14 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Quick Domain` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: unit (Domain); testes acompanham o componente nesta tarefa.
+**Gate**: Quick Domain
+**Commit**: `feat(investments-domain): validação dos valores de investimento`
+
+### T3: Perfis financeiros
+
+**What**: Entregar perfis financeiros conforme os requisitos abaixo.
+**Where**: `packages/domain/src/accounts/financial-account-profile.ts`
+**Depends on**: T2
+**Reuses**: Value objects de identidade e normalização de nomes.
+**Requirement**: INV-01, INV-02, INV-03, INV-11, INV-12
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Mapear todos os tipos para kind e validar perfil de investimento, instituição/referência e ausência de settlement; rejeitar combinação estrutural inválida.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Quick Domain` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: unit (Domain); testes acompanham o componente nesta tarefa.
+**Gate**: Quick Domain
+**Commit**: `feat(investments-domain): perfis financeiros`
+
+### T4: Perfil no aggregate LedgerAccount
+
+**What**: Entregar perfil no aggregate ledgeraccount conforme os requisitos abaixo.
+**Where**: `packages/domain/src/ledger/accounts/ledger-account.ts`
+**Depends on**: T3
+**Reuses**: AggregateRoot, lifecycle e CategoryAppearance existentes.
+**Requirement**: INV-02, INV-03, INV-04, INV-07, INV-11, INV-76
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Adicionar profile e mutação única/version/fact, clone profundo e validação quando presente; manter criação interna OTHER compatível. A exigência de profile no restore persistido entra em T23 junto do mapper e backfill.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Quick Domain` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: unit (Domain); testes acompanham o componente nesta tarefa.
+**Gate**: Quick Domain
+**Commit**: `feat(investments-domain): perfil no aggregate ledgeraccount`
+
+### T5: Identidades de investimentos
+
+**What**: Entregar identidades de investimentos conforme os requisitos abaixo.
+**Where**: `packages/domain/src/shared/identity/ids.ts`
+**Depends on**: T4
+**Reuses**: IdGenerator e adaptadores locais.
+**Requirement**: INV-19, INV-78, INV-89
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Acrescentar quatro IDs internos e métodos do IdGenerator com implementações reais nos adaptadores sequenciais/Tauri; consumidores compilam sem casts para esconder métodos ausentes.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 6 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Quick Domain + Build` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: unit (Domain); testes acompanham o componente nesta tarefa.
+**Gate**: Quick Domain + Build
+**Commit**: `feat(investments-domain): identidades de investimentos`
+
+### Phase 2: Aggregates de investimentos
+
+### T6: Aggregate InvestmentInstrument
+
+**What**: Entregar aggregate investmentinstrument conforme os requisitos abaixo.
+**Where**: `packages/domain/src/investments/instruments/investment-instrument.ts`
+**Depends on**: T5
+**Reuses**: Perfis/valores, normalizeSearchText e AggregateRoot.
+**Requirement**: INV-14, INV-15, INV-16, INV-17, INV-18, INV-26, INV-83, INV-89, INV-114, INV-116
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Cobrir todos os tipos/classes, normalização dos schemes, mercado obrigatório em TICKER e ausente em ISIN, moeda, metadata, lifecycle, no-op/version/facts e vedação a alterar tipo após uso.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 18 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Quick Domain` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: unit (Domain); testes acompanham o componente nesta tarefa.
+**Gate**: Quick Domain
+**Commit**: `feat(investments-domain): aggregate investmentinstrument`
+
+### T7: Termos de renda fixa
+
+**What**: Entregar termos de renda fixa conforme os requisitos abaixo.
+**Where**: `packages/domain/src/investments/positions/fixed-income-terms.ts`
+**Depends on**: T6
+**Reuses**: Decimal, LocalDate e VOs de T2.
+**Requirement**: INV-22, INV-23, INV-24, INV-25, INV-26
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Aceitar termos desconhecidos e variantes PREFIXED/INDEXED/HYBRID completas; validar pares de datas conhecidos e índices, sem calcular remuneração ou encerrar por vencimento.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 14 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Quick Domain` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: unit (Domain); testes acompanham o componente nesta tarefa.
+**Gate**: Quick Domain
+**Commit**: `feat(investments-domain): termos de renda fixa`
+
+### T8: Aggregate InvestmentPosition
+
+**What**: Entregar aggregate investmentposition conforme os requisitos abaixo.
+**Where**: `packages/domain/src/investments/positions/investment-position.ts`
+**Depends on**: T7
+**Reuses**: AggregateRoot, valores e termos de T7.
+**Requirement**: INV-19, INV-20, INV-21, INV-25, INV-26, INV-35, INV-39, INV-40, INV-46, INV-51, INV-53, INV-62, INV-71, INV-118, INV-119, INV-127, INV-128, INV-129, INV-144
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Implementar abertura, metadata e transições finais únicas: UNITS/AMOUNT, custo zero com unidades, fechamento, reabertura, UNOPENED cancelado, revision independente de version e allocationEffectiveOn.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 24 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Quick Domain` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: unit (Domain); testes acompanham o componente nesta tarefa.
+**Gate**: Quick Domain
+**Commit**: `feat(investments-domain): aggregate investmentposition`
+
+### T9: Aggregate InvestmentOperation
+
+**What**: Entregar aggregate investmentoperation conforme os requisitos abaixo.
+**Where**: `packages/domain/src/investments/operations/investment-operation.ts`
+**Depends on**: T8
+**Reuses**: JournalEntry lifecycle e snapshots de Position.
+**Requirement**: INV-34, INV-61, INV-63, INV-64, INV-65, INV-66, INV-68, INV-69, INV-72, INV-73, INV-81, INV-132, INV-133, INV-134
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Persistir deltas e estado anterior, role BUSINESS/REVERSAL, datas/sequência e lineage; permitir só mudança de links/version e inversão dos efeitos guardados; identificar última efetiva sem reversões.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 18 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Quick Domain` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: unit (Domain); testes acompanham o componente nesta tarefa.
+**Gate**: Quick Domain
+**Commit**: `feat(investments-domain): aggregate investmentoperation`
+
+### T10: Observação InvestmentValuation
+
+**What**: Entregar observação investmentvaluation conforme os requisitos abaixo.
+**Where**: `packages/domain/src/investments/valuations/investment-valuation.ts`
+**Depends on**: T9
+**Reuses**: Valores exatos, Currency e Position.
+**Requirement**: INV-47, INV-48, INV-49, INV-59, INV-82, INV-83, INV-84, INV-142
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Criar snapshot imutável com bruto obrigatório, campos opcionais desconhecidos, quantidade coerente e moeda; não alterar posição nem produzir journal/fact próprio.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Quick Domain + Build` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: unit (Domain); testes acompanham o componente nesta tarefa.
+**Gate**: Quick Domain + Build
+**Commit**: `feat(investments-domain): observação investmentvaluation`
+
+### Phase 3: Plano contábil e fronteiras da aplicação
+
+### T11: Planner contábil de investimentos
+
+**What**: Entregar planner contábil de investimentos conforme os requisitos abaixo.
+**Where**: `packages/domain/src/investments/accounting/investment-accounting-plan.ts`
+**Depends on**: T10
+**Reuses**: Money, Posting e JournalEntry.post.
+**Requirement**: INV-27, INV-29, INV-30, INV-35, INV-36, INV-37, INV-38, INV-39, INV-40, INV-41, INV-42, INV-43, INV-44, INV-45, INV-46, INV-125, INV-126, INV-132
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Cobrir todas as linhas da matriz com valores literais da spec: principal, ganho/perda, despesas e caixa; agrupar contas/remover zeros, não criar journal vazio nem capitalizar/repetir taxas.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 24 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Quick Domain` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: unit (Domain); testes acompanham o componente nesta tarefa.
+**Gate**: Quick Domain
+**Commit**: `feat(investments-domain): planner contábil de investimentos`
+
+### T12: Contratos de comandos e resultados
+
+**What**: Entregar contratos de comandos e resultados conforme os requisitos abaixo.
+**Where**: `packages/application/src/ports/investment-commands.ts`
+**Depends on**: T11
+**Reuses**: Commands/Result existentes e modelos de domínio.
+**Requirement**: INV-20, INV-36, INV-74, INV-76, INV-78, INV-79, INV-82, INV-83, INV-84, INV-89, INV-90, INV-131, INV-145
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Definir envelopes/drafts discriminados, MutationResult e warning com conta/caixa/moeda; impedir postings arbitrários e mistura de rota interna/externa; versionar contrato canônico.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 8 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Quick Application` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: unit (Application); testes acompanham o componente nesta tarefa.
+**Gate**: Quick Application
+**Commit**: `feat(investments-contracts): contratos de comandos e resultados`
+
+### T13: Ports de persistência de investimento
+
+**What**: Entregar ports de persistência de investimento conforme os requisitos abaixo.
+**Where**: `packages/application/src/ports/investment-repositories.ts`
+**Depends on**: T12
+**Reuses**: RepositoryContext e SqliteReader como padrão de separação, sem import de infraestrutura.
+**Requirement**: INV-74, INV-75, INV-76, INV-78, INV-88, INV-89, INV-132
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Definir BookScopedLookup, repositories, stores append-only, sequence e leituras scoped de D4.3; não exigir implementações novas no RepositoryContext existente antes de T40.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 6 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Quick Application` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: unit (Application); testes acompanham o componente nesta tarefa.
+**Gate**: Quick Application
+**Commit**: `feat(investments-contracts): ports de persistência de investimento`
+
+### T14: Contratos das consultas de investimento
+
+**What**: Entregar contratos das consultas de investimento conforme os requisitos abaixo.
+**Where**: `packages/application/src/ports/investment-queries.ts`
+**Depends on**: T13
+**Reuses**: QueryPage/QuerySlice e contracts de queries existentes.
+**Requirement**: INV-09, INV-10, INV-50, INV-52, INV-54, INV-55, INV-56, INV-57, INV-58, INV-59, INV-60, INV-93, INV-94, INV-95, INV-96, INV-97, INV-98, INV-140, INV-141
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Tipar resumo/posição/carteira/históricos, valores string, base de avaliação e cursores; resumos têm data e moeda explícitas e não aceitam filtros da lista.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 8 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Quick Application` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: unit (Application); testes acompanham o componente nesta tarefa.
+**Gate**: Quick Application
+**Commit**: `feat(investments-contracts): contratos das consultas de investimento`
+
+### T15: Registro dos facts no dispatcher
+
+**What**: Entregar registro dos facts no dispatcher conforme os requisitos abaixo.
+**Where**: `packages/application/src/core/event-dispatcher.ts`
+**Depends on**: T14
+**Reuses**: ApplicationEventType e testes de envelopes atuais.
+**Requirement**: INV-04, INV-81, INV-90
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Registrar todos os facts listados na spec com livro/aggregate/version exatos; publicar na ordem e rejeitar tipo desconhecido sem expor payload financeiro no diagnóstico.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 8 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Quick Application` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: unit (Application); testes acompanham o componente nesta tarefa.
+**Gate**: Quick Application
+**Commit**: `feat(investments-contracts): registro dos facts no dispatcher`
+
+### T16: Resultado preservado após commit
+
+**What**: Entregar resultado preservado após commit conforme os requisitos abaixo.
+**Where**: `packages/application/src/core/use-case-executor.ts`
+**Depends on**: T15
+**Reuses**: executeUseCase, dispatcher e TransactionManager.
+**Requirement**: INV-75, INV-78, INV-80, INV-81, INV-90
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Separar falha pré-commit de dispatch/reporter pós-commit; preserveCommitted retorna sucesso salvo mesmo se ambos falharem, default dos consumidores não migrados é preservado.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Quick Application + Build` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: unit (Application); testes acompanham o componente nesta tarefa.
+**Gate**: Quick Application + Build
+**Commit**: `feat(investments-contracts): resultado preservado após commit`
+
+### Phase 4: Schema e migrações
+
+### T17: Migração de perfis financeiros
+
+**What**: Entregar migração de perfis financeiros conforme os requisitos abaixo.
+**Where**: `packages/infrastructure-sqlite/migrations/0005_financial_account_profiles.sql`
+**Depends on**: T16
+**Reuses**: Runner e geração de manifesto existentes.
+**Requirement**: INV-01, INV-03, INV-05, INV-06, INV-85, INV-86, INV-87, INV-88
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Criar tabelas/triggers de profiles e backfill OTHER inclusive arquivadas, sem tocar postings/versões/checksums; testar banco vazio/v4, repetição e rollback da migration.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (SQLite); testes acompanham o componente nesta tarefa.
+**Gate**: Full SQLite
+**Commit**: `feat(investments-sqlite): migração de perfis financeiros`
+
+### T18: Migração de instrumentos
+
+**What**: Entregar migração de instrumentos conforme os requisitos abaixo.
+**Where**: `packages/infrastructure-sqlite/migrations/0006_investment_instruments.sql`
+**Depends on**: T17
+**Reuses**: Migration de T17 e runner existente.
+**Requirement**: INV-14, INV-17, INV-18, INV-74, INV-85, INV-86, INV-87
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Criar instrumentos/identificadores STRICT, FK composta e unicidade com mercado canônico não nulo; testar colisões por livro/scheme e migração retomável.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 8 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (SQLite); testes acompanham o componente nesta tarefa.
+**Gate**: Full SQLite
+**Commit**: `feat(investments-sqlite): migração de instrumentos`
+
+### T19: Migração de posições e termos
+
+**What**: Entregar migração de posições e termos conforme os requisitos abaixo.
+**Where**: `packages/infrastructure-sqlite/migrations/0007_investment_positions.sql`
+**Depends on**: T18
+**Reuses**: Schemas de carteira/instrumento e migration runner.
+**Requirement**: INV-19, INV-20, INV-21, INV-22, INV-23, INV-74, INV-85, INV-86, INV-127
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Criar posição/termos com FKs de livro, sem unique conta+instrumento; validar modos e variantes de taxa, datas, versões e revisão inicial.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 8 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (SQLite); testes acompanham o componente nesta tarefa.
+**Gate**: Full SQLite
+**Commit**: `feat(investments-sqlite): migração de posições e termos`
+
+### T20: Migração de operações e sequência
+
+**What**: Entregar migração de operações e sequência conforme os requisitos abaixo.
+**Where**: `packages/infrastructure-sqlite/migrations/0008_investment_operations.sql`
+**Depends on**: T19
+**Reuses**: Constraints de journal e schemas anteriores.
+**Requirement**: INV-63, INV-64, INV-68, INV-69, INV-72, INV-74, INV-85, INV-86, INV-132, INV-133, INV-134
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Criar sequence/operations, estado anterior escalar, lineage restrito à posição e ownership de journal; proteger efeitos contra UPDATE e validar links permitidos.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (SQLite); testes acompanham o componente nesta tarefa.
+**Gate**: Full SQLite
+**Commit**: `feat(investments-sqlite): migração de operações e sequência`
+
+### T21: Migração de avaliações
+
+**What**: Entregar migração de avaliações conforme os requisitos abaixo.
+**Where**: `packages/infrastructure-sqlite/migrations/0009_investment_valuations.sql`
+**Depends on**: T20
+**Reuses**: Position FK e índices previstos em D6.
+**Requirement**: INV-47, INV-49, INV-50, INV-74, INV-85, INV-86, INV-88, INV-127
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Criar avaliações imutáveis, índice de seleção vigente e ordem persistida; rejeitar UPDATE/DELETE, aceitar duas observações no mesmo instante.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 8 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (SQLite); testes acompanham o componente nesta tarefa.
+**Gate**: Full SQLite
+**Commit**: `feat(investments-sqlite): migração de avaliações`
+
+### T22: Migração de recibos
+
+**What**: Entregar migração de recibos conforme os requisitos abaixo.
+**Where**: `packages/infrastructure-sqlite/migrations/0010_investment_request_receipts.sql`
+**Depends on**: T21
+**Reuses**: Migration runner e manifesto.
+**Requirement**: INV-75, INV-78, INV-79, INV-80, INV-85, INV-86, INV-87
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Criar recibos com PK livro/requestId e JSON versionado; validar unicidade, rollback e retomada desde cada versão intermediária sem expiração/backfill duplicado.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 8 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full SQLite + Build` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (SQLite); testes acompanham o componente nesta tarefa.
+**Gate**: Full SQLite + Build
+**Commit**: `feat(investments-sqlite): migração de recibos`
+
+### Phase 5: Persistência SQLite dos aggregates
+
+### T23: Persistência do perfil no LedgerAccount
+
+**What**: Entregar persistência do perfil no ledgeraccount conforme os requisitos abaixo.
+**Where**: `packages/infrastructure-sqlite/src/repositories/sqlite-ledger-account-repository.ts`
+**Depends on**: T22
+**Reuses**: Mapper e repository atuais; migrations T17–T22.
+**Requirement**: INV-01, INV-03, INV-04, INV-05, INV-06, INV-07, INV-11, INV-74, INV-76, INV-88
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Persistir/restaurar profile e settlement junto ao aggregate e CAS; mapper exige profile financeiro após migration. Atualizar fixtures/consumidores de restore no mesmo commit, mantendo categorias/system intactos. A persistência de profiles no adapter em memória também conserva o snapshot completo; strict restore só é ativado quando todos os consumidores forem compatíveis.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (SQLite); testes acompanham o componente nesta tarefa.
+**Gate**: Full SQLite
+**Commit**: `feat(investments-sqlite): persistência do perfil no ledgeraccount`
+
+### T24: Repository SQLite de instrumentos
+
+**What**: Entregar repository sqlite de instrumentos conforme os requisitos abaixo.
+**Where**: `packages/infrastructure-sqlite/src/repositories/sqlite-investment-instrument-repository.ts`
+**Depends on**: T23
+**Reuses**: Repository CAS e mapper de conta.
+**Requirement**: INV-14, INV-16, INV-17, INV-18, INV-26, INV-74, INV-76, INV-88, INV-114, INV-116
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Roundtrip de instrumentos/filhas, lookup tipado, unicidade, no-op e CAS com rollback das filhas; não devolver entidade de outro livro.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (SQLite); testes acompanham o componente nesta tarefa.
+**Gate**: Full SQLite
+**Commit**: `feat(investments-sqlite): repository sqlite de instrumentos`
+
+### T25: Repository SQLite de posições
+
+**What**: Entregar repository sqlite de posições conforme os requisitos abaixo.
+**Where**: `packages/infrastructure-sqlite/src/repositories/sqlite-investment-position-repository.ts`
+**Depends on**: T24
+**Reuses**: Repository CAS e schemas de T19.
+**Requirement**: INV-19, INV-20, INV-21, INV-22, INV-23, INV-26, INV-74, INV-76, INV-88, INV-113, INV-114, INV-127, INV-128
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Restaurar quantidade/termos/revisão exatos, salvar uma versão e consultar uso atual/histórico; proibir alteração de identidade/mode/termos e estado corrompido.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (SQLite); testes acompanham o componente nesta tarefa.
+**Gate**: Full SQLite
+**Commit**: `feat(investments-sqlite): repository sqlite de posições`
+
+### T26: Repository SQLite de operações
+
+**What**: Entregar repository sqlite de operações conforme os requisitos abaixo.
+**Where**: `packages/infrastructure-sqlite/src/repositories/sqlite-investment-operation-repository.ts`
+**Depends on**: T25
+**Reuses**: Journal mapper e constraints de T20.
+**Requirement**: INV-61, INV-63, INV-64, INV-65, INV-68, INV-69, INV-72, INV-74, INV-76, INV-88, INV-132, INV-133, INV-134, INV-135, INV-136
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Persistir snapshot e lineage sem reescrever efeito; buscar última efetiva com exclusão do alvo e ownership de qualquer journal; testar quatro combinações com/sem journal.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 14 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (SQLite); testes acompanham o componente nesta tarefa.
+**Gate**: Full SQLite
+**Commit**: `feat(investments-sqlite): repository sqlite de operações`
+
+### T27: Store SQLite de avaliações
+
+**What**: Entregar store sqlite de avaliações conforme os requisitos abaixo.
+**Where**: `packages/infrastructure-sqlite/src/repositories/sqlite-investment-valuation-store.ts`
+**Depends on**: T26
+**Reuses**: Schema de T21 e protocolo string/int64.
+**Requirement**: INV-47, INV-48, INV-49, INV-50, INV-74, INV-88, INV-127
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Append/roundtrip exatos, sem update/delete público, preservando valuedAt/recordedAt/sequence/revision e campos ausentes.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 8 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (SQLite); testes acompanham o componente nesta tarefa.
+**Gate**: Full SQLite
+**Commit**: `feat(investments-sqlite): store sqlite de avaliações`
+
+### T28: Store SQLite de recibos
+
+**What**: Entregar store sqlite de recibos conforme os requisitos abaixo.
+**Where**: `packages/infrastructure-sqlite/src/repositories/sqlite-investment-request-store.ts`
+**Depends on**: T27
+**Reuses**: Schema de T22 e executor transacional.
+**Requirement**: INV-74, INV-75, INV-78, INV-79, INV-80, INV-88
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Guardar e recuperar resultado imutável por livro/request, detectar duplicata e não reaplicar efeitos; rollback remove recibo junto do fato.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 8 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (SQLite); testes acompanham o componente nesta tarefa.
+**Gate**: Full SQLite
+**Commit**: `feat(investments-sqlite): store sqlite de recibos`
+
+### T29: Store SQLite de sequência
+
+**What**: Entregar store sqlite de sequência conforme os requisitos abaixo.
+**Where**: `packages/infrastructure-sqlite/src/repositories/sqlite-investment-sequence-store.ts`
+**Depends on**: T28
+**Reuses**: Reserva de sequência de journals.
+**Requirement**: INV-50, INV-72, INV-75, INV-82, INV-88
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Reservar sequência positiva em transação, preservar string exata no DTO e reverter reserva em erro; rejeitar estouro antes de gravar.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 6 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full SQLite + Build` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (SQLite); testes acompanham o componente nesta tarefa.
+**Gate**: Full SQLite + Build
+**Commit**: `feat(investments-sqlite): store sqlite de sequência`
+
+### Phase 6: Adapters de memória
+
+### T30: Snapshot de investimentos em memória
+
+**What**: Entregar snapshot de investimentos em memória conforme os requisitos abaixo.
+**Where**: `packages/infrastructure-memory/src/store/in-memory-store.ts`
+**Depends on**: T29
+**Reuses**: Snapshot/restore do InMemoryStore.
+**Requirement**: INV-04, INV-75, INV-88, INV-127, INV-132
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Incluir todas as coleções/contador e clone profundo; alterar cópia de profile/termos/identificador/estado anterior não contamina store ou rollback.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (Memory); testes acompanham o componente nesta tarefa.
+**Gate**: Full Memory
+**Commit**: `feat(investments-memory): snapshot de investimentos em memória`
+
+### T31: Repository em memória de instrumentos
+
+**What**: Entregar repository em memória de instrumentos conforme os requisitos abaixo.
+**Where**: `packages/infrastructure-memory/src/repositories/in-memory-investment-instrument-repository.ts`
+**Depends on**: T30
+**Reuses**: InMemoryLedgerAccountRepository e store T30.
+**Requirement**: INV-14, INV-17, INV-18, INV-26, INV-74, INV-76, INV-114, INV-116
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Implementar lookup, unicidade, lifecycle e CAS equivalentes ao adapter SQLite sem retornar referências mutáveis.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 8 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (Memory); testes acompanham o componente nesta tarefa.
+**Gate**: Full Memory
+**Commit**: `feat(investments-memory): repository em memória de instrumentos`
+
+### T32: Repository em memória de posições
+
+**What**: Entregar repository em memória de posições conforme os requisitos abaixo.
+**Where**: `packages/infrastructure-memory/src/repositories/in-memory-investment-position-repository.ts`
+**Depends on**: T31
+**Reuses**: Store T30 e Position.
+**Requirement**: INV-19, INV-20, INV-74, INV-76, INV-113, INV-114, INV-127
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Persistir/restaurar posições e termos, uso histórico/aberto e CAS, sem agrupar posições do mesmo instrumento.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 8 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (Memory); testes acompanham o componente nesta tarefa.
+**Gate**: Full Memory
+**Commit**: `feat(investments-memory): repository em memória de posições`
+
+### T33: Repository em memória de operações
+
+**What**: Entregar repository em memória de operações conforme os requisitos abaixo.
+**Where**: `packages/infrastructure-memory/src/repositories/in-memory-investment-operation-repository.ts`
+**Depends on**: T32
+**Reuses**: Store T30 e Operation.
+**Requirement**: INV-61, INV-63, INV-64, INV-65, INV-69, INV-72, INV-74, INV-76, INV-132
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Preservar deltas/lineage, ordenar última efetiva por data/sequência, excluir alvo e resolver ownership sem contar reversões.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 8 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (Memory); testes acompanham o componente nesta tarefa.
+**Gate**: Full Memory
+**Commit**: `feat(investments-memory): repository em memória de operações`
+
+### T34: Store em memória de avaliações
+
+**What**: Entregar store em memória de avaliações conforme os requisitos abaixo.
+**Where**: `packages/infrastructure-memory/src/repositories/in-memory-investment-valuation-store.ts`
+**Depends on**: T33
+**Reuses**: Store T30 e snapshots de Valuation.
+**Requirement**: INV-47, INV-49, INV-50, INV-74, INV-88
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Append preserva observações e revisão; cópias não mutam dados guardados e inserções do mesmo instante continuam distintas.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 6 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (Memory); testes acompanham o componente nesta tarefa.
+**Gate**: Full Memory
+**Commit**: `feat(investments-memory): store em memória de avaliações`
+
+### T35: Store em memória de recibos
+
+**What**: Entregar store em memória de recibos conforme os requisitos abaixo.
+**Where**: `packages/infrastructure-memory/src/repositories/in-memory-investment-request-store.ts`
+**Depends on**: T34
+**Reuses**: Store T30 e contrato de recibos.
+**Requirement**: INV-74, INV-75, INV-78, INV-79, INV-80
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Reproduzir unicidade por livro/request, resultado imutável e participação no snapshot/rollback.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 6 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (Memory); testes acompanham o componente nesta tarefa.
+**Gate**: Full Memory
+**Commit**: `feat(investments-memory): store em memória de recibos`
+
+### T36: Store em memória de sequência
+
+**What**: Entregar store em memória de sequência conforme os requisitos abaixo.
+**Where**: `packages/infrastructure-memory/src/repositories/in-memory-investment-sequence-store.ts`
+**Depends on**: T35
+**Reuses**: Contador transacional existente.
+**Requirement**: INV-50, INV-72, INV-75, INV-82
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Reservar inteiro exato por livro, detectar limite e restaurar reserva após erro sem colisão entre operações/avaliações.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 6 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full Memory + Build` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (Memory); testes acompanham o componente nesta tarefa.
+**Gate**: Full Memory + Build
+**Commit**: `feat(investments-memory): store em memória de sequência`
+
+### Phase 7: Leituras de escrita e contas financeiras
+
+### T37: Agregador exato de postings
+
+**What**: Entregar agregador exato de postings conforme os requisitos abaixo.
+**Where**: `packages/infrastructure-sqlite/src/queries/sqlite-exact-ledger-totals.ts`
+**Depends on**: T36
+**Reuses**: SqliteReader, parâmetros e codecs monetários.
+**Requirement**: INV-55, INV-56, INV-57, INV-82, INV-103, INV-140, INV-141
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Somar bigint em páginas internas de até 512 usando chave estável e reader recebido; cobrir totais >int64, sinais, filtros e reversões sem SUM/TOTAL float ou nova transação.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (SQLite); testes acompanham o componente nesta tarefa.
+**Gate**: Full SQLite
+**Commit**: `feat(investments-sqlite): agregador exato de postings`
+
+### T38: Leituras transacionais SQLite
+
+**What**: Entregar leituras transacionais sqlite conforme os requisitos abaixo.
+**Where**: `packages/infrastructure-sqlite/src/queries/sqlite-investment-transaction-reads.ts`
+**Depends on**: T37
+**Reuses**: Agregador T37 e índices de posições/settlement.
+**Requirement**: INV-12, INV-28, INV-32, INV-55, INV-60, INV-77, INV-113, INV-115, INV-140, INV-141, INV-145
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Calcular L/C/caixa e dependentes ativos no executor recebido, após escritas; incluir aviso de cada carteira negativa, datas e saldo completo para arquivamento sem reentrância Tauri.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (SQLite); testes acompanham o componente nesta tarefa.
+**Gate**: Full SQLite
+**Commit**: `feat(investments-sqlite): leituras transacionais sqlite`
+
+### T39: Leituras transacionais em memória
+
+**What**: Entregar leituras transacionais em memória conforme os requisitos abaixo.
+**Where**: `packages/infrastructure-memory/src/queries/in-memory-investment-transaction-reads.ts`
+**Depends on**: T38
+**Reuses**: InMemoryLedgerQueries e store completo.
+**Requirement**: INV-12, INV-28, INV-32, INV-55, INV-60, INV-77, INV-113, INV-115, INV-140, INV-141, INV-145
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Calcular os mesmos saldos/avisos e dependentes que SQLite; preservar originais/reversões, data D e dados ainda não confirmados da transação corrente.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (Memory); testes acompanham o componente nesta tarefa.
+**Gate**: Full Memory
+**Commit**: `feat(investments-memory): leituras transacionais em memória`
+
+### T40: Contexto transacional com investimentos
+
+**What**: Entregar contexto transacional com investimentos conforme os requisitos abaixo.
+**Where**: `packages/application/src/ports/repositories.ts`
+**Depends on**: T39
+**Reuses**: Todos os adapters T23–T39 e filas transacionais existentes.
+**Requirement**: INV-74, INV-75, INV-76, INV-77, INV-78, INV-80, INV-81, INV-88, INV-89
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Adicionar os ports obrigatórios e wiring real nos dois transaction managers; confirmar/rollback de posição/operação/journal/recibo/sequência/facts juntos; adaptar fakes e testar scoped executor via adapter Tauri. Rodar contratos reais pelo SQLite, injeção de erro antes do commit e protocolo nativo mockado como prova distinta de UAT.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 14 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full Cross` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (Integration); testes acompanham o componente nesta tarefa.
+**Gate**: Full Cross
+**Commit**: `feat(investments-transaction): contexto transacional com investimentos`
+
+### T41: Criação de conta pelo tipo financeiro
+
+**What**: Entregar criação de conta pelo tipo financeiro conforme os requisitos abaixo.
+**Where**: `packages/application/src/ledger/accounts/create-financial-account.ts`
+**Depends on**: T40
+**Reuses**: Factory de LedgerAccount e executor existente.
+**Requirement**: INV-01, INV-02, INV-03, INV-04, INV-11, INV-74
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Trocar kind de entrada por type e migrar chamadas/facade/fixtures mecanicamente no mesmo commit; criar profile e settlement opcional validado sem identidade extra.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (Command); testes acompanham o componente nesta tarefa.
+**Gate**: Full Memory
+**Commit**: `feat(investments): criação de conta pelo tipo financeiro`
+
+### T42: Configuração financeira e liquidação
+
+**What**: Entregar configuração financeira e liquidação conforme os requisitos abaixo.
+**Where**: `packages/application/src/ledger/accounts/configure-financial-account.ts`
+**Depends on**: T41
+**Reuses**: Profile T3 e InvestmentTransactionReads.
+**Requirement**: INV-04, INV-07, INV-08, INV-11, INV-12, INV-13, INV-74, INV-76, INV-115, INV-138
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Implementar configuração e wrappers set/clear de settlement sobre uma única mutação; validar posições históricas/dependentes e tipo/kind/livro/status, no-op e CAS, sem postings.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 14 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (Command); testes acompanham o componente nesta tarefa.
+**Gate**: Full Memory
+**Commit**: `feat(investments): configuração financeira e liquidação`
+
+### T43: Política de lifecycle de contas
+
+**What**: Entregar política de lifecycle de contas conforme os requisitos abaixo.
+**Where**: `packages/application/src/ledger/accounts/investment-account-lifecycle-policy.ts`
+**Depends on**: T42
+**Reuses**: Lifecycle de LedgerAccount e leituras T38/T39.
+**Requirement**: INV-08, INV-12, INV-74, INV-113, INV-115, INV-116, INV-144
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Conectar política compartilhada a archive/reactivate existentes; bloquear carteira com OPEN ou saldo não zero e settlement em uso; reativar preserva ID e revalida vínculos na transação.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full Memory + Build` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (Command); testes acompanham o componente nesta tarefa.
+**Gate**: Full Memory + Build
+**Commit**: `feat(investments): política de lifecycle de contas`
+
+### Phase 8: Catálogos e execução idempotente
+
+### T44: Criar instrumento
+
+**What**: Entregar criar instrumento conforme os requisitos abaixo.
+**Where**: `packages/application/src/investments/instruments/create-investment-instrument.ts`
+**Depends on**: T43
+**Reuses**: Instrument T6 e executor T16.
+**Requirement**: INV-14, INV-15, INV-16, INV-17, INV-18, INV-74, INV-81, INV-83, INV-89
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Validar livro/moeda e identificadores, criar aggregate ativo/fact e confirmar unicidade na transação; falha não deixa filhas órfãs.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (Command); testes acompanham o componente nesta tarefa.
+**Gate**: Full Memory
+**Commit**: `feat(investments): criar instrumento`
+
+### T45: Atualizar instrumento
+
+**What**: Entregar atualizar instrumento conforme os requisitos abaixo.
+**Where**: `packages/application/src/investments/instruments/update-investment-instrument.ts`
+**Depends on**: T44
+**Reuses**: Instrument repository e hasAnyForInstrument.
+**Requirement**: INV-16, INV-17, INV-18, INV-26, INV-74, INV-76, INV-81, INV-83
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Editar metadata com CAS/no-op; impedir tipo/moeda após qualquer posição histórica e preservar dados econômicos anteriores.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (Command); testes acompanham o componente nesta tarefa.
+**Gate**: Full Memory
+**Commit**: `feat(investments): atualizar instrumento`
+
+### T46: Lifecycle de instrumento
+
+**What**: Entregar lifecycle de instrumento conforme os requisitos abaixo.
+**Where**: `packages/application/src/investments/instruments/set-investment-instrument-status.ts`
+**Depends on**: T45
+**Reuses**: Lifecycle do Instrument e repository de posições.
+**Requirement**: INV-74, INV-76, INV-81, INV-114, INV-116, INV-117, INV-144
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Oferecer archive/reactivate sobre uma transição de status; rejeitar archive com OPEN, preservar identidade e não expor hard delete.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 8 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (Command); testes acompanham o componente nesta tarefa.
+**Gate**: Full Memory
+**Commit**: `feat(investments): lifecycle de instrumento`
+
+### T47: Metadata da posição
+
+**What**: Entregar metadata da posição conforme os requisitos abaixo.
+**Where**: `packages/application/src/investments/positions/update-investment-position-metadata.ts`
+**Depends on**: T46
+**Reuses**: Position.updateLabel e CAS.
+**Requirement**: INV-20, INV-26, INV-74, INV-76, INV-83, INV-127, INV-129
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Editar só rótulo, incluindo no-op e erro de versão; manter quantidade/custo/termos/revisão/datas econômicas e histórico.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 8 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (Command); testes acompanham o componente nesta tarefa.
+**Gate**: Full Memory
+**Commit**: `feat(investments): metadata da posição`
+
+### T48: Execução idempotente de investimento
+
+**What**: Entregar execução idempotente de investimento conforme os requisitos abaixo.
+**Where**: `packages/application/src/investments/shared/execute-investment-request.ts`
+**Depends on**: T47
+**Reuses**: executeUseCase T16, receipt/sequence stores e Clock.
+**Requirement**: INV-74, INV-75, INV-76, INV-77, INV-78, INV-79, INV-80, INV-81, INV-84, INV-90, INV-145
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Canonicalizar payload/versões, buscar recibo antes de CAS/status/data, salvar resultado com facts numa transação e preservar request em erro indeterminado; expor recuperação read-only e testar retry após correção posterior.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 16 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (Command); testes acompanham o componente nesta tarefa.
+**Gate**: Full Memory
+**Commit**: `feat(investments): execução idempotente de investimento`
+
+### T49: Saldo inicial explícito idempotente
+
+**What**: Entregar saldo inicial explícito idempotente conforme os requisitos abaixo.
+**Where**: `packages/application/src/investments/accounts/set-investment-opening-balance.ts`
+**Depends on**: T48
+**Reuses**: SetOpeningBalance e executor idempotente T48.
+**Requirement**: INV-78, INV-120, INV-121, INV-122, INV-123, INV-124, INV-137, INV-145, INV-147
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Reutilizar trabalho transacional de SetOpeningBalance sem execute aninhado; reconhecer custo+caixa real, não valuation, preservar OPENING_BALANCE_ALREADY_SET e saldo confirmado após falha de alocação.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full Memory + Build` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (Command); testes acompanham o componente nesta tarefa.
+**Gate**: Full Memory + Build
+**Commit**: `feat(investments): saldo inicial explícito idempotente`
+
+### Phase 9: Abertura e operações
+
+### T50: Abrir posição
+
+**What**: Entregar abrir posição conforme os requisitos abaixo.
+**Where**: `packages/application/src/investments/positions/open-investment-position.ts`
+**Depends on**: T49
+**Reuses**: Position, Operation, planner e executor T48.
+**Requirement**: INV-19, INV-20, INV-21, INV-27, INV-28, INV-29, INV-30, INV-32, INV-33, INV-34, INV-75, INV-78, INV-120, INV-121, INV-123, INV-127, INV-137, INV-145
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Criar Position e primeira OPENING_ALLOCATION ou compra em unidade atômica; distinguir origens, não inventar saldo/quantidade/custo, permitir caixa negativo com warning e não repetir saldo inicial separado.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 18 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (Command); testes acompanham o componente nesta tarefa.
+**Gate**: Full Memory
+**Commit**: `feat(investments): abrir posição`
+
+### T51: Registrar compra ou aplicação
+
+**What**: Entregar registrar compra ou aplicação conforme os requisitos abaixo.
+**Where**: `packages/application/src/investments/operations/record-investment-purchase.ts`
+**Depends on**: T50
+**Reuses**: Executor T48 e matriz T11.
+**Requirement**: INV-29, INV-30, INV-32, INV-34, INV-35, INV-36, INV-44, INV-45, INV-74, INV-75, INV-76, INV-77, INV-78, INV-118, INV-125, INV-126, INV-128, INV-145
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Registrar PURCHASE/APPLICATION com rota interna/externa explícita, datas/quantidade/custo/CAS; mesmo planner para ambas, journal só quando necessário e despesa não capitalizada.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 16 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (Command); testes acompanham o componente nesta tarefa.
+**Gate**: Full Memory
+**Commit**: `feat(investments): registrar compra ou aplicação`
+
+### T52: Registrar venda ou resgate
+
+**What**: Entregar registrar venda ou resgate conforme os requisitos abaixo.
+**Where**: `packages/application/src/investments/operations/record-investment-sale.ts`
+**Depends on**: T51
+**Reuses**: Position e planner; fixtures de venda da spec.
+**Requirement**: INV-35, INV-36, INV-37, INV-38, INV-39, INV-40, INV-41, INV-44, INV-45, INV-46, INV-51, INV-53, INV-74, INV-75, INV-76, INV-78, INV-126, INV-128, INV-139
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Registrar SALE/REDEMPTION com custo retirado explícito, ganho/perda e despesas, destinos interno/externo; fechar total, preservar zero custo com unidades e rejeitar redução inválida sem escolher FIFO/média.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 20 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (Command); testes acompanham o componente nesta tarefa.
+**Gate**: Full Memory
+**Commit**: `feat(investments): registrar venda ou resgate`
+
+### T53: Registrar rendimento
+
+**What**: Entregar registrar rendimento conforme os requisitos abaixo.
+**Where**: `packages/application/src/investments/operations/record-investment-income.ts`
+**Depends on**: T52
+**Reuses**: Planner e executor idempotente.
+**Requirement**: INV-42, INV-44, INV-74, INV-75, INV-76, INV-78, INV-119, INV-126, INV-129
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] R=100,f=2,t=10 produz I=88 e receita100/despesas12 numa operação; posição CLOSED ativa aceita fluxo sem reabrir/alocar nem criar FEE/TAX extra.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (Command); testes acompanham o componente nesta tarefa.
+**Gate**: Full Memory
+**Commit**: `feat(investments): registrar rendimento`
+
+### T54: Registrar amortização
+
+**What**: Entregar registrar amortização conforme os requisitos abaixo.
+**Where**: `packages/application/src/investments/operations/record-investment-amortization.ts`
+**Depends on**: T53
+**Reuses**: Planner e transições da Position.
+**Requirement**: INV-35, INV-42, INV-44, INV-46, INV-74, INV-75, INV-76, INV-78, INV-126, INV-128
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Reduzir custo sem alterar unidades, separar recebimento/principal/resultado/despesas; C1000 reduz200 recebe220 resulta custo800 e receita20.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (Command); testes acompanham o componente nesta tarefa.
+**Gate**: Full Memory
+**Commit**: `feat(investments): registrar amortização`
+
+### T55: Registrar taxa ou imposto independente
+
+**What**: Entregar registrar taxa ou imposto independente conforme os requisitos abaixo.
+**Where**: `packages/application/src/investments/operations/record-investment-expense.ts`
+**Depends on**: T54
+**Reuses**: RecordExpense como padrão e planner de investimento.
+**Requirement**: INV-32, INV-43, INV-44, INV-74, INV-75, INV-76, INV-78, INV-119, INV-126, INV-129, INV-145
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Comando discriminado FEE/TAX registra despesa posterior apenas uma vez em caixa interno; aceita CLOSED com vínculos ativos sem mudar revisão e retorna aviso se caixa negativo.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full Memory + Build` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (Command); testes acompanham o componente nesta tarefa.
+**Gate**: Full Memory + Build
+**Commit**: `feat(investments): registrar taxa ou imposto independente`
+
+### Phase 10: Correções, avaliações e proteção contábil
+
+### T56: Cancelar operação
+
+**What**: Entregar cancelar operação conforme os requisitos abaixo.
+**Where**: `packages/application/src/investments/operations/reverse-investment-operation.ts`
+**Depends on**: T55
+**Reuses**: Operation, Position.applyCorrection e JournalEntry.createReversal.
+**Requirement**: INV-61, INV-62, INV-63, INV-64, INV-65, INV-66, INV-67, INV-69, INV-70, INV-71, INV-72, INV-73, INV-74, INV-75, INV-76, INV-78, INV-128, INV-132, INV-133, INV-134, INV-144, INV-145
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Cancelar somente última efetiva; inverter deltas/postings persistidos e datar reversão no original; aplicar estado final uma vez, avançar revisão quando muda e bloquear reabertura sob cadastro arquivado.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 20 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (Command); testes acompanham o componente nesta tarefa.
+**Gate**: Full Memory
+**Commit**: `feat(investments): cancelar operação`
+
+### T57: Substituir operação
+
+**What**: Entregar substituir operação conforme os requisitos abaixo.
+**Where**: `packages/application/src/investments/operations/amend-investment-operation.ts`
+**Depends on**: T56
+**Reuses**: Cancelamento T56 e planner para fato novo, sem recalcular o antigo.
+**Requirement**: INV-61, INV-63, INV-64, INV-65, INV-66, INV-67, INV-68, INV-69, INV-70, INV-72, INV-73, INV-74, INV-75, INV-76, INV-78, INV-128, INV-129, INV-132, INV-133, INV-134, INV-135, INV-136, INV-144, INV-145
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Amendment mantém tipo/posição/conta, valida data entre anterior e hoje e uma única versão/revisão final; cobrir quatro combinações de journal e rollback após cada escrita sem links órfãos.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 24 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (Command); testes acompanham o componente nesta tarefa.
+**Gate**: Full Memory
+**Commit**: `feat(investments): substituir operação`
+
+### T58: Registrar avaliação manual
+
+**What**: Entregar registrar avaliação manual conforme os requisitos abaixo.
+**Where**: `packages/application/src/investments/valuations/record-investment-valuation.ts`
+**Depends on**: T57
+**Reuses**: Valuation T10, Clock e executor T48.
+**Requirement**: INV-47, INV-48, INV-49, INV-50, INV-51, INV-59, INV-74, INV-75, INV-78, INV-84, INV-127, INV-130, INV-131, INV-142
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Validar expectedAllocationRevision dentro da escrita, instante UTC não futuro/quantidade/moeda; append sem alterar Position.version e corrida operação-avaliação válida nas duas ordens.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 14 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (Command); testes acompanham o componente nesta tarefa.
+**Gate**: Full Memory
+**Commit**: `feat(investments): registrar avaliação manual`
+
+### T59: Guard de manutenção genérica do journal
+
+**What**: Entregar guard de manutenção genérica do journal conforme os requisitos abaixo.
+**Where**: `packages/application/src/ledger/journal/investment-journal-ownership.ts`
+**Depends on**: T58
+**Reuses**: findOwnerOfJournal e comandos genéricos existentes.
+**Requirement**: INV-63, INV-64, INV-67, INV-68, INV-69, INV-74, INV-102, INV-117, INV-135, INV-136
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Inserir guard em Reverse/Amend genéricos na transação para journal original/reversão/substituta de investimento; devolver INVESTMENT_OPERATION_REQUIRED sem alterar posição/journal/facts.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (Command); testes acompanham o componente nesta tarefa.
+**Gate**: Full Memory
+**Commit**: `feat(investments): guard de manutenção genérica do journal`
+
+### T60: Avisos em comandos financeiros comuns
+
+**What**: Entregar avisos em comandos financeiros comuns conforme os requisitos abaixo.
+**Where**: `packages/application/src/ledger/journal/investment-cash-warnings.ts`
+**Depends on**: T59
+**Reuses**: Leituras scoped T38/T39 e DTOs financeiros existentes.
+**Requirement**: INV-28, INV-31, INV-32, INV-60, INV-70, INV-75, INV-77, INV-145, INV-147
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Conectar helper pós-postings a Income/Expense/Transfer/OpeningBalance e correções genéricas; warning aditivo por toda carteira afetada, inclusive ambas numa transferência, sem bloquear ou criar operação de investimento.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 14 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (Command); testes acompanham o componente nesta tarefa.
+**Gate**: Full Memory
+**Commit**: `feat(investments): avisos em comandos financeiros comuns`
+
+### T61: Prévia da operação
+
+**What**: Entregar prévia da operação conforme os requisitos abaixo.
+**Where**: `packages/application/src/investments/queries/preview-investment-operation.ts`
+**Depends on**: T60
+**Reuses**: Planner e readers do contexto, sem executor de escrita.
+**Requirement**: INV-13, INV-36, INV-74, INV-76, INV-100, INV-139, INV-145, INV-148
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Read-only chama planner com estado atual e retorna custo/fluxo/categorias/caixa/versões; não grava recibo, ID, sequência ou fact; caixa negativo não é erro e confirmação revalida tudo.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full Memory + Build` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (Command); testes acompanham o componente nesta tarefa.
+**Gate**: Full Memory + Build
+**Commit**: `feat(investments): prévia da operação`
+
+### Phase 11: Consultas de investimentos
+
+### T62: Resumo patrimonial
+
+**What**: Entregar resumo patrimonial conforme os requisitos abaixo.
+**Where**: `packages/infrastructure-sqlite/src/queries/investments/sqlite-investment-portfolio-summary.ts`
+**Depends on**: T61
+**Reuses**: Agregador T37, índices e GetNetWorth como oráculo.
+**Requirement**: INV-09, INV-10, INV-50, INV-51, INV-52, INV-53, INV-54, INV-55, INV-56, INV-57, INV-58, INV-59, INV-60, INV-82, INV-93, INV-97, INV-130, INV-140, INV-141, INV-145, INV-146, INV-147
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Usar uma leitura consistente com D do livro, L/C/V e tupla vigente; fórmulas exatas >int64, cobertura real, custo fallback, moedas/vazio, arquivadas, warnings por carteira e filtro de lista sem efeito no total. Incluir o handler de aplicação que resolve Clock.localDate/moeda e repassa D uma única vez; testar o handler junto da consulta.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 20 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (SQLite); testes acompanham o componente nesta tarefa.
+**Gate**: Full SQLite
+**Commit**: `feat(investments-sqlite): resumo patrimonial`
+
+### T63: Consulta de carteiras
+
+**What**: Entregar consulta de carteiras conforme os requisitos abaixo.
+**Where**: `packages/infrastructure-sqlite/src/queries/investments/sqlite-investment-account-queries.ts`
+**Depends on**: T62
+**Reuses**: Leituras de totais e catalog queries.
+**Requirement**: INV-09, INV-10, INV-11, INV-55, INV-60, INV-74, INV-94, INV-107, INV-113, INV-145, INV-146
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] List/detail retornam metadata e totais por carteira sem histórico infinito ou N+1; settlement ausente permanece ausente e warnings/saldos preservam sinais/moeda. Incluir o handler de aplicação e validação da query correspondente, com testes próprios no mesmo commit.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (SQLite); testes acompanham o componente nesta tarefa.
+**Gate**: Full SQLite
+**Commit**: `feat(investments-sqlite): consulta de carteiras`
+
+### T64: Consulta de instrumentos
+
+**What**: Entregar consulta de instrumentos conforme os requisitos abaixo.
+**Where**: `packages/infrastructure-sqlite/src/queries/investments/sqlite-investment-instrument-queries.ts`
+**Depends on**: T63
+**Reuses**: Catalog query validation e índices de instrumentos.
+**Requirement**: INV-14, INV-15, INV-17, INV-18, INV-26, INV-74, INV-99, INV-114, INV-116
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Listar/detalhar instrumentos para manutenção e seleção, status/filtros/ordem determinísticos, identificadores normalizados e isolamento; seletores novos só ativos. Incluir o handler de aplicação e validação da query correspondente, com testes próprios no mesmo commit.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 8 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (SQLite); testes acompanham o componente nesta tarefa.
+**Gate**: Full SQLite
+**Commit**: `feat(investments-sqlite): consulta de instrumentos`
+
+### T65: Consulta de posições
+
+**What**: Entregar consulta de posições conforme os requisitos abaixo.
+**Where**: `packages/infrastructure-sqlite/src/queries/investments/sqlite-investment-position-queries.ts`
+**Depends on**: T64
+**Reuses**: QueryPage/QuerySlice e codecs existentes com prefixo ip1.
+**Requirement**: INV-19, INV-20, INV-22, INV-25, INV-26, INV-50, INV-51, INV-52, INV-53, INV-58, INV-59, INV-74, INV-95, INV-96, INV-97, INV-98, INV-130
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] List/detail paginados por nome/rótulo/ID e filtros, termos/valores vigentes; cursor25/100 com fingerprint, LIKE literal e joins indexados sem uma busca de aggregate por linha. Incluir o handler de aplicação e validação da query correspondente, com testes próprios no mesmo commit.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 16 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (SQLite); testes acompanham o componente nesta tarefa.
+**Gate**: Full SQLite
+**Commit**: `feat(investments-sqlite): consulta de posições`
+
+### T66: Histórico de operações
+
+**What**: Entregar histórico de operações conforme os requisitos abaixo.
+**Where**: `packages/infrastructure-sqlite/src/queries/investments/sqlite-investment-operation-queries.ts`
+**Depends on**: T65
+**Reuses**: Operation repository e codecs de query.
+**Requirement**: INV-61, INV-63, INV-64, INV-65, INV-68, INV-69, INV-72, INV-74, INV-96, INV-98, INV-117, INV-132, INV-133, INV-134, INV-135, INV-136
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Paginar por data/sequence/id, incluir efeitos/lineage histórico e vínculos de journal opcionais; cursor io1 valida livro/posição/filtros e não perde operação sem journal. Incluir o handler de aplicação e validação da query correspondente, com testes próprios no mesmo commit.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (SQLite); testes acompanham o componente nesta tarefa.
+**Gate**: Full SQLite
+**Commit**: `feat(investments-sqlite): histórico de operações`
+
+### T67: Histórico de avaliações
+
+**What**: Entregar histórico de avaliações conforme os requisitos abaixo.
+**Where**: `packages/infrastructure-sqlite/src/queries/investments/sqlite-investment-valuation-queries.ts`
+**Depends on**: T66
+**Reuses**: Índices de Valuation e codecs.
+**Requirement**: INV-47, INV-49, INV-50, INV-51, INV-53, INV-59, INV-74, INV-96, INV-98, INV-117, INV-127, INV-130
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Paginar observações por valuedAt/sequence/id com cursor iv1 independente das operações; preservar antigas revisões/valores desconhecidos e seleção vigente não usa ID aleatório. Incluir o handler de aplicação e validação da query correspondente, com testes próprios no mesmo commit.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full SQLite + Build` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (SQLite); testes acompanham o componente nesta tarefa.
+**Gate**: Full SQLite + Build
+**Commit**: `feat(investments-sqlite): histórico de avaliações`
+
+### Phase 12: Consultas existentes e composição
+
+### T68: Saldos e extrato exatos existentes
+
+**What**: Entregar saldos e extrato exatos existentes conforme os requisitos abaixo.
+**Where**: `packages/infrastructure-sqlite/src/queries/sqlite-ledger-queries.ts`
+**Depends on**: T67
+**Reuses**: SqliteExactLedgerTotals e testes atuais de ledger/statement.
+**Requirement**: INV-05, INV-06, INV-07, INV-31, INV-55, INV-57, INV-82, INV-140, INV-141
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Substituir somas vulneráveis nas consultas contábeis/saldos/extrato afetadas pelo helper sem mudar filtros, sinais, asOf ou paginação; testar totais além de int64 e lançamentos futuros.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (SQLite); testes acompanham o componente nesta tarefa.
+**Gate**: Full SQLite
+**Commit**: `feat(investments-sqlite): saldos e extrato exatos existentes`
+
+### T69: Insights exatos existentes
+
+**What**: Entregar insights exatos existentes conforme os requisitos abaixo.
+**Where**: `packages/infrastructure-sqlite/src/queries/sqlite-insight-queries.ts`
+**Depends on**: T68
+**Reuses**: Helper T37 e suites de insights.
+**Requirement**: INV-37, INV-38, INV-42, INV-43, INV-44, INV-55, INV-56, INV-57, INV-82, INV-103, INV-140, INV-141
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Migrar NetWorth, monthly cash flow e category spending para soma exata; preservar semântica temporal/reversões e somar renda/despesa mistas uma vez. O teste legado que exige uma única instrução agrupada deve passar a verificar leitura consistente, lotes limitados e ausência de N+1, preservando todos os oráculos monetários; a mudança decorre do design aprovado.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 14 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (SQLite); testes acompanham o componente nesta tarefa.
+**Gate**: Full SQLite
+**Commit**: `feat(investments-sqlite): insights exatos existentes`
+
+### T70: Read model INVESTMENT em Transações
+
+**What**: Entregar read model investment em transações conforme os requisitos abaixo.
+**Where**: `packages/infrastructure-sqlite/src/queries/sqlite-journal-view-queries.ts`
+**Depends on**: T69
+**Reuses**: Journal view DTOs, codecs/filtros e helper T37.
+**Requirement**: INV-31, INV-45, INV-63, INV-64, INV-67, INV-68, INV-69, INV-82, INV-98, INV-102, INV-103, INV-135, INV-136
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [ ] Classificar pelo ownership, expor operação/posição e canEditWithGenericFlow, amount=abs(netCashFlow); resumo por postings/kind, count/largest/lifecycle preservados e nenhuma linha artificial sem journal.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 16 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (SQLite); testes acompanham o componente nesta tarefa.
+**Gate**: Full SQLite
+**Commit**: `feat(investments-sqlite): read model investment em transações`
+
+### T71: Composição MyFinServices
+
+**What**: Entregar composição myfinservices conforme os requisitos abaixo.
+**Where**: `apps/tauri/src/bootstrap/create-services.ts`
+**Depends on**: T70
+**Reuses**: Providers e create-services existentes.
+**Requirement**: INV-74, INV-78, INV-80, INV-89, INV-91, INV-92, INV-101, INV-104
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven. Usar shadcn ao compor componentes da biblioteca; playwright quando aplicável à evidência em navegador.
+
+**Done when**:
+
+- [ ] Conectar comandos e queries completos à facade investments e adaptadores reais, sem imports SQLite na UI; fakes públicos refletem a interface e retry consulta recibo.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full React + Build` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (React); testes acompanham o componente nesta tarefa.
+**Gate**: Full React + Build
+**Commit**: `feat(investments-ui): composição myfinservices`
+
+### Phase 13: Estado de UI e cadastros
+
+### T72: Consultas e cache de investimentos na UI
+
+**What**: Entregar consultas e cache de investimentos na ui conforme os requisitos abaixo.
+**Where**: `apps/tauri/src/features/investments/hooks/investment-queries.ts`
+**Depends on**: T71
+**Reuses**: React Query, useActiveBook e key factories existentes.
+**Requirement**: INV-50, INV-58, INV-74, INV-93, INV-94, INV-95, INV-96, INV-97, INV-98, INV-104, INV-105, INV-106, INV-107, INV-108, INV-140, INV-141
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven. Usar shadcn ao compor componentes da biblioteca; playwright quando aplicável à evidência em navegador.
+
+**Done when**:
+
+- [ ] Criar hooks via uma factory de queries do livro, cursores independentes e defer só search; refetch/focus/mudança do dia recalculam D sem dia fixo de 24h; chave antiga nunca contamina livro novo.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 16 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full React` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (React); testes acompanham o componente nesta tarefa.
+**Gate**: Full React
+**Commit**: `feat(investments-ui): consultas e cache de investimentos na ui`
+
+### T73: Submissão de investimentos na UI
+
+**What**: Entregar submissão de investimentos na ui conforme os requisitos abaixo.
+**Where**: `apps/tauri/src/features/investments/hooks/use-investment-submission.ts`
+**Depends on**: T72
+**Reuses**: useTransactionFormSubmission e mutation helpers.
+**Requirement**: INV-74, INV-76, INV-78, INV-79, INV-80, INV-90, INV-104, INV-105, INV-109, INV-111, INV-131, INV-145, INV-148
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven. Usar shadcn ao compor componentes da biblioteca; playwright quando aplicável à evidência em navegador.
+
+**Done when**:
+
+- [ ] Manter requestId/draft no retry, gerar nova intenção só ao editar, recuperar resposta indeterminada e invalidar livro original; impedir duplo envio e preservar campos em erro/conflito, warning é sucesso.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 16 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full React` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (React); testes acompanham o componente nesta tarefa.
+**Gate**: Full React
+**Commit**: `feat(investments-ui): submissão de investimentos na ui`
+
+### T74: Classificação no formulário de conta
+
+**What**: Entregar classificação no formulário de conta conforme os requisitos abaixo.
+**Where**: `apps/tauri/src/features/accounts/components/account-form.tsx`
+**Depends on**: T73
+**Reuses**: AccountForm RHF e controles existentes.
+**Requirement**: INV-01, INV-07, INV-08, INV-11, INV-12, INV-13, INV-99, INV-110, INV-115, INV-138
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven. Usar shadcn ao compor componentes da biblioteca; playwright quando aplicável à evidência em navegador.
+
+**Done when**:
+
+- [ ] Adicionar tipo/instituição/referência e configuração explícita de settlement/reclassificação; explicar OTHER sem inventar postings, bloquear incompatibilidades pelo erro do comando e preservar foco/validação.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 14 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full React` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (React); testes acompanham o componente nesta tarefa.
+**Gate**: Full React
+**Commit**: `feat(investments-ui): classificação no formulário de conta`
+
+### T75: Resumo contábil em Contas
+
+**What**: Entregar resumo contábil em contas conforme os requisitos abaixo.
+**Where**: `apps/tauri/src/features/accounts/components/account-summary.tsx`
+**Depends on**: T74
+**Reuses**: AccountSummaryModel e query de resumo.
+**Requirement**: INV-09, INV-10, INV-57, INV-93, INV-107, INV-138, INV-143
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven. Usar shadcn ao compor componentes da biblioteca; playwright quando aplicável à evidência em navegador.
+
+**Done when**:
+
+- [ ] Exibir Patrimônio contábil com moeda do livro, inclusive vazio não-BRL; separar disponível/outros ativos conforme query e orientar classificação pós-migração.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 8 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full React` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (React); testes acompanham o componente nesta tarefa.
+**Gate**: Full React
+**Commit**: `feat(investments-ui): resumo contábil em contas`
+
+### T76: Formulário de instrumento
+
+**What**: Entregar formulário de instrumento conforme os requisitos abaixo.
+**Where**: `apps/tauri/src/features/investments/forms/investment-instrument-form.tsx`
+**Depends on**: T75
+**Reuses**: Controlled fields, Drawer, DropdownMenu e hooks de submissão.
+**Requirement**: INV-14, INV-15, INV-16, INV-17, INV-18, INV-26, INV-99, INV-101, INV-109, INV-110, INV-111, INV-114, INV-116
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven. Usar shadcn ao compor componentes da biblioteca; playwright quando aplicável à evidência em navegador.
+
+**Done when**:
+
+- [ ] Cadastrar/editar/arquivar/reativar instrumento com identificadores e erros estáveis; não alterar tipo após uso nem criar catálogo como efeito oculto da operação.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 14 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full React` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (React); testes acompanham o componente nesta tarefa.
+**Gate**: Full React
+**Commit**: `feat(investments-ui): formulário de instrumento`
+
+### T77: Formulário de metadata da posição
+
+**What**: Entregar formulário de metadata da posição conforme os requisitos abaixo.
+**Where**: `apps/tauri/src/features/investments/forms/investment-position-metadata-form.tsx`
+**Depends on**: T76
+**Reuses**: Drawer e UpdateInvestmentPositionMetadata.
+**Requirement**: INV-20, INV-26, INV-101, INV-109, INV-110, INV-111, INV-129
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven. Usar shadcn ao compor componentes da biblioteca; playwright quando aplicável à evidência em navegador.
+
+**Done when**:
+
+- [ ] Editar rótulo via caso dedicado, termos imutáveis no detalhe, conflito preserva draft; payload não permite custo/quantidade/revisão.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 6 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full React + Build` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (React); testes acompanham o componente nesta tarefa.
+**Gate**: Full React + Build
+**Commit**: `feat(investments-ui): formulário de metadata da posição`
+
+### Phase 14: Formulários de abertura e operações
+
+### T78: Formulário de abertura
+
+**What**: Entregar formulário de abertura conforme os requisitos abaixo.
+**Where**: `apps/tauri/src/features/investments/forms/open-investment-position-form.tsx`
+**Depends on**: T77
+**Reuses**: Catálogos existentes, forms T74/T76 e preview T61.
+**Requirement**: INV-19, INV-21, INV-22, INV-23, INV-27, INV-28, INV-33, INV-99, INV-100, INV-101, INV-109, INV-110, INV-111, INV-120, INV-121, INV-122, INV-123, INV-124, INV-137, INV-138, INV-145, INV-148
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven. Usar shadcn ao compor componentes da biblioteca; playwright quando aplicável à evidência em navegador.
+
+**Done when**:
+
+- [ ] Oferecer Já possuo/Comprar e três origens contábeis, quantidade obrigatória nos produtos definidos e termos parciais; saldo inicial confirma separadamente e falha de alocação não o repete.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 20 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full React` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (React); testes acompanham o componente nesta tarefa.
+**Gate**: Full React
+**Commit**: `feat(investments-ui): formulário de abertura`
+
+### T79: Formulário de compra/aplicação
+
+**What**: Entregar formulário de compra/aplicação conforme os requisitos abaixo.
+**Where**: `apps/tauri/src/features/investments/forms/investment-purchase-form.tsx`
+**Depends on**: T78
+**Reuses**: Preview e submissão de investimentos.
+**Requirement**: INV-13, INV-29, INV-30, INV-32, INV-36, INV-100, INV-101, INV-109, INV-110, INV-111, INV-118, INV-125, INV-126, INV-145, INV-148
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven. Usar shadcn ao compor componentes da biblioteca; playwright quando aplicável à evidência em navegador.
+
+**Done when**:
+
+- [ ] Solicitar principal, quantidade aplicável, despesas/categorias e rota explícita; pré-seleção de settlement não decide silenciosamente, preview negativo mantém Salvar habilitado.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full React` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (React); testes acompanham o componente nesta tarefa.
+**Gate**: Full React
+**Commit**: `feat(investments-ui): formulário de compra/aplicação`
+
+### T80: Formulário de venda/resgate
+
+**What**: Entregar formulário de venda/resgate conforme os requisitos abaixo.
+**Where**: `apps/tauri/src/features/investments/forms/investment-sale-form.tsx`
+**Depends on**: T79
+**Reuses**: Preview, query de Position e campos monetários exatos.
+**Requirement**: INV-13, INV-35, INV-36, INV-37, INV-38, INV-39, INV-40, INV-41, INV-100, INV-101, INV-109, INV-110, INV-111, INV-126, INV-139, INV-148
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven. Usar shadcn ao compor componentes da biblioteca; playwright quando aplicável à evidência em navegador.
+
+**Done when**:
+
+- [ ] Separar custo retirado de bruto recebido, unidades/total/parcial e despesas; total preenche custo exato, parcial não inventa média e confirmação mostra efeitos/categorias.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 16 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full React` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (React); testes acompanham o componente nesta tarefa.
+**Gate**: Full React
+**Commit**: `feat(investments-ui): formulário de venda/resgate`
+
+### T81: Formulário de rendimento
+
+**What**: Entregar formulário de rendimento conforme os requisitos abaixo.
+**Where**: `apps/tauri/src/features/investments/forms/investment-income-form.tsx`
+**Depends on**: T80
+**Reuses**: Campos controlados e RecordInvestmentIncome.
+**Requirement**: INV-42, INV-44, INV-100, INV-101, INV-109, INV-110, INV-111, INV-119, INV-126, INV-148
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven. Usar shadcn ao compor componentes da biblioteca; playwright quando aplicável à evidência em navegador.
+
+**Done when**:
+
+- [ ] Capturar bruto e retenções do evento com categorias, inclusive posição encerrada em vínculos ativos; uma submissão INCOME sem FEE/TAX duplicadas.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full React` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (React); testes acompanham o componente nesta tarefa.
+**Gate**: Full React
+**Commit**: `feat(investments-ui): formulário de rendimento`
+
+### T82: Formulário de amortização
+
+**What**: Entregar formulário de amortização conforme os requisitos abaixo.
+**Where**: `apps/tauri/src/features/investments/forms/investment-amortization-form.tsx`
+**Depends on**: T81
+**Reuses**: Campos controlados e RecordInvestmentAmortization.
+**Requirement**: INV-42, INV-44, INV-46, INV-100, INV-101, INV-109, INV-110, INV-111, INV-126, INV-148
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven. Usar shadcn ao compor componentes da biblioteca; playwright quando aplicável à evidência em navegador.
+
+**Done when**:
+
+- [ ] Pedir custo reduzido e bruto/despesas, sem edição de unidades; preview mostra efeito no custo/resultado e erros mantêm dados.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full React` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (React); testes acompanham o componente nesta tarefa.
+**Gate**: Full React
+**Commit**: `feat(investments-ui): formulário de amortização`
+
+### T83: Formulário de despesa de investimento
+
+**What**: Entregar formulário de despesa de investimento conforme os requisitos abaixo.
+**Where**: `apps/tauri/src/features/investments/forms/investment-expense-form.tsx`
+**Depends on**: T82
+**Reuses**: RecordInvestmentExpense e form de despesa existente.
+**Requirement**: INV-32, INV-43, INV-44, INV-100, INV-101, INV-109, INV-110, INV-111, INV-119, INV-126, INV-145, INV-148
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven. Usar shadcn ao compor componentes da biblioteca; playwright quando aplicável à evidência em navegador.
+
+**Done when**:
+
+- [ ] Oferecer FEE/TAX independente com categoria explícita e caixa interno; explicar vínculo à posição e permitir aviso negativo sem segunda confirmação.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full React + Build` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (React); testes acompanham o componente nesta tarefa.
+**Gate**: Full React + Build
+**Commit**: `feat(investments-ui): formulário de despesa de investimento`
+
+### Phase 15: Avaliação, correção e listas
+
+### T84: Formulário de avaliação
+
+**What**: Entregar formulário de avaliação conforme os requisitos abaixo.
+**Where**: `apps/tauri/src/features/investments/forms/investment-valuation-form.tsx`
+**Depends on**: T83
+**Reuses**: RecordInvestmentValuation e query de detalhe.
+**Requirement**: INV-47, INV-48, INV-49, INV-58, INV-59, INV-100, INV-101, INV-109, INV-110, INV-111, INV-130, INV-131, INV-142
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven. Usar shadcn ao compor componentes da biblioteca; playwright quando aplicável à evidência em navegador.
+
+**Done when**:
+
+- [ ] Enviar bruto/instante e revisão observada, opcionais desconhecidos e quantidade coerente; revisão obsoleta exige recarregar sem converter valuation em custo ou lucro informado.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 14 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full React` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (React); testes acompanham o componente nesta tarefa.
+**Gate**: Full React
+**Commit**: `feat(investments-ui): formulário de avaliação`
+
+### T85: Formulário de correção
+
+**What**: Entregar formulário de correção conforme os requisitos abaixo.
+**Where**: `apps/tauri/src/features/investments/forms/investment-correction-form.tsx`
+**Depends on**: T84
+**Reuses**: Forms de operações e comandos T56/T57.
+**Requirement**: INV-61, INV-62, INV-65, INV-67, INV-68, INV-69, INV-70, INV-72, INV-73, INV-100, INV-101, INV-109, INV-110, INV-111, INV-128, INV-129, INV-134, INV-135, INV-136, INV-144, INV-148
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven. Usar shadcn ao compor componentes da biblioteca; playwright quando aplicável à evidência em navegador.
+
+**Done when**:
+
+- [ ] Oferecer cancelamento/amendment da última efetiva com motivo e versões, reutilizando form específico do tipo; datas da reversão são derivadas, não editáveis, e conflitos mantêm draft.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 18 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full React` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (React); testes acompanham o componente nesta tarefa.
+**Gate**: Full React
+**Commit**: `feat(investments-ui): formulário de correção`
+
+### T86: Cards patrimoniais
+
+**What**: Entregar cards patrimoniais conforme os requisitos abaixo.
+**Where**: `apps/tauri/src/features/investments/components/investment-portfolio-summary.tsx`
+**Depends on**: T85
+**Reuses**: formatMinorAmount e componentes Card/ErrorState.
+**Requirement**: INV-09, INV-10, INV-52, INV-53, INV-54, INV-56, INV-58, INV-59, INV-60, INV-93, INV-106, INV-107, INV-108, INV-112, INV-140, INV-141, INV-146, INV-147
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven. Usar shadcn ao compor componentes da biblioteca; playwright quando aplicável à evidência em navegador.
+
+**Done when**:
+
+- [ ] Exibir disponível/contábil/avaliado, moeda/data/cobertura e desconhecidos; loading/erro não viram zero e total com inconsistência conserva fórmula/aviso até caixa corrigido.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full React` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (React); testes acompanham o componente nesta tarefa.
+**Gate**: Full React
+**Commit**: `feat(investments-ui): cards patrimoniais`
+
+### T87: Lista de carteiras
+
+**What**: Entregar lista de carteiras conforme os requisitos abaixo.
+**Where**: `apps/tauri/src/features/investments/components/investment-account-list.tsx`
+**Depends on**: T86
+**Reuses**: Query de carteiras, DropdownMenu e forms de contas.
+**Requirement**: INV-11, INV-55, INV-60, INV-94, INV-106, INV-107, INV-108, INV-112, INV-113, INV-115, INV-116, INV-145, INV-146, INV-147
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven. Usar shadcn ao compor componentes da biblioteca; playwright quando aplicável à evidência em navegador.
+
+**Done when**:
+
+- [ ] Mostrar L/C/caixa/valor/resultado por carteira, seleção e ações de configuração/lifecycle com erros, vazio e aviso visível mesmo se caixa agregado for positivo.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full React` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (React); testes acompanham o componente nesta tarefa.
+**Gate**: Full React
+**Commit**: `feat(investments-ui): lista de carteiras`
+
+### T88: Tabela de posições
+
+**What**: Entregar tabela de posições conforme os requisitos abaixo.
+**Where**: `apps/tauri/src/features/investments/components/investment-position-table.tsx`
+**Depends on**: T87
+**Reuses**: Query hooks, tabela e DropdownMenu compartilhados.
+**Requirement**: INV-19, INV-25, INV-26, INV-52, INV-53, INV-58, INV-59, INV-95, INV-97, INV-98, INV-106, INV-107, INV-108, INV-110, INV-112, INV-118
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven. Usar shadcn ao compor componentes da biblioteca; playwright quando aplicável à evidência em navegador.
+
+**Done when**:
+
+- [ ] Exibir instrumento/rótulo/carteira/classe/quantidade/custo/base/status e filtros paginados; ações respeitam estado, tabela rola internamente em viewport estreito.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full React + Build` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (React); testes acompanham o componente nesta tarefa.
+**Gate**: Full React + Build
+**Commit**: `feat(investments-ui): tabela de posições`
+
+### Phase 16: Históricos e integração da navegação
+
+### T89: Histórico visual de operações
+
+**What**: Entregar histórico visual de operações conforme os requisitos abaixo.
+**Where**: `apps/tauri/src/features/investments/components/investment-operation-history.tsx`
+**Depends on**: T88
+**Reuses**: Query de histórico e form T85.
+**Requirement**: INV-61, INV-63, INV-64, INV-65, INV-68, INV-69, INV-72, INV-73, INV-96, INV-98, INV-106, INV-108, INV-110, INV-112, INV-117, INV-132, INV-133, INV-134, INV-135, INV-136
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven. Usar shadcn ao compor componentes da biblioteca; playwright quando aplicável à evidência em navegador.
+
+**Done when**:
+
+- [ ] Mostrar fatos/reversões/substituições, efeitos e datas de ocorrência/registro, journal opcional e acesso à correção somente da última efetiva; paginação isolada.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full React` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (React); testes acompanham o componente nesta tarefa.
+**Gate**: Full React
+**Commit**: `feat(investments-ui): histórico visual de operações`
+
+### T90: Histórico visual de avaliações
+
+**What**: Entregar histórico visual de avaliações conforme os requisitos abaixo.
+**Where**: `apps/tauri/src/features/investments/components/investment-valuation-history.tsx`
+**Depends on**: T89
+**Reuses**: Query de avaliações e form T84.
+**Requirement**: INV-47, INV-49, INV-50, INV-51, INV-53, INV-58, INV-59, INV-96, INV-98, INV-106, INV-108, INV-112, INV-117, INV-127, INV-130
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven. Usar shadcn ao compor componentes da biblioteca; playwright quando aplicável à evidência em navegador.
+
+**Done when**:
+
+- [ ] Mostrar observações antigas/atuais e revisão/data, opcionais desconhecidos e cadastro append; cursor independente sem substituir histórico ao avaliar.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full React` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (React); testes acompanham o componente nesta tarefa.
+**Gate**: Full React
+**Commit**: `feat(investments-ui): histórico visual de avaliações`
+
+### T91: Detalhe da posição
+
+**What**: Entregar detalhe da posição conforme os requisitos abaixo.
+**Where**: `apps/tauri/src/features/investments/components/investment-position-detail.tsx`
+**Depends on**: T90
+**Reuses**: Componentes T84–T90 e hooks da feature.
+**Requirement**: INV-20, INV-22, INV-25, INV-26, INV-52, INV-53, INV-59, INV-61, INV-74, INV-95, INV-96, INV-101, INV-105, INV-106, INV-108, INV-110, INV-112, INV-119, INV-144
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven. Usar shadcn ao compor componentes da biblioteca; playwright quando aplicável à evidência em navegador.
+
+**Done when**:
+
+- [ ] Compor termos, estado, ações e tabs dos dois históricos sem ler tudo de uma vez; ID de outro livro não abre detalhe e conta/instrumento arquivado orienta reativação.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 14 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full React` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (React); testes acompanham o componente nesta tarefa.
+**Gate**: Full React
+**Commit**: `feat(investments-ui): detalhe da posição`
+
+### T92: Página Investimentos
+
+**What**: Entregar página investimentos conforme os requisitos abaixo.
+**Where**: `apps/tauri/src/features/investments/components/investments-page.tsx`
+**Depends on**: T91
+**Reuses**: Cards/listas/forms prontos e contexto do shell.
+**Requirement**: INV-91, INV-92, INV-93, INV-94, INV-95, INV-97, INV-99, INV-101, INV-104, INV-105, INV-106, INV-107, INV-108, INV-110, INV-111, INV-112, INV-138, INV-146, INV-147, INV-148
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven. Usar shadcn ao compor componentes da biblioteca; playwright quando aplicável à evidência em navegador.
+
+**Done when**:
+
+- [ ] Compor resumo, carteiras, posições e drawers com todas as ações; filtro não muda total, troca de livro limpa estado e mutation anterior só invalida seu livro.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 18 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full React` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (React); testes acompanham o componente nesta tarefa.
+**Gate**: Full React
+**Commit**: `feat(investments-ui): página investimentos`
+
+### T93: Rotas e navegação de investimentos
+
+**What**: Entregar rotas e navegação de investimentos conforme os requisitos abaixo.
+**Where**: `apps/tauri/src/routes/app-routes.tsx`
+**Depends on**: T92
+**Reuses**: React Router e ApplicationShell existentes.
+**Requirement**: INV-74, INV-91, INV-92, INV-96, INV-99, INV-101, INV-105, INV-110, INV-112
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven. Usar shadcn ao compor componentes da biblioteca; playwright quando aplicável à evidência em navegador.
+
+**Done when**:
+
+- [ ] Registrar /investments e /investments/positions/:positionId sob shell, item/breadcrumb e proteção por livro; executar jornada nativa descrita no gate Native, sem mudar dashboard. Native N1–N6/N8 e o trecho de teclado/layout de Investimentos de N7 são parte deste aceite. A navegação e apresentação INVESTMENT em Transações de N7 são verificadas em T94, quando o componente estiver integrado.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full React + Native (N1–N6/N8 e N7 parcial)` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (React); testes acompanham o componente nesta tarefa.
+**Gate**: Full React + Native (N1–N6/N8 e N7 parcial)
+**Commit**: `feat(investments-ui): rotas e navegação de investimentos`
+
+### T94: Integração visual com Transações
+
+**What**: Entregar integração visual com transações conforme os requisitos abaixo.
+**Where**: `apps/tauri/src/features/transactions/components/transaction-table.tsx`
+**Depends on**: T93
+**Reuses**: TransactionTable, filtros, Drawer e queries atuais.
+**Requirement**: INV-31, INV-45, INV-63, INV-64, INV-67, INV-68, INV-69, INV-98, INV-102, INV-103, INV-104, INV-109, INV-110, INV-112, INV-135, INV-136
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven. Usar shadcn ao compor componentes da biblioteca; playwright quando aplicável à evidência em navegador.
+
+**Done when**:
+
+- [ ] Exibir tipo/filtro/detalhe INVESTMENT e vínculo ao detalhe, ocultar edição genérica e preservar busca/paginação/menus; renderizar receitas/despesas mistas do read model sem recalcular por linha. Revalidar N7 e caminhos nativos afetados, rodar Final e manter toda evidência de T93 válida no estado final.
+- [ ] Escrever/atualizar no mesmo commit pelo menos 14 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [ ] Gate `Full React + Build + Final + Native afetado` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (React); testes acompanham o componente nesta tarefa.
+**Gate**: Full React + Build + Final + Native afetado
+**Commit**: `feat(investments-ui): integração visual com transações`
+
+## Task Granularity Check
+
+Um componente/caso de uso por tarefa, com testes e integrações mecânicas do mesmo contrato. Não usar o ponto principal como permissão para agregar funcionalidades adjacentes.
+
+| Task | Scope | Status |
+| --- | --- | --- |
+| T1 | Decimal exato | ✅ Um componente/contrato coeso |
+| T2 | Validação dos valores de investimento | ✅ Um componente/contrato coeso |
+| T3 | Perfis financeiros | ✅ Um componente/contrato coeso |
+| T4 | Perfil no aggregate LedgerAccount | ✅ Um componente/contrato coeso |
+| T5 | Identidades de investimentos | ✅ Um componente/contrato coeso |
+| T6 | Aggregate InvestmentInstrument | ✅ Um componente/contrato coeso |
+| T7 | Termos de renda fixa | ✅ Um componente/contrato coeso |
+| T8 | Aggregate InvestmentPosition | ✅ Um componente/contrato coeso |
+| T9 | Aggregate InvestmentOperation | ✅ Um componente/contrato coeso |
+| T10 | Observação InvestmentValuation | ✅ Um componente/contrato coeso |
+| T11 | Planner contábil de investimentos | ✅ Um componente/contrato coeso |
+| T12 | Contratos de comandos e resultados | ✅ Um componente/contrato coeso |
+| T13 | Ports de persistência de investimento | ✅ Um componente/contrato coeso |
+| T14 | Contratos das consultas de investimento | ✅ Um componente/contrato coeso |
+| T15 | Registro dos facts no dispatcher | ✅ Um componente/contrato coeso |
+| T16 | Resultado preservado após commit | ✅ Um componente/contrato coeso |
+| T17 | Migração de perfis financeiros | ✅ Um componente/contrato coeso |
+| T18 | Migração de instrumentos | ✅ Um componente/contrato coeso |
+| T19 | Migração de posições e termos | ✅ Um componente/contrato coeso |
+| T20 | Migração de operações e sequência | ✅ Um componente/contrato coeso |
+| T21 | Migração de avaliações | ✅ Um componente/contrato coeso |
+| T22 | Migração de recibos | ✅ Um componente/contrato coeso |
+| T23 | Persistência do perfil no LedgerAccount | ✅ Um componente/contrato coeso |
+| T24 | Repository SQLite de instrumentos | ✅ Um componente/contrato coeso |
+| T25 | Repository SQLite de posições | ✅ Um componente/contrato coeso |
+| T26 | Repository SQLite de operações | ✅ Um componente/contrato coeso |
+| T27 | Store SQLite de avaliações | ✅ Um componente/contrato coeso |
+| T28 | Store SQLite de recibos | ✅ Um componente/contrato coeso |
+| T29 | Store SQLite de sequência | ✅ Um componente/contrato coeso |
+| T30 | Snapshot de investimentos em memória | ✅ Um componente/contrato coeso |
+| T31 | Repository em memória de instrumentos | ✅ Um componente/contrato coeso |
+| T32 | Repository em memória de posições | ✅ Um componente/contrato coeso |
+| T33 | Repository em memória de operações | ✅ Um componente/contrato coeso |
+| T34 | Store em memória de avaliações | ✅ Um componente/contrato coeso |
+| T35 | Store em memória de recibos | ✅ Um componente/contrato coeso |
+| T36 | Store em memória de sequência | ✅ Um componente/contrato coeso |
+| T37 | Agregador exato de postings | ✅ Um componente/contrato coeso |
+| T38 | Leituras transacionais SQLite | ✅ Um componente/contrato coeso |
+| T39 | Leituras transacionais em memória | ✅ Um componente/contrato coeso |
+| T40 | Contexto transacional com investimentos | ✅ Um componente/contrato coeso |
+| T41 | Criação de conta pelo tipo financeiro | ✅ Um componente/contrato coeso |
+| T42 | Configuração financeira e liquidação | ✅ Um componente/contrato coeso |
+| T43 | Política de lifecycle de contas | ✅ Um componente/contrato coeso |
+| T44 | Criar instrumento | ✅ Um componente/contrato coeso |
+| T45 | Atualizar instrumento | ✅ Um componente/contrato coeso |
+| T46 | Lifecycle de instrumento | ✅ Um componente/contrato coeso |
+| T47 | Metadata da posição | ✅ Um componente/contrato coeso |
+| T48 | Execução idempotente de investimento | ✅ Um componente/contrato coeso |
+| T49 | Saldo inicial explícito idempotente | ✅ Um componente/contrato coeso |
+| T50 | Abrir posição | ✅ Um componente/contrato coeso |
+| T51 | Registrar compra ou aplicação | ✅ Um componente/contrato coeso |
+| T52 | Registrar venda ou resgate | ✅ Um componente/contrato coeso |
+| T53 | Registrar rendimento | ✅ Um componente/contrato coeso |
+| T54 | Registrar amortização | ✅ Um componente/contrato coeso |
+| T55 | Registrar taxa ou imposto independente | ✅ Um componente/contrato coeso |
+| T56 | Cancelar operação | ✅ Um componente/contrato coeso |
+| T57 | Substituir operação | ✅ Um componente/contrato coeso |
+| T58 | Registrar avaliação manual | ✅ Um componente/contrato coeso |
+| T59 | Guard de manutenção genérica do journal | ✅ Um componente/contrato coeso |
+| T60 | Avisos em comandos financeiros comuns | ✅ Um componente/contrato coeso |
+| T61 | Prévia da operação | ✅ Um componente/contrato coeso |
+| T62 | Resumo patrimonial | ✅ Um componente/contrato coeso |
+| T63 | Consulta de carteiras | ✅ Um componente/contrato coeso |
+| T64 | Consulta de instrumentos | ✅ Um componente/contrato coeso |
+| T65 | Consulta de posições | ✅ Um componente/contrato coeso |
+| T66 | Histórico de operações | ✅ Um componente/contrato coeso |
+| T67 | Histórico de avaliações | ✅ Um componente/contrato coeso |
+| T68 | Saldos e extrato exatos existentes | ✅ Um componente/contrato coeso |
+| T69 | Insights exatos existentes | ✅ Um componente/contrato coeso |
+| T70 | Read model INVESTMENT em Transações | ✅ Um componente/contrato coeso |
+| T71 | Composição MyFinServices | ✅ Um componente/contrato coeso |
+| T72 | Consultas e cache de investimentos na UI | ✅ Um componente/contrato coeso |
+| T73 | Submissão de investimentos na UI | ✅ Um componente/contrato coeso |
+| T74 | Classificação no formulário de conta | ✅ Um componente/contrato coeso |
+| T75 | Resumo contábil em Contas | ✅ Um componente/contrato coeso |
+| T76 | Formulário de instrumento | ✅ Um componente/contrato coeso |
+| T77 | Formulário de metadata da posição | ✅ Um componente/contrato coeso |
+| T78 | Formulário de abertura | ✅ Um componente/contrato coeso |
+| T79 | Formulário de compra/aplicação | ✅ Um componente/contrato coeso |
+| T80 | Formulário de venda/resgate | ✅ Um componente/contrato coeso |
+| T81 | Formulário de rendimento | ✅ Um componente/contrato coeso |
+| T82 | Formulário de amortização | ✅ Um componente/contrato coeso |
+| T83 | Formulário de despesa de investimento | ✅ Um componente/contrato coeso |
+| T84 | Formulário de avaliação | ✅ Um componente/contrato coeso |
+| T85 | Formulário de correção | ✅ Um componente/contrato coeso |
+| T86 | Cards patrimoniais | ✅ Um componente/contrato coeso |
+| T87 | Lista de carteiras | ✅ Um componente/contrato coeso |
+| T88 | Tabela de posições | ✅ Um componente/contrato coeso |
+| T89 | Histórico visual de operações | ✅ Um componente/contrato coeso |
+| T90 | Histórico visual de avaliações | ✅ Um componente/contrato coeso |
+| T91 | Detalhe da posição | ✅ Um componente/contrato coeso |
+| T92 | Página Investimentos | ✅ Um componente/contrato coeso |
+| T93 | Rotas e navegação de investimentos | ✅ Um componente/contrato coeso |
+| T94 | Integração visual com Transações | ✅ Um componente/contrato coeso |
+
+## Diagram-Definition Cross-Check
+
+| Task | Depends On (task body) | Diagram Shows | Status |
+| --- | --- | --- | --- |
+| T1 | None | None | ✅ Match |
+| T2 | T1 | T1 | ✅ Match |
+| T3 | T2 | T2 | ✅ Match |
+| T4 | T3 | T3 | ✅ Match |
+| T5 | T4 | T4 | ✅ Match |
+| T6 | T5 | T5 | ✅ Match |
+| T7 | T6 | T6 | ✅ Match |
+| T8 | T7 | T7 | ✅ Match |
+| T9 | T8 | T8 | ✅ Match |
+| T10 | T9 | T9 | ✅ Match |
+| T11 | T10 | T10 | ✅ Match |
+| T12 | T11 | T11 | ✅ Match |
+| T13 | T12 | T12 | ✅ Match |
+| T14 | T13 | T13 | ✅ Match |
+| T15 | T14 | T14 | ✅ Match |
+| T16 | T15 | T15 | ✅ Match |
+| T17 | T16 | T16 | ✅ Match |
+| T18 | T17 | T17 | ✅ Match |
+| T19 | T18 | T18 | ✅ Match |
+| T20 | T19 | T19 | ✅ Match |
+| T21 | T20 | T20 | ✅ Match |
+| T22 | T21 | T21 | ✅ Match |
+| T23 | T22 | T22 | ✅ Match |
+| T24 | T23 | T23 | ✅ Match |
+| T25 | T24 | T24 | ✅ Match |
+| T26 | T25 | T25 | ✅ Match |
+| T27 | T26 | T26 | ✅ Match |
+| T28 | T27 | T27 | ✅ Match |
+| T29 | T28 | T28 | ✅ Match |
+| T30 | T29 | T29 | ✅ Match |
+| T31 | T30 | T30 | ✅ Match |
+| T32 | T31 | T31 | ✅ Match |
+| T33 | T32 | T32 | ✅ Match |
+| T34 | T33 | T33 | ✅ Match |
+| T35 | T34 | T34 | ✅ Match |
+| T36 | T35 | T35 | ✅ Match |
+| T37 | T36 | T36 | ✅ Match |
+| T38 | T37 | T37 | ✅ Match |
+| T39 | T38 | T38 | ✅ Match |
+| T40 | T39 | T39 | ✅ Match |
+| T41 | T40 | T40 | ✅ Match |
+| T42 | T41 | T41 | ✅ Match |
+| T43 | T42 | T42 | ✅ Match |
+| T44 | T43 | T43 | ✅ Match |
+| T45 | T44 | T44 | ✅ Match |
+| T46 | T45 | T45 | ✅ Match |
+| T47 | T46 | T46 | ✅ Match |
+| T48 | T47 | T47 | ✅ Match |
+| T49 | T48 | T48 | ✅ Match |
+| T50 | T49 | T49 | ✅ Match |
+| T51 | T50 | T50 | ✅ Match |
+| T52 | T51 | T51 | ✅ Match |
+| T53 | T52 | T52 | ✅ Match |
+| T54 | T53 | T53 | ✅ Match |
+| T55 | T54 | T54 | ✅ Match |
+| T56 | T55 | T55 | ✅ Match |
+| T57 | T56 | T56 | ✅ Match |
+| T58 | T57 | T57 | ✅ Match |
+| T59 | T58 | T58 | ✅ Match |
+| T60 | T59 | T59 | ✅ Match |
+| T61 | T60 | T60 | ✅ Match |
+| T62 | T61 | T61 | ✅ Match |
+| T63 | T62 | T62 | ✅ Match |
+| T64 | T63 | T63 | ✅ Match |
+| T65 | T64 | T64 | ✅ Match |
+| T66 | T65 | T65 | ✅ Match |
+| T67 | T66 | T66 | ✅ Match |
+| T68 | T67 | T67 | ✅ Match |
+| T69 | T68 | T68 | ✅ Match |
+| T70 | T69 | T69 | ✅ Match |
+| T71 | T70 | T70 | ✅ Match |
+| T72 | T71 | T71 | ✅ Match |
+| T73 | T72 | T72 | ✅ Match |
+| T74 | T73 | T73 | ✅ Match |
+| T75 | T74 | T74 | ✅ Match |
+| T76 | T75 | T75 | ✅ Match |
+| T77 | T76 | T76 | ✅ Match |
+| T78 | T77 | T77 | ✅ Match |
+| T79 | T78 | T78 | ✅ Match |
+| T80 | T79 | T79 | ✅ Match |
+| T81 | T80 | T80 | ✅ Match |
+| T82 | T81 | T81 | ✅ Match |
+| T83 | T82 | T82 | ✅ Match |
+| T84 | T83 | T83 | ✅ Match |
+| T85 | T84 | T84 | ✅ Match |
+| T86 | T85 | T85 | ✅ Match |
+| T87 | T86 | T86 | ✅ Match |
+| T88 | T87 | T87 | ✅ Match |
+| T89 | T88 | T88 | ✅ Match |
+| T90 | T89 | T89 | ✅ Match |
+| T91 | T90 | T90 | ✅ Match |
+| T92 | T91 | T91 | ✅ Match |
+| T93 | T92 | T92 | ✅ Match |
+| T94 | T93 | T93 | ✅ Match |
+
+## Test Co-location Validation
+
+| Task | Code Layer Created/Modified | Matrix Requires | Task Says | Status |
+| --- | --- | --- | --- | --- |
+| T1 | Domain | unit | unit | ✅ Mesmo commit |
+| T2 | Domain | unit | unit | ✅ Mesmo commit |
+| T3 | Domain | unit | unit | ✅ Mesmo commit |
+| T4 | Domain | unit | unit | ✅ Mesmo commit |
+| T5 | Domain | unit | unit | ✅ Mesmo commit |
+| T6 | Domain | unit | unit | ✅ Mesmo commit |
+| T7 | Domain | unit | unit | ✅ Mesmo commit |
+| T8 | Domain | unit | unit | ✅ Mesmo commit |
+| T9 | Domain | unit | unit | ✅ Mesmo commit |
+| T10 | Domain | unit | unit | ✅ Mesmo commit |
+| T11 | Domain | unit | unit | ✅ Mesmo commit |
+| T12 | Application | unit | unit | ✅ Mesmo commit |
+| T13 | Application | unit | unit | ✅ Mesmo commit |
+| T14 | Application | unit | unit | ✅ Mesmo commit |
+| T15 | Application | unit | unit | ✅ Mesmo commit |
+| T16 | Application | unit | unit | ✅ Mesmo commit |
+| T17 | SQLite | integration | integration | ✅ Mesmo commit |
+| T18 | SQLite | integration | integration | ✅ Mesmo commit |
+| T19 | SQLite | integration | integration | ✅ Mesmo commit |
+| T20 | SQLite | integration | integration | ✅ Mesmo commit |
+| T21 | SQLite | integration | integration | ✅ Mesmo commit |
+| T22 | SQLite | integration | integration | ✅ Mesmo commit |
+| T23 | SQLite | integration | integration | ✅ Mesmo commit |
+| T24 | SQLite | integration | integration | ✅ Mesmo commit |
+| T25 | SQLite | integration | integration | ✅ Mesmo commit |
+| T26 | SQLite | integration | integration | ✅ Mesmo commit |
+| T27 | SQLite | integration | integration | ✅ Mesmo commit |
+| T28 | SQLite | integration | integration | ✅ Mesmo commit |
+| T29 | SQLite | integration | integration | ✅ Mesmo commit |
+| T30 | Memory | integration | integration | ✅ Mesmo commit |
+| T31 | Memory | integration | integration | ✅ Mesmo commit |
+| T32 | Memory | integration | integration | ✅ Mesmo commit |
+| T33 | Memory | integration | integration | ✅ Mesmo commit |
+| T34 | Memory | integration | integration | ✅ Mesmo commit |
+| T35 | Memory | integration | integration | ✅ Mesmo commit |
+| T36 | Memory | integration | integration | ✅ Mesmo commit |
+| T37 | SQLite | integration | integration | ✅ Mesmo commit |
+| T38 | SQLite | integration | integration | ✅ Mesmo commit |
+| T39 | Memory | integration | integration | ✅ Mesmo commit |
+| T40 | Integration | integration | integration | ✅ Mesmo commit |
+| T41 | Command | integration | integration | ✅ Mesmo commit |
+| T42 | Command | integration | integration | ✅ Mesmo commit |
+| T43 | Command | integration | integration | ✅ Mesmo commit |
+| T44 | Command | integration | integration | ✅ Mesmo commit |
+| T45 | Command | integration | integration | ✅ Mesmo commit |
+| T46 | Command | integration | integration | ✅ Mesmo commit |
+| T47 | Command | integration | integration | ✅ Mesmo commit |
+| T48 | Command | integration | integration | ✅ Mesmo commit |
+| T49 | Command | integration | integration | ✅ Mesmo commit |
+| T50 | Command | integration | integration | ✅ Mesmo commit |
+| T51 | Command | integration | integration | ✅ Mesmo commit |
+| T52 | Command | integration | integration | ✅ Mesmo commit |
+| T53 | Command | integration | integration | ✅ Mesmo commit |
+| T54 | Command | integration | integration | ✅ Mesmo commit |
+| T55 | Command | integration | integration | ✅ Mesmo commit |
+| T56 | Command | integration | integration | ✅ Mesmo commit |
+| T57 | Command | integration | integration | ✅ Mesmo commit |
+| T58 | Command | integration | integration | ✅ Mesmo commit |
+| T59 | Command | integration | integration | ✅ Mesmo commit |
+| T60 | Command | integration | integration | ✅ Mesmo commit |
+| T61 | Command | integration | integration | ✅ Mesmo commit |
+| T62 | SQLite | integration | integration | ✅ Mesmo commit |
+| T63 | SQLite | integration | integration | ✅ Mesmo commit |
+| T64 | SQLite | integration | integration | ✅ Mesmo commit |
+| T65 | SQLite | integration | integration | ✅ Mesmo commit |
+| T66 | SQLite | integration | integration | ✅ Mesmo commit |
+| T67 | SQLite | integration | integration | ✅ Mesmo commit |
+| T68 | SQLite | integration | integration | ✅ Mesmo commit |
+| T69 | SQLite | integration | integration | ✅ Mesmo commit |
+| T70 | SQLite | integration | integration | ✅ Mesmo commit |
+| T71 | React | integration | integration | ✅ Mesmo commit |
+| T72 | React | integration | integration | ✅ Mesmo commit |
+| T73 | React | integration | integration | ✅ Mesmo commit |
+| T74 | React | integration | integration | ✅ Mesmo commit |
+| T75 | React | integration | integration | ✅ Mesmo commit |
+| T76 | React | integration | integration | ✅ Mesmo commit |
+| T77 | React | integration | integration | ✅ Mesmo commit |
+| T78 | React | integration | integration | ✅ Mesmo commit |
+| T79 | React | integration | integration | ✅ Mesmo commit |
+| T80 | React | integration | integration | ✅ Mesmo commit |
+| T81 | React | integration | integration | ✅ Mesmo commit |
+| T82 | React | integration | integration | ✅ Mesmo commit |
+| T83 | React | integration | integration | ✅ Mesmo commit |
+| T84 | React | integration | integration | ✅ Mesmo commit |
+| T85 | React | integration | integration | ✅ Mesmo commit |
+| T86 | React | integration | integration | ✅ Mesmo commit |
+| T87 | React | integration | integration | ✅ Mesmo commit |
+| T88 | React | integration | integration | ✅ Mesmo commit |
+| T89 | React | integration | integration | ✅ Mesmo commit |
+| T90 | React | integration | integration | ✅ Mesmo commit |
+| T91 | React | integration | integration | ✅ Mesmo commit |
+| T92 | React | integration | integration | ✅ Mesmo commit |
+| T93 | React | integration | integration | ✅ Mesmo commit |
+| T94 | React | integration | integration | ✅ Mesmo commit |
+
+## Requirement Traceability
+
+Mapeamento de planejamento, não evidência de implementação. Cada ID também conserva sua seção responsável em design.md. Durante Execute, acrescentar assertions e file:line à evidência da tarefa e do Verifier.
+
+| Requirement ID | Tasks | Status |
+| --- | --- | --- |
+| INV-01 | T3, T17, T23, T41, T74 | Planned |
+| INV-02 | T3, T4, T41 | Planned |
+| INV-03 | T3, T4, T17, T23, T41 | Planned |
+| INV-04 | T4, T15, T23, T30, T41, T42 | Planned |
+| INV-05 | T17, T23, T68 | Planned |
+| INV-06 | T17, T23, T68 | Planned |
+| INV-07 | T4, T23, T42, T68, T74 | Planned |
+| INV-08 | T42, T43, T74 | Planned |
+| INV-09 | T14, T62, T63, T75, T86 | Planned |
+| INV-10 | T14, T62, T63, T75, T86 | Planned |
+| INV-138 | T42, T74, T75, T78, T92 | Planned |
+| INV-11 | T3, T4, T23, T41, T42, T63, T74, T87 | Planned |
+| INV-12 | T3, T38, T39, T42, T43, T74 | Planned |
+| INV-13 | T42, T61, T74, T79, T80 | Planned |
+| INV-14 | T6, T18, T24, T31, T44, T64, T76 | Planned |
+| INV-15 | T6, T44, T64, T76 | Planned |
+| INV-16 | T6, T24, T44, T45, T76 | Planned |
+| INV-17 | T6, T18, T24, T31, T44, T45, T64, T76 | Planned |
+| INV-18 | T6, T18, T24, T31, T44, T45, T64, T76 | Planned |
+| INV-19 | T5, T8, T19, T25, T32, T50, T65, T78, T88 | Planned |
+| INV-20 | T8, T12, T19, T25, T32, T47, T50, T65, T77, T91 | Planned |
+| INV-21 | T2, T8, T19, T25, T50, T78 | Planned |
+| INV-22 | T7, T19, T25, T65, T78, T91 | Planned |
+| INV-23 | T7, T19, T25, T78 | Planned |
+| INV-24 | T2, T7 | Planned |
+| INV-25 | T7, T8, T65, T88, T91 | Planned |
+| INV-26 | T6, T7, T8, T24, T25, T31, T45, T47, T64, T65, T76, T77, T88, T91 | Planned |
+| INV-27 | T11, T50, T78 | Planned |
+| INV-28 | T38, T39, T50, T60, T78 | Planned |
+| INV-29 | T11, T50, T51, T79 | Planned |
+| INV-30 | T11, T50, T51, T79 | Planned |
+| INV-31 | T60, T68, T70, T94 | Planned |
+| INV-32 | T38, T39, T50, T51, T55, T60, T79, T83 | Planned |
+| INV-33 | T50, T78 | Planned |
+| INV-34 | T9, T50, T51 | Planned |
+| INV-120 | T49, T50, T78 | Planned |
+| INV-121 | T49, T50, T78 | Planned |
+| INV-122 | T49, T78 | Planned |
+| INV-123 | T2, T49, T50, T78 | Planned |
+| INV-124 | T49, T78 | Planned |
+| INV-137 | T49, T50, T78 | Planned |
+| INV-35 | T8, T11, T51, T52, T54, T80 | Planned |
+| INV-36 | T2, T11, T12, T51, T52, T61, T79, T80 | Planned |
+| INV-37 | T11, T52, T69, T80 | Planned |
+| INV-38 | T11, T52, T69, T80 | Planned |
+| INV-39 | T8, T11, T52, T80 | Planned |
+| INV-40 | T8, T11, T52, T80 | Planned |
+| INV-41 | T11, T52, T80 | Planned |
+| INV-42 | T11, T53, T54, T69, T81, T82 | Planned |
+| INV-43 | T11, T55, T69, T83 | Planned |
+| INV-44 | T11, T51, T52, T53, T54, T55, T69, T81, T82, T83 | Planned |
+| INV-45 | T11, T51, T52, T70, T94 | Planned |
+| INV-46 | T8, T11, T52, T54, T82 | Planned |
+| INV-125 | T11, T51, T79 | Planned |
+| INV-126 | T11, T51, T52, T53, T54, T55, T79, T80, T81, T82, T83 | Planned |
+| INV-139 | T52, T61, T80 | Planned |
+| INV-47 | T10, T21, T27, T34, T58, T67, T84, T90 | Planned |
+| INV-48 | T2, T10, T27, T58, T84 | Planned |
+| INV-49 | T10, T21, T27, T34, T58, T67, T84, T90 | Planned |
+| INV-50 | T14, T21, T27, T29, T34, T36, T58, T62, T65, T67, T72, T90 | Planned |
+| INV-51 | T8, T52, T58, T62, T65, T67, T90 | Planned |
+| INV-52 | T14, T62, T65, T86, T88, T91 | Planned |
+| INV-53 | T8, T52, T62, T65, T67, T86, T88, T90, T91 | Planned |
+| INV-54 | T14, T62, T86 | Planned |
+| INV-55 | T14, T37, T38, T39, T62, T63, T68, T69, T87 | Planned |
+| INV-56 | T14, T37, T62, T69, T86 | Planned |
+| INV-57 | T14, T37, T62, T68, T69, T75 | Planned |
+| INV-58 | T14, T62, T65, T72, T84, T86, T88, T90 | Planned |
+| INV-59 | T10, T14, T58, T62, T65, T67, T84, T86, T88, T90, T91 | Planned |
+| INV-60 | T14, T38, T39, T60, T62, T63, T86, T87 | Planned |
+| INV-127 | T8, T19, T21, T25, T27, T30, T32, T47, T50, T58, T67, T90 | Planned |
+| INV-128 | T8, T25, T51, T52, T54, T56, T57, T85 | Planned |
+| INV-129 | T8, T47, T53, T55, T57, T77, T85 | Planned |
+| INV-130 | T58, T62, T65, T67, T84, T90 | Planned |
+| INV-131 | T12, T58, T73, T84 | Planned |
+| INV-140 | T14, T37, T38, T39, T62, T68, T69, T72, T86 | Planned |
+| INV-141 | T14, T37, T38, T39, T62, T68, T69, T72, T86 | Planned |
+| INV-142 | T10, T58, T84 | Planned |
+| INV-146 | T62, T63, T86, T87, T92 | Planned |
+| INV-147 | T49, T60, T62, T86, T87, T92 | Planned |
+| INV-61 | T9, T26, T33, T56, T57, T66, T85, T89, T91 | Planned |
+| INV-62 | T8, T56, T85 | Planned |
+| INV-63 | T9, T20, T26, T33, T56, T57, T59, T66, T70, T89, T94 | Planned |
+| INV-64 | T9, T20, T26, T33, T56, T57, T59, T66, T70, T89, T94 | Planned |
+| INV-65 | T9, T26, T33, T56, T57, T66, T85, T89 | Planned |
+| INV-66 | T9, T56, T57 | Planned |
+| INV-67 | T56, T57, T59, T70, T85, T94 | Planned |
+| INV-68 | T9, T20, T26, T57, T59, T66, T70, T85, T89, T94 | Planned |
+| INV-69 | T9, T20, T26, T33, T56, T57, T59, T66, T70, T85, T89, T94 | Planned |
+| INV-70 | T56, T57, T60, T85 | Planned |
+| INV-71 | T8, T56 | Planned |
+| INV-72 | T9, T20, T26, T29, T33, T36, T56, T57, T66, T85, T89 | Planned |
+| INV-73 | T9, T56, T57, T85, T89 | Planned |
+| INV-132 | T9, T11, T13, T20, T26, T30, T33, T56, T57, T66, T89 | Planned |
+| INV-133 | T9, T20, T26, T56, T57, T66, T89 | Planned |
+| INV-134 | T9, T20, T26, T56, T57, T66, T85, T89 | Planned |
+| INV-135 | T26, T57, T59, T66, T70, T85, T89, T94 | Planned |
+| INV-136 | T26, T57, T59, T66, T70, T85, T89, T94 | Planned |
+| INV-74 | T12, T13, T18, T19, T20, T21, T23, T24, T25, T26, T27, T28, T31, T32, T33, T34, T35, T40, T41, T42, T43, T44, T45, T46, T47, T48, T51, T52, T53, T54, T55, T56, T57, T58, T59, T61, T63, T64, T65, T66, T67, T71, T72, T73, T91, T93 | Planned |
+| INV-75 | T13, T16, T22, T28, T29, T30, T35, T36, T40, T48, T50, T51, T52, T53, T54, T55, T56, T57, T58, T60 | Planned |
+| INV-76 | T4, T12, T13, T23, T24, T25, T26, T31, T32, T33, T40, T42, T45, T46, T47, T48, T51, T52, T53, T54, T55, T56, T57, T61, T73 | Planned |
+| INV-77 | T38, T39, T40, T48, T51, T60 | Planned |
+| INV-78 | T5, T12, T13, T16, T22, T28, T35, T40, T48, T49, T50, T51, T52, T53, T54, T55, T56, T57, T58, T71, T73 | Planned |
+| INV-79 | T12, T22, T28, T35, T48, T73 | Planned |
+| INV-80 | T16, T22, T28, T35, T40, T48, T71, T73 | Planned |
+| INV-81 | T9, T15, T16, T40, T44, T45, T46, T48 | Planned |
+| INV-82 | T1, T2, T10, T12, T29, T36, T37, T62, T68, T69, T70 | Planned |
+| INV-83 | T1, T2, T6, T10, T12, T44, T45, T47 | Planned |
+| INV-84 | T2, T10, T12, T48, T58 | Planned |
+| INV-85 | T17, T18, T19, T20, T21, T22 | Planned |
+| INV-86 | T17, T18, T19, T20, T21, T22 | Planned |
+| INV-87 | T17, T18, T22 | Planned |
+| INV-88 | T13, T17, T21, T23, T24, T25, T26, T27, T28, T29, T30, T34, T40 | Planned |
+| INV-89 | T5, T6, T12, T13, T40, T44, T71 | Planned |
+| INV-90 | T12, T15, T16, T48, T73 | Planned |
+| INV-145 | T12, T38, T39, T48, T49, T50, T51, T55, T56, T57, T60, T61, T62, T63, T73, T78, T79, T83, T87 | Planned |
+| INV-91 | T71, T92, T93 | Planned |
+| INV-92 | T71, T92, T93 | Planned |
+| INV-93 | T14, T62, T72, T75, T86, T92 | Planned |
+| INV-94 | T14, T63, T72, T87, T92 | Planned |
+| INV-95 | T14, T65, T72, T88, T91, T92 | Planned |
+| INV-96 | T14, T65, T66, T67, T72, T89, T90, T91, T93 | Planned |
+| INV-97 | T14, T62, T65, T72, T88, T92 | Planned |
+| INV-98 | T14, T65, T66, T67, T70, T72, T88, T89, T90, T94 | Planned |
+| INV-99 | T64, T74, T76, T78, T92, T93 | Planned |
+| INV-100 | T61, T78, T79, T80, T81, T82, T83, T84, T85 | Planned |
+| INV-101 | T71, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T91, T92, T93 | Planned |
+| INV-102 | T59, T70, T94 | Planned |
+| INV-103 | T37, T69, T70, T94 | Planned |
+| INV-104 | T71, T72, T73, T92, T94 | Planned |
+| INV-105 | T72, T73, T91, T92, T93 | Planned |
+| INV-106 | T72, T86, T87, T88, T89, T90, T91, T92 | Planned |
+| INV-107 | T63, T72, T75, T86, T87, T88, T92 | Planned |
+| INV-108 | T72, T86, T87, T88, T89, T90, T91, T92 | Planned |
+| INV-109 | T73, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T94 | Planned |
+| INV-110 | T74, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T88, T89, T91, T92, T93, T94 | Planned |
+| INV-111 | T73, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T92 | Planned |
+| INV-112 | T86, T87, T88, T89, T90, T91, T92, T93, T94 | Planned |
+| INV-143 | T75 | Planned |
+| INV-148 | T61, T73, T78, T79, T80, T81, T82, T83, T85, T92 | Planned |
+| INV-113 | T25, T32, T38, T39, T43, T63, T87 | Planned |
+| INV-114 | T6, T24, T25, T31, T32, T46, T64, T76 | Planned |
+| INV-115 | T38, T39, T42, T43, T74, T87 | Planned |
+| INV-116 | T6, T24, T31, T43, T46, T64, T76, T87 | Planned |
+| INV-117 | T46, T59, T66, T67, T89, T90 | Planned |
+| INV-118 | T8, T51, T79, T88 | Planned |
+| INV-119 | T8, T53, T55, T81, T83, T91 | Planned |
+| INV-144 | T8, T43, T46, T56, T57, T85, T91 | Planned |
+
+## Edge Case Coverage
+
+Os 35 fixtures de Edge Cases da spec têm responsáveis explícitos. A entrada e o resultado obrigatório permanecem na spec como oráculo; os testes não os calculam pelo planner da implementação.
+
+| Cenário da spec | Tasks responsáveis |
+| --- | --- |
+| Compra interna sem despesas | T11, T51, T62 |
+| Compra externa com despesas | T11, T51, T70 |
+| Venda com ganho | T11, T52 |
+| Venda com perda | T11, T52 |
+| Ganho menor que despesas | T11, T52, T70 |
+| Sem resultado, mas com despesas | T11, T52 |
+| Resgate direto | T11, T52 |
+| Venda parcial | T8, T52 |
+| Avaliação antes de venda parcial | T52, T58, T62 |
+| Custo zero com unidades | T8, T52 |
+| Amortização | T11, T54 |
+| Empate de avaliação | T58, T62, T67 |
+| Dado antigo inserido depois | T58, T62 |
+| Moedas distintas | T6, T44 |
+| Precisão | T1, T2 |
+| Caixa negativo legado | T38, T62, T87 |
+| Resumo independente de filtro | T62, T65, T92 |
+| Retry após resposta perdida | T48, T50, T73 |
+| Cancelamento inicial | T8, T56 |
+| Venda com despesas no caixa interno | T11, T52 |
+| Venda com despesas direto ao banco | T11, T52 |
+| Rendimento com retenção no evento | T11, T53 |
+| Caixa já reconhecido na carteira | T50, T78 |
+| Patrimônio inicialmente ausente | T49, T50, T62 |
+| Patrimônio ausente com caixa real | T49, T50, T62 |
+| Cancelamento não recupera valuation anterior | T8, T56, T62 |
+| Amendment sem mudança de alocação | T8, T57, T62 |
+| Avaliação aberta antes de venda | T58, T84 |
+| Amendment passa a ter journal | T57, T66, T70 |
+| Amendment deixa de ter journal | T57, T66, T70 |
+| Abertura antes de completar ledger | T50, T62, T86 |
+| Recuperação do caixa | T49, T60, T62, T86 |
+| Compra com caixa insuficiente | T51, T79 |
+| Lançamento futuro no ledger | T37, T62, T69 |
+| Avaliação de quantidade divergente | T10, T58, T84 |
+
+## Ferramentas propostas e fechamento futuro
+
+O plano usa ferramentas locais para ler/editar/executar gates, tlc-spec-driven durante todo Execute, shadcn nas tarefas de componentes aplicáveis e playwright quando o cenário puder ser verificado em navegador real. Não há MCP externo necessário nem plugin financeiro a instalar. Antes de Execute, confirmar as ferramentas por tarefa e a eventual delegação conforme a skill; essa confirmação não é necessária para produzir este documento. Nenhum worker foi iniciado.
+
+Após o último commit, o Verifier novo verifica assertions contra os 148 ACs, rastreabilidade e evidência nativa, além dos sensores de D13: bruto da venda tratado como renda, taxa duplicada, valuation reaproveitada após saída, revisão antiga restaurada, bypass do guard, recibo fora do rollback, reversão excluída do saldo e caixa negativo bloqueado. Usar scratch isolado; nunca alterar o worktree real para mutações. validation.md só será criado quando houver verificação real. Após o Verifier, executar `python3 .codex/skills/tlc-spec-driven/scripts/validate_state.py investments-foundation`; gaps ou Native pendente impedem declarar conclusão, mesmo que a validação estrutural passe.
+
+## Validação deste plano
+
+Em 2026-09-10, validate_tasks.py --strict e validate_spec.py --strict retornaram zero erros e zero avisos. Foram conferidas granularidade, correspondência entre diagramas/dependências e co-localização de testes nas tabelas acima. Rastreabilidade: 148/148 requisitos e 35/35 fixtures da spec possuem tarefas responsáveis. Não há testes de software rodados, tarefas concluídas ou commits de implementação.
