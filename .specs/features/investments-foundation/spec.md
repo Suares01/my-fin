@@ -543,11 +543,11 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-19 | S2 | Tasks | In progress: T5 identities | T5, T8, T19, T25, T32, T50, T65, T78, T88 |
 | INV-20 | S2 | Tasks | Planned | T8, T12, T19, T25, T32, T47, T50, T65, T77, T91 |
 | INV-21 | S2 | Tasks | In progress: T2 values | T2, T8, T19, T25, T50, T78 |
-| INV-22 | S2 | Tasks | Planned | T7, T19, T25, T65, T78, T91 |
-| INV-23 | S2 | Tasks | Planned | T7, T19, T25, T78 |
-| INV-24 | S2 | Tasks | In progress: T2 values | T2, T7 |
-| INV-25 | S2 | Tasks | Planned | T7, T8, T65, T88, T91 |
-| INV-26 | S2 | Tasks | In progress: T6 instrument | T6, T7, T8, T24, T25, T31, T45, T47, T64, T65, T76, T77, T88, T91 |
+| INV-22 | S2 | Tasks | In progress: T7 fixed-income terms | T7, T19, T25, T65, T78, T91 |
+| INV-23 | S2 | Tasks | In progress: T7 fixed-income terms | T7, T19, T25, T78 |
+| INV-24 | S2 | Tasks | In progress: T2 values; T7 fixed-income terms | T2, T7 |
+| INV-25 | S2 | Tasks | In progress: T7 fixed-income terms | T7, T8, T65, T88, T91 |
+| INV-26 | S2 | Tasks | In progress: T6 instrument; T7 fixed-income terms | T6, T7, T8, T24, T25, T31, T45, T47, T64, T65, T76, T77, T88, T91 |
 | INV-27 | S3 | Tasks | Planned | T11, T50, T78 |
 | INV-28 | S3 | Tasks | Planned | T38, T39, T50, T60, T78 |
 | INV-29 | S3 | Tasks | Planned | T11, T50, T51, T79 |

@@ -30,3 +30,4 @@ export type {
 export * from "./ledger/accounts/index.js"
 export * from "./ledger/journal/index.js"
 export * from "./investments/instruments/index.js"
+export * from "./investments/positions/index.js"

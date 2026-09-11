@@ -449,13 +449,35 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Aceitar termos desconhecidos e variantes PREFIXED/INDEXED/HYBRID completas; validar pares de datas conhecidos e índices, sem calcular remuneração ou encerrar por vencimento.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 14 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Quick Domain` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Aceitar termos desconhecidos e variantes PREFIXED/INDEXED/HYBRID completas; validar pares de datas conhecidos e índices, sem calcular remuneração ou encerrar por vencimento.
+- [x] Escrever/atualizar no mesmo commit pelo menos 14 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Quick Domain` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: unit (Domain); testes acompanham o componente nesta tarefa.
 **Gate**: Quick Domain
 **Commit**: `feat(investments-domain): termos de renda fixa`
+
+**Execution evidence**: before T7 Domain: 15 files, 285 tests; after: 16 files, 311 tests. `fixed-income-terms.test.ts` adds 26 spec-derived scenarios. Quick Domain, supplemental domain lint and `git diff --check` passed.
+
+| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| INV-22 | `fixed-income-terms.test.ts:16` `expect(...).toEqual({ rateKind: "PREFIXED", annualRate: "12.5" })`; `:26` INDEXED; `:37-42` HYBRID; `:7` `toBeUndefined()` | Unknown terms and each complete rate variant are accepted. | Yes |
+| INV-23 | `fixed-income-terms.test.ts:110-116` `expectInvalid(...)`; `:119-130` `expectInvalid(...)`; `:146-151` `expectInvalid(...)`; `:154-157` `expectInvalid(...)` | Terms outside FIXED_INCOME, incomplete variants and invalid known date pairs reject with `INVALID_FIXED_INCOME_TERMS`. | Yes |
+| INV-24 | `fixed-income-terms.test.ts:26` `expect(...).toEqual(...indexPercentage: "105")`; `:88-96` `expect(...).toBe("0")` | 105% and non-negative decimal rates/spreads are accepted without a 100 cap. | Yes |
+| INV-25 | `fixed-income-terms.test.ts:59-64` `expect(...maturityDate).toBe("2020-01-01")` | Elapsed maturity remains descriptive; no remuneration or closing is calculated. | Yes |
+| INV-26 | `fixed-income-terms.test.ts:99-107` `expect(...annualRate).toBe("10")` | Contracted terms remain immutable through snapshot copies. | Yes |
+
+| Evidence | Maps to | Keep? |
+| --- | --- | --- |
+| `fixed-income-terms.test.ts:7` `expect(...).toBeUndefined()` | INV-22 unknown terms | Yes |
+| `:16`, `:26`, `:37-42` `expect(...).toEqual(...)` | INV-22 variants | Yes |
+| `:52-56`, `:74` `expect(...).toEqual(...)` | INV-22 partial terms and known dates | Yes |
+| `:64` `expect(...).toBe("2020-01-01")` | INV-25 maturity does not close | Yes |
+| `:85`, `:96` `expect(...).toEqual(...)` / `toBe("0")` | INV-24 allowed index and non-negative rates | Yes |
+| `:107` `expect(...annualRate).toBe("10")` | INV-26 immutable terms snapshot | Yes |
+| `:110-116`, `:119-130`, `:133-143`, `:146-157`, `:167` `expect(...code).toBe("INVALID_FIXED_INCOME_TERMS")` | INV-23 invalid class, components, index/rates and dates | Yes |
+
+**Adequacy verdict**: PASS. The 26 direct assertions cover every selected rate branch, allowed partial/unknown terms, all known-date ordering pairs, immutable snapshots and the stable rejection code. No test relies on a mock or tautology; the Domain co-location follows the Test Coverage Matrix.
 
 ### T8: Aggregate InvestmentPosition
 
