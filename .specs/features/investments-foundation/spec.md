@@ -523,12 +523,12 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | Requirement ID | Story | Phase | Status | Tasks |
 | --- | --- | --- | --- | --- |
 | INV-01 | S1 | Tasks | In progress: T3 profiles | T3, T17, T23, T41, T74 |
-| INV-02 | S1 | Tasks | In progress: T3 profiles | T3, T4, T41 |
-| INV-03 | S1 | Tasks | In progress: T3 profiles | T3, T4, T17, T23, T41 |
-| INV-04 | S1 | Tasks | Planned | T4, T15, T23, T30, T41, T42 |
+| INV-02 | S1 | Tasks | In progress: T3 profiles; T4 aggregate | T3, T4, T41 |
+| INV-03 | S1 | Tasks | In progress: T3 profiles; T4 aggregate | T3, T4, T17, T23, T41 |
+| INV-04 | S1 | Tasks | In progress: T4 aggregate | T4, T15, T23, T30, T41, T42 |
 | INV-05 | S1 | Tasks | Planned | T17, T23, T68 |
 | INV-06 | S1 | Tasks | Planned | T17, T23, T68 |
-| INV-07 | S1 | Tasks | Planned | T4, T23, T42, T68, T74 |
+| INV-07 | S1 | Tasks | In progress: T4 aggregate | T4, T23, T42, T68, T74 |
 | INV-08 | S1 | Tasks | Planned | T42, T43, T74 |
 | INV-09 | S1 | Tasks | Planned | T14, T62, T63, T75, T86 |
 | INV-10 | S1 | Tasks | Planned | T14, T62, T63, T75, T86 |
@@ -597,7 +597,7 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-73 | S6 | Tasks | Planned | T9, T56, T57, T85, T89 |
 | INV-74 | S7 | Tasks | Planned | T12, T13, T18, T19, T20, T21, T23, T24, T25, T26, T27, T28, T31, T32, T33, T34, T35, T40, T41, T42, T43, T44, T45, T46, T47, T48, T51, T52, T53, T54, T55, T56, T57, T58, T59, T61, T63, T64, T65, T66, T67, T71, T72, T73, T91, T93 |
 | INV-75 | S7 | Tasks | Planned | T13, T16, T22, T28, T29, T30, T35, T36, T40, T48, T50, T51, T52, T53, T54, T55, T56, T57, T58, T60 |
-| INV-76 | S7 | Tasks | Planned | T4, T12, T13, T23, T24, T25, T26, T31, T32, T33, T40, T42, T45, T46, T47, T48, T51, T52, T53, T54, T55, T56, T57, T61, T73 |
+| INV-76 | S7 | Tasks | In progress: T4 aggregate | T4, T12, T13, T23, T24, T25, T26, T31, T32, T33, T40, T42, T45, T46, T47, T48, T51, T52, T53, T54, T55, T56, T57, T61, T73 |
 | INV-77 | S7 | Tasks | Planned | T38, T39, T40, T48, T51, T60 |
 | INV-78 | S7 | Tasks | Planned | T5, T12, T13, T16, T22, T28, T35, T40, T48, T49, T50, T51, T52, T53, T54, T55, T56, T57, T58, T71, T73 |
 | INV-79 | S7 | Tasks | Planned | T12, T22, T28, T35, T48, T73 |

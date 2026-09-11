@@ -2,6 +2,11 @@ import type { BookId, LedgerAccountId } from "../../shared/identity/ids.js"
 import { AggregateRoot } from "../../shared/kernel/aggregate-root.js"
 import { DomainError } from "../../shared/kernel/domain-error.js"
 import {
+  assertFinancialAccountProfileAllowed,
+  FinancialAccountProfile,
+  type FinancialAccountProfileSnapshot,
+} from "../../accounts/financial-account-profile.js"
+import {
   categoryAppearance,
   type CategoryAppearance,
 } from "./category-appearance.js"
@@ -32,6 +37,7 @@ export interface LedgerAccountSnapshot {
   readonly systemPurpose?: SystemAccountPurpose
   readonly iconKey?: string
   readonly colorHex?: string
+  readonly financialAccount?: FinancialAccountProfileSnapshot
   readonly version: number
 }
 
@@ -43,6 +49,7 @@ export interface CreateLedgerAccountInput {
   readonly systemPurpose?: SystemAccountPurpose
   readonly iconKey?: string
   readonly colorHex?: string
+  readonly financialAccount?: FinancialAccountProfileSnapshot
 }
 
 export function normalizeAccountName(name: string): string {
@@ -79,6 +86,9 @@ export class LedgerAccount extends AggregateRoot<
     private readonly accountSystemPurpose: SystemAccountPurpose | undefined,
     private accountIconKey: string | undefined,
     private accountColorHex: string | undefined,
+    private accountFinancialProfile:
+      | FinancialAccountProfileSnapshot
+      | undefined,
     private accountVersion: number
   ) {
     super(id)
@@ -94,6 +104,7 @@ export class LedgerAccount extends AggregateRoot<
     }
 
     const appearance = validateAppearance(input)
+    const financialProfile = createFinancialProfile(input)
 
     const account = new LedgerAccount(
       input.id,
@@ -105,6 +116,7 @@ export class LedgerAccount extends AggregateRoot<
       input.systemPurpose,
       appearance?.iconKey,
       appearance?.colorHex,
+      financialProfile,
       0
     )
     account.recordFact({
@@ -118,6 +130,7 @@ export class LedgerAccount extends AggregateRoot<
 
   static restore(snapshot: LedgerAccountSnapshot): LedgerAccount {
     const appearance = validateAppearance(snapshot)
+    const financialProfile = restoreFinancialProfile(snapshot)
 
     return new LedgerAccount(
       snapshot.id,
@@ -129,6 +142,7 @@ export class LedgerAccount extends AggregateRoot<
       snapshot.systemPurpose,
       appearance?.iconKey,
       appearance?.colorHex,
+      financialProfile,
       snapshot.version
     )
   }
@@ -167,6 +181,37 @@ export class LedgerAccount extends AggregateRoot<
 
   get version(): number {
     return this.accountVersion
+  }
+
+  get financialAccount(): FinancialAccountProfileSnapshot | undefined {
+    return cloneFinancialProfile(this.accountFinancialProfile)
+  }
+
+  configureFinancialProfile(profile: FinancialAccountProfileSnapshot): void {
+    const next = FinancialAccountProfile.create(profile)
+    assertFinancialAccountProfileAllowed({
+      profile: next,
+      kind: this.kind,
+      ...(this.systemPurpose === undefined
+        ? {}
+        : { systemPurpose: this.systemPurpose }),
+    })
+    const nextSnapshot = next.toSnapshot()
+    if (sameFinancialProfile(this.accountFinancialProfile, nextSnapshot)) {
+      return
+    }
+
+    const previous = this.accountFinancialProfile
+    this.accountFinancialProfile = cloneFinancialProfile(nextSnapshot)
+    this.accountVersion += 1
+    this.recordFact({
+      type: isSettlementOnlyChange(previous, nextSnapshot)
+        ? "InvestmentSettlementAccountChanged"
+        : "FinancialAccountConfigured",
+      aggregateId: this.id,
+      aggregateVersion: this.version,
+      payload: this.lifecyclePayload(),
+    })
   }
 
   get normalBalance(): "DEBIT" | "CREDIT" {
@@ -280,6 +325,9 @@ export class LedgerAccount extends AggregateRoot<
         : { systemPurpose: this.systemPurpose }),
       ...(this.iconKey === undefined ? {} : { iconKey: this.iconKey }),
       ...(this.colorHex === undefined ? {} : { colorHex: this.colorHex }),
+      ...(this.financialAccount === undefined
+        ? {}
+        : { financialAccount: this.financialAccount }),
       version: this.version,
     }
   }
@@ -334,8 +382,85 @@ export class LedgerAccount extends AggregateRoot<
       status: this.status,
       ...(this.iconKey === undefined ? {} : { iconKey: this.iconKey }),
       ...(this.colorHex === undefined ? {} : { colorHex: this.colorHex }),
+      ...(this.financialAccount === undefined
+        ? {}
+        : { financialAccount: this.financialAccount }),
     }
   }
+}
+
+function createFinancialProfile(
+  input: CreateLedgerAccountInput
+): FinancialAccountProfileSnapshot | undefined {
+  if (input.financialAccount === undefined) {
+    if (input.kind !== "ASSET" && input.kind !== "LIABILITY") {
+      return undefined
+    }
+    return FinancialAccountProfile.create({
+      type: input.kind === "ASSET" ? "OTHER_ASSET" : "OTHER_LIABILITY",
+    }).toSnapshot()
+  }
+
+  const profile = FinancialAccountProfile.create(input.financialAccount)
+  assertFinancialAccountProfileAllowed({
+    profile,
+    kind: input.kind,
+    ...(input.systemPurpose === undefined
+      ? {}
+      : { systemPurpose: input.systemPurpose }),
+  })
+  return profile.toSnapshot()
+}
+
+function restoreFinancialProfile(
+  snapshot: LedgerAccountSnapshot
+): FinancialAccountProfileSnapshot | undefined {
+  if (snapshot.financialAccount === undefined) {
+    return undefined
+  }
+
+  const profile = FinancialAccountProfile.create(snapshot.financialAccount)
+  assertFinancialAccountProfileAllowed({
+    profile,
+    kind: snapshot.kind,
+    ...(snapshot.systemPurpose === undefined
+      ? {}
+      : { systemPurpose: snapshot.systemPurpose }),
+  })
+  return profile.toSnapshot()
+}
+
+function cloneFinancialProfile(
+  profile: FinancialAccountProfileSnapshot | undefined
+): FinancialAccountProfileSnapshot | undefined {
+  if (profile === undefined) {
+    return undefined
+  }
+  return {
+    ...profile,
+    ...(profile.investment === undefined
+      ? {}
+      : { investment: { ...profile.investment } }),
+  }
+}
+
+function sameFinancialProfile(
+  left: FinancialAccountProfileSnapshot | undefined,
+  right: FinancialAccountProfileSnapshot
+): boolean {
+  return JSON.stringify(left) === JSON.stringify(right)
+}
+
+function isSettlementOnlyChange(
+  previous: FinancialAccountProfileSnapshot | undefined,
+  next: FinancialAccountProfileSnapshot
+): boolean {
+  return (
+    previous?.type === "INVESTMENT_ACCOUNT" &&
+    next.type === "INVESTMENT_ACCOUNT" &&
+    previous.institutionName === next.institutionName &&
+    previous.displayReference === next.displayReference
+  )
 }
 
 function validateAppearance(

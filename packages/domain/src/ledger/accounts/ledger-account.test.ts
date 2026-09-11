@@ -293,4 +293,105 @@ describe("LedgerAccount", () => {
     ).toMatchObject({ get: expect.any(Function), set: undefined })
     expect(account.kind).toBe("ASSET")
   })
+
+  it.each([
+    ["ASSET", "OTHER_ASSET"],
+    ["LIABILITY", "OTHER_LIABILITY"],
+  ] as const)("derives the internal %s profile as %s", (kind, type) => {
+    expect(createAccount(kind).financialAccount?.type).toBe(type)
+  })
+
+  it("configures an investment profile in one versioned fact", () => {
+    const account = createAccount("ASSET")
+    account.pullDomainFacts()
+    account.configureFinancialProfile({
+      type: "INVESTMENT_ACCOUNT",
+      institutionName: "Broker",
+    })
+
+    expect(account.version).toBe(1)
+    expect(account.financialAccount).toEqual({
+      type: "INVESTMENT_ACCOUNT",
+      institutionName: "Broker",
+      investment: {},
+    })
+    expect(account.pullDomainFacts()).toEqual([
+      expect.objectContaining({
+        type: "FinancialAccountConfigured",
+        aggregateVersion: 1,
+      }),
+    ])
+  })
+
+  it("records a settlement-only profile change with its dedicated fact", () => {
+    const account = createAccount("ASSET")
+    account.configureFinancialProfile({ type: "INVESTMENT_ACCOUNT" })
+    account.pullDomainFacts()
+    account.configureFinancialProfile({
+      type: "INVESTMENT_ACCOUNT",
+      investment: {
+        defaultSettlementAccountId: ledgerAccountIdFromString("bank-1"),
+      },
+    })
+
+    expect(account.version).toBe(2)
+    expect(account.pullDomainFacts()).toEqual([
+      expect.objectContaining({ type: "InvestmentSettlementAccountChanged" }),
+    ])
+  })
+
+  it("keeps an equal financial profile as a no-op", () => {
+    const account = createAccount("ASSET")
+    const before = account.toSnapshot()
+    account.pullDomainFacts()
+    account.configureFinancialProfile({ type: "OTHER_ASSET" })
+
+    expect(account.toSnapshot()).toEqual(before)
+    expect(account.pullDomainFacts()).toEqual([])
+  })
+
+  it.each([
+    ["INCOME", "BANK_ACCOUNT"],
+    ["EXPENSE", "BANK_ACCOUNT"],
+    ["EQUITY", "BANK_ACCOUNT"],
+  ] as const)(
+    "rejects %s profile configuration without mutation",
+    (kind, type) => {
+      const account = createAccount(kind)
+      const before = account.toSnapshot()
+      account.pullDomainFacts()
+
+      expect(() => account.configureFinancialProfile({ type })).toThrowError(
+        expect.objectContaining({ code: "INVALID_FINANCIAL_ACCOUNT_PROFILE" })
+      )
+      expect(account.toSnapshot()).toEqual(before)
+      expect(account.pullDomainFacts()).toEqual([])
+    }
+  )
+
+  it("restores the financial profile without facts", () => {
+    const account = createAccount("ASSET")
+    account.configureFinancialProfile({
+      type: "INVESTMENT_ACCOUNT",
+      investment: {
+        defaultSettlementAccountId: ledgerAccountIdFromString("bank-1"),
+      },
+    })
+    const restored = LedgerAccount.restore(account.toSnapshot())
+
+    expect(restored.financialAccount).toEqual(account.financialAccount)
+    expect(restored.pullDomainFacts()).toEqual([])
+  })
+
+  it.each([
+    ["BANK_ACCOUNT", "ASSET"],
+    ["PAYMENT_ACCOUNT", "ASSET"],
+    ["CREDIT_CARD", "LIABILITY"],
+  ] as const)("configures %s only on its matching %s account", (type, kind) => {
+    const account = createAccount(kind)
+
+    account.configureFinancialProfile({ type })
+
+    expect(account.financialAccount?.type).toBe(type)
+  })
 })

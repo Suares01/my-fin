@@ -336,13 +336,31 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Adicionar profile e mutação única/version/fact, clone profundo e validação quando presente; manter criação interna OTHER compatível. A exigência de profile no restore persistido entra em T23 junto do mapper e backfill.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Quick Domain` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Adicionar profile e mutação única/version/fact, clone profundo e validação quando presente; manter criação interna OTHER compatível. A exigência de profile no restore persistido entra em T23 junto do mapper e backfill.
+- [x] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Quick Domain` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: unit (Domain); testes acompanham o componente nesta tarefa.
 **Gate**: Quick Domain
 **Commit**: `feat(investments-domain): perfil no aggregate ledgeraccount`
+
+**Execution evidence**: before T4 Domain: 14 files, 232 tests; after: 14 files, 244 tests. Quick Domain and lint passed. Assertions at `ledger-account.test.ts:274-367` cover OTHER derivation, version/facts, no-op, structural rejection and restore.
+
+| Requirement | Evidence | Spec outcome | Covered |
+| --- | --- | --- | --- |
+| INV-02/03 | `ledger-account.test.ts:331` `expect(...).toThrowError(...)` | invalid profile association does not mutate | Yes |
+| INV-04 | `ledger-account.test.ts:284` `expect(account.version).toBe(1)` | profile shares aggregate identity/version | Yes |
+| INV-07 | `ledger-account.test.ts:313` `expect(...).toEqual(before)` | no-op preserves account state/history | Yes |
+| INV-11 | `ledger-account.test.ts:286` `expect(...).toEqual(...)` | investment profile accepts optional fields | Yes |
+| INV-76 | `ledger-account.test.ts:358` `expect(restored.pullDomainFacts()).toEqual([])` | restore creates no facts | Yes |
+
+| Test assertion | Maps to | Keep |
+| --- | --- | --- |
+| `ledger-account.test.ts:284` `expect(account.version).toBe(1)` | INV-04 | Yes |
+| `ledger-account.test.ts:297` `expect(...type).toBe(...)` | configuration fact | Yes |
+| `ledger-account.test.ts:313` `expect(...).toEqual(before)` | INV-07 no-op | Yes |
+
+**Adequacy verdict**: PASS. The 12 new scenarios assert aggregate state/facts and clone/restore outcomes, with no mock-only assertions.
 
 ### T5: Identidades de investimentos
 
