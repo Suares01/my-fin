@@ -570,13 +570,30 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Criar snapshot imutável com bruto obrigatório, campos opcionais desconhecidos, quantidade coerente e moeda; não alterar posição nem produzir journal/fact próprio.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Quick Domain + Build` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Criar snapshot imutável com bruto obrigatório, campos opcionais desconhecidos, quantidade coerente e moeda; não alterar posição nem produzir journal/fact próprio.
+- [x] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Quick Domain + Build` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: unit (Domain); testes acompanham o componente nesta tarefa.
 **Gate**: Quick Domain + Build
 **Commit**: `feat(investments-domain): observação investmentvaluation`
+
+**Execution evidence**: before T10 Domain: 18 files, 364 tests; after: 19 files, 380 tests. `investment-valuation.test.ts` adds 16 spec-derived scenarios. Quick Domain, Domain lint, Domain build and `git diff --check` passed.
+
+| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- |
+| INV-47, INV-49 | `investment-valuation.test.ts:33-39` `expect(...).toMatchObject({ source: "MANUAL", grossValueMinor: "1200", allocationRevision: 2 })`; `:39` `expect(...).toEqual([])` | Manual values are immutable observations with no aggregate fact, journal or position mutation. | Yes |
+| INV-48, INV-142 | `:59-68`, `:69-80`, `:91-102`, `:121` `expect(...code).toBe("INVALID_INVESTMENT_VALUATION")` | Negative values, mismatch currency/quantity and invalid value timestamps reject with the stable valuation code. | Yes |
+| INV-59 | `:46-50` `expect(...).toMatchObject({ netValueMinor: undefined, withdrawableValueMinor: undefined, grossValueMinor: "1200" })` | Unknown optional values remain absent, not zero or gross. | Yes |
+| INV-82, INV-83, INV-84 | `:93-97` `expect(...unitPrice).toBe("120.5")`; `:98-106` `expectInvalid(...)` | Decimal values are canonical and invalid temporal/sequence input rejects. | Yes |
+
+| Evidence | Maps to | Keep? |
+| --- | --- | --- |
+| `investment-valuation.test.ts:33-58`, `:108-112` | INV-47, INV-49, INV-59 immutable append-only snapshot | Yes |
+| `:59-102`, `:104-106`, `:121` | INV-48, INV-142 invalid monetary, quantity and temporal paths | Yes |
+| `:93-97` | INV-82, INV-83 canonical precise unit price | Yes |
+
+**Adequacy verdict**: PASS. The 16 direct assertions cover every task-owned optional-value, quantity, currency, precision and immutability branch. No test relies on a mock or tautology; the Domain co-location follows the Test Coverage Matrix.
 
 ### Phase 3: Plano contábil e fronteiras da aplicação
 
