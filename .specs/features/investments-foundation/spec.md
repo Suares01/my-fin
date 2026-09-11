@@ -522,9 +522,9 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 
 | Requirement ID | Story | Phase | Status | Tasks |
 | --- | --- | --- | --- | --- |
-| INV-01 | S1 | Tasks | Planned | T3, T17, T23, T41, T74 |
-| INV-02 | S1 | Tasks | Planned | T3, T4, T41 |
-| INV-03 | S1 | Tasks | Planned | T3, T4, T17, T23, T41 |
+| INV-01 | S1 | Tasks | In progress: T3 profiles | T3, T17, T23, T41, T74 |
+| INV-02 | S1 | Tasks | In progress: T3 profiles | T3, T4, T41 |
+| INV-03 | S1 | Tasks | In progress: T3 profiles | T3, T4, T17, T23, T41 |
 | INV-04 | S1 | Tasks | Planned | T4, T15, T23, T30, T41, T42 |
 | INV-05 | S1 | Tasks | Planned | T17, T23, T68 |
 | INV-06 | S1 | Tasks | Planned | T17, T23, T68 |
@@ -532,8 +532,8 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-08 | S1 | Tasks | Planned | T42, T43, T74 |
 | INV-09 | S1 | Tasks | Planned | T14, T62, T63, T75, T86 |
 | INV-10 | S1 | Tasks | Planned | T14, T62, T63, T75, T86 |
-| INV-11 | S2 | Tasks | Planned | T3, T4, T23, T41, T42, T63, T74, T87 |
-| INV-12 | S2 | Tasks | Planned | T3, T38, T39, T42, T43, T74 |
+| INV-11 | S2 | Tasks | In progress: T3 profiles | T3, T4, T23, T41, T42, T63, T74, T87 |
+| INV-12 | S2 | Tasks | In progress: T3 profiles | T3, T38, T39, T42, T43, T74 |
 | INV-13 | S2 | Tasks | Planned | T42, T61, T74, T79, T80 |
 | INV-14 | S2 | Tasks | Planned | T6, T18, T24, T31, T44, T64, T76 |
 | INV-15 | S2 | Tasks | Planned | T6, T44, T64, T76 |

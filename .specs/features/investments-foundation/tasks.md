@@ -299,13 +299,31 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Mapear todos os tipos para kind e validar perfil de investimento, instituição/referência e ausência de settlement; rejeitar combinação estrutural inválida.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Quick Domain` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Mapear todos os tipos para kind e validar perfil de investimento, instituição/referência e ausência de settlement; rejeitar combinação estrutural inválida.
+- [x] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Quick Domain` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: unit (Domain); testes acompanham o componente nesta tarefa.
 **Gate**: Quick Domain
 **Commit**: `feat(investments-domain): perfis financeiros`
+
+**Execution evidence**: before T3 Domain: 13 files, 216 tests; after: 14 files, 232 tests. Quick Domain and supplemental lint passed.
+
+| Requirement | Evidence | Spec outcome | Covered |
+| --- | --- | --- | --- |
+| INV-01 | `financial-account-profile.test.ts:20` `expect(...).toBe(kind)` | every normative type derives its listed kind | Yes |
+| INV-02 | `financial-account-profile.test.ts:20` | profile map yields only ASSET/LIABILITY and does not extend LedgerAccountKind | Yes |
+| INV-03 | `financial-account-profile.test.ts:72` `expectInvalid(...)`, `:106` exact code | category, EQUITY and system association reject | Yes |
+| INV-11 | `financial-account-profile.test.ts:24` `expect(...).toEqual(...)` | investment institution and settlement may be absent | Yes |
+| INV-12 | `financial-account-profile.test.ts:53` `expectInvalid(...)` | settlement profile is exclusive to INVESTMENT_ACCOUNT | Yes |
+
+| Test assertion | Maps to | Keep |
+| --- | --- | --- |
+| `financial-account-profile.test.ts:20` `expect(...).toBe(kind)` | INV-01/02 type map | Yes |
+| `financial-account-profile.test.ts:28` `expect(...).toEqual(...)` | INV-11 optional fields | Yes |
+| `financial-account-profile.test.ts:106` `expect(...code).toBe(...)` | INV-03 structural rejection | Yes |
+
+**Adequacy verdict**: PASS. The 16 scenarios assert all type branches, optional values and structural failures directly. Domain co-location follows the Test Coverage Matrix; no project testing guideline was found.
 
 ### T4: Perfil no aggregate LedgerAccount
 

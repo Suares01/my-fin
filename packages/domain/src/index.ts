@@ -12,6 +12,16 @@ export {
 } from "./investments/values/investment-values.js"
 export { LocalDate } from "./shared/local-date.js"
 export { normalizeSearchText } from "./shared/search-text.js"
+export {
+  assertFinancialAccountProfileAllowed,
+  FinancialAccountProfile,
+  ledgerAccountKindForFinancialType,
+} from "./accounts/financial-account-profile.js"
+export type {
+  FinancialAccountProfileSnapshot,
+  FinancialAccountType,
+  InvestmentAccountProfileSnapshot,
+} from "./accounts/financial-account-profile.js"
 export { FinancialBook } from "./book/financial-book.js"
 export type {
   CreateFinancialBookInput,
