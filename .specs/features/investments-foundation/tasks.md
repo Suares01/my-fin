@@ -257,13 +257,36 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Quantity, Percentage, UnitPrice e limite monetário simétrico respeitam a spec; distinguir custo ausente de zero e permitir percentuais acima de 100.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 14 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Quick Domain` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Quantity, Percentage, UnitPrice e limite monetário simétrico respeitam a spec; distinguir custo ausente de zero e permitir percentuais acima de 100.
+- [x] Escrever/atualizar no mesmo commit pelo menos 14 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Quick Domain` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: unit (Domain); testes acompanham o componente nesta tarefa.
 **Gate**: Quick Domain
 **Commit**: `feat(investments-domain): validação dos valores de investimento`
+
+**Execution evidence**: before T2 Domain: 12 files, 199 tests, pass; after: 13 files, 216 tests, pass. `investment-values.test.ts` adds 17 spec-derived scenarios. Quick Domain and supplemental domain lint passed.
+
+| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| INV-21 quantity | `packages/domain/src/investments/values/investment-values.test.ts:23` `expect(...).toBe(expected)` and `:27` `expectCode(..., "INVALID_INVESTMENT_INPUT")` | quantity is non-negative; absence is not converted to zero | Yes |
+| INV-24 percentage | `investment-values.test.ts:37` `expect(...).toBe(expected)` for `105` and `:42` `expectCode(..., "INVALID_INVESTMENT_INPUT")` | 105 is valid; negative percentage is rejected | Yes |
+| INV-36 numeric bounds | `investment-values.test.ts:69` `expectCode(..., "INVESTMENT_VALUE_OUT_OF_RANGE")` | persisted individual money accepts only symmetric int64 range | Yes |
+| INV-48 unit price | `investment-values.test.ts:49` `expect(...).toBe(expected)` and `:53` `expectCode(..., "INVALID_INVESTMENT_INPUT")` | unit price is non-negative | Yes |
+| INV-82 exact money bounds | `investment-values.test.ts:60` `expect(...amountMinor).toBe(amount)` | both ±9223372036854775807 are accepted | Yes |
+| INV-83 validation | `investment-values.test.ts:69` `expectCode(..., "INVESTMENT_VALUE_OUT_OF_RANGE")` | out-of-range persisted money is rejected | Yes |
+| INV-84 date code | `investment-values.test.ts:92` `expectCode(..., "INVALID_INVESTMENT_DATE")` | invalid local date gets stable investment code | Yes |
+| INV-123 absent cost | `investment-values.test.ts:76` `expect(...).toBe(0n)` and `:77` `expectCode(..., "INVESTMENT_BOOK_COST_REQUIRED")` | explicit zero remains valid; missing cost rejects | Yes |
+
+| Test assertion | Maps to | Keep |
+| --- | --- | --- |
+| `investment-values.test.ts:23` `expect(...).toBe(expected)` | INV-21 quantity representation | Yes |
+| `investment-values.test.ts:37` `expect(...).toBe(expected)` | INV-24 no 100 percentage cap | Yes |
+| `investment-values.test.ts:69` `expectCode(..., "INVESTMENT_VALUE_OUT_OF_RANGE")` | INV-36/82 persisted money bounds | Yes |
+| `investment-values.test.ts:76` `expect(...).toBe(0n)` | INV-123 zero distinct from absent cost | Yes |
+| `investment-values.test.ts:92` `expectCode(..., "INVALID_INVESTMENT_DATE")` | INV-84 stable invalid-date code | Yes |
+
+**Adequacy verdict**: PASS. Tests assert domain values and stable errors directly, cover zero/negative/boundary paths, and add no behavior beyond the named requirements. The Domain test location follows the Test Coverage Matrix; no project testing guideline was found.
 
 ### T3: Perfis financeiros
 

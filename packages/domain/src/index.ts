@@ -2,6 +2,14 @@ export * from "./shared/kernel/index.js"
 export * from "./shared/identity/index.js"
 export { Money } from "./shared/money.js"
 export { Decimal } from "./shared/decimal.js"
+export {
+  assertInvestmentMoneyRange,
+  assertRequiredBookCost,
+  parseInvestmentLocalDate,
+  Percentage,
+  Quantity,
+  UnitPrice,
+} from "./investments/values/investment-values.js"
 export { LocalDate } from "./shared/local-date.js"
 export { normalizeSearchText } from "./shared/search-text.js"
 export { FinancialBook } from "./book/financial-book.js"

@@ -542,10 +542,10 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-18 | S2 | Tasks | Planned | T6, T18, T24, T31, T44, T45, T64, T76 |
 | INV-19 | S2 | Tasks | Planned | T5, T8, T19, T25, T32, T50, T65, T78, T88 |
 | INV-20 | S2 | Tasks | Planned | T8, T12, T19, T25, T32, T47, T50, T65, T77, T91 |
-| INV-21 | S2 | Tasks | Planned | T2, T8, T19, T25, T50, T78 |
+| INV-21 | S2 | Tasks | In progress: T2 values | T2, T8, T19, T25, T50, T78 |
 | INV-22 | S2 | Tasks | Planned | T7, T19, T25, T65, T78, T91 |
 | INV-23 | S2 | Tasks | Planned | T7, T19, T25, T78 |
-| INV-24 | S2 | Tasks | Planned | T2, T7 |
+| INV-24 | S2 | Tasks | In progress: T2 values | T2, T7 |
 | INV-25 | S2 | Tasks | Planned | T7, T8, T65, T88, T91 |
 | INV-26 | S2 | Tasks | Planned | T6, T7, T8, T24, T25, T31, T45, T47, T64, T65, T76, T77, T88, T91 |
 | INV-27 | S3 | Tasks | Planned | T11, T50, T78 |
@@ -557,7 +557,7 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-33 | S3 | Tasks | Planned | T50, T78 |
 | INV-34 | S3 | Tasks | Planned | T9, T50, T51 |
 | INV-35 | S4 | Tasks | Planned | T8, T11, T51, T52, T54, T80 |
-| INV-36 | S4 | Tasks | Planned | T2, T11, T12, T51, T52, T61, T79, T80 |
+| INV-36 | S4 | Tasks | In progress: T2 values | T2, T11, T12, T51, T52, T61, T79, T80 |
 | INV-37 | S4 | Tasks | Planned | T11, T52, T69, T80 |
 | INV-38 | S4 | Tasks | Planned | T11, T52, T69, T80 |
 | INV-39 | S4 | Tasks | Planned | T8, T11, T52, T80 |
@@ -569,7 +569,7 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-45 | S4 | Tasks | Planned | T11, T51, T52, T70, T94 |
 | INV-46 | S4 | Tasks | Planned | T8, T11, T52, T54, T82 |
 | INV-47 | S5 | Tasks | Planned | T10, T21, T27, T34, T58, T67, T84, T90 |
-| INV-48 | S5 | Tasks | Planned | T2, T10, T27, T58, T84 |
+| INV-48 | S5 | Tasks | In progress: T2 values | T2, T10, T27, T58, T84 |
 | INV-49 | S5 | Tasks | Planned | T10, T21, T27, T34, T58, T67, T84, T90 |
 | INV-50 | S5 | Tasks | Planned | T14, T21, T27, T29, T34, T36, T58, T62, T65, T67, T72, T90 |
 | INV-51 | S5 | Tasks | Planned | T8, T52, T58, T62, T65, T67, T90 |
@@ -603,9 +603,9 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-79 | S7 | Tasks | Planned | T12, T22, T28, T35, T48, T73 |
 | INV-80 | S7 | Tasks | Planned | T16, T22, T28, T35, T40, T48, T71, T73 |
 | INV-81 | S7 | Tasks | Planned | T9, T15, T16, T40, T44, T45, T46, T48 |
-| INV-82 | S7 | Tasks | In progress: T1 Decimal | T1, T2, T10, T12, T29, T36, T37, T62, T68, T69, T70 |
-| INV-83 | S7 | Tasks | In progress: T1 Decimal | T1, T2, T6, T10, T12, T44, T45, T47 |
-| INV-84 | S7 | Tasks | Planned | T2, T10, T12, T48, T58 |
+| INV-82 | S7 | Tasks | In progress: T1 Decimal; T2 values | T1, T2, T10, T12, T29, T36, T37, T62, T68, T69, T70 |
+| INV-83 | S7 | Tasks | In progress: T1 Decimal; T2 values | T1, T2, T6, T10, T12, T44, T45, T47 |
+| INV-84 | S7 | Tasks | In progress: T2 values | T2, T10, T12, T48, T58 |
 | INV-85 | S7 | Tasks | Planned | T17, T18, T19, T20, T21, T22 |
 | INV-86 | S7 | Tasks | Planned | T17, T18, T19, T20, T21, T22 |
 | INV-87 | S7 | Tasks | Planned | T17, T18, T22 |
@@ -644,7 +644,7 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-120 | S3 | Tasks | Planned | T49, T50, T78 |
 | INV-121 | S3 | Tasks | Planned | T49, T50, T78 |
 | INV-122 | S3 | Tasks | Planned | T49, T78 |
-| INV-123 | S3 | Tasks | Planned | T2, T49, T50, T78 |
+| INV-123 | S3 | Tasks | In progress: T2 values | T2, T49, T50, T78 |
 | INV-124 | S3 | Tasks | Planned | T49, T78 |
 | INV-125 | S4 | Tasks | Planned | T11, T51, T79 |
 | INV-126 | S4 | Tasks | Planned | T11, T51, T52, T53, T54, T55, T79, T80, T81, T82, T83 |
