@@ -490,13 +490,36 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Implementar abertura, metadata e transições finais únicas: UNITS/AMOUNT, custo zero com unidades, fechamento, reabertura, UNOPENED cancelado, revision independente de version e allocationEffectiveOn.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 24 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Quick Domain` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Implementar abertura, metadata e transições finais únicas: UNITS/AMOUNT, custo zero com unidades, fechamento, reabertura, UNOPENED cancelado, revision independente de version e allocationEffectiveOn.
+- [x] Escrever/atualizar no mesmo commit pelo menos 24 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Quick Domain` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: unit (Domain); testes acompanham o componente nesta tarefa.
 **Gate**: Quick Domain
 **Commit**: `feat(investments-domain): aggregate investmentposition`
+
+**Execution evidence**: before T8 Domain: 16 files, 311 tests; after: 17 files, 343 tests. `investment-position.test.ts` adds 32 spec-derived scenarios. Quick Domain, supplemental Domain lint and `git diff --check` passed.
+
+| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- |
+| INV-19, INV-20 | `investment-position.test.ts:36` `expect(first.id).not.toBe(second.id)`; `:43-47` `expect(...).toMatchObject(...)` | Positions remain distinct; identities and quantity mode remain fixed. | Yes |
+| INV-21, INV-35 | `:55` `expect(...).toMatchObject({ quantity: "10", bookCostMinor: "0", status: "OPEN" })`; `:70-77` `expectInvalid(...)`; `:157-159` `expectInvalid(...)` | Opening does not infer quantity; units/amount opening rules and explicit cost effect are enforced. | Yes |
+| INV-25, INV-26 | `:90-110` `expect(...).toMatchObject({ ...fixedIncomeTerms ... })`; `:113-125` `expect(...type).toBe("InvestmentPositionChanged")` | Terms are retained at opening and metadata changes do not overwrite allocation/contract. | Yes |
+| INV-39, INV-40, INV-46 | `:150-154` `expect(...).toMatchObject({ quantity: "6", bookCostMinor: "600", status: "OPEN" })`; `:170-173`, `:185-188`, `:209-212` | Partial exit changes only supplied cost/units; zero allocation closes; amortization-like effect preserves units. | Yes |
+| INV-51, INV-127, INV-128, INV-129 | `:83-87`, `:223-227`, `:237-241`, `:252-257`, `:268-272`, `:288-291` | Revision starts at 1, advances once only when final allocation changes, and stays independent from version. | Yes |
+| INV-53, INV-62, INV-71 | `:307-310` `expect(...).toMatchObject({ status: "OPEN", closedOn: undefined, allocationRevision: 3 })`; `:318-323` | Corrections reopen auditably; cancelling opening preserves zeroed CLOSED history. | Yes |
+| INV-118, INV-119, INV-144 | `:334`, `:346`, `:357-359`, `:370`, `:407` `expect(...code).toBe("INVESTMENT_ENTITY_NOT_ACTIVE")` | Closed/inactive allocation and inactive reopens reject; active post-close cash flow remains permitted. | Yes |
+
+| Evidence | Maps to | Keep? |
+| --- | --- | --- |
+| `investment-position.test.ts:36`, `:43-47`, `:55`, `:63-77` | INV-19–21 opening identity and allocation matrix | Yes |
+| `:83-87`, `:102-110`, `:118-139` | INV-25, INV-26, INV-127 metadata, terms and independent revision | Yes |
+| `:150-212` | INV-35, INV-39, INV-40, INV-46 final operation state | Yes |
+| `:223-291`, `:307-323` | INV-51, INV-53, INV-62, INV-71, INV-128, INV-129 correction/revision transitions | Yes |
+| `:334`, `:346`, `:357-370`, `:407` | INV-118, INV-119, INV-144 activity guards | Yes |
+| `:380-387` | INV-127 restore and independent snapshot persistence | Yes |
+
+**Adequacy verdict**: PASS. The 32 direct assertions cover every opening branch, economic final state, cancellation/reopening path, revision invariant, contract snapshot and activity guard assigned to T8. No test relies on a mock or tautology; the Domain co-location follows the Test Coverage Matrix.
 
 ### T9: Aggregate InvestmentOperation
 

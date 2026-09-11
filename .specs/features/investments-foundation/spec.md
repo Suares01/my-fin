@@ -540,14 +540,14 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-16 | S2 | Tasks | In progress: T6 instrument | T6, T24, T44, T45, T76 |
 | INV-17 | S2 | Tasks | In progress: T6 instrument | T6, T18, T24, T31, T44, T45, T64, T76 |
 | INV-18 | S2 | Tasks | In progress: T6 instrument | T6, T18, T24, T31, T44, T45, T64, T76 |
-| INV-19 | S2 | Tasks | In progress: T5 identities | T5, T8, T19, T25, T32, T50, T65, T78, T88 |
-| INV-20 | S2 | Tasks | Planned | T8, T12, T19, T25, T32, T47, T50, T65, T77, T91 |
-| INV-21 | S2 | Tasks | In progress: T2 values | T2, T8, T19, T25, T50, T78 |
+| INV-19 | S2 | Tasks | In progress: T5 identities; T8 position | T5, T8, T19, T25, T32, T50, T65, T78, T88 |
+| INV-20 | S2 | Tasks | In progress: T8 position | T8, T12, T19, T25, T32, T47, T50, T65, T77, T91 |
+| INV-21 | S2 | Tasks | In progress: T2 values; T8 position | T2, T8, T19, T25, T50, T78 |
 | INV-22 | S2 | Tasks | In progress: T7 fixed-income terms | T7, T19, T25, T65, T78, T91 |
 | INV-23 | S2 | Tasks | In progress: T7 fixed-income terms | T7, T19, T25, T78 |
 | INV-24 | S2 | Tasks | In progress: T2 values; T7 fixed-income terms | T2, T7 |
-| INV-25 | S2 | Tasks | In progress: T7 fixed-income terms | T7, T8, T65, T88, T91 |
-| INV-26 | S2 | Tasks | In progress: T6 instrument; T7 fixed-income terms | T6, T7, T8, T24, T25, T31, T45, T47, T64, T65, T76, T77, T88, T91 |
+| INV-25 | S2 | Tasks | In progress: T7 fixed-income terms; T8 position | T7, T8, T65, T88, T91 |
+| INV-26 | S2 | Tasks | In progress: T6 instrument; T7 fixed-income terms; T8 position | T6, T7, T8, T24, T25, T31, T45, T47, T64, T65, T76, T77, T88, T91 |
 | INV-27 | S3 | Tasks | Planned | T11, T50, T78 |
 | INV-28 | S3 | Tasks | Planned | T38, T39, T50, T60, T78 |
 | INV-29 | S3 | Tasks | Planned | T11, T50, T51, T79 |
@@ -556,25 +556,25 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-32 | S3 | Tasks | Planned | T38, T39, T50, T51, T55, T60, T79, T83 |
 | INV-33 | S3 | Tasks | Planned | T50, T78 |
 | INV-34 | S3 | Tasks | Planned | T9, T50, T51 |
-| INV-35 | S4 | Tasks | Planned | T8, T11, T51, T52, T54, T80 |
+| INV-35 | S4 | Tasks | In progress: T8 position | T8, T11, T51, T52, T54, T80 |
 | INV-36 | S4 | Tasks | In progress: T2 values | T2, T11, T12, T51, T52, T61, T79, T80 |
 | INV-37 | S4 | Tasks | Planned | T11, T52, T69, T80 |
 | INV-38 | S4 | Tasks | Planned | T11, T52, T69, T80 |
-| INV-39 | S4 | Tasks | Planned | T8, T11, T52, T80 |
-| INV-40 | S4 | Tasks | Planned | T8, T11, T52, T80 |
+| INV-39 | S4 | Tasks | In progress: T8 position | T8, T11, T52, T80 |
+| INV-40 | S4 | Tasks | In progress: T8 position | T8, T11, T52, T80 |
 | INV-41 | S4 | Tasks | Planned | T11, T52, T80 |
 | INV-42 | S4 | Tasks | Planned | T11, T53, T54, T69, T81, T82 |
 | INV-43 | S4 | Tasks | Planned | T11, T55, T69, T83 |
 | INV-44 | S4 | Tasks | Planned | T11, T51, T52, T53, T54, T55, T69, T81, T82, T83 |
 | INV-45 | S4 | Tasks | Planned | T11, T51, T52, T70, T94 |
-| INV-46 | S4 | Tasks | Planned | T8, T11, T52, T54, T82 |
+| INV-46 | S4 | Tasks | In progress: T8 position | T8, T11, T52, T54, T82 |
 | INV-47 | S5 | Tasks | Planned | T10, T21, T27, T34, T58, T67, T84, T90 |
 | INV-48 | S5 | Tasks | In progress: T2 values | T2, T10, T27, T58, T84 |
 | INV-49 | S5 | Tasks | Planned | T10, T21, T27, T34, T58, T67, T84, T90 |
 | INV-50 | S5 | Tasks | Planned | T14, T21, T27, T29, T34, T36, T58, T62, T65, T67, T72, T90 |
-| INV-51 | S5 | Tasks | Planned | T8, T52, T58, T62, T65, T67, T90 |
+| INV-51 | S5 | Tasks | In progress: T8 position | T8, T52, T58, T62, T65, T67, T90 |
 | INV-52 | S5 | Tasks | Planned | T14, T62, T65, T86, T88, T91 |
-| INV-53 | S5 | Tasks | Planned | T8, T52, T62, T65, T67, T86, T88, T90, T91 |
+| INV-53 | S5 | Tasks | In progress: T8 position | T8, T52, T62, T65, T67, T86, T88, T90, T91 |
 | INV-54 | S5 | Tasks | Planned | T14, T62, T86 |
 | INV-55 | S5 | Tasks | Planned | T14, T37, T38, T39, T62, T63, T68, T69, T87 |
 | INV-56 | S5 | Tasks | Planned | T14, T37, T62, T69, T86 |
@@ -583,7 +583,7 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-59 | S5 | Tasks | Planned | T10, T14, T58, T62, T65, T67, T84, T86, T88, T90, T91 |
 | INV-60 | S5 | Tasks | Planned | T14, T38, T39, T60, T62, T63, T86, T87 |
 | INV-61 | S6 | Tasks | Planned | T9, T26, T33, T56, T57, T66, T85, T89, T91 |
-| INV-62 | S6 | Tasks | Planned | T8, T56, T85 |
+| INV-62 | S6 | Tasks | In progress: T8 position | T8, T56, T85 |
 | INV-63 | S6 | Tasks | Planned | T9, T20, T26, T33, T56, T57, T59, T66, T70, T89, T94 |
 | INV-64 | S6 | Tasks | Planned | T9, T20, T26, T33, T56, T57, T59, T66, T70, T89, T94 |
 | INV-65 | S6 | Tasks | Planned | T9, T26, T33, T56, T57, T66, T85, T89 |
@@ -592,7 +592,7 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-68 | S6 | Tasks | Planned | T9, T20, T26, T57, T59, T66, T70, T85, T89, T94 |
 | INV-69 | S6 | Tasks | Planned | T9, T20, T26, T33, T56, T57, T59, T66, T70, T85, T89, T94 |
 | INV-70 | S6 | Tasks | Planned | T56, T57, T60, T85 |
-| INV-71 | S6 | Tasks | Planned | T8, T56 |
+| INV-71 | S6 | Tasks | In progress: T8 position | T8, T56 |
 | INV-72 | S6 | Tasks | Planned | T9, T20, T26, T29, T33, T36, T56, T57, T66, T85, T89 |
 | INV-73 | S6 | Tasks | Planned | T9, T56, T57, T85, T89 |
 | INV-74 | S7 | Tasks | Planned | T12, T13, T18, T19, T20, T21, T23, T24, T25, T26, T27, T28, T31, T32, T33, T34, T35, T40, T41, T42, T43, T44, T45, T46, T47, T48, T51, T52, T53, T54, T55, T56, T57, T58, T59, T61, T63, T64, T65, T66, T67, T71, T72, T73, T91, T93 |
@@ -639,8 +639,8 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-115 | S9 | Tasks | Planned | T38, T39, T42, T43, T74, T87 |
 | INV-116 | S9 | Tasks | Planned | T6, T24, T31, T43, T46, T64, T76, T87 |
 | INV-117 | S9 | Tasks | Planned | T46, T59, T66, T67, T89, T90 |
-| INV-118 | S9 | Tasks | Planned | T8, T51, T79, T88 |
-| INV-119 | S9 | Tasks | Planned | T8, T53, T55, T81, T83, T91 |
+| INV-118 | S9 | Tasks | In progress: T8 position | T8, T51, T79, T88 |
+| INV-119 | S9 | Tasks | In progress: T8 position | T8, T53, T55, T81, T83, T91 |
 | INV-120 | S3 | Tasks | Planned | T49, T50, T78 |
 | INV-121 | S3 | Tasks | Planned | T49, T50, T78 |
 | INV-122 | S3 | Tasks | Planned | T49, T78 |
@@ -648,9 +648,9 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-124 | S3 | Tasks | Planned | T49, T78 |
 | INV-125 | S4 | Tasks | Planned | T11, T51, T79 |
 | INV-126 | S4 | Tasks | Planned | T11, T51, T52, T53, T54, T55, T79, T80, T81, T82, T83 |
-| INV-127 | S5 | Tasks | Planned | T8, T19, T21, T25, T27, T30, T32, T47, T50, T58, T67, T90 |
-| INV-128 | S5 | Tasks | Planned | T8, T25, T51, T52, T54, T56, T57, T85 |
-| INV-129 | S5 | Tasks | Planned | T8, T47, T53, T55, T57, T77, T85 |
+| INV-127 | S5 | Tasks | In progress: T8 position | T8, T19, T21, T25, T27, T30, T32, T47, T50, T58, T67, T90 |
+| INV-128 | S5 | Tasks | In progress: T8 position | T8, T25, T51, T52, T54, T56, T57, T85 |
+| INV-129 | S5 | Tasks | In progress: T8 position | T8, T47, T53, T55, T57, T77, T85 |
 | INV-130 | S5 | Tasks | Planned | T58, T62, T65, T67, T84, T90 |
 | INV-131 | S5 | Tasks | Planned | T12, T58, T73, T84 |
 | INV-132 | S6 | Tasks | Planned | T9, T11, T13, T20, T26, T30, T33, T56, T57, T66, T89 |
@@ -665,7 +665,7 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-141 | S5 | Tasks | Planned | T14, T37, T38, T39, T62, T68, T69, T72, T86 |
 | INV-142 | S5 | Tasks | Planned | T10, T58, T84 |
 | INV-143 | S8 | Tasks | Planned | T75 |
-| INV-144 | S9 | Tasks | Planned | T8, T43, T46, T56, T57, T85, T91 |
+| INV-144 | S9 | Tasks | In progress: T8 position | T8, T43, T46, T56, T57, T85, T91 |
 | INV-145 | S7 | Tasks | Planned | T12, T38, T39, T48, T49, T50, T51, T55, T56, T57, T60, T61, T62, T63, T73, T78, T79, T83, T87 |
 | INV-146 | S5 | Tasks | Planned | T62, T63, T86, T87, T92 |
 | INV-147 | S5 | Tasks | Planned | T49, T60, T62, T86, T87, T92 |
