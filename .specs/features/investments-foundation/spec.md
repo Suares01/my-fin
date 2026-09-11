@@ -555,7 +555,7 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-31 | S3 | Tasks | Planned | T60, T68, T70, T94 |
 | INV-32 | S3 | Tasks | Planned | T38, T39, T50, T51, T55, T60, T79, T83 |
 | INV-33 | S3 | Tasks | Planned | T50, T78 |
-| INV-34 | S3 | Tasks | Planned | T9, T50, T51 |
+| INV-34 | S3 | Tasks | In progress: T9 operation | T9, T50, T51 |
 | INV-35 | S4 | Tasks | In progress: T8 position | T8, T11, T51, T52, T54, T80 |
 | INV-36 | S4 | Tasks | In progress: T2 values | T2, T11, T12, T51, T52, T61, T79, T80 |
 | INV-37 | S4 | Tasks | Planned | T11, T52, T69, T80 |
@@ -582,19 +582,19 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-58 | S5 | Tasks | Planned | T14, T62, T65, T72, T84, T86, T88, T90 |
 | INV-59 | S5 | Tasks | Planned | T10, T14, T58, T62, T65, T67, T84, T86, T88, T90, T91 |
 | INV-60 | S5 | Tasks | Planned | T14, T38, T39, T60, T62, T63, T86, T87 |
-| INV-61 | S6 | Tasks | Planned | T9, T26, T33, T56, T57, T66, T85, T89, T91 |
+| INV-61 | S6 | Tasks | In progress: T9 operation | T9, T26, T33, T56, T57, T66, T85, T89, T91 |
 | INV-62 | S6 | Tasks | In progress: T8 position | T8, T56, T85 |
-| INV-63 | S6 | Tasks | Planned | T9, T20, T26, T33, T56, T57, T59, T66, T70, T89, T94 |
-| INV-64 | S6 | Tasks | Planned | T9, T20, T26, T33, T56, T57, T59, T66, T70, T89, T94 |
-| INV-65 | S6 | Tasks | Planned | T9, T26, T33, T56, T57, T66, T85, T89 |
-| INV-66 | S6 | Tasks | Planned | T9, T56, T57 |
+| INV-63 | S6 | Tasks | In progress: T9 operation | T9, T20, T26, T33, T56, T57, T59, T66, T70, T89, T94 |
+| INV-64 | S6 | Tasks | In progress: T9 operation | T9, T20, T26, T33, T56, T57, T59, T66, T70, T89, T94 |
+| INV-65 | S6 | Tasks | In progress: T9 operation | T9, T26, T33, T56, T57, T66, T85, T89 |
+| INV-66 | S6 | Tasks | In progress: T9 operation | T9, T56, T57 |
 | INV-67 | S6 | Tasks | Planned | T56, T57, T59, T70, T85, T94 |
-| INV-68 | S6 | Tasks | Planned | T9, T20, T26, T57, T59, T66, T70, T85, T89, T94 |
-| INV-69 | S6 | Tasks | Planned | T9, T20, T26, T33, T56, T57, T59, T66, T70, T85, T89, T94 |
+| INV-68 | S6 | Tasks | In progress: T9 operation | T9, T20, T26, T57, T59, T66, T70, T85, T89, T94 |
+| INV-69 | S6 | Tasks | In progress: T9 operation | T9, T20, T26, T33, T56, T57, T59, T66, T70, T85, T89, T94 |
 | INV-70 | S6 | Tasks | Planned | T56, T57, T60, T85 |
 | INV-71 | S6 | Tasks | In progress: T8 position | T8, T56 |
-| INV-72 | S6 | Tasks | Planned | T9, T20, T26, T29, T33, T36, T56, T57, T66, T85, T89 |
-| INV-73 | S6 | Tasks | Planned | T9, T56, T57, T85, T89 |
+| INV-72 | S6 | Tasks | In progress: T9 operation | T9, T20, T26, T29, T33, T36, T56, T57, T66, T85, T89 |
+| INV-73 | S6 | Tasks | In progress: T9 operation | T9, T56, T57, T85, T89 |
 | INV-74 | S7 | Tasks | Planned | T12, T13, T18, T19, T20, T21, T23, T24, T25, T26, T27, T28, T31, T32, T33, T34, T35, T40, T41, T42, T43, T44, T45, T46, T47, T48, T51, T52, T53, T54, T55, T56, T57, T58, T59, T61, T63, T64, T65, T66, T67, T71, T72, T73, T91, T93 |
 | INV-75 | S7 | Tasks | Planned | T13, T16, T22, T28, T29, T30, T35, T36, T40, T48, T50, T51, T52, T53, T54, T55, T56, T57, T58, T60 |
 | INV-76 | S7 | Tasks | In progress: T4 aggregate | T4, T12, T13, T23, T24, T25, T26, T31, T32, T33, T40, T42, T45, T46, T47, T48, T51, T52, T53, T54, T55, T56, T57, T61, T73 |
@@ -602,7 +602,7 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-78 | S7 | Tasks | In progress: T5 identities | T5, T12, T13, T16, T22, T28, T35, T40, T48, T49, T50, T51, T52, T53, T54, T55, T56, T57, T58, T71, T73 |
 | INV-79 | S7 | Tasks | Planned | T12, T22, T28, T35, T48, T73 |
 | INV-80 | S7 | Tasks | Planned | T16, T22, T28, T35, T40, T48, T71, T73 |
-| INV-81 | S7 | Tasks | Planned | T9, T15, T16, T40, T44, T45, T46, T48 |
+| INV-81 | S7 | Tasks | In progress: T9 operation | T9, T15, T16, T40, T44, T45, T46, T48 |
 | INV-82 | S7 | Tasks | In progress: T1 Decimal; T2 values | T1, T2, T10, T12, T29, T36, T37, T62, T68, T69, T70 |
 | INV-83 | S7 | Tasks | In progress: T1 Decimal; T2 values | T1, T2, T6, T10, T12, T44, T45, T47 |
 | INV-84 | S7 | Tasks | In progress: T2 values | T2, T10, T12, T48, T58 |

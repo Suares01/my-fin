@@ -532,13 +532,32 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Persistir deltas e estado anterior, role BUSINESS/REVERSAL, datas/sequência e lineage; permitir só mudança de links/version e inversão dos efeitos guardados; identificar última efetiva sem reversões.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 18 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Quick Domain` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Persistir deltas e estado anterior, role BUSINESS/REVERSAL, datas/sequência e lineage; permitir só mudança de links/version e inversão dos efeitos guardados; identificar última efetiva sem reversões.
+- [x] Escrever/atualizar no mesmo commit pelo menos 18 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Quick Domain` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: unit (Domain); testes acompanham o componente nesta tarefa.
 **Gate**: Quick Domain
 **Commit**: `feat(investments-domain): aggregate investmentoperation`
+
+**Execution evidence**: before T9 Domain: 17 files, 343 tests; after: 18 files, 364 tests. `investment-operation.test.ts` adds 21 spec-derived scenarios. Quick Domain, supplemental Domain lint and `git diff --check` passed.
+
+| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- |
+| INV-34, INV-132 | `investment-operation.test.ts:43-54` `expect(...).toMatchObject({ role: "BUSINESS", quantityDelta: "-4", bookCostDeltaMinor: "-400", netCashFlowMinor: "470", positionBefore: ... })` | Normalized authoritative effects, explicit cash mode and prior economic state persist. | Yes |
+| INV-61, INV-63, INV-68 | `:75-81` `expect(...reversedBy).toMatchObject(...)`; `:155` `expect(reversal.isEffective()).toBe(false)`; `:169-171` `expect(...id).toBe("operation-0")` | Lineage changes only links/version; an unlinked BUSINESS fact is the only effective candidate. | Yes |
+| INV-72, INV-73, INV-134 | `:111-128` `expect(...).toMatchObject({ occurredOn: "2026-01-02", recordedAt: "2026-02-01T10:00:00.000Z" ... })`; `:158-169` invalid sequence/timestamp rejection | Sequence is positive persisted text; reversal preserves original occurrence and records the real correction instant. | Yes |
+| INV-133 | `:120-128` `expect(...quantityDelta).toBe("4")` and `bookCostDeltaMinor: "400"`, `netCashFlowMinor: "-470"`; `:140-144` descriptive amounts | Reversal inverses stored deltas without recalculating descriptive amounts. | Yes |
+| INV-81 | `:59-63` `expect(...).toMatchObject({ type: "InvestmentOperationRecorded", aggregateId: "operation-1", aggregateVersion: 0 })` | Recorded operation emits a typed versioned fact. | Yes |
+
+| Evidence | Maps to | Keep? |
+| --- | --- | --- |
+| `investment-operation.test.ts:43-67`, `:178-201` | Persisted operation contract, optional references and snapshot cloning | Yes |
+| `:75-108`, `:147-155` | INV-61, INV-63, INV-68 lineage and effective-state boundaries | Yes |
+| `:111-144` | INV-73, INV-132, INV-133, INV-134 reversal contract | Yes |
+| `:158-175`, `:204-208`, `:218` | Sequence/timestamp/delta validation and restore behavior | Yes |
+
+**Adequacy verdict**: PASS. The 21 direct assertions cover every aggregate-owned role, lineage, stored-delta, reversal and ordering branch. Journal coordination, generic journal protection and coordinated position correction remain in their explicitly assigned later tasks; no test relies on a mock or tautology.
 
 ### T10: Observação InvestmentValuation
 
