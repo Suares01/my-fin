@@ -373,13 +373,29 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Acrescentar quatro IDs internos e métodos do IdGenerator com implementações reais nos adaptadores sequenciais/Tauri; consumidores compilam sem casts para esconder métodos ausentes.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 6 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Quick Domain + Build` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Acrescentar quatro IDs internos e métodos do IdGenerator com implementações reais nos adaptadores sequenciais/Tauri; consumidores compilam sem casts para esconder métodos ausentes.
+- [x] Escrever/atualizar no mesmo commit pelo menos 6 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Quick Domain + Build` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: unit (Domain); testes acompanham o componente nesta tarefa.
 **Gate**: Quick Domain + Build
 **Commit**: `feat(investments-domain): identidades de investimentos`
+
+**Execution evidence**: before T5 Domain: 14 files, 244 tests; after: 14 files, 248 tests. Phase build passed: Domain 248/248, Application 209/209, Memory 246/246 and Tauri 63/63; check-types, lint, build and `git diff --check` passed for each touched package.
+
+| Requirement | Evidence | Spec outcome | Covered |
+| --- | --- | --- | --- |
+| INV-19 | `identity.test.ts:46-52` `expect(fromString(value)).toBe(value)` | each investment entity has its own stable internal identity | Yes |
+| INV-78 | `deterministic-adapters.test.ts:37-40` `expect(ids.nextInvestment...Id()).toBe(...)` | sequential adapter creates deterministic IDs for idempotent commands | Yes |
+| INV-89 | `platform.test.ts:47-58` `expect(generated).toEqual([...])`; `expect(new Set(generated)).toHaveLength(9)` | Tauri generates real, distinct UUID-backed investment IDs | Yes |
+
+| Test assertion | Maps to | Keep |
+| --- | --- | --- |
+| `identity.test.ts:52` `expect(fromString(value)).toBe(value)` | INV-19 dedicated identity constructors | Yes |
+| `deterministic-adapters.test.ts:37-40` `expect(ids.nextInvestment...Id()).toBe(...)` | INV-78 deterministic internal IDs | Yes |
+| `platform.test.ts:47-58` `expect(generated).toEqual([...])`; `expect(new Set(generated)).toHaveLength(9)` | INV-89 real adapter contract | Yes |
+
+**Adequacy verdict**: PASS. Eight new assertions across six parameterized/domain and adapter scenarios cover every new identity and generator outcome; assertions verify values and distinctness, not only calls.
 
 ### Phase 2: Aggregates de investimentos
 

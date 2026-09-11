@@ -1,5 +1,9 @@
 import type {
   BookId,
+  InvestmentInstrumentId,
+  InvestmentOperationId,
+  InvestmentPositionId,
+  InvestmentValuationId,
   JournalEntryId,
   LedgerAccountId,
   PostingId,
@@ -32,6 +36,22 @@ export class TauriIdGenerator implements IdGenerator {
 
   public nextPostingId(): PostingId {
     return this.createUuid() as PostingId
+  }
+
+  public nextInvestmentInstrumentId(): InvestmentInstrumentId {
+    return this.createUuid() as InvestmentInstrumentId
+  }
+
+  public nextInvestmentPositionId(): InvestmentPositionId {
+    return this.createUuid() as InvestmentPositionId
+  }
+
+  public nextInvestmentOperationId(): InvestmentOperationId {
+    return this.createUuid() as InvestmentOperationId
+  }
+
+  public nextInvestmentValuationId(): InvestmentValuationId {
+    return this.createUuid() as InvestmentValuationId
   }
 
   public nextEventId(): string {

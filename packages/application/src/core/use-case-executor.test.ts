@@ -53,6 +53,22 @@ class FixedIds implements IdGenerator {
     return "posting-generated" as never
   }
 
+  nextInvestmentInstrumentId() {
+    return "instrument-generated" as never
+  }
+
+  nextInvestmentPositionId() {
+    return "position-generated" as never
+  }
+
+  nextInvestmentOperationId() {
+    return "operation-generated" as never
+  }
+
+  nextInvestmentValuationId() {
+    return "valuation-generated" as never
+  }
+
   nextEventId(): string {
     this.eventIndex += 1
     return `event-${this.eventIndex}`

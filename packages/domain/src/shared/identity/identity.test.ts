@@ -3,6 +3,10 @@ import { DomainError } from "../kernel/domain-error.js"
 import { Currency } from "./currency.js"
 import {
   bookIdFromString,
+  investmentInstrumentIdFromString,
+  investmentOperationIdFromString,
+  investmentPositionIdFromString,
+  investmentValuationIdFromString,
   journalEntryIdFromString,
   ledgerAccountIdFromString,
   postingIdFromString,
@@ -37,6 +41,15 @@ describe("branded ids", () => {
     const accountId: LedgerAccountId = bookId
 
     expect(accountId).toBe("book-1")
+  })
+
+  it.each([
+    ["instrument", investmentInstrumentIdFromString, "instrument-1"],
+    ["position", investmentPositionIdFromString, "position-1"],
+    ["operation", investmentOperationIdFromString, "operation-1"],
+    ["valuation", investmentValuationIdFromString, "valuation-1"],
+  ])("preserves the %s investment identity", (_kind, fromString, value) => {
+    expect(fromString(value)).toBe(value)
   })
 })
 

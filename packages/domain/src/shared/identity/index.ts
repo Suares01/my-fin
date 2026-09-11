@@ -3,6 +3,10 @@ export {
   bookIdFromString,
   journalEntryIdFromString,
   ledgerAccountIdFromString,
+  investmentInstrumentIdFromString,
+  investmentOperationIdFromString,
+  investmentPositionIdFromString,
+  investmentValuationIdFromString,
   postingIdFromString,
 } from "./ids.js"
 export type {
@@ -10,5 +14,9 @@ export type {
   BrandedId,
   JournalEntryId,
   LedgerAccountId,
+  InvestmentInstrumentId,
+  InvestmentOperationId,
+  InvestmentPositionId,
+  InvestmentValuationId,
   PostingId,
 } from "./ids.js"

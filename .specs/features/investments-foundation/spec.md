@@ -540,7 +540,7 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-16 | S2 | Tasks | Planned | T6, T24, T44, T45, T76 |
 | INV-17 | S2 | Tasks | Planned | T6, T18, T24, T31, T44, T45, T64, T76 |
 | INV-18 | S2 | Tasks | Planned | T6, T18, T24, T31, T44, T45, T64, T76 |
-| INV-19 | S2 | Tasks | Planned | T5, T8, T19, T25, T32, T50, T65, T78, T88 |
+| INV-19 | S2 | Tasks | In progress: T5 identities | T5, T8, T19, T25, T32, T50, T65, T78, T88 |
 | INV-20 | S2 | Tasks | Planned | T8, T12, T19, T25, T32, T47, T50, T65, T77, T91 |
 | INV-21 | S2 | Tasks | In progress: T2 values | T2, T8, T19, T25, T50, T78 |
 | INV-22 | S2 | Tasks | Planned | T7, T19, T25, T65, T78, T91 |
@@ -599,7 +599,7 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-75 | S7 | Tasks | Planned | T13, T16, T22, T28, T29, T30, T35, T36, T40, T48, T50, T51, T52, T53, T54, T55, T56, T57, T58, T60 |
 | INV-76 | S7 | Tasks | In progress: T4 aggregate | T4, T12, T13, T23, T24, T25, T26, T31, T32, T33, T40, T42, T45, T46, T47, T48, T51, T52, T53, T54, T55, T56, T57, T61, T73 |
 | INV-77 | S7 | Tasks | Planned | T38, T39, T40, T48, T51, T60 |
-| INV-78 | S7 | Tasks | Planned | T5, T12, T13, T16, T22, T28, T35, T40, T48, T49, T50, T51, T52, T53, T54, T55, T56, T57, T58, T71, T73 |
+| INV-78 | S7 | Tasks | In progress: T5 identities | T5, T12, T13, T16, T22, T28, T35, T40, T48, T49, T50, T51, T52, T53, T54, T55, T56, T57, T58, T71, T73 |
 | INV-79 | S7 | Tasks | Planned | T12, T22, T28, T35, T48, T73 |
 | INV-80 | S7 | Tasks | Planned | T16, T22, T28, T35, T40, T48, T71, T73 |
 | INV-81 | S7 | Tasks | Planned | T9, T15, T16, T40, T44, T45, T46, T48 |
@@ -610,7 +610,7 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-86 | S7 | Tasks | Planned | T17, T18, T19, T20, T21, T22 |
 | INV-87 | S7 | Tasks | Planned | T17, T18, T22 |
 | INV-88 | S7 | Tasks | Planned | T13, T17, T21, T23, T24, T25, T26, T27, T28, T29, T30, T34, T40 |
-| INV-89 | S7 | Tasks | Planned | T5, T6, T12, T13, T40, T44, T71 |
+| INV-89 | S7 | Tasks | In progress: T5 identities | T5, T6, T12, T13, T40, T44, T71 |
 | INV-90 | S7 | Tasks | Planned | T12, T15, T16, T48, T73 |
 | INV-91 | S8 | Tasks | Planned | T71, T92, T93 |
 | INV-92 | S8 | Tasks | Planned | T71, T92, T93 |

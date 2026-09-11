@@ -34,6 +34,10 @@ describe("deterministic memory adapters", () => {
     expect(ids.nextLedgerAccountId()).toBe("account-1")
     expect(ids.nextJournalEntryId()).toBe("entry-1")
     expect(ids.nextPostingId()).toBe("posting-1")
+    expect(ids.nextInvestmentInstrumentId()).toBe("instrument-1")
+    expect(ids.nextInvestmentPositionId()).toBe("position-1")
+    expect(ids.nextInvestmentOperationId()).toBe("operation-1")
+    expect(ids.nextInvestmentValuationId()).toBe("valuation-1")
     expect(ids.nextEventId()).toBe("event-1")
   })
 
@@ -86,5 +90,11 @@ describe("deterministic memory adapters", () => {
 
     expect(ids.nextEventId()).not.toBe(ids.nextJournalEntryId())
     expect(ids.nextEventId()).not.toBe(ids.nextLedgerAccountId())
+    expect(ids.nextInvestmentInstrumentId()).not.toBe(
+      ids.nextInvestmentPositionId()
+    )
+    expect(ids.nextInvestmentOperationId()).not.toBe(
+      ids.nextInvestmentValuationId()
+    )
   })
 })

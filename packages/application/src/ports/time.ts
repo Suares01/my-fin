@@ -1,5 +1,9 @@
 import type {
   BookId,
+  InvestmentInstrumentId,
+  InvestmentOperationId,
+  InvestmentPositionId,
+  InvestmentValuationId,
   JournalEntryId,
   LedgerAccountId,
   PostingId,
@@ -15,5 +19,9 @@ export interface IdGenerator {
   nextLedgerAccountId(): LedgerAccountId
   nextJournalEntryId(): JournalEntryId
   nextPostingId(): PostingId
+  nextInvestmentInstrumentId(): InvestmentInstrumentId
+  nextInvestmentPositionId(): InvestmentPositionId
+  nextInvestmentOperationId(): InvestmentOperationId
+  nextInvestmentValuationId(): InvestmentValuationId
   nextEventId(): string
 }

@@ -1,6 +1,10 @@
 import type { IdGenerator } from "@workspace/application"
 import type {
   BookId,
+  InvestmentInstrumentId,
+  InvestmentOperationId,
+  InvestmentPositionId,
+  InvestmentValuationId,
   JournalEntryId,
   LedgerAccountId,
   PostingId,
@@ -23,6 +27,22 @@ export class SequentialIdGenerator implements IdGenerator {
 
   nextPostingId(): PostingId {
     return this.next("posting") as PostingId
+  }
+
+  nextInvestmentInstrumentId(): InvestmentInstrumentId {
+    return this.next("instrument") as InvestmentInstrumentId
+  }
+
+  nextInvestmentPositionId(): InvestmentPositionId {
+    return this.next("position") as InvestmentPositionId
+  }
+
+  nextInvestmentOperationId(): InvestmentOperationId {
+    return this.next("operation") as InvestmentOperationId
+  }
+
+  nextInvestmentValuationId(): InvestmentValuationId {
+    return this.next("valuation") as InvestmentValuationId
   }
 
   nextEventId(): string {
