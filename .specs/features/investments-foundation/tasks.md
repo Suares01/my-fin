@@ -220,13 +220,31 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Normalizar zeros/sinal, somar/subtrair 0.1 e 0.2 exatamente e rejeitar exponencial, entrada longa, precisão/escala excedidas; compare e equals não usam float.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 16 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Quick Domain` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Normalizar zeros/sinal, somar/subtrair 0.1 e 0.2 exatamente e rejeitar exponencial, entrada longa, precisão/escala excedidas; compare e equals não usam float.
+- [x] Escrever/atualizar no mesmo commit pelo menos 16 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Quick Domain` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: unit (Domain); testes acompanham o componente nesta tarefa.
 **Gate**: Quick Domain
 **Commit**: `feat(investments-domain): decimal exato`
+
+**Execution evidence**: baseline Domain: 11 files, 178 tests, pass; T1: 12 files, 199 tests, pass. `decimal.test.ts` adds 21 spec-derived scenarios. `pnpm --filter @workspace/domain exec vitest run` and `check-types` passed.
+
+| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| INV-82 decimal exact | `packages/domain/src/shared/decimal.test.ts:16` `expect(...).toBe("0.3")` | `0.1 + 0.2 = 0.3` without float | Yes |
+| INV-82 normalized zero/sign | `packages/domain/src/shared/decimal.test.ts:12` `expect(...).toBe(expected)` | `0010.5000 → 10.5`; `-0.00 → 0` | Yes |
+| INV-83 canonical limits | `packages/domain/src/shared/decimal.test.ts:61` `expectInvalidInput(input)` and `:82` `expect(...code).toBe("INVALID_INVESTMENT_INPUT")` | reject exponent, >80 chars, precision >38 and scale >18 | Yes |
+| exact comparison | `packages/domain/src/shared/decimal.test.ts:45` `expect(...compare(...)).toBe(expected)` and `:49` `expect(...equals(...)).toBe(true)` | compare/equals exact, no float | Yes |
+
+| Test assertion | Maps to | Keep |
+| --- | --- | --- |
+| `decimal.test.ts:16` `expect(...).toBe("0.3")` | INV-82 normative precision fixture | Yes |
+| `decimal.test.ts:12` `expect(...).toBe(expected)` | INV-82 canonical decimal normalization | Yes |
+| `decimal.test.ts:61` `expectInvalidInput(input)` | INV-83 invalid input/bounds | Yes |
+| `decimal.test.ts:45` `expect(...).toBe(expected)` | T1 exact comparison criterion | Yes |
+
+**Adequacy verdict**: PASS. Assertions target normative values and error code; no mock, tautological, or out-of-scope test. The Domain test location follows the Test Coverage Matrix; no project testing guideline was found.
 
 ### T2: Validação dos valores de investimento
 
