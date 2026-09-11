@@ -410,13 +410,33 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Cobrir todos os tipos/classes, normalização dos schemes, mercado obrigatório em TICKER e ausente em ISIN, moeda, metadata, lifecycle, no-op/version/facts e vedação a alterar tipo após uso.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 18 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Quick Domain` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Cobrir todos os tipos/classes, normalização dos schemes, mercado obrigatório em TICKER e ausente em ISIN, moeda, metadata, lifecycle, no-op/version/facts e vedação a alterar tipo após uso.
+- [x] Escrever/atualizar no mesmo commit pelo menos 18 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Quick Domain` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: unit (Domain); testes acompanham o componente nesta tarefa.
 **Gate**: Quick Domain
 **Commit**: `feat(investments-domain): aggregate investmentinstrument`
+
+**Execution evidence**: before T6 Domain: 14 files, 248 tests; after: 15 files, 285 tests. Quick Domain passed: 285/285; check-types, lint and `git diff --check` passed.
+
+| Requirement | Evidence | Spec outcome | Covered |
+| --- | --- | --- | --- |
+| INV-14/15 | `investment-instrument.test.ts:26-59` `expect(...).toMatchObject(...)`; `expect(investmentInstrumentClassFor(type)).toBe(instrumentClass)` | active instrument and normative type-to-class map | Yes |
+| INV-16 | `investment-instrument.test.ts:61-66` `toThrowError(...INVESTMENT_CURRENCY_MISMATCH)` | book-currency mismatch is rejected | Yes |
+| INV-17/18 | `investment-instrument.test.ts:68-103` `toEqual(...)`; `toThrowError(...DUPLICATE_INSTRUMENT_IDENTIFIER)` | scheme normalization and duplicate rejection | Yes |
+| INV-26 | `investment-instrument.test.ts:105-136` `expect(instrument.version).toBe(0)`; immutable type error | metadata versioning and type after use | Yes |
+| INV-114/116 | `investment-instrument.test.ts:138-153` `toThrowError(...INVESTMENT_INSTRUMENT_IN_USE)`; `expect(instrument.status).toBe(...)` | archive guard and reactivation lifecycle | Yes |
+| INV-83/89 | `investment-instrument.test.ts:82-89,167-175` `toThrowError(...INVALID_INVESTMENT_INPUT)` | bounded validation without external-provider dependency | Yes |
+
+| Test assertion | Maps to | Keep |
+| --- | --- | --- |
+| `investment-instrument.test.ts:45` `expect(investmentInstrumentClassFor(type)).toBe(instrumentClass)` | INV-15 all instrument types | Yes |
+| `investment-instrument.test.ts:81` `expect(...).toEqual({ scheme: "TICKER", value: "PETR4", market: "B3" })` | INV-17 normalization | Yes |
+| `investment-instrument.test.ts:114` `expect(instrument.pullDomainFacts()).toHaveLength(1)` | INV-26 versioned metadata fact | Yes |
+| `investment-instrument.test.ts:147` `toThrowError(...INVESTMENT_INSTRUMENT_IN_USE)` | INV-114 archive guard | Yes |
+
+**Adequacy verdict**: PASS. Thirty-seven new domain cases map to the normative aggregate contract, including every type, invalid identifier branch, lifecycle path and immutable contract; no assertion relies solely on a mock call.
 
 ### T7: Termos de renda fixa
 
