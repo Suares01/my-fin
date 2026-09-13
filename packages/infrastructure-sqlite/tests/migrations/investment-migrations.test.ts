@@ -139,7 +139,7 @@ describe("investment migrations", () => {
     await migrate()
     await expect(
       database!.query<{ version: number }>("SELECT version FROM schema_migrations ORDER BY version")
-    ).resolves.toEqual([{ version: 1 }, { version: 2 }, { version: 3 }, { version: 4 }, { version: 5 }, { version: 6 }, { version: 7 }, { version: 8 }, { version: 9 }])
+    ).resolves.toEqual([{ version: 1 }, { version: 2 }, { version: 3 }, { version: 4 }, { version: 5 }, { version: 6 }, { version: 7 }, { version: 8 }, { version: 9 }, { version: 10 }])
   })
 
   it("rolls back version five tables, triggers and control row on failure", async () => {
@@ -232,7 +232,7 @@ describe("investment migrations", () => {
     await createV5InstrumentDatabase()
     await migrate()
     await migrate()
-    await expect(database!.query("SELECT version FROM schema_migrations ORDER BY version")).resolves.toEqual([{ version: 1 }, { version: 2 }, { version: 3 }, { version: 4 }, { version: 5 }, { version: 6 }, { version: 7 }, { version: 8 }, { version: 9 }])
+    await expect(database!.query("SELECT version FROM schema_migrations ORDER BY version")).resolves.toEqual([{ version: 1 }, { version: 2 }, { version: 3 }, { version: 4 }, { version: 5 }, { version: 6 }, { version: 7 }, { version: 8 }, { version: 9 }, { version: 10 }])
   })
 
   it("rolls back version six schema and its control row on failure", async () => {
@@ -297,4 +297,14 @@ describe("investment migrations", () => {
   it('rejects invalid revision and source', async () => { await valuationDatabase(); await expect(database!.execute("INSERT INTO investment_valuations (id, book_id, position_id, allocation_revision, valued_at, valued_on, recorded_at, record_sequence, source, currency, gross_value_minor) VALUES ('bad', 'book-1', 'position-1', 0, '2026-01-01T00:00:00.000Z', '2026-01-01', '2026-01-01T00:00:00.000Z', 1, 'AUTO', 'BRL', 1)")).rejects.toThrow() })
   it('rejects valuation parent from another book', async () => { await valuationDatabase(); await expect(database!.execute("INSERT INTO investment_valuations (id, book_id, position_id, allocation_revision, valued_at, valued_on, recorded_at, record_sequence, source, currency, gross_value_minor) VALUES ('bad', 'book-1', 'missing', 1, '2026-01-01T00:00:00.000Z', '2026-01-01', '2026-01-01T00:00:00.000Z', 1, 'MANUAL', 'BRL', 1)")).rejects.toThrow() })
   it('rejects updates and deletes', async () => { await valuationDatabase(); await valuation(); await expect(database!.execute("UPDATE investment_valuations SET gross_value_minor = 0")).rejects.toThrow('immutable'); await expect(database!.execute("DELETE FROM investment_valuations")).rejects.toThrow('immutable') })
+  async function receiptDatabase(): Promise<void> { await valuationDatabase() }
+  async function receipt(requestId = 'request-1', command = '{"type":"PURCHASE"}'): Promise<void> { await database!.execute("INSERT INTO investment_request_receipts (book_id, request_id, format_version, canonical_command, result_json, recorded_at) VALUES ('book-1', ?, 1, ?, '{" + '"operationId":"operation-1"' + "}', '2026-01-01T00:00:00.000Z')", [requestId, command]) }
+  it('creates strict receipt storage', async () => { await receiptDatabase(); await expect(database!.query("SELECT name FROM sqlite_schema WHERE name = 'investment_request_receipts'")).resolves.toEqual([{ name: 'investment_request_receipts' }]) })
+  it('stores versioned canonical command and result JSON', async () => { await receiptDatabase(); await receipt(); await expect(database!.query("SELECT format_version, canonical_command FROM investment_request_receipts")).resolves.toEqual([{ format_version: 1, canonical_command: '{"type":"PURCHASE"}' }]) })
+  it('rejects duplicate request id in a book', async () => { await receiptDatabase(); await receipt(); await expect(receipt()).rejects.toThrow() })
+  it('rejects invalid JSON command and result', async () => { await receiptDatabase(); await expect(receipt('bad', 'not-json')).rejects.toThrow() })
+  it('rejects blank request id', async () => { await receiptDatabase(); await expect(receipt(' ')).rejects.toThrow() })
+  it('keeps receipts without expiration fields', async () => { await receiptDatabase(); await receipt(); await expect(database!.query("PRAGMA table_info(investment_request_receipts)")).resolves.not.toEqual(expect.arrayContaining([expect.objectContaining({ name: 'expires_at' })])) })
+  it('is repeatable through latest receipt migration', async () => { await receiptDatabase(); await migrate(); await expect(database!.query("SELECT version FROM schema_migrations ORDER BY version")).resolves.toHaveLength(10) })
+  it('rolls back receipt migration failure and preserves v9', async () => { await createV7OperationDatabase(); const migration = sqliteMigrations.find(({ version }) => version === 10)!; await expect(new SqliteMigrationRunner(database!, [...sqliteMigrations.filter(({ version }) => version <= 9), { ...migration, sql: migration.sql + '\nINVALID SQL;' }]).migrate()).rejects.toThrow(); await expect(database!.query("SELECT version FROM schema_migrations ORDER BY version")).resolves.toHaveLength(9) })
 })

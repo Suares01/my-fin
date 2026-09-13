@@ -930,13 +930,17 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Criar recibos com PK livro/requestId e JSON versionado; validar unicidade, rollback e retomada desde cada versão intermediária sem expiração/backfill duplicado.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 8 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full SQLite + Build` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Criar recibos com PK livro/requestId e JSON versionado; validar unicidade, rollback e retomada desde cada versão intermediária sem expiração/backfill duplicado.
+- [x] Escrever/atualizar no mesmo commit pelo menos 8 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full SQLite + Build` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (SQLite); testes acompanham o componente nesta tarefa.
 **Gate**: Full SQLite + Build
 **Commit**: `feat(investments-sqlite): migração de recibos`
+
+**Execution evidence**: 746/746 SQLite tests; Full SQLite, manifest, typecheck and SQLite build passed. Eight SQL scenarios cover versioned JSON, composite uniqueness, invalid data, no expiry, rerun and rollback.
+
+**Adequacy verdict**: PASS. Assertions target receipt state and migration outcomes directly.
 
 ### Phase 5: Persistência SQLite dos aggregates
 

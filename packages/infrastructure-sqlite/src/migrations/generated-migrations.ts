@@ -65,4 +65,11 @@ export const sqliteMigrations: readonly SqliteMigration[] = [
       "ea0481cab4de66d92f18f663f912f8cc384da49ce9e9f7358956d084dcc58fc1",
     sql: "CREATE TABLE investment_valuations (\n  id TEXT PRIMARY KEY, book_id TEXT NOT NULL, position_id TEXT NOT NULL, allocation_revision INTEGER NOT NULL CHECK (allocation_revision >= 1), valued_at TEXT NOT NULL, valued_on TEXT NOT NULL, recorded_at TEXT NOT NULL, record_sequence INTEGER NOT NULL CHECK (record_sequence > 0), source TEXT NOT NULL CHECK (source = 'MANUAL'), quantity TEXT, unit_price TEXT, currency TEXT NOT NULL CHECK (currency GLOB '[A-Z][A-Z][A-Z]'), gross_value_minor INTEGER NOT NULL, net_value_minor INTEGER, withdrawable_value_minor INTEGER,\n  UNIQUE (id, book_id), UNIQUE (book_id, record_sequence), FOREIGN KEY (position_id, book_id) REFERENCES investment_positions (id, book_id)\n) STRICT;\nCREATE INDEX ix_investment_valuations_current ON investment_valuations (book_id, position_id, allocation_revision, valued_at DESC, recorded_at DESC, record_sequence DESC);\nCREATE INDEX ix_investment_valuations_history ON investment_valuations (book_id, position_id, valued_at DESC, record_sequence DESC);\nCREATE TRIGGER trg_investment_valuations_immutable_update BEFORE UPDATE ON investment_valuations BEGIN SELECT RAISE(ABORT, 'investment valuations are immutable'); END;\nCREATE TRIGGER trg_investment_valuations_immutable_delete BEFORE DELETE ON investment_valuations BEGIN SELECT RAISE(ABORT, 'investment valuations are immutable'); END;\n",
   },
+  {
+    version: 10,
+    name: "investment_request_receipts",
+    checksum:
+      "458e97b15ad229c04fc2ad947f2770e9860ebf9cefeb5a35cdfe771c6ba001b7",
+    sql: "CREATE TABLE investment_request_receipts (\n  book_id TEXT NOT NULL, request_id TEXT NOT NULL CHECK (length(trim(request_id)) > 0), format_version INTEGER NOT NULL CHECK (format_version >= 1), canonical_command TEXT NOT NULL CHECK (json_valid(canonical_command)), result_json TEXT NOT NULL CHECK (json_valid(result_json)), recorded_at TEXT NOT NULL,\n  PRIMARY KEY (book_id, request_id), FOREIGN KEY (book_id) REFERENCES financial_books (id)\n) STRICT;\nCREATE INDEX ix_investment_request_receipts_recorded_at ON investment_request_receipts (book_id, recorded_at);\n",
+  },
 ]
