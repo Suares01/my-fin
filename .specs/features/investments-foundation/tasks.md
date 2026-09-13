@@ -884,13 +884,17 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Criar sequence/operations, estado anterior escalar, lineage restrito à posição e ownership de journal; proteger efeitos contra UPDATE e validar links permitidos.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Criar sequence/operations, estado anterior escalar, lineage restrito à posição e ownership de journal; proteger efeitos contra UPDATE e validar links permitidos.
+- [x] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (SQLite); testes acompanham o componente nesta tarefa.
 **Gate**: Full SQLite
 **Commit**: `feat(investments-sqlite): migração de operações e sequência`
+
+**Execution evidence**: 730/730 SQLite tests; Full SQLite, generated migrations and typecheck passed. `investment-migrations.test.ts` adds ten SQL integration scenarios for scalar effects, sequence, cash route, reversal/self lineage, immutable effect updates, indexes and rollback.
+
+**Adequacy verdict**: PASS. Assertions target persisted operation fields and named schema constraints, not mocks.
 
 ### T21: Migração de avaliações
 

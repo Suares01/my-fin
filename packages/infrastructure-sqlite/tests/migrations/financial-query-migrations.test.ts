@@ -33,6 +33,7 @@ describe("financial query migrations", () => {
       { version: 5, name: "financial_account_profiles" },
       { version: 6, name: "investment_instruments" },
       { version: 7, name: "investment_positions" },
+      { version: 8, name: "investment_operations" },
     ])
     expect(
       sqliteMigrations.every(({ checksum }) => /^[a-f0-9]{64}$/.test(checksum))
@@ -56,6 +57,7 @@ describe("financial query migrations", () => {
       { version: 5, name: "financial_account_profiles" },
       { version: 6, name: "investment_instruments" },
       { version: 7, name: "investment_positions" },
+      { version: 8, name: "investment_operations" },
     ])
   })
 
@@ -78,6 +80,7 @@ describe("financial query migrations", () => {
       { version: 5 },
       { version: 6 },
       { version: 7 },
+      { version: 8 },
     ])
   })
 
