@@ -702,13 +702,17 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Tipar resumo/posição/carteira/históricos, valores string, base de avaliação e cursores; resumos têm data e moeda explícitas e não aceitam filtros da lista.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 8 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Quick Application` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Tipar resumo/posição/carteira/históricos, valores string, base de avaliação e cursores; resumos têm data e moeda explícitas e não aceitam filtros da lista.
+- [x] Escrever/atualizar no mesmo commit 8 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Quick Application` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: unit (Application); testes acompanham o componente nesta tarefa.
 **Gate**: Quick Application
 **Commit**: `feat(investments-contracts): contratos das consultas de investimento`
+
+**Execution evidence**: before T14 Application: 20 files, 224 tests; after: 21 files, 232 tests. `investment-queries.test.ts` adds 8 contract scenarios. Quick Application passed: 21 files, 232 tests, 0 failures; application check-types passed after Domain build.
+
+**Adequacy verdict**: PASS. Tests assert explicit currency/asOf, string totals, valuation bases, unknown quantities and isolated list cursor/filter contracts.
 
 ### T15: Registro dos facts no dispatcher
 

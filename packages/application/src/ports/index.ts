@@ -102,6 +102,18 @@ export type {
   InvestmentValuationStore,
 } from "./investment-repositories.js"
 export type {
+  InvestmentAccountView,
+  InvestmentOperationHistoryItem,
+  InvestmentPortfolioSummary,
+  InvestmentPositionView,
+  InvestmentQueries,
+  InvestmentValuationHistoryItem,
+  ListInvestmentOperationsQuery,
+  ListInvestmentPositionsQuery,
+  ListInvestmentValuationsQuery,
+  PositionValuationView,
+} from "./investment-queries.js"
+export type {
   AmendInvestmentOperationCommand,
   AmortizationDraft,
   CashRoute,
