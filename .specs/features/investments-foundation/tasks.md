@@ -855,13 +855,23 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Criar posição/termos com FKs de livro, sem unique conta+instrumento; validar modos e variantes de taxa, datas, versões e revisão inicial.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 8 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Criar posição/termos com FKs de livro, sem unique conta+instrumento; validar modos e variantes de taxa, datas, versões e revisão inicial.
+- [x] Escrever/atualizar no mesmo commit pelo menos 8 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (SQLite); testes acompanham o componente nesta tarefa.
 **Gate**: Full SQLite
 **Commit**: `feat(investments-sqlite): migração de posições e termos`
+
+**Execution evidence**: before T19 SQLite: 40 files, 712 tests; after: 40 files, 720 tests. Full SQLite passed: dependency builds, SQLite 720/720, manifest check and typecheck.
+
+| Requirement | Evidence | Outcome | Covered |
+| --- | --- | --- | --- |
+| INV-19, INV-20, INV-21, INV-127 | `tests/migrations/investment-migrations.test.ts:256-264` exact two-position and invalid quantity/revision assertions | multiple positions are allowed; mode and revision constraints persist | Yes |
+| INV-22, INV-23 | `:266-267` exact three rate kinds; `:268` invalid variant/date rejections | all complete variants persist; incomplete and reversed dates reject | Yes |
+| INV-74, INV-85, INV-86 | `:265`, `:269` FK and v7 rollback assertions | book-scoped parents and migration atomicity hold | Yes |
+
+**Adequacy verdict**: PASS. Eight integration scenarios assert stored rows and direct SQL rejection paths; all map to the task requirements and avoid mock-only coverage.
 
 ### T20: Migração de operações e sequência
 

@@ -5,6 +5,7 @@ import { BetterSqliteDatabase } from "../support/better-sqlite-database.js"
 
 const V4_MIGRATIONS = sqliteMigrations.filter(({ version }) => version <= 4)
 const V5_MIGRATIONS = sqliteMigrations.filter(({ version }) => version <= 5)
+const V6_MIGRATIONS = sqliteMigrations.filter(({ version }) => version <= 6)
 
 describe("investment migrations", () => {
   let database: BetterSqliteDatabase | undefined
@@ -138,7 +139,7 @@ describe("investment migrations", () => {
     await migrate()
     await expect(
       database!.query<{ version: number }>("SELECT version FROM schema_migrations ORDER BY version")
-    ).resolves.toEqual([{ version: 1 }, { version: 2 }, { version: 3 }, { version: 4 }, { version: 5 }, { version: 6 }])
+    ).resolves.toEqual([{ version: 1 }, { version: 2 }, { version: 3 }, { version: 4 }, { version: 5 }, { version: 6 }, { version: 7 }])
   })
 
   it("rolls back version five tables, triggers and control row on failure", async () => {
@@ -231,7 +232,7 @@ describe("investment migrations", () => {
     await createV5InstrumentDatabase()
     await migrate()
     await migrate()
-    await expect(database!.query("SELECT version FROM schema_migrations ORDER BY version")).resolves.toEqual([{ version: 1 }, { version: 2 }, { version: 3 }, { version: 4 }, { version: 5 }, { version: 6 }])
+    await expect(database!.query("SELECT version FROM schema_migrations ORDER BY version")).resolves.toEqual([{ version: 1 }, { version: 2 }, { version: 3 }, { version: 4 }, { version: 5 }, { version: 6 }, { version: 7 }])
   })
 
   it("rolls back version six schema and its control row on failure", async () => {
@@ -241,4 +242,36 @@ describe("investment migrations", () => {
     await expect(database!.query("SELECT name FROM sqlite_schema WHERE name IN ('investment_instruments', 'investment_instrument_identifiers')")).resolves.toEqual([])
     await expect(database!.query("SELECT version FROM schema_migrations ORDER BY version")).resolves.toEqual([{ version: 1 }, { version: 2 }, { version: 3 }, { version: 4 }, { version: 5 }])
   })
+
+  async function createV6PositionDatabase(): Promise<void> {
+    await createV4Database()
+    await new SqliteMigrationRunner(database!, V6_MIGRATIONS).migrate()
+    await database!.execute("UPDATE financial_accounts SET type = 'INVESTMENT_ACCOUNT' WHERE ledger_account_id = 'asset-active'")
+    await database!.execute("INSERT INTO investment_accounts (ledger_account_id, book_id) VALUES ('asset-active', 'book-1')")
+    await database!.execute("INSERT INTO investment_instruments (id, book_id, name, normalized_name, type, currency, status, version) VALUES ('instrument-1', 'book-1', 'CDB', 'cdb', 'CDB', 'BRL', 'ACTIVE', 0)")
+  }
+  async function insertPosition(id = 'position-1', mode = 'UNITS', quantity: string | null = '10'): Promise<void> {
+    await database!.execute("INSERT INTO investment_positions (id, book_id, investment_account_id, instrument_id, normalized_label, quantity_mode, quantity, book_cost_minor, currency, opened_on, closed_on, status, allocation_revision, allocation_effective_on, version) VALUES (?, 'book-1', 'asset-active', 'instrument-1', '', ?, ?, 1000, 'BRL', '2026-01-01', NULL, 'OPEN', 1, '2026-01-01', 0)", [id, mode, quantity])
+  }
+  it('creates strict positions and terms with no account-instrument uniqueness', async () => {
+    await createV6PositionDatabase(); await migrate(); await insertPosition('position-1'); await insertPosition('position-2')
+    await expect(database!.query("SELECT id FROM investment_positions ORDER BY id")).resolves.toEqual([{ id: 'position-1' }, { id: 'position-2' }])
+  })
+  it('requires quantity only for UNITS positions', async () => {
+    await createV6PositionDatabase(); await migrate()
+    await expect(insertPosition('bad-units', 'UNITS', null)).rejects.toThrow()
+    await expect(insertPosition('bad-amount', 'AMOUNT', '1')).rejects.toThrow()
+  })
+  it('requires a closed date exactly for CLOSED positions', async () => {
+    await createV6PositionDatabase(); await migrate()
+    await expect(database!.execute("INSERT INTO investment_positions (id, book_id, investment_account_id, instrument_id, normalized_label, quantity_mode, quantity, book_cost_minor, currency, opened_on, closed_on, status, allocation_revision, allocation_effective_on, version) VALUES ('bad', 'book-1', 'asset-active', 'instrument-1', '', 'UNITS', '1', 1, 'BRL', '2026-01-01', NULL, 'CLOSED', 1, '2026-01-01', 0)")).rejects.toThrow()
+  })
+  it('requires initial positive allocation revision', async () => {
+    await createV6PositionDatabase(); await migrate()
+    await expect(database!.execute("INSERT INTO investment_positions (id, book_id, investment_account_id, instrument_id, normalized_label, quantity_mode, quantity, book_cost_minor, currency, opened_on, closed_on, status, allocation_revision, allocation_effective_on, version) VALUES ('bad', 'book-1', 'asset-active', 'instrument-1', '', 'UNITS', '1', 1, 'BRL', '2026-01-01', NULL, 'OPEN', 0, '2026-01-01', 0)")).rejects.toThrow()
+  })
+  it('rejects a position parent from another book', async () => { await createV6PositionDatabase(); await migrate(); await expect(database!.execute("INSERT INTO investment_positions (id, book_id, investment_account_id, instrument_id, normalized_label, quantity_mode, quantity, book_cost_minor, currency, opened_on, closed_on, status, allocation_revision, allocation_effective_on, version) VALUES ('bad', 'book-1', 'asset-active', 'missing', '', 'UNITS', '1', 1, 'BRL', '2026-01-01', NULL, 'OPEN', 1, '2026-01-01', 0)")).rejects.toThrow() })
+  it('accepts complete prefixed, indexed and hybrid terms', async () => { await createV6PositionDatabase(); await migrate(); await insertPosition('position-1'); await insertPosition('position-2'); await insertPosition('position-3'); await database!.execute("INSERT INTO investment_fixed_income_terms (position_id, book_id, rate_kind, annual_rate) VALUES ('position-1', 'book-1', 'PREFIXED', '10')"); await database!.execute("INSERT INTO investment_fixed_income_terms (position_id, book_id, rate_kind, index_name, index_percentage) VALUES ('position-2', 'book-1', 'INDEXED', 'CDI', '100')"); await database!.execute("INSERT INTO investment_fixed_income_terms (position_id, book_id, rate_kind, index_name, index_percentage, annual_spread_rate) VALUES ('position-3', 'book-1', 'HYBRID', 'IPCA', '100', '5')"); await expect(database!.query("SELECT position_id, rate_kind FROM investment_fixed_income_terms ORDER BY position_id")).resolves.toEqual([{ position_id: 'position-1', rate_kind: 'PREFIXED' }, { position_id: 'position-2', rate_kind: 'INDEXED' }, { position_id: 'position-3', rate_kind: 'HYBRID' }]) })
+  it('rejects incomplete fixed-income variants and invalid known date order', async () => { await createV6PositionDatabase(); await migrate(); await insertPosition(); await expect(database!.execute("INSERT INTO investment_fixed_income_terms (position_id, book_id, rate_kind, annual_rate) VALUES ('position-1', 'book-1', 'PREFIXED', NULL)")).rejects.toThrow(); await expect(database!.execute("INSERT INTO investment_fixed_income_terms (position_id, book_id, issue_date, maturity_date) VALUES ('position-1', 'book-1', '2026-02-01', '2026-01-01')")).rejects.toThrow() })
+  it('rolls back version seven when SQL fails', async () => { await createV6PositionDatabase(); const migration = sqliteMigrations.find(({ version }) => version === 7)!; await expect(new SqliteMigrationRunner(database!, [...V6_MIGRATIONS, { ...migration, sql: migration.sql + '\nINVALID SQL;' }]).migrate()).rejects.toThrow(); await expect(database!.query("SELECT version FROM schema_migrations ORDER BY version")).resolves.toEqual([{ version: 1 }, { version: 2 }, { version: 3 }, { version: 4 }, { version: 5 }, { version: 6 }]) })
 })

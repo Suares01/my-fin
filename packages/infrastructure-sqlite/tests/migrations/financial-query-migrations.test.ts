@@ -32,6 +32,7 @@ describe("financial query migrations", () => {
       { version: 4, name: "category_visual_metadata" },
       { version: 5, name: "financial_account_profiles" },
       { version: 6, name: "investment_instruments" },
+      { version: 7, name: "investment_positions" },
     ])
     expect(
       sqliteMigrations.every(({ checksum }) => /^[a-f0-9]{64}$/.test(checksum))
@@ -54,6 +55,7 @@ describe("financial query migrations", () => {
       { version: 4, name: "category_visual_metadata" },
       { version: 5, name: "financial_account_profiles" },
       { version: 6, name: "investment_instruments" },
+      { version: 7, name: "investment_positions" },
     ])
   })
 
@@ -75,6 +77,7 @@ describe("financial query migrations", () => {
       { version: 4 },
       { version: 5 },
       { version: 6 },
+      { version: 7 },
     ])
   })
 
