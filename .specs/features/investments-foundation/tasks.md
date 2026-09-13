@@ -608,13 +608,29 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Cobrir todas as linhas da matriz com valores literais da spec: principal, ganho/perda, despesas e caixa; agrupar contas/remover zeros, não criar journal vazio nem capitalizar/repetir taxas.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 24 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Quick Domain` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Cobrir todas as linhas da matriz com valores literais da spec: principal, ganho/perda, despesas e caixa; agrupar contas/remover zeros, não criar journal vazio nem capitalizar/repetir taxas.
+- [x] Escrever/atualizar no mesmo commit 24 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Quick Domain` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: unit (Domain); testes acompanham o componente nesta tarefa.
 **Gate**: Quick Domain
 **Commit**: `feat(investments-domain): planner contábil de investimentos`
+
+**Execution evidence**: before T11 Domain: 19 files, 380 tests; after: 20 files, 404 tests. `investment-accounting-plan.test.ts` adds 24 spec-derived scenarios. Quick Domain passed: 20 files, 404 tests, 0 failures; `check-types` passed.
+
+| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- |
+| INV-27, INV-29, INV-30, INV-125 | `investment-accounting-plan.test.ts:28-31`, `:45-47` `expect(result.bookCostDeltaMinor).toBe(cost)` | Opening has no journal; purchase/application preserves principal and never capitalizes fees/taxes. | Yes |
+| INV-35–INV-46, INV-126 | `:32-42`, `:45-47` `expect(...postings).toEqual(expected)` | Sale/redemption/amortization/income/fee/tax use literal principal, result, expenses and cash deltas. | Yes |
+| INV-45 | `:36`, `:47` `expect(...).toEqual([])` | Internal sale at cost with no expenses produces no empty journal. | Yes |
+| INV-36, INV-132 | `:50-61` `expect(...).toThrow("Invalid investment accounting plan")` | Impossible routes, required categories, negative net cash and malformed monetary values reject. | Yes |
+
+| Test assertion | Maps to | Keep |
+| --- | --- | --- |
+| `investment-accounting-plan.test.ts:45-47` | INV-27, INV-29, INV-30, INV-35–INV-46, INV-125, INV-126 literal accounting matrix | Yes |
+| `:61` | INV-36 invalid operation boundaries | Yes |
+
+**Adequacy verdict**: PASS. The 24 assertions cover every planner operation branch, no-empty-journal grouping and required invalid inputs with literal spec outcomes.
 
 ### T12: Contratos de comandos e resultados
 
