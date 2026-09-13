@@ -37,7 +37,7 @@ describe("initializeSqliteDatabase", () => {
       await database.query<{ version: number }>(
         "SELECT version FROM schema_migrations"
       )
-    ).toEqual([{ version: 1 }, { version: 2 }, { version: 3 }, { version: 4 }])
+    ).toEqual([{ version: 1 }, { version: 2 }, { version: 3 }, { version: 4 }, { version: 5 }])
     expect(
       await database.query(
         "SELECT name FROM sqlite_schema WHERE name = 'postings'"
@@ -62,7 +62,7 @@ describe("initializeSqliteDatabase", () => {
       await database.query<{ version: number }>(
         "SELECT version FROM schema_migrations"
       )
-    ).toEqual([{ version: 1 }, { version: 2 }, { version: 3 }, { version: 4 }])
+    ).toEqual([{ version: 1 }, { version: 2 }, { version: 3 }, { version: 4 }, { version: 5 }])
   })
 
   it("runs an explicitly supplied migration list in version order", async () => {
@@ -115,6 +115,7 @@ describe("initializeSqliteDatabase", () => {
       { version: 2, applied_at: expect.any(String) },
       { version: 3, applied_at: expect.any(String) },
       { version: 4, applied_at: expect.any(String) },
+      { version: 5, applied_at: expect.any(String) },
     ])
     expect(
       await database.query(

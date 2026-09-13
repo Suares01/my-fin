@@ -195,6 +195,7 @@ describe("category visual metadata migration", () => {
       { version: 2 },
       { version: 3 },
       { version: 4 },
+      { version: 5 },
     ])
     await expect(
       database!.query("SELECT id FROM ledger_accounts ORDER BY id")

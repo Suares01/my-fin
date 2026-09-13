@@ -779,13 +779,32 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Criar tabelas/triggers de profiles e backfill OTHER inclusive arquivadas, sem tocar postings/versões/checksums; testar banco vazio/v4, repetição e rollback da migration.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Criar tabelas/triggers de profiles e backfill OTHER inclusive arquivadas, sem tocar postings/versões/checksums; testar banco vazio/v4, repetição e rollback da migration.
+- [x] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (SQLite); testes acompanham o componente nesta tarefa.
 **Gate**: Full SQLite
 **Commit**: `feat(investments-sqlite): migração de perfis financeiros`
+
+**Execution evidence**: baseline SQLite: 39 files, 692 tests; after: 40 files, 703 tests. Full SQLite passed: Domain/Application/Memory builds, SQLite 703/703 tests, migration manifest check and typecheck.
+
+| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- |
+| INV-01, INV-03 | `tests/migrations/investment-migrations.test.ts:87-103` `rejects.toThrow("financial account profile must match")` | profiles accept only matching non-system financial parent accounts | Yes |
+| INV-05, INV-06 | `:53-72` `resolves.toEqual([...OTHER_ASSET, OTHER_LIABILITY])`; `:75-84` `resolves.toEqual([{ version: 7 }])` | active/archived ASSET and LIABILITY backfill once; categories/system, account versions and postings remain intact | Yes |
+| INV-85, INV-86 | `:39-50` `sql: expect.stringContaining("STRICT")`; `:134-140` migration list is `1..5` after repeated execution | empty and v4 databases get strict, book-scoped profiles without modifying prior migrations | Yes |
+| INV-87 | `:143-150` `resolves.toEqual([])` / versions `1..4` | failed v5 rolls back only itself and can be retried | Yes |
+| INV-88 | `:106-131` exact child profile selection and invalid settlement assertions | persisted profile relations retain book-scoped parent integrity | Yes |
+
+| Test assertion | Maps to | Keep |
+| --- | --- | --- |
+| `investment-migrations.test.ts:60-64` `resolves.toEqual([...])` | INV-05/06 normative OTHER backfill | Yes |
+| `:92`, `:100`, `:103` `rejects.toThrow(...)` | INV-01/03 profile parent constraints | Yes |
+| `:111`, `:119`, `:128`, `:131` direct relation assertions | INV-01/03 investment-profile and settlement constraints | Yes |
+| `:140`, `:149-150` migration-state assertions | INV-85/86/87 repeatability and rollback | Yes |
+
+**Adequacy verdict**: PASS. Eleven integration scenarios assert schema state, persisted values and rollback metadata directly. No scenario relies solely on mock calls; existing SQLite migration-test conventions were followed.
 
 ### T18: Migração de instrumentos
 

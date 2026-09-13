@@ -141,7 +141,9 @@ describe("initial financial ledger migration", () => {
     )
 
     expect(rows.map((row) => row.name)).toEqual([
+      "financial_accounts",
       "financial_books",
+      "investment_accounts",
       "journal_entries",
       "journal_sequences",
       "ledger_accounts",
@@ -163,6 +165,10 @@ describe("initial financial ledger migration", () => {
     expect(triggers.map(({ name }) => name).sort()).toEqual([
       "trg_category_visual_metadata_insert",
       "trg_category_visual_metadata_update",
+      "trg_financial_accounts_insert",
+      "trg_financial_accounts_update",
+      "trg_investment_accounts_insert",
+      "trg_investment_accounts_update",
       "trg_journal_entries_replaced_by_same_book_insert",
       "trg_journal_entries_replaced_by_same_book_update",
       "trg_journal_entries_replacement_of_same_book_insert",
@@ -415,6 +421,8 @@ describe("initial financial ledger migration", () => {
     )
 
     expect(rows.map((row) => row.name)).toEqual([
+      "ix_financial_accounts_book_type",
+      "ix_investment_accounts_book_settlement",
       "ix_journal_entries_book_date_sequence",
       "ix_journal_entries_book_date_sequence_numeric",
       "ix_journal_entries_book_search",
