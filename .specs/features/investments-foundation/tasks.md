@@ -817,13 +817,32 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Criar instrumentos/identificadores STRICT, FK composta e unicidade com mercado canônico não nulo; testar colisões por livro/scheme e migração retomável.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 8 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Criar instrumentos/identificadores STRICT, FK composta e unicidade com mercado canônico não nulo; testar colisões por livro/scheme e migração retomável.
+- [x] Escrever/atualizar no mesmo commit pelo menos 8 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (SQLite); testes acompanham o componente nesta tarefa.
 **Gate**: Full SQLite
 **Commit**: `feat(investments-sqlite): migração de instrumentos`
+
+**Execution evidence**: before T18 SQLite: 40 files, 703 tests; after: 40 files, 712 tests. Full SQLite passed: dependency builds, SQLite 712/712 tests, generated manifest check and typecheck.
+
+| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- |
+| INV-14 | `tests/migrations/investment-migrations.test.ts:154-162` `sql: expect.stringContaining("STRICT")`; `:218-227` rejects invalid enum/currency/status | instrument catalog is strict and preserves the approved type/lifecycle value set | Yes |
+| INV-17 | `:177-198` exact TICKER `market: "B3"`, ISIN `market: ""`, and invalid market rejections | TICKER requires market, ISIN forbids it, and missing market is canonical empty text | Yes |
+| INV-18 | `:201-215` collision and foreign-key rejection assertions | normalized identifier is unique per book/scheme/market and cannot cross books | Yes |
+| INV-74 | `:210-215` `rejects.toThrow()` | a child identifier cannot reference a parent from another book | Yes |
+| INV-85, INV-86, INV-87 | `:230-242` version `1..6`, absent tables and preserved `1..5` assertions | reexecution is safe and a failed v6 rolls back only itself | Yes |
+
+| Test assertion | Maps to | Keep |
+| --- | --- | --- |
+| `investment-migrations.test.ts:182` exact ticker row | INV-17 canonical market | Yes |
+| `:190` `market: ""` | INV-17 ISIN canonical market | Yes |
+| `:197-198`, `:207`, `:215` rejections | INV-17/18/74 schema integrity | Yes |
+| `:234`, `:241-242` migration-state assertions | INV-85/86/87 retry and rollback | Yes |
+
+**Adequacy verdict**: PASS. Nine integration scenarios assert persisted canonical fields, unique/FK constraints, strict values and retry state. No mock-only assertion or unclaimed scenario was added.
 
 ### T19: Migração de posições e termos
 

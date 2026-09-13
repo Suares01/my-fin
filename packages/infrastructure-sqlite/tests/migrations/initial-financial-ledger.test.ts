@@ -144,6 +144,8 @@ describe("initial financial ledger migration", () => {
       "financial_accounts",
       "financial_books",
       "investment_accounts",
+      "investment_instrument_identifiers",
+      "investment_instruments",
       "journal_entries",
       "journal_sequences",
       "ledger_accounts",
@@ -423,6 +425,8 @@ describe("initial financial ledger migration", () => {
     expect(rows.map((row) => row.name)).toEqual([
       "ix_financial_accounts_book_type",
       "ix_investment_accounts_book_settlement",
+      "ix_investment_instrument_identifiers_book_instrument",
+      "ix_investment_instruments_book_status_type_name",
       "ix_journal_entries_book_date_sequence",
       "ix_journal_entries_book_date_sequence_numeric",
       "ix_journal_entries_book_search",
