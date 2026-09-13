@@ -985,13 +985,24 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Roundtrip de instrumentos/filhas, lookup tipado, unicidade, no-op e CAS com rollback das filhas; não devolver entidade de outro livro.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Roundtrip de instrumentos/filhas, lookup tipado, unicidade, no-op e CAS com rollback das filhas; não devolver entidade de outro livro.
+- [x] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (SQLite); testes acompanham o componente nesta tarefa.
 **Gate**: Full SQLite
 **Commit**: `feat(investments-sqlite): repository sqlite de instrumentos`
+
+**Execution evidence**: before T24 SQLite: 40 files, 761 tests; after: 41 files, 774 tests. Full SQLite passed: Domain/Application/Memory builds, SQLite 774/774 tests, generated migration manifest check and SQLite typecheck.
+
+| Requirement / done-when | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| INV-14, INV-16, INV-17 | `sqlite-investment-instrument-repository.test.ts:67-81` `expect(...toSnapshot()).toEqual(value.toSnapshot())`; `:103-127` `resolves.toBe(true)` | Scalar fields and normalized TICKER/ISIN identifiers persist and restore exactly. | Yes |
+| INV-18, INV-74 | `sqlite-investment-instrument-repository.test.ts:84-91` `resolves.toEqual({ kind: "BOOK_MISMATCH" })`; `:177-193` duplicate rejects and second lookup is `NOT_FOUND` | Other-book lookup exposes no entity; duplicate normalized identifier rolls back its instrument. | Yes |
+| INV-26, INV-76 | `sqlite-investment-instrument-repository.test.ts:159-174` `expect(value.version).toBe(0)`; `:196-244` snapshot equality after CAS and stale failure | Metadata no-op preserves version; save replaces children only with the exact next version. | Yes |
+| INV-88, INV-114, INV-116 | `sqlite-investment-instrument-repository.test.ts:94-100` `resolves.toBeUndefined()`; `:130-156` scoped/excluded identifier assertions | Reconstructed instruments preserve independent IDs, and repository uniqueness is book-scoped without treating a display name as an identifier key. | Yes |
+
+**Adequacy verdict**: PASS. The 13 scenarios assert returned snapshots, typed lookup envelopes, child state and rollback. Each is requirement-bound; no assertion is only a mock-call count.
 
 ### T25: Repository SQLite de posições
 
