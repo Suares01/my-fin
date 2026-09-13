@@ -673,13 +673,23 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Definir BookScopedLookup, repositories, stores append-only, sequence e leituras scoped de D4.3; não exigir implementações novas no RepositoryContext existente antes de T40.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 6 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Quick Application` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Definir BookScopedLookup, repositories, stores append-only, sequence e leituras scoped de D4.3; não exigir implementações novas no RepositoryContext existente antes de T40.
+- [x] Escrever/atualizar no mesmo commit 6 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Quick Application` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: unit (Application); testes acompanham o componente nesta tarefa.
 **Gate**: Quick Application
 **Commit**: `feat(investments-contracts): ports de persistência de investimento`
+
+**Execution evidence**: before T13 Application: 19 files, 218 tests; after: 20 files, 224 tests. `investment-repositories.test.ts` adds 6 contract scenarios. Quick Application passed: 20 files, 224 tests, 0 failures; application check-types passed after Domain build.
+
+| Requirement | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| INV-74 | `investment-repositories.test.ts:6-8` `expect(...).toEqual(["FOUND", "NOT_FOUND", "BOOK_MISMATCH"])` | Book lookup distinguishes absence from another book. | Yes |
+| INV-75, INV-76, INV-78, INV-88 | `:9-12` `expectTypeOf<Parameters<...>>().toEqualTypeOf<...>()` | Receipt, sequence, valuation and scoped reads remain typed at the application boundary. | Yes |
+| INV-89, INV-132 | `:13` `expectTypeOf<RepositoryContext>().not.toHaveProperty("investmentPositions")` | New ports are additive and do not require infrastructure or legacy context changes. | Yes |
+
+**Adequacy verdict**: PASS. The six contract checks cover lookup discrimination, append-only/idempotent stores and scoped transaction reads.
 
 ### T14: Contratos das consultas de investimento
 

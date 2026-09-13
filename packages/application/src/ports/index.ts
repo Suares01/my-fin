@@ -91,6 +91,17 @@ export type { YearMonth } from "./querying-types.js"
 export type { CommittedTransaction, TransactionManager } from "./transaction.js"
 export type { Clock, IdGenerator } from "./time.js"
 export type {
+  BookScopedLookup,
+  InvestmentCashState,
+  InvestmentInstrumentRepository,
+  InvestmentOperationRepository,
+  InvestmentPositionRepository,
+  InvestmentRequestStore,
+  InvestmentSequenceStore,
+  InvestmentTransactionReads,
+  InvestmentValuationStore,
+} from "./investment-repositories.js"
+export type {
   AmendInvestmentOperationCommand,
   AmortizationDraft,
   CashRoute,
