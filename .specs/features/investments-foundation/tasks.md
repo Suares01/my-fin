@@ -907,13 +907,17 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Criar avaliações imutáveis, índice de seleção vigente e ordem persistida; rejeitar UPDATE/DELETE, aceitar duas observações no mesmo instante.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 8 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Criar avaliações imutáveis, índice de seleção vigente e ordem persistida; rejeitar UPDATE/DELETE, aceitar duas observações no mesmo instante.
+- [x] Escrever/atualizar no mesmo commit pelo menos 8 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (SQLite); testes acompanham o componente nesta tarefa.
 **Gate**: Full SQLite
 **Commit**: `feat(investments-sqlite): migração de avaliações`
+
+**Execution evidence**: 738/738 SQLite tests; Full SQLite, generated manifest and typecheck passed. Eight SQL scenarios cover immutable rows, current/history indexes, sequence ordering, same-instant observations, duplicate sequence, parent isolation and invalid values.
+
+**Adequacy verdict**: PASS. Every assertion targets a required persisted value or schema rejection.
 
 ### T22: Migração de recibos
 

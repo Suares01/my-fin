@@ -139,7 +139,7 @@ describe("investment migrations", () => {
     await migrate()
     await expect(
       database!.query<{ version: number }>("SELECT version FROM schema_migrations ORDER BY version")
-    ).resolves.toEqual([{ version: 1 }, { version: 2 }, { version: 3 }, { version: 4 }, { version: 5 }, { version: 6 }, { version: 7 }, { version: 8 }])
+    ).resolves.toEqual([{ version: 1 }, { version: 2 }, { version: 3 }, { version: 4 }, { version: 5 }, { version: 6 }, { version: 7 }, { version: 8 }, { version: 9 }])
   })
 
   it("rolls back version five tables, triggers and control row on failure", async () => {
@@ -232,7 +232,7 @@ describe("investment migrations", () => {
     await createV5InstrumentDatabase()
     await migrate()
     await migrate()
-    await expect(database!.query("SELECT version FROM schema_migrations ORDER BY version")).resolves.toEqual([{ version: 1 }, { version: 2 }, { version: 3 }, { version: 4 }, { version: 5 }, { version: 6 }, { version: 7 }, { version: 8 }])
+    await expect(database!.query("SELECT version FROM schema_migrations ORDER BY version")).resolves.toEqual([{ version: 1 }, { version: 2 }, { version: 3 }, { version: 4 }, { version: 5 }, { version: 6 }, { version: 7 }, { version: 8 }, { version: 9 }])
   })
 
   it("rolls back version six schema and its control row on failure", async () => {
@@ -287,4 +287,14 @@ describe("investment migrations", () => {
   it('rejects effect updates while allowing no effect to be silently changed', async () => { await createV7OperationDatabase(); await migrate(); await insertOperation(); await expect(database!.execute("UPDATE investment_operations SET net_cash_flow_minor = 0 WHERE id = 'operation-1'")).rejects.toThrow('immutable') })
   it('keeps the effective-operation partial index', async () => { await createV7OperationDatabase(); await migrate(); await expect(database!.query("SELECT name FROM sqlite_schema WHERE type = 'index' AND name = 'ix_investment_operations_effective'")).resolves.toEqual([{ name: 'ix_investment_operations_effective' }]) })
   it('rolls back version eight when its SQL fails', async () => { await createV7OperationDatabase(); const migration = sqliteMigrations.find(({ version }) => version === 8)!; await expect(new SqliteMigrationRunner(database!, [...sqliteMigrations.filter(({ version }) => version <= 7), { ...migration, sql: migration.sql + '\nINVALID SQL;' }]).migrate()).rejects.toThrow(); await expect(database!.query("SELECT version FROM schema_migrations ORDER BY version")).resolves.toEqual([{ version: 1 }, { version: 2 }, { version: 3 }, { version: 4 }, { version: 5 }, { version: 6 }, { version: 7 }]) })
+  async function valuationDatabase(): Promise<void> { await createV7OperationDatabase(); await migrate() }
+  async function valuation(id = 'valuation-1', sequence = 1, valuedAt = '2026-01-01T10:00:00.000Z'): Promise<void> { await database!.execute("INSERT INTO investment_valuations (id, book_id, position_id, allocation_revision, valued_at, valued_on, recorded_at, record_sequence, source, currency, gross_value_minor) VALUES (?, 'book-1', 'position-1', 1, ?, '2026-01-01', '2026-01-01T11:00:00.000Z', ?, 'MANUAL', 'BRL', 100)", [id, valuedAt, sequence]) }
+  it('creates strict valuation storage and current index', async () => { await valuationDatabase(); await expect(database!.query("SELECT name FROM sqlite_schema WHERE name = 'ix_investment_valuations_current'")).resolves.toEqual([{ name: 'ix_investment_valuations_current' }]) })
+  it('persists scalar observation values', async () => { await valuationDatabase(); await valuation(); await expect(database!.query("SELECT gross_value_minor, source FROM investment_valuations")).resolves.toEqual([{ gross_value_minor: 100, source: 'MANUAL' }]) })
+  it('allows two observations at the same instant', async () => { await valuationDatabase(); await valuation('one', 1); await valuation('two', 2); await expect(database!.query("SELECT id FROM investment_valuations ORDER BY record_sequence")).resolves.toEqual([{ id: 'one' }, { id: 'two' }]) })
+  it('orders ties by persisted record sequence', async () => { await valuationDatabase(); await valuation('one', 1); await valuation('two', 2); await expect(database!.query("SELECT id FROM investment_valuations ORDER BY valued_at DESC, recorded_at DESC, record_sequence DESC LIMIT 1")).resolves.toEqual([{ id: 'two' }]) })
+  it('rejects duplicate record sequence per book', async () => { await valuationDatabase(); await valuation(); await expect(valuation('two')).rejects.toThrow() })
+  it('rejects invalid revision and source', async () => { await valuationDatabase(); await expect(database!.execute("INSERT INTO investment_valuations (id, book_id, position_id, allocation_revision, valued_at, valued_on, recorded_at, record_sequence, source, currency, gross_value_minor) VALUES ('bad', 'book-1', 'position-1', 0, '2026-01-01T00:00:00.000Z', '2026-01-01', '2026-01-01T00:00:00.000Z', 1, 'AUTO', 'BRL', 1)")).rejects.toThrow() })
+  it('rejects valuation parent from another book', async () => { await valuationDatabase(); await expect(database!.execute("INSERT INTO investment_valuations (id, book_id, position_id, allocation_revision, valued_at, valued_on, recorded_at, record_sequence, source, currency, gross_value_minor) VALUES ('bad', 'book-1', 'missing', 1, '2026-01-01T00:00:00.000Z', '2026-01-01', '2026-01-01T00:00:00.000Z', 1, 'MANUAL', 'BRL', 1)")).rejects.toThrow() })
+  it('rejects updates and deletes', async () => { await valuationDatabase(); await valuation(); await expect(database!.execute("UPDATE investment_valuations SET gross_value_minor = 0")).rejects.toThrow('immutable'); await expect(database!.execute("DELETE FROM investment_valuations")).rejects.toThrow('immutable') })
 })
