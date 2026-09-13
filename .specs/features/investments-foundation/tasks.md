@@ -955,13 +955,24 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Persistir/restaurar profile e settlement junto ao aggregate e CAS; mapper exige profile financeiro após migration. Atualizar fixtures/consumidores de restore no mesmo commit, mantendo categorias/system intactos. A persistência de profiles no adapter em memória também conserva o snapshot completo; strict restore só é ativado quando todos os consumidores forem compatíveis.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Persistir/restaurar profile e settlement junto ao aggregate e CAS; mapper exige profile financeiro após migration. Atualizar fixtures/consumidores de restore no mesmo commit, mantendo categorias/system intactos. A persistência de profiles no adapter em memória também conserva o snapshot completo; strict restore só é ativado quando todos os consumidores forem compatíveis.
+- [x] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (SQLite); testes acompanham o componente nesta tarefa.
 **Gate**: Full SQLite
 **Commit**: `feat(investments-sqlite): persistência do perfil no ledgeraccount`
+
+**Execution evidence**: before T23 SQLite: 40 files, 746 tests; after: 40 files, 761 tests. Full SQLite passed: Domain/Application/Memory builds, SQLite 761/761 tests, generated migration manifest check and SQLite typecheck.
+
+| Requirement / done-when | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| INV-01, INV-04, INV-11, INV-88 | `sqlite-ledger-account-repository.test.ts:176-198` `expect(...toSnapshot()).toEqual(investment.toSnapshot())` | Investment account profile, optional metadata and settlement round-trip with the account identity and version. | Yes |
+| INV-03, INV-74, INV-76 | `sqlite-ledger-account-repository.test.ts:201-226` `expect(...toSnapshot()).toEqual(updated.toSnapshot())`; `:247-267` `rejects.toMatchObject({ code: "UNEXPECTED_ERROR" })` and `resolves.toBeNull()` | CAS persists the profile atomically; an invalid settlement cannot leave a persisted aggregate. | Yes |
+| INV-05, INV-06, INV-07 | `persistence-contracts.test.ts:58-80` explicit OTHER profile fixtures; `sqlite-ledger-account-repository.test.ts:229-245` `expect(...toSnapshot()).toEqual(updated.toSnapshot())` | Financial types remain compatible with their ASSET/LIABILITY aggregate; same-kind reclassification retains account identity and versioned state. | Yes |
+| INV-76, INV-88 | `ledger-account-mapper.test.ts:105-129` `toThrow(...)` assertions | A post-migration financial account with missing or malformed profile data is rejected during restore. | Yes |
+
+**Adequacy verdict**: PASS. The 15 added focused scenarios assert persisted state and rollback outcomes, not only SQL calls. Each maps to T23 requirements; the adapted contract/query fixtures preserve their existing assertions under strict restore.
 
 ### T24: Repository SQLite de instrumentos
 

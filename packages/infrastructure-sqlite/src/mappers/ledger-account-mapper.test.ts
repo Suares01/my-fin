@@ -25,6 +25,15 @@ const expenseCategoryRow: LedgerAccountRow = {
   color_hex: "f43f5e",
 }
 
+const financialAccountRow: LedgerAccountRow = {
+  ...row,
+  system_purpose: null,
+  financial_type: "INVESTMENT_ACCOUNT",
+  institution_name: "Broker",
+  display_reference: "123",
+  default_settlement_account_id: "settlement-1",
+}
+
 describe("LedgerAccountMapper", () => {
   it("round-trips all account fields exactly", () => {
     const account = LedgerAccountMapper.toDomain(row)
@@ -70,7 +79,7 @@ describe("LedgerAccountMapper", () => {
 
   it("round-trips absent appearance for a financial account as nulls", () => {
     const account = LedgerAccountMapper.toDomain({
-      ...row,
+      ...financialAccountRow,
       icon_key: null,
       color_hex: null,
     })
@@ -81,6 +90,43 @@ describe("LedgerAccountMapper", () => {
       icon_key: null,
       color_hex: null,
     })
+  })
+
+  it("maps the persisted BANK spelling to BANK_ACCOUNT", () => {
+    expect(
+      LedgerAccountMapper.toDomain({
+        ...financialAccountRow,
+        financial_type: "BANK",
+        default_settlement_account_id: null,
+      }).financialAccount
+    ).toMatchObject({ type: "BANK_ACCOUNT" })
+  })
+
+  it("rejects a missing financial profile for a non-system account", () => {
+    expect(() =>
+      LedgerAccountMapper.toDomain({
+        ...financialAccountRow,
+        financial_type: null,
+      })
+    ).toThrow("Financial ledger account is missing its profile")
+  })
+
+  it("rejects settlement data on a non-investment profile", () => {
+    expect(() =>
+      LedgerAccountMapper.toDomain({
+        ...financialAccountRow,
+        financial_type: "CASH",
+      })
+    ).toThrow("Non-investment financial account has settlement data")
+  })
+
+  it("rejects an unsupported financial type", () => {
+    expect(() =>
+      LedgerAccountMapper.toDomain({
+        ...financialAccountRow,
+        financial_type: "BROKER",
+      })
+    ).toThrow("Invalid ledger_accounts.financial_type")
   })
 
   it("rejects a managed row with a missing icon", () => {
@@ -122,7 +168,7 @@ describe("LedgerAccountMapper", () => {
 
   it("maps a SQL null purpose to undefined and back to null", () => {
     const account = LedgerAccountMapper.toDomain({
-      ...row,
+      ...financialAccountRow,
       system_purpose: null,
     })
 
@@ -131,7 +177,10 @@ describe("LedgerAccountMapper", () => {
   })
 
   it("accepts integer versions encoded as strings by the Tauri IPC adapter", () => {
-    const account = LedgerAccountMapper.toDomain({ ...row, version: "2" })
+    const account = LedgerAccountMapper.toDomain({
+      ...financialAccountRow,
+      version: "2",
+    })
 
     expect(account.version).toBe(2)
   })

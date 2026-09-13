@@ -1,6 +1,7 @@
 import {
   LedgerAccount,
   categoryAppearance,
+  type LedgerAccountId,
   type LedgerAccountSnapshot,
   type SystemAccountPurpose,
 } from "@workspace/domain"
@@ -32,6 +33,10 @@ export type LedgerAccountRow = {
   readonly version: unknown
   readonly icon_key: unknown
   readonly color_hex: unknown
+  readonly financial_type?: unknown
+  readonly institution_name?: unknown
+  readonly display_reference?: unknown
+  readonly default_settlement_account_id?: unknown
 }
 
 export type LedgerAccountPersistence = {
@@ -70,6 +75,7 @@ export const LedgerAccountMapper = {
       status: readEnum(row.status, ACCOUNT_STATUSES, "status"),
       ...(systemPurpose === undefined ? {} : { systemPurpose }),
       ...appearance,
+      ...readFinancialProfile(row, kind, systemPurpose),
       version: readVersion(row.version),
     }
 
@@ -91,6 +97,75 @@ export const LedgerAccountMapper = {
       color_hex: snapshot.colorHex ?? null,
     }
   },
+}
+
+function readFinancialProfile(
+  row: LedgerAccountRow,
+  kind: LedgerAccountSnapshot["kind"],
+  systemPurpose: SystemAccountPurpose | undefined
+): Partial<Pick<LedgerAccountSnapshot, "financialAccount">> {
+  const financial = row.financial_type
+  const financialRequired =
+    systemPurpose === undefined && (kind === "ASSET" || kind === "LIABILITY")
+
+  if (financial === null || financial === undefined) {
+    if (financialRequired) {
+      throw new TypeError("Financial ledger account is missing its profile")
+    }
+    return {}
+  }
+
+  const type = readEnum(
+    financial === "BANK" ? "BANK_ACCOUNT" : financial,
+    [
+      "BANK_ACCOUNT",
+      "PAYMENT_ACCOUNT",
+      "INVESTMENT_ACCOUNT",
+      "CASH",
+      "OTHER_ASSET",
+      "CREDIT_CARD",
+      "OTHER_LIABILITY",
+    ] as const,
+    "financial_type"
+  )
+  const optional = (value: unknown, field: string): string | undefined => {
+    if (value === null || value === undefined) {
+      return undefined
+    }
+    return readNonEmptyString(value, field)
+  }
+  const settlementAccountId = optional(
+    row.default_settlement_account_id,
+    "default_settlement_account_id"
+  )
+  const investment =
+    type === "INVESTMENT_ACCOUNT"
+      ? {
+          ...(settlementAccountId === undefined
+            ? {}
+            : {
+                defaultSettlementAccountId:
+                  settlementAccountId as LedgerAccountId,
+              }),
+        }
+      : undefined
+
+  if (type !== "INVESTMENT_ACCOUNT" && settlementAccountId !== undefined) {
+    throw new TypeError("Non-investment financial account has settlement data")
+  }
+
+  return {
+    financialAccount: {
+      type,
+      ...(optional(row.institution_name, "institution_name") === undefined
+        ? {}
+        : { institutionName: optional(row.institution_name, "institution_name") }),
+      ...(optional(row.display_reference, "display_reference") === undefined
+        ? {}
+        : { displayReference: optional(row.display_reference, "display_reference") }),
+      ...(investment === undefined ? {} : { investment }),
+    },
+  }
 }
 
 function readAppearance(

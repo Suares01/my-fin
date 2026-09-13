@@ -36,6 +36,13 @@ function accountSnapshot(
       : systemPurpose === undefined && kind === "EXPENSE"
         ? { iconKey: "label-dollar", colorHex: "f43f5e" }
         : {}),
+    ...(systemPurpose === undefined && (kind === "ASSET" || kind === "LIABILITY")
+      ? {
+          financialAccount: {
+            type: kind === "ASSET" ? "OTHER_ASSET" : "OTHER_LIABILITY",
+          },
+        }
+      : {}),
     ...overrides,
   }
 }
@@ -137,6 +144,140 @@ describe("SqliteLedgerAccountRepository", () => {
     const snapshot = (await repository.findById(account.id))?.toSnapshot()
     expect(snapshot).not.toHaveProperty("iconKey")
     expect(snapshot).not.toHaveProperty("colorHex")
+  })
+
+  it.each([
+    ["BANK_ACCOUNT", "ASSET"],
+    ["PAYMENT_ACCOUNT", "ASSET"],
+    ["CASH", "ASSET"],
+    ["OTHER_ASSET", "ASSET"],
+    ["CREDIT_CARD", "LIABILITY"],
+    ["OTHER_LIABILITY", "LIABILITY"],
+  ] as const)("round-trips the %s financial profile", async (type, kind) => {
+    const repository = new SqliteLedgerAccountRepository(database)
+    const account = restoredAccount({
+      kind,
+      financialAccount: {
+        type,
+        institutionName: " Bank ",
+        displayReference: " 123 ",
+      },
+    })
+
+    await repository.add(account)
+
+    expect((await repository.findById(account.id))?.financialAccount).toEqual({
+      type,
+      institutionName: "Bank",
+      displayReference: "123",
+    })
+  })
+
+  it("round-trips an investment profile and settlement account", async () => {
+    const repository = new SqliteLedgerAccountRepository(database)
+    const settlement = restoredAccount({
+      id: ledgerAccountIdFromString("settlement-1"),
+      financialAccount: { type: "BANK_ACCOUNT" },
+    })
+    const investment = restoredAccount({
+      id: ledgerAccountIdFromString("investment-1"),
+      name: "Brokerage",
+      normalizedName: "brokerage",
+      financialAccount: {
+        type: "INVESTMENT_ACCOUNT",
+        institutionName: "Broker",
+        displayReference: "A-1",
+        investment: { defaultSettlementAccountId: settlement.id },
+      },
+    })
+    await repository.add(settlement)
+    await repository.add(investment)
+
+    expect((await repository.findById(investment.id))?.toSnapshot()).toEqual(
+      investment.toSnapshot()
+    )
+  })
+
+  it("updates profile and settlement in the account CAS", async () => {
+    const repository = new SqliteLedgerAccountRepository(database)
+    const settlement = restoredAccount({
+      id: ledgerAccountIdFromString("settlement-1"),
+      name: "Settlement",
+      normalizedName: "settlement",
+      financialAccount: { type: "PAYMENT_ACCOUNT" },
+    })
+    const initial = restoredAccount({
+      financialAccount: { type: "INVESTMENT_ACCOUNT" },
+    })
+    const updated = restoredAccount({
+      version: 1,
+      financialAccount: {
+        type: "INVESTMENT_ACCOUNT",
+        investment: { defaultSettlementAccountId: settlement.id },
+      },
+    })
+    await repository.add(settlement)
+    await repository.add(initial)
+
+    await repository.save(updated, 0)
+
+    expect((await repository.findById(initial.id))?.toSnapshot()).toEqual(
+      updated.toSnapshot()
+    )
+  })
+
+  it("reclassifies a same-kind financial account without changing identity", async () => {
+    const repository = new SqliteLedgerAccountRepository(database)
+    const initial = restoredAccount({
+      financialAccount: { type: "OTHER_ASSET" },
+    })
+    const updated = restoredAccount({
+      version: 1,
+      financialAccount: { type: "BANK_ACCOUNT" },
+    })
+    await repository.add(initial)
+
+    await repository.save(updated, 0)
+
+    expect((await repository.findById(initial.id))?.toSnapshot()).toEqual(
+      updated.toSnapshot()
+    )
+  })
+
+  it("rolls back the account when the settlement profile violates a foreign key", async () => {
+    await expect(
+      database.transaction(async (executor) => {
+        const repository = new SqliteLedgerAccountRepository(executor)
+        await repository.add(
+          restoredAccount({
+            financialAccount: {
+              type: "INVESTMENT_ACCOUNT",
+              investment: {
+                defaultSettlementAccountId: ledgerAccountIdFromString("missing"),
+              },
+            },
+          })
+        )
+      })
+    ).rejects.toMatchObject({ code: "UNEXPECTED_ERROR" })
+    await expect(
+      new SqliteLedgerAccountRepository(database).findById(
+        ledgerAccountIdFromString("account-1")
+      )
+    ).resolves.toBeNull()
+  })
+
+  it("does not add financial children for a system account", async () => {
+    const repository = new SqliteLedgerAccountRepository(database)
+    const account = restoredAccount({ systemPurpose: "OPENING_BALANCE" })
+    await repository.add(account)
+
+    await expect(
+      database.query<{ readonly count: number }>(
+        "SELECT COUNT(*) AS count FROM financial_accounts WHERE ledger_account_id = ?",
+        [account.id]
+      )
+    ).resolves.toEqual([{ count: 0 }])
   })
 
   it("saves category name and appearance in one optimistic update", async () => {
