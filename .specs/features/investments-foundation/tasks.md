@@ -643,13 +643,24 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Definir envelopes/drafts discriminados, MutationResult e warning com conta/caixa/moeda; impedir postings arbitrários e mistura de rota interna/externa; versionar contrato canônico.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 8 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Quick Application` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Definir envelopes/drafts discriminados, MutationResult e warning com conta/caixa/moeda; impedir postings arbitrários e mistura de rota interna/externa; versionar contrato canônico.
+- [x] Escrever/atualizar no mesmo commit 9 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Quick Application` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: unit (Application); testes acompanham o componente nesta tarefa.
 **Gate**: Quick Application
 **Commit**: `feat(investments-contracts): contratos de comandos e resultados`
+
+**Execution evidence**: before T12 Application: 18 files, 209 tests; after: 19 files, 218 tests. `investment-commands.test.ts` adds 9 spec-derived scenarios. Quick Application passed: 19 files, 218 tests, 0 failures; application check-types passed after Domain build.
+
+| Requirement | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| INV-36, INV-82, INV-83 | `investment-commands.test.ts:25`, `:34`, `:42` `expect(...).toMatchObject(...)` | Drafts preserve explicit strings for cost, gross and expense values. | Yes |
+| INV-74, INV-78, INV-79 | `:13`, `:45-49` `expect(receipt).toMatchObject({ formatVersion: 1, result: ... })` | bookId/requestId envelope and versioned canonical receipt preserve replay result. | Yes |
+| INV-145 | `:39` `expect(warning).toEqual(...)` | Warning exposes code, investment account, cash, currency and asOf. | Yes |
+| INV-89, INV-90 | `:51` `expectTypeOf<InvestmentOperationDraft>().not.toHaveProperty("postings")` | Contract accepts no arbitrary postings or provider surface. | Yes |
+
+**Adequacy verdict**: PASS. Every assertion maps to a public command boundary; routes are discriminated and all result/warning payload fields are asserted.
 
 ### T13: Ports de persistência de investimento
 

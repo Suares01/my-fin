@@ -90,3 +90,20 @@ export type {
 export type { YearMonth } from "./querying-types.js"
 export type { CommittedTransaction, TransactionManager } from "./transaction.js"
 export type { Clock, IdGenerator } from "./time.js"
+export type {
+  AmendInvestmentOperationCommand,
+  AmortizationDraft,
+  CashRoute,
+  CorrectInvestmentOperationCommand,
+  FeeOrTaxDraft,
+  IncomeDraft,
+  InvestmentMutationResult,
+  InvestmentOperationDraft,
+  InvestmentRequest,
+  InvestmentRequestReceipt,
+  InvestmentWarning,
+  OpenInvestmentPositionCommand,
+  PurchaseOrApplicationDraft,
+  RecordInvestmentValuationCommand,
+  SaleOrRedemptionDraft,
+} from "./investment-commands.js"
