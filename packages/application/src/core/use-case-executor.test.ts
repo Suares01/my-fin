@@ -88,6 +88,18 @@ function dispatcher(publisher: Collector): DomainEventDispatcher {
 }
 
 describe("DomainEventDispatcher", () => {
+  it("publishes every investment fact with its book, aggregate and version", async () => {
+    const publisher = new Collector()
+    const facts = [
+      "FinancialAccountConfigured", "InvestmentSettlementAccountChanged", "InvestmentInstrumentCreated", "InvestmentInstrumentUpdated",
+      "InvestmentInstrumentArchived", "InvestmentInstrumentReactivated", "InvestmentPositionOpened", "InvestmentPositionChanged",
+      "InvestmentOperationRecorded", "InvestmentOperationReversed",
+    ].map((type, index) => ({ type, aggregateId: `aggregate-${index}`, aggregateVersion: index, payload: { bookId: "book-1" } }))
+    await dispatcher(publisher).dispatch(facts)
+    expect(publisher.events.map(({ type, bookId, aggregateId, aggregateVersion }) => ({ type, bookId, aggregateId, aggregateVersion }))).toEqual(
+      facts.map(({ type, aggregateId, aggregateVersion }) => ({ type, bookId: "book-1", aggregateId, aggregateVersion }))
+    )
+  })
   it("versions every supported event from its immutable fact version", async () => {
     const publisher = new Collector()
     const allFacts = [

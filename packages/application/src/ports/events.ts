@@ -10,6 +10,16 @@ export type ApplicationEventType =
   | "JournalEntryPosted"
   | "JournalEntryReversed"
   | "JournalEntryAmended"
+  | "FinancialAccountConfigured"
+  | "InvestmentSettlementAccountChanged"
+  | "InvestmentInstrumentCreated"
+  | "InvestmentInstrumentUpdated"
+  | "InvestmentInstrumentArchived"
+  | "InvestmentInstrumentReactivated"
+  | "InvestmentPositionOpened"
+  | "InvestmentPositionChanged"
+  | "InvestmentOperationRecorded"
+  | "InvestmentOperationReversed"
 
 export interface DomainEventEnvelope {
   readonly eventId: string

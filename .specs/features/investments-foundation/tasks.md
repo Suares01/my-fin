@@ -725,13 +725,17 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Registrar todos os facts listados na spec com livro/aggregate/version exatos; publicar na ordem e rejeitar tipo desconhecido sem expor payload financeiro no diagnóstico.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 8 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Quick Application` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Registrar todos os facts listados na spec com livro/aggregate/version exatos; publicar na ordem e rejeitar tipo desconhecido sem expor payload financeiro no diagnóstico.
+- [x] Escrever/atualizar no mesmo commit 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Quick Application` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: unit (Application); testes acompanham o componente nesta tarefa.
 **Gate**: Quick Application
 **Commit**: `feat(investments-contracts): registro dos facts no dispatcher`
+
+**Execution evidence**: before T15 Application: 21 files, 232 tests; after: 21 files, 233 tests. One dispatcher scenario asserts all 10 investment fact variants. Quick Application passed: 21 files, 233 tests, 0 failures; application check-types passed after Domain build.
+
+**Adequacy verdict**: PASS. The assertion compares each fact's ordered type, bookId, aggregateId and aggregateVersion, while the existing unknown-type test retains the diagnostic boundary.
 
 ### T16: Resultado preservado após commit
 

@@ -17,6 +17,16 @@ const EVENT_TYPES: readonly ApplicationEventType[] = [
   "JournalEntryPosted",
   "JournalEntryReversed",
   "JournalEntryAmended",
+  "FinancialAccountConfigured",
+  "InvestmentSettlementAccountChanged",
+  "InvestmentInstrumentCreated",
+  "InvestmentInstrumentUpdated",
+  "InvestmentInstrumentArchived",
+  "InvestmentInstrumentReactivated",
+  "InvestmentPositionOpened",
+  "InvestmentPositionChanged",
+  "InvestmentOperationRecorded",
+  "InvestmentOperationReversed",
 ]
 
 export class DomainEventDispatcher {
