@@ -44,7 +44,8 @@ export interface InvestmentOperationDateInput {
   readonly currency: string
 }
 
-export interface InvestmentOperationBase extends InvestmentRequest, InvestmentOperationDateInput {
+export interface InvestmentOperationBase
+  extends InvestmentRequest, InvestmentOperationDateInput {
   readonly positionId: string
   readonly expectedPositionVersion: number
 }

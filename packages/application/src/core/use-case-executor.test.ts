@@ -91,13 +91,39 @@ describe("DomainEventDispatcher", () => {
   it("publishes every investment fact with its book, aggregate and version", async () => {
     const publisher = new Collector()
     const facts = [
-      "FinancialAccountConfigured", "InvestmentSettlementAccountChanged", "InvestmentInstrumentCreated", "InvestmentInstrumentUpdated",
-      "InvestmentInstrumentArchived", "InvestmentInstrumentReactivated", "InvestmentPositionOpened", "InvestmentPositionChanged",
-      "InvestmentOperationRecorded", "InvestmentOperationReversed",
-    ].map((type, index) => ({ type, aggregateId: `aggregate-${index}`, aggregateVersion: index, payload: { bookId: "book-1" } }))
+      "FinancialAccountConfigured",
+      "InvestmentSettlementAccountChanged",
+      "InvestmentInstrumentCreated",
+      "InvestmentInstrumentUpdated",
+      "InvestmentInstrumentArchived",
+      "InvestmentInstrumentReactivated",
+      "InvestmentPositionOpened",
+      "InvestmentPositionChanged",
+      "InvestmentOperationRecorded",
+      "InvestmentOperationReversed",
+    ].map((type, index) => ({
+      type,
+      aggregateId: `aggregate-${index}`,
+      aggregateVersion: index,
+      payload: { bookId: "book-1" },
+    }))
     await dispatcher(publisher).dispatch(facts)
-    expect(publisher.events.map(({ type, bookId, aggregateId, aggregateVersion }) => ({ type, bookId, aggregateId, aggregateVersion }))).toEqual(
-      facts.map(({ type, aggregateId, aggregateVersion }) => ({ type, bookId: "book-1", aggregateId, aggregateVersion }))
+    expect(
+      publisher.events.map(
+        ({ type, bookId, aggregateId, aggregateVersion }) => ({
+          type,
+          bookId,
+          aggregateId,
+          aggregateVersion,
+        })
+      )
+    ).toEqual(
+      facts.map(({ type, aggregateId, aggregateVersion }) => ({
+        type,
+        bookId: "book-1",
+        aggregateId,
+        aggregateVersion,
+      }))
     )
   })
   it("versions every supported event from its immutable fact version", async () => {
@@ -350,6 +376,52 @@ describe("DomainEventDispatcher", () => {
 })
 
 describe("executeUseCase", () => {
+  it("preserves a known committed result when dispatch and reporting fail", async () => {
+    const result = await executeUseCase({
+      transactionManager: {
+        async execute<T>() {
+          return { value: "saved" as T, facts }
+        },
+      },
+      eventDispatcher: new DomainEventDispatcher(
+        new FixedClock(),
+        new FixedIds(),
+        {
+          publish() {
+            throw new Error("dispatch failed")
+          },
+        }
+      ),
+      work: async () => "saved",
+      preserveCommitted: true,
+      reportPostCommitFailure() {
+        throw new Error("report failed")
+      },
+    })
+    expect(result).toEqual(Result.ok("saved"))
+  })
+
+  it("keeps legacy callers failing when dispatch fails after commit", async () => {
+    const result = await executeUseCase({
+      transactionManager: {
+        async execute<T>() {
+          return { value: "saved" as T, facts }
+        },
+      },
+      eventDispatcher: new DomainEventDispatcher(
+        new FixedClock(),
+        new FixedIds(),
+        {
+          publish() {
+            throw new Error("dispatch failed")
+          },
+        }
+      ),
+      work: async () => "saved",
+    })
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.error.code).toBe("UNEXPECTED_ERROR")
+  })
   it("publishes only after the transaction returns a committed value", async () => {
     const order: string[] = []
     const transactionManager: TransactionManager = {

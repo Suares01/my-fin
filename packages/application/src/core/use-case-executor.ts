@@ -8,11 +8,29 @@ export async function executeUseCase<T>(input: {
   readonly transactionManager: TransactionManager
   readonly eventDispatcher: DomainEventDispatcher
   readonly work: (repositories: RepositoryContext) => Promise<T>
+  /** Opt in for idempotent investment commands: commit success remains success. */
+  readonly preserveCommitted?: boolean
+  readonly reportPostCommitFailure?: (
+    error: ApplicationError
+  ) => Promise<void> | void
 }): Promise<Result<T, ApplicationError>> {
+  let committed: T
   try {
-    const committed = await input.transactionManager.execute(input.work)
-    await input.eventDispatcher.dispatch(committed.facts)
-    return Result.ok(committed.value)
+    const transaction = await input.transactionManager.execute(input.work)
+    committed = transaction.value
+    try {
+      await input.eventDispatcher.dispatch(transaction.facts)
+    } catch (error: unknown) {
+      const applicationError = toApplicationError(error)
+      try {
+        await input.reportPostCommitFailure?.(applicationError)
+      } catch {
+        // A reporter must not turn a known committed investment mutation into a retry.
+      }
+      if (input.preserveCommitted === true) return Result.ok(committed)
+      return Result.fail(applicationError)
+    }
+    return Result.ok(committed)
   } catch (error: unknown) {
     return Result.fail(toApplicationError(error))
   }

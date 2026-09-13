@@ -17,7 +17,10 @@ export interface InvestmentPortfolioSummary {
   readonly unrealizedResultMinor: string
   readonly openPositionCount: number
   readonly valuedPositionCount: number
-  readonly valuationDateRange: { readonly oldest: string; readonly newest: string } | null
+  readonly valuationDateRange: {
+    readonly oldest: string
+    readonly newest: string
+  } | null
   readonly warnings: readonly InvestmentWarning[]
 }
 export interface PositionValuationView {
@@ -76,11 +79,27 @@ export interface ListInvestmentPositionsQuery {
   readonly limit: number
   readonly cursor?: string
 }
-export interface ListInvestmentOperationsQuery { readonly bookId: string; readonly positionId: string; readonly limit: number; readonly cursor?: string }
-export interface ListInvestmentValuationsQuery { readonly bookId: string; readonly positionId: string; readonly limit: number; readonly cursor?: string }
+export interface ListInvestmentOperationsQuery {
+  readonly bookId: string
+  readonly positionId: string
+  readonly limit: number
+  readonly cursor?: string
+}
+export interface ListInvestmentValuationsQuery {
+  readonly bookId: string
+  readonly positionId: string
+  readonly limit: number
+  readonly cursor?: string
+}
 export interface InvestmentQueries {
   getPortfolioSummary(bookId: string): Promise<InvestmentPortfolioSummary>
-  listPositions(query: ListInvestmentPositionsQuery): Promise<QueryPage<InvestmentPositionView>>
-  listOperations(query: ListInvestmentOperationsQuery): Promise<QueryPage<InvestmentOperationHistoryItem>>
-  listValuations(query: ListInvestmentValuationsQuery): Promise<QueryPage<InvestmentValuationHistoryItem>>
+  listPositions(
+    query: ListInvestmentPositionsQuery
+  ): Promise<QueryPage<InvestmentPositionView>>
+  listOperations(
+    query: ListInvestmentOperationsQuery
+  ): Promise<QueryPage<InvestmentOperationHistoryItem>>
+  listValuations(
+    query: ListInvestmentValuationsQuery
+  ): Promise<QueryPage<InvestmentValuationHistoryItem>>
 }

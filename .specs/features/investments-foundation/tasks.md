@@ -748,13 +748,23 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Separar falha pré-commit de dispatch/reporter pós-commit; preserveCommitted retorna sucesso salvo mesmo se ambos falharem, default dos consumidores não migrados é preservado.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Quick Application + Build` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Separar falha pré-commit de dispatch/reporter pós-commit; preserveCommitted retorna sucesso salvo mesmo se ambos falharem, default dos consumidores não migrados é preservado.
+- [x] Escrever/atualizar no mesmo commit 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Quick Application + Build` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: unit (Application); testes acompanham o componente nesta tarefa.
 **Gate**: Quick Application + Build
 **Commit**: `feat(investments-contracts): resultado preservado após commit`
+
+**Execution evidence**: before T16 Application: 21 files, 233 tests; after: 21 files, 235 tests. Existing executor coverage plus two post-commit scenarios cover ten commit/dispatch/error branches. Quick Application and Build passed: 21 files, 235 tests, 0 failures; check-types, eslint, application build and `git diff --check` passed after Domain build.
+
+| Requirement | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| INV-75, INV-78 | `use-case-executor.test.ts:411-424` `expect(result).toEqual(Result.ok("saved"))` | A known committed result stays successful when dispatch and reporter fail. | Yes |
+| INV-80, INV-81 | `:426-438` `expect(result.error.code).toBe("UNEXPECTED_ERROR")`; existing `:383-402` publish-after-commit assertions | Default legacy behavior is retained; events remain post-commit. | Yes |
+| INV-90 | `use-case-executor.ts:20-25` maps post-commit failure to stable ApplicationError before reporting. | Reporter observes only stable error context, not a financial payload. | Yes |
+
+**Adequacy verdict**: PASS. The post-commit tests assert the two mutually exclusive policies and existing tests retain pre-commit rollback/error behavior and event order.
 
 ### Phase 4: Schema e migrações
 
