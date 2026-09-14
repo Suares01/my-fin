@@ -43,6 +43,21 @@ export interface InvestmentInstrumentDto {
   readonly version: number
 }
 
+export interface UpdateInvestmentInstrumentCommand {
+  readonly bookId: string
+  readonly instrumentId: string
+  readonly expectedVersion: number
+  readonly name: string
+  readonly type: string
+  readonly currency: string
+  readonly issuerName?: string
+  readonly identifiers: readonly {
+    readonly scheme: string
+    readonly value: string
+    readonly market?: string
+  }[]
+}
+
 export interface ConfigureFinancialAccountCommand {
   readonly bookId: string
   readonly accountId: string

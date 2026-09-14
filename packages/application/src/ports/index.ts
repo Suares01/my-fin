@@ -25,6 +25,7 @@ export type {
   SetInvestmentSettlementAccountCommand,
   TransferMoneyCommand,
   UpdateCategoryCommand,
+  UpdateInvestmentInstrumentCommand,
 } from "./commands.js"
 export type {
   ApplicationEventType,

@@ -201,6 +201,42 @@ export class InvestmentInstrument extends AggregateRoot<
     this.instrument = { ...next, version: this.version + 1 }
     this.record("InvestmentInstrumentUpdated")
   }
+  update(
+    input: {
+      readonly name: string
+      readonly type: InvestmentInstrumentType
+      readonly currency: string
+      readonly issuerName?: string
+      readonly identifiers: readonly InstrumentIdentifierSnapshot[]
+    },
+    hasHistoricalPosition: boolean
+  ): void {
+    const name = requiredText(input.name)
+    const issuerName = optionalText(input.issuerName)
+    const identifiers = normalizeIdentifiers(input.identifiers)
+    Currency.parse(input.currency)
+    if (
+      hasHistoricalPosition &&
+      (input.type !== this.type || input.currency !== this.instrument.currency)
+    ) {
+      throw new DomainError(
+        "INVESTMENT_INSTRUMENT_TYPE_IMMUTABLE",
+        "Instrument type and currency cannot change after first position"
+      )
+    }
+    const next = {
+      ...this.instrument,
+      name,
+      normalizedName: normalizeSearchText(name),
+      type: input.type,
+      currency: input.currency,
+      ...(issuerName === undefined ? {} : { issuerName }),
+      identifiers,
+    }
+    if (JSON.stringify(next) === JSON.stringify(this.instrument)) return
+    this.instrument = { ...next, version: this.version + 1 }
+    this.record("InvestmentInstrumentUpdated")
+  }
   updateType(
     type: InvestmentInstrumentType,
     hasHistoricalPosition: boolean

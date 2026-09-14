@@ -1693,13 +1693,40 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Editar metadata com CAS/no-op; impedir tipo/moeda após qualquer posição histórica e preservar dados econômicos anteriores.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Editar metadata com CAS/no-op; impedir tipo/moeda após qualquer posição histórica e preservar dados econômicos anteriores.
+- [x] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (Command); testes acompanham o componente nesta tarefa.
 **Gate**: Full Memory
 **Commit**: `feat(investments): atualizar instrumento`
+
+**Execution evidence**: baseline Memory: 36 files, 351 tests, pass; T45: 37 files, 361 tests, pass. `update-investment-instrument.test.ts` adds 10 spec-derived command scenarios. Full Memory passed: domain/application build, Memory 361/361, Memory typecheck.
+
+| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| INV-16 currency | `packages/infrastructure-memory/src/use-cases/update-investment-instrument.test.ts:171` `expect(result).toMatchObject({ error: { code: "INVESTMENT_CURRENCY_MISMATCH" } })` | a currency distinct from the book base currency is rejected without changing the instrument | Yes |
+| INV-17/18 metadata identifiers | `packages/infrastructure-memory/src/use-cases/update-investment-instrument.test.ts:78` `identifiers: [{ scheme: "TICKER", value: "CDBN", market: "B3" }]` and `:253` `expect(result).toMatchObject({ error: { code: "DUPLICATE_INSTRUMENT_IDENTIFIER" } })` | normalized metadata persists; equivalent identifier cannot duplicate another instrument in book | Yes |
+| INV-26 immutable economics | `packages/infrastructure-memory/src/use-cases/update-investment-instrument.test.ts:136` `expect(result).toMatchObject({ error: { code: "INVESTMENT_INSTRUMENT_TYPE_IMMUTABLE" } })` and `:155` `expect(...getInvestmentPosition(...)).toEqual(beforePosition)` | type is immutable after first position and metadata does not alter prior economic state | Yes |
+| INV-74 book isolation | `packages/infrastructure-memory/src/use-cases/update-investment-instrument.test.ts:230` `expect(result).toMatchObject({ error: { code: "BOOK_MISMATCH" } })` | cross-book reference is rejected without writing | Yes |
+| INV-76 CAS/no-op | `packages/infrastructure-memory/src/use-cases/update-investment-instrument.test.ts:104` `expect(result).toMatchObject({ ok: true, value: { version: 0 } })` and `:189` `expect(result).toMatchObject({ error: { code: "OPTIMISTIC_CONCURRENCY_FAILURE" } })` | no-op keeps version; stale expectedVersion cannot overwrite | Yes |
+| INV-81 fact | `packages/infrastructure-memory/src/use-cases/update-investment-instrument.test.ts:82` `expect(harness.publisher.events).toEqual([{ ... aggregateVersion: 1 }])` | committed update publishes supported versioned fact | Yes |
+| INV-83 input validation | `packages/application/src/investments/instruments/update-investment-instrument.ts:52` `if (!isInstrumentType(command.type) || !isIdentifierList(command))` | invalid type/scheme is rejected before write | Yes |
+
+| Test assertion | Maps to | Keep |
+| --- | --- | --- |
+| `update-investment-instrument.test.ts:70` `expect(result).toMatchObject({ ... version: 1 })` | metadata update/CAS | Yes |
+| `update-investment-instrument.test.ts:104` `expect(result).toMatchObject({ ok: true, value: { version: 0 } })` | no-op | Yes |
+| `update-investment-instrument.test.ts:118` `expect(result).toMatchObject({ type: "STOCK", instrumentClass: "EQUITY" })` | type before history | Yes |
+| `update-investment-instrument.test.ts:136` `expect(result).toMatchObject({ error: { code: "INVESTMENT_INSTRUMENT_TYPE_IMMUTABLE" } })` | INV-26 immutable type | Yes |
+| `update-investment-instrument.test.ts:155` `expect(...getInvestmentPosition(...)).toEqual(beforePosition)` | preserve economic history | Yes |
+| `update-investment-instrument.test.ts:171` `expect(result).toMatchObject({ error: { code: "INVESTMENT_CURRENCY_MISMATCH" } })` | INV-16 currency | Yes |
+| `update-investment-instrument.test.ts:189` `expect(result).toMatchObject({ error: { code: "OPTIMISTIC_CONCURRENCY_FAILURE" } })` | INV-76 | Yes |
+| `update-investment-instrument.test.ts:203` `expect(result).toMatchObject({ error: { code: "ENTITY_NOT_FOUND" } })` | missing instrument | Yes |
+| `update-investment-instrument.test.ts:230` `expect(result).toMatchObject({ error: { code: "BOOK_MISMATCH" } })` | INV-74 | Yes |
+| `update-investment-instrument.test.ts:253` `expect(result).toMatchObject({ error: { code: "DUPLICATE_INSTRUMENT_IDENTIFIER" } })` | INV-18 | Yes |
+
+**Adequacy verdict**: PASS. Ten Memory command scenarios assert resulting DTOs, events, stable errors and full rollback snapshots. The tests cover each T45 branch and do not rely on mock-call counts.
 
 ### T46: Lifecycle de instrumento
 
