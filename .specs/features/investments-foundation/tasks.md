@@ -2001,13 +2001,33 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] R=100,f=2,t=10 produz I=88 e receita100/despesas12 numa operação; posição CLOSED ativa aceita fluxo sem reabrir/alocar nem criar FEE/TAX extra.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] R=100,f=2,t=10 produz I=88 e receita100/despesas12 numa operação; posição CLOSED ativa aceita fluxo sem reabrir/alocar nem criar FEE/TAX extra.
+- [x] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (Command); testes acompanham o componente nesta tarefa.
 **Gate**: Full Memory
 **Commit**: `feat(investments): registrar rendimento`
+
+**Execution evidence**: baseline Memory: 44 files, 467 tests; T53: 45 files, 479 tests. The 12 integration scenarios in `record-investment-income.test.ts` cover the normative retained-income fixture, position closure, category validation, invalid amount/route rollback, CAS, replay, idempotency conflict and book isolation. `validate_tasks.py` passed with 0 errors/0 warnings. Full Memory passed: Domain/Application builds, Memory 45/45 files and 479/479 tests, plus Memory typecheck; `git diff --check` passed.
+
+| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| INV-42, INV-44, INV-126 | `packages/infrastructure-memory/src/use-cases/record-investment-income.test.ts:167-170` `expect.objectContaining({ accountId: f.broker.id, amountMinor: 88n })`, `...income.id, amountMinor: -100n`, `...fee.id, amountMinor: 2n`, `...tax.id, amountMinor: 10n`; `:200-205` `toHaveLength(2)` and `toEqual(["OPENING_ALLOCATION", "INCOME"])` | R=100, f=2, t=10 posts I=88, income -100 and expenses +12 in one INCOME without FEE/TAX operations. | Yes |
+| INV-129 | `record-investment-income.test.ts:178-184` `expect(...).toMatchObject({ quantity: "10", bookCostMinor: "1000", allocationRevision: 1, version: 1 })`; `:185-193` operation fields including `bookCostDeltaMinor: "0"` | Income advances position version while preserving allocation, units and cost. | Yes |
+| INV-119 | `record-investment-income.test.ts:212-223` `expect(...positionVersion: 2, allocationRevision: 2...)` and `expect(...).toMatchObject({ status: "CLOSED", closedOn: "2026-08-04", allocationRevision: 2 })` | An active CLOSED position accepts income and remains closed without reopening or allocating. | Yes |
+| INV-43 boundary, INV-75 | `record-investment-income.test.ts:229-231`, `:237-245`, `:251-260`, `:266-271` exact category/operation errors plus unchanged operations/journal | Invalid categories, gross/net values or non-internal route leave no partial operation or journal. | Yes |
+| INV-74, INV-76, INV-78 | `record-investment-income.test.ts:277-283` exact stale-CAS error and unchanged version; `:289-294` replay IDs plus one effect; `:301-302` conflict; `:314-318` BOOK_MISMATCH and absent receipt | Stale or cross-book commands cannot write; equivalent retry returns the saved result without duplicates; reused request with changed content conflicts. | Yes |
+
+| Test assertion | Maps to | Keep? |
+| --- | --- | --- |
+| `record-investment-income.test.ts:153-172` exact result and all four posting amounts | INV-42, INV-44, INV-126 | Yes |
+| `:178-205` position/operation snapshot and one-operation assertions | INV-42, INV-126, INV-129 | Yes |
+| `:212-223` closed-position result and persisted CLOSED state | INV-119 | Yes |
+| `:229-283` category, invalid amount/route, rollback and CAS assertions | INV-75, INV-76 and operation validation | Yes |
+| `:289-318` replay/conflict and cross-book assertions | INV-74, INV-78 | Yes |
+
+**Adequacy verdict**: PASS. The 12 spec-scoped Memory command scenarios assert result values, persisted operation/position state, complete postings and stable errors. They neither rely on mock calls nor add a separate FEE/TAX operation.
 
 ### T54: Registrar amortização
 

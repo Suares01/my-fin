@@ -10,6 +10,7 @@ export { UpdateInvestmentPositionMetadata } from "./investments/positions/update
 export { OpenInvestmentPosition } from "./investments/positions/open-investment-position.js"
 export { RecordInvestmentPurchase } from "./investments/operations/record-investment-purchase.js"
 export { RecordInvestmentSale } from "./investments/operations/record-investment-sale.js"
+export { RecordInvestmentIncome } from "./investments/operations/record-investment-income.js"
 export { SetInvestmentOpeningBalance } from "./investments/accounts/set-investment-opening-balance.js"
 export {
   canonicalize,
