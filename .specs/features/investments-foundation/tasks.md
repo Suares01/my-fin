@@ -1280,13 +1280,15 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Persistir/restaurar posições e termos, uso histórico/aberto e CAS, sem agrupar posições do mesmo instrumento.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 8 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Persistir/restaurar posições e termos, uso histórico/aberto e CAS, sem agrupar posições do mesmo instrumento.
+- [x] Escrever/atualizar no mesmo commit pelo menos 8 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (Memory); testes acompanham o componente nesta tarefa.
 **Gate**: Full Memory
 **Commit**: `feat(investments-memory): repository em memória de posições`
+
+**Execution evidence**: before T32: 27 files, 264 tests; after: 28 files, 272 tests. Full Memory passed: Domain/Application builds, 272/272 Memory tests and typecheck. `in-memory-investment-position-repository.test.ts:35-44` asserts FOUND and BOOK_MISMATCH; `:58-70` asserts distinct positions/history/open use; `:74-94` asserts stable CAS errors. Adequacy verdict: PASS. Eight spec-scoped assertions cover lookup, book isolation, distinct positions, history/open checks, terms restoration and concurrency.
 
 ### T33: Repository em memória de operações
 
