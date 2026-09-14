@@ -1343,13 +1343,15 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Reproduzir unicidade por livro/request, resultado imutável e participação no snapshot/rollback.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 6 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Reproduzir unicidade por livro/request, resultado imutável e participação no snapshot/rollback.
+- [x] Escrever/atualizar no mesmo commit pelo menos 6 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (Memory); testes acompanham o componente nesta tarefa.
 **Gate**: Full Memory
 **Commit**: `feat(investments-memory): store em memória de recibos`
+
+**Execution evidence**: before T35: 32 files, 286 tests; after: 34 files, 292 tests. Full Memory passed: Domain/Application builds, 292/292 Memory tests, lint, typecheck and `git diff --check`. `in-memory-investment-request-store.test.ts:19-72` asserts missing/round-trip reads, book scope, duplicate preservation, independent requests and snapshot rollback. Adequacy verdict: PASS.
 
 ### T36: Store em memória de sequência
 
