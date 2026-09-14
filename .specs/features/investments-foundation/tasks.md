@@ -1485,13 +1485,34 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Adicionar os ports obrigatórios e wiring real nos dois transaction managers; confirmar/rollback de posição/operação/journal/recibo/sequência/facts juntos; adaptar fakes e testar scoped executor via adapter Tauri. Rodar contratos reais pelo SQLite, injeção de erro antes do commit e protocolo nativo mockado como prova distinta de UAT.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 14 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full Cross` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Adicionar os ports obrigatórios e wiring real nos dois transaction managers; confirmar/rollback de posição/operação/journal/recibo/sequência/facts juntos; adaptar fakes e testar scoped executor via adapter Tauri. Rodar contratos reais pelo SQLite, injeção de erro antes do commit e protocolo nativo mockado como prova distinta de UAT.
+- [x] Escrever/atualizar no mesmo commit pelo menos 14 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full Cross` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (Integration); testes acompanham o componente nesta tarefa.
 **Gate**: Full Cross
 **Commit**: `feat(investments-transaction): contexto transacional com investimentos`
+
+**Execution evidence**: Application: 235 → 241 tests; Memory: 308 → 310 tests; SQLite: 850 → 856 tests. The 14 added/updated scenarios are seven required public context ports, two Memory transaction scenarios, the SQLite context shape, and six SQLite scoped-executor routes. Full Cross passed: Domain/Application builds, 310/310 Memory tests, 856/856 SQLite tests, migration check, SQLite build/typecheck, 63/63 Tauri protocol tests/typecheck, and `git diff --check`.
+
+| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| INV-74 scoped repository context | `packages/application/src/ports/investment-repositories.test.ts:39` `expectTypeOf<RepositoryContext>().toHaveProperty("investmentInstruments")`; `:51` `...("investmentReads")` | context requires investment ports and book-scoped reads | Yes |
+| INV-75 pre-commit rollback | `packages/infrastructure-memory/src/transaction/in-memory-transaction-manager.test.ts:111` `rejects.toThrow("rollback investments")`; `:114` `expect(...next(...)).toBe("1")`; `:116` `expect(...find(...)).toBeNull()` | receipt and sequence are reverted with the enclosing write | Yes |
+| INV-76 / INV-77 transaction-scoped persistence | `packages/infrastructure-memory/src/transaction/in-memory-transaction-manager.test.ts:85` `expect(...instrument).toEqual({ kind: "NOT_FOUND" })`; `:86-91` assertions for position, operation, receipt, sequence, dependency and cash | all investment state is accessed within the same transaction context | Yes |
+| INV-78 / INV-80 receipt and retry substrate | `packages/application/src/ports/investment-repositories.test.ts:25` `expectTypeOf<Parameters<InvestmentRequestStore["find"]>>().toEqualTypeOf<[string, string]>()`; `packages/infrastructure-memory/src/transaction/in-memory-transaction-manager.test.ts:116` `expect(...find(...)).toBeNull()` after rollback | receipts remain book/request scoped and never survive a failed commit | Yes |
+| INV-81 facts stay on the common context | `packages/infrastructure-sqlite/src/repositories/create-sqlite-repository-context.test.ts:128` `expect(fixture.context.facts).toBe(fixture.facts)` | facts are collected by the transaction context, not a separate write path | Yes |
+| INV-88 / INV-89 real SQLite wiring without provider coupling | `packages/infrastructure-sqlite/src/repositories/create-sqlite-repository-context.test.ts:115` exact key assertion; `:148` `resolves.toEqual({ kind: "NOT_FOUND" })`; `packages/infrastructure-tauri/src/database/tauri-sqlite-database.test.ts:163` `expect(calls[2]!.args).toEqual(...transactionId: "tx-1")` | all investment adapters are concrete SQLite adapters and use the scoped native executor without provider contracts | Yes |
+
+| Test assertion | Maps to | Keep |
+| --- | --- | --- |
+| `in-memory-transaction-manager.test.ts:114` `expect(...next(...)).toBe("1")` | INV-75 atomic rollback | Yes |
+| `in-memory-transaction-manager.test.ts:116` `expect(...find(...)).toBeNull()` | INV-75/78 receipt rollback | Yes |
+| `create-sqlite-repository-context.test.ts:115` `expect(Object.keys(...).sort()).toEqual([...])` | T40 complete concrete context wiring | Yes |
+| `create-sqlite-repository-context.test.ts:148` `resolves.toEqual({ kind: "NOT_FOUND" })` | INV-74 book-scoped instrument adapter routing | Yes |
+| `create-sqlite-repository-context.test.ts:193` `resolves.toBe(false)` | INV-77 transaction-scoped settlement dependency read | Yes |
+
+**Adequacy verdict**: PASS. Assertions check required context members, exact lookup/read outcomes, and rollback state rather than mock calls; all tests map to T40 and the Integration/Memory/SQLite location conventions in the coverage matrix. Tauri protocol tests are mock-native transport proof only; native UAT remains future T93/T94 scope.
 
 ### T41: Criação de conta pelo tipo financeiro
 

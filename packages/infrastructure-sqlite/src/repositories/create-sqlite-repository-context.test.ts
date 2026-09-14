@@ -109,13 +109,20 @@ function entry(): JournalEntry {
 }
 
 describe("createSqliteRepositoryContext", () => {
-  it("returns exactly the current repository context shape", () => {
+  it("returns the complete investment transaction context shape", () => {
     const fixture = context()
 
     expect(Object.keys(fixture.context).sort()).toEqual([
       "accounts",
       "books",
       "facts",
+      "investmentInstruments",
+      "investmentOperations",
+      "investmentPositions",
+      "investmentReads",
+      "investmentRequests",
+      "investmentSequences",
+      "investmentValuations",
       "journalEntries",
     ])
     expect(fixture.context.facts).toBe(fixture.facts)
@@ -128,6 +135,72 @@ describe("createSqliteRepositoryContext", () => {
     await fixture.context.accounts.findById("account-1" as never)
 
     expect(fixture.executor.queries).toHaveLength(2)
+  })
+
+  it("routes investment instrument lookups through the supplied executor", async () => {
+    const fixture = context()
+
+    await expect(
+      fixture.context.investmentInstruments.findById(
+        "book-1",
+        "instrument-1" as never
+      )
+    ).resolves.toEqual({ kind: "NOT_FOUND" })
+    expect(fixture.executor.queries).toHaveLength(1)
+  })
+
+  it("routes investment position lookups through the supplied executor", async () => {
+    const fixture = context()
+
+    await expect(
+      fixture.context.investmentPositions.findById(
+        "book-1",
+        "position-1" as never
+      )
+    ).resolves.toEqual({ kind: "NOT_FOUND" })
+    expect(fixture.executor.queries).toHaveLength(1)
+  })
+
+  it("routes investment operation lookups through the supplied executor", async () => {
+    const fixture = context()
+
+    await expect(
+      fixture.context.investmentOperations.findById(
+        "book-1",
+        "operation-1" as never
+      )
+    ).resolves.toEqual({ kind: "NOT_FOUND" })
+    expect(fixture.executor.queries).toHaveLength(1)
+  })
+
+  it("routes investment receipt lookups through the supplied executor", async () => {
+    const fixture = context()
+
+    await expect(
+      fixture.context.investmentRequests.find("book-1", "request-1")
+    ).resolves.toBeNull()
+    expect(fixture.executor.queries).toHaveLength(1)
+  })
+
+  it("routes settlement dependency reads through the supplied executor", async () => {
+    const fixture = context()
+
+    await expect(
+      fixture.context.investmentReads.hasActiveSettlementDependents(
+        "book-1",
+        "account-1" as never
+      )
+    ).resolves.toBe(false)
+    expect(fixture.executor.queries).toHaveLength(1)
+  })
+
+  it("keeps empty investment cash reads inside the transaction context", async () => {
+    const fixture = context()
+
+    await expect(
+      fixture.context.investmentReads.accountCash("book-1", [], "2026-08-04")
+    ).resolves.toEqual([])
+    expect(fixture.executor.queries).toHaveLength(0)
   })
 
   it("routes journal reads through the supplied executor", async () => {

@@ -36,6 +36,18 @@ describe("investment persistence contracts", () => {
     expectTypeOf<
       Parameters<InvestmentTransactionReads["accountCash"]>
     >().toEqualTypeOf<[string, readonly LedgerAccountId[], string]>())
-  it("does not require investment ports in the legacy repository context", () =>
-    expectTypeOf<RepositoryContext>().not.toHaveProperty("investmentPositions"))
+  it("requires investment instrument persistence in the transaction context", () =>
+    expectTypeOf<RepositoryContext>().toHaveProperty("investmentInstruments"))
+  it("requires investment position persistence in the transaction context", () =>
+    expectTypeOf<RepositoryContext>().toHaveProperty("investmentPositions"))
+  it("requires investment operation persistence in the transaction context", () =>
+    expectTypeOf<RepositoryContext>().toHaveProperty("investmentOperations"))
+  it("requires append-only valuations in the transaction context", () =>
+    expectTypeOf<RepositoryContext>().toHaveProperty("investmentValuations"))
+  it("requires request receipts in the transaction context", () =>
+    expectTypeOf<RepositoryContext>().toHaveProperty("investmentRequests"))
+  it("requires investment sequences in the transaction context", () =>
+    expectTypeOf<RepositoryContext>().toHaveProperty("investmentSequences"))
+  it("requires transaction-scoped investment reads in the transaction context", () =>
+    expectTypeOf<RepositoryContext>().toHaveProperty("investmentReads"))
 })

@@ -7,6 +7,15 @@ import type {
 } from "@workspace/domain"
 import type { BookId, JournalEntryId, LedgerAccountId } from "@workspace/domain"
 import type { DomainFact } from "@workspace/domain"
+import type {
+  InvestmentInstrumentRepository,
+  InvestmentOperationRepository,
+  InvestmentPositionRepository,
+  InvestmentRequestStore,
+  InvestmentSequenceStore,
+  InvestmentTransactionReads,
+  InvestmentValuationStore,
+} from "./investment-repositories.js"
 
 export interface FinancialBookRepository {
   findById(id: BookId): Promise<FinancialBook | null>
@@ -50,5 +59,12 @@ export interface RepositoryContext {
   readonly books: FinancialBookRepository
   readonly accounts: LedgerAccountRepository
   readonly journalEntries: JournalEntryRepository
+  readonly investmentInstruments: InvestmentInstrumentRepository
+  readonly investmentPositions: InvestmentPositionRepository
+  readonly investmentOperations: InvestmentOperationRepository
+  readonly investmentValuations: InvestmentValuationStore
+  readonly investmentRequests: InvestmentRequestStore
+  readonly investmentSequences: InvestmentSequenceStore
+  readonly investmentReads: InvestmentTransactionReads
   readonly facts: DomainFactCollector
 }

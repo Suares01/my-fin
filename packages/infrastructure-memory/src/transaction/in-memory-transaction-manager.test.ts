@@ -56,6 +56,68 @@ function entry() {
 }
 
 describe("InMemoryTransactionManager", () => {
+  it("exposes all investment ports through one transaction-scoped context", async () => {
+    const manager = new InMemoryTransactionManager(new InMemoryStore())
+
+    const result = await manager.execute(async (repositories) => ({
+      instrument: await repositories.investmentInstruments.findById(
+        "book-1",
+        "instrument-1" as never
+      ),
+      position: await repositories.investmentPositions.findById(
+        "book-1",
+        "position-1" as never
+      ),
+      operation: await repositories.investmentOperations.findById(
+        "book-1",
+        "operation-1" as never
+      ),
+      receipt: await repositories.investmentRequests.find("book-1", "request-1"),
+      sequence: await repositories.investmentSequences.next("book-1"),
+      hasSettlementDependent:
+        await repositories.investmentReads.hasActiveSettlementDependents(
+          "book-1",
+          "account-1" as never
+        ),
+      cash: await repositories.investmentReads.accountCash("book-1", [], "2026-08-04"),
+    }))
+
+    expect(result.value.instrument).toEqual({ kind: "NOT_FOUND" })
+    expect(result.value.position).toEqual({ kind: "NOT_FOUND" })
+    expect(result.value.operation).toEqual({ kind: "NOT_FOUND" })
+    expect(result.value.receipt).toBeNull()
+    expect(result.value.sequence).toBe("1")
+    expect(result.value.hasSettlementDependent).toBe(false)
+    expect(result.value.cash).toEqual([])
+  })
+
+  it("rolls back investment sequence and request receipt with the enclosing transaction", async () => {
+    const store = new InMemoryStore()
+    const manager = new InMemoryTransactionManager(store)
+
+    await expect(
+      manager.execute(async (repositories) => {
+        await repositories.investmentSequences.next("book-1")
+        await repositories.investmentRequests.add({
+          bookId: "book-1",
+          requestId: "request-1",
+          formatVersion: 1,
+          canonicalCommand: "open-position",
+          result: { requestId: "request-1", journalEntryIds: [], warnings: [] },
+          recordedAt: "2026-08-04T12:00:00.000Z",
+        })
+        throw new Error("rollback investments")
+      })
+    ).rejects.toThrow("rollback investments")
+
+    await manager.execute(async (repositories) => {
+      expect(await repositories.investmentSequences.next("book-1")).toBe("1")
+      expect(
+        await repositories.investmentRequests.find("book-1", "request-1")
+      ).toBeNull()
+    })
+  })
+
   it("rolls back an uncommitted sequence reservation and keeps confirmed values", async () => {
     const store = new InMemoryStore()
     const manager = new InMemoryTransactionManager(store)
