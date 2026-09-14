@@ -8,6 +8,7 @@ import {
   type InvestmentOperationId,
   type InvestmentOperationSnapshot,
   type InvestmentPositionId,
+  type JournalEntryId,
 } from "@workspace/domain"
 import type { SqliteExecutor } from "../database/sqlite-executor.js"
 import { mapSqliteError } from "../database/sqlite-error.js"
@@ -58,6 +59,19 @@ export class SqliteInvestmentOperationRepository implements InvestmentOperationR
         : [bookId, positionId, excludeOperationId]
     )
     const row = rows[0]
+    return row === undefined ? null : InvestmentOperation.restore(snapshot(row))
+  }
+
+  public async findOwnerOfJournal(
+    bookId: string,
+    id: JournalEntryId
+  ): Promise<InvestmentOperation | null> {
+    const row = (
+      await this.executor.query<OperationRow>(
+        SELECT + " WHERE book_id = ? AND journal_entry_id = ?",
+        [bookId, id]
+      )
+    )[0]
     return row === undefined ? null : InvestmentOperation.restore(snapshot(row))
   }
 

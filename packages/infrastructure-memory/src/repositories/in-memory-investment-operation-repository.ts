@@ -7,6 +7,7 @@ import {
   InvestmentOperation,
   type InvestmentOperationId,
   type InvestmentPositionId,
+  type JournalEntryId,
 } from "@workspace/domain"
 import { InMemoryStore } from "../store/in-memory-store.js"
 
@@ -38,6 +39,16 @@ export class InMemoryInvestmentOperationRepository implements InvestmentOperatio
       )
       .map(InvestmentOperation.restore)
     return InvestmentOperation.lastEffective(operations) ?? null
+  }
+
+  async findOwnerOfJournal(
+    bookId: string,
+    id: JournalEntryId
+  ): Promise<InvestmentOperation | null> {
+    const snapshot = this.store
+      .listInvestmentOperations()
+      .find((item) => item.bookId === bookId && item.journalEntryId === id)
+    return snapshot === undefined ? null : InvestmentOperation.restore(snapshot)
   }
 
   async add(value: InvestmentOperation): Promise<void> {

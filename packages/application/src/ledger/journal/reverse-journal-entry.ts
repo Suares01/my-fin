@@ -12,6 +12,7 @@ import type {
 import { ApplicationError } from "../../ports/errors.js"
 import { DomainEventDispatcher } from "../../core/event-dispatcher.js"
 import { executeUseCase } from "../../core/use-case-executor.js"
+import { assertJournalNotOwnedByInvestment } from "./investment-journal-ownership.js"
 
 export class ReverseJournalEntry {
   constructor(
@@ -52,6 +53,12 @@ export class ReverseJournalEntry {
             "Journal entry does not belong to the requested book"
           )
         }
+
+        await assertJournalNotOwnedByInvestment(
+          repositories,
+          book.id,
+          original.id
+        )
 
         if (original.version !== command.expectedVersion) {
           throw new ApplicationError(

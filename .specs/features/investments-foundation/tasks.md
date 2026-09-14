@@ -2226,13 +2226,29 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Inserir guard em Reverse/Amend genéricos na transação para journal original/reversão/substituta de investimento; devolver INVESTMENT_OPERATION_REQUIRED sem alterar posição/journal/facts.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Inserir guard em Reverse/Amend genéricos na transação para journal original/reversão/substituta de investimento; devolver INVESTMENT_OPERATION_REQUIRED sem alterar posição/journal/facts.
+- [x] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (Command); testes acompanham o componente nesta tarefa.
 **Gate**: Full Memory
 **Commit**: `feat(investments): guard de manutenção genérica do journal`
+
+**Execution evidence**: before T59: 50 Memory files, 567 tests; after: 51 files, 579 tests. `investment-journal-ownership.test.ts` adds 12 integration scenarios for original, reversal and replacement journals across generic Reverse/Amend. Full Memory passed: Domain and Application builds, Memory 51/51 files and 579/579 tests, and Memory typecheck. Changed-file lint and `git diff --check` passed. An extra SQLite `check-types` confirmation remains blocked by pre-existing `tests/support/financial-query-scenario.ts:154` passing obsolete `kind` to `CreateFinancialAccountCommand`; it is outside this task and was not changed.
+
+| Done-when criterion / requirement | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| INV-63/64/67/68/69/102/117: generic Reverse protects original and reversal ownership | `investment-journal-ownership.test.ts:198-221` - `expect(...error).toMatchObject({ code: "INVESTMENT_OPERATION_REQUIRED" })` and `expect(...snapshot()).toEqual(before)` | original, reversal and replacement journals of investment operations require the specialized flow and leave all state intact | Yes |
+| INV-135/136: generic Amend protects the full amendment journal matrix | `investment-journal-ownership.test.ts:224-246` - `expect(...error).toMatchObject({ code: "INVESTMENT_OPERATION_REQUIRED" })` and `expect(...publisher.events).toEqual([])` | neither original/reversal nor replacement journal can receive a generic amendment | Yes |
+| INV-74: ownership is scoped by book and only real investment links are guarded | `investment-journal-ownership.test.ts:249-276` - `expect(...map((owner) => owner?.id)).toEqual(["operation-2", "operation-4", "operation-3"])` and `expect(owner.value).toBeNull()` | each persisted investment journal resolves to its owner; journal-less allocation resolves no owner | Yes |
+
+| `file:line` + assertion expression | Maps to | Keep |
+| --- | --- | --- |
+| `investment-journal-ownership.test.ts:198-221` - `expectBlocked(...); expect(f.h.store.snapshot()).toEqual(before)` | INV-63, INV-64, INV-67, INV-68, INV-69, INV-117 generic Reverse guard | Yes |
+| `investment-journal-ownership.test.ts:224-246` - `expectBlocked(...); expect(f.h.publisher.events).toEqual([])` | INV-135, INV-136 generic Amend guard | Yes |
+| `investment-journal-ownership.test.ts:249-276` - `expect(owners.value.map(...)).toEqual(...)` | INV-74 and T59 `findOwnerOfJournal` ownership contract | Yes |
+
+**Adequacy verdict**: PASS. All twelve scenarios assert the public error plus persisted snapshot and published-fact absence, so a guard placed after any mutation fails. The ownership assertions cover all three journal roles and the journal-less negative case; existing generic journal suites remain the proof that non-investment maintenance behavior is unchanged. Tests use the Memory command convention and add no UI/query scope.
 
 ### T60: Avisos em comandos financeiros comuns
 

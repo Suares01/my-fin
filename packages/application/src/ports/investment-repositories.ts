@@ -6,6 +6,7 @@ import type {
   InvestmentPosition,
   InvestmentPositionId,
   InvestmentValuationSnapshot,
+  JournalEntryId,
   LedgerAccountId,
 } from "@workspace/domain"
 import type { InvestmentRequestReceipt } from "./investment-commands.js"
@@ -59,6 +60,10 @@ export interface InvestmentOperationRepository {
     bookId: string,
     positionId: InvestmentPositionId,
     excludeOperationId?: InvestmentOperationId
+  ): Promise<InvestmentOperation | null>
+  findOwnerOfJournal(
+    bookId: string,
+    id: JournalEntryId
   ): Promise<InvestmentOperation | null>
   add(value: InvestmentOperation): Promise<void>
   saveLineage(
