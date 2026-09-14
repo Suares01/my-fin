@@ -1925,13 +1925,31 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Registrar PURCHASE/APPLICATION com rota interna/externa explícita, datas/quantidade/custo/CAS; mesmo planner para ambas, journal só quando necessário e despesa não capitalizada.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 16 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Registrar PURCHASE/APPLICATION com rota interna/externa explícita, datas/quantidade/custo/CAS; mesmo planner para ambas, journal só quando necessário e despesa não capitalizada.
+- [x] Escrever/atualizar no mesmo commit pelo menos 16 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (Command); testes acompanham o componente nesta tarefa.
 **Gate**: Full Memory
 **Commit**: `feat(investments): registrar compra ou aplicação`
+
+**Execution evidence**: baseline Memory: 43 files, 426 tests; T51: 44 files, 442 tests. Full Memory passed: Domain/Application builds, Memory 442/442 tests and Memory typecheck.
+
+| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| INV-29, INV-35, INV-45, INV-128 | `packages/infrastructure-memory/src/use-cases/record-investment-purchase.test.ts:89-103` `expect(...positionVersion: 1, allocationRevision: 2, journalEntryIds: [])` and `expect(...quantity: "12", bookCostMinor: "1200")` | Internal purchase changes only explicit units/cost, advances allocation revision once, and creates no zero-effect journal. | Yes |
+| INV-30, INV-44, INV-125, INV-126 | `record-investment-purchase.test.ts:118-133` `journalEntryIds: ["entry-1"]`, `bookCostMinor: "1200"`, and postings `-215n/+200n/+10n/+5n` | External application creates one combined journal and never capitalizes fee/tax into cost. | Yes |
+| INV-32, INV-76, INV-77, INV-78, INV-145 | `record-investment-purchase.test.ts:144-168` exact stale-CAS, replay length, and conflict assertions; `:214-226` warning `cashMinor: "-1200"` | Stale writes fail, matching retries do not duplicate, and negative cash remains a warning. | Yes |
+| INV-34, INV-36, INV-74, INV-118 | `record-investment-purchase.test.ts:135-142`, `:170-180`, `:228-250` exact route/entity/quantity/error assertions | Funding is explicit; invalid reference, amount, or units cannot persist a purchase. | Yes |
+
+| Test assertion | Maps to | Keep |
+| --- | --- | --- |
+| `record-investment-purchase.test.ts:89-103` state and no-journal assertions | INV-29, INV-35, INV-45, INV-128 | Yes |
+| `:118-133` exact combined postings and non-capitalized cost | INV-30, INV-44, INV-125, INV-126 | Yes |
+| `:144-250` error, CAS, retry, warning and date assertions | INV-32, INV-34, INV-36, INV-74, INV-76, INV-77, INV-78, INV-118, INV-145 | Yes |
+| `:252-264` persisted before-state/deltas assertion | operation audit snapshot | Yes |
+
+**Adequacy verdict**: PASS. Sixteen Memory command scenarios assert operation, position, journal postings, warnings and stable failures; no scenario relies on mock calls or exceeds the T51 contract.
 
 ### T52: Registrar venda ou resgate
 
