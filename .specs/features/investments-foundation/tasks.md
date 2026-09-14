@@ -1055,13 +1055,32 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Persistir snapshot e lineage sem reescrever efeito; buscar última efetiva com exclusão do alvo e ownership de qualquer journal; testar quatro combinações com/sem journal.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 14 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Persistir snapshot e lineage sem reescrever efeito; buscar última efetiva com exclusão do alvo e ownership de qualquer journal; testar quatro combinações com/sem journal.
+- [x] Escrever/atualizar no mesmo commit pelo menos 14 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (SQLite); testes acompanham o componente nesta tarefa.
 **Gate**: Full SQLite
 **Commit**: `feat(investments-sqlite): repository sqlite de operações`
+
+**Execution evidence**: before T26 SQLite: 42 files, 787 tests; after: 43 files, 803 tests. Full SQLite passed: Domain/Application/Memory builds, SQLite 803/803 tests, generated migration manifest check, SQLite typecheck and `git diff --check`.
+
+| Requirement / done-when | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| INV-61, INV-65, INV-88, INV-132, INV-133, INV-134 | `sqlite-investment-operation-repository.test.ts:143-145` `expect(...toSnapshot()).toEqual(value.toSnapshot())`; `:282-284` same assertion after `saveLineage` | Snapshot retains normalized effects, state-before, categories, journal and lineage without rewriting effects. | Yes |
+| INV-63, INV-68, INV-72 | `sqlite-investment-operation-repository.test.ts:196-201` `resolves.toMatchObject({ id: "later" })`; `:213-218` same-day sequence assertion; `:231-237` target exclusion assertion | Last effective business operation is ordered by date/sequence and excludes the correction target. | Yes |
+| INV-74, INV-76 | `sqlite-investment-operation-repository.test.ts:172-174` `resolves.toEqual({ kind: "BOOK_MISMATCH" })`; `:302-308` stale save rejection and persisted link is `"reversal"` | Foreign-book operation is hidden; stale lineage cannot overwrite the persisted link. | Yes |
+| INV-135, INV-136 | `sqlite-investment-operation-repository.test.ts:354-365` parameterized `expect(...journalEntryId).toBe(originalJournal/reversalJournal)` | Original and reversal preserve all four journal-presence combinations without fabricating a journal. | Yes |
+
+| Test assertion | Maps to | Keep |
+| --- | --- | --- |
+| `sqlite-investment-operation-repository.test.ts:143-145` `expect(...toSnapshot()).toEqual(value.toSnapshot())` | INV-88, INV-132 authoritative snapshot restore | Yes |
+| `sqlite-investment-operation-repository.test.ts:282-284` `expect(...toSnapshot()).toEqual(original.toSnapshot())` | INV-61, INV-65, INV-133 lineage-only save | Yes |
+| `sqlite-investment-operation-repository.test.ts:196-201` `resolves.toMatchObject({ id: "later" })` | INV-68, INV-72 effective ordering | Yes |
+| `sqlite-investment-operation-repository.test.ts:302-308` stale rejection and `toBe("reversal")` | INV-76 CAS preservation | Yes |
+| `sqlite-investment-operation-repository.test.ts:354-365` `toBe(originalJournal)` / `toBe(reversalJournal)` | INV-135, INV-136 journal combinations | Yes |
+
+**Adequacy verdict**: PASS. The 16 SQLite scenarios assert persisted snapshots and query outcomes, including all journal combinations. No assertion is a spy/call-count surrogate or exceeds the operation repository contract.
 
 ### T27: Store SQLite de avaliações
 
