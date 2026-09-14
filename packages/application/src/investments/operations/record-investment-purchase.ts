@@ -1,6 +1,7 @@
 import {
   bookIdFromString,
   Currency,
+  type FinancialBook,
   InvestmentOperation,
   investmentPositionIdFromString,
   JournalEntry,
@@ -291,7 +292,7 @@ async function postPlan(input: {
   readonly repositories: Parameters<
     Parameters<typeof executeInvestmentRequest>[0]["work"]
   >[0]
-  readonly book: any
+  readonly book: FinancialBook
   readonly plan: ReturnType<typeof planInvestmentAccounting>
   readonly command: PurchaseOrApplicationDraft
   readonly ids: IdGenerator

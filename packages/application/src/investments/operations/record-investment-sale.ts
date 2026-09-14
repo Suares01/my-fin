@@ -11,7 +11,10 @@ import {
   Posting,
 } from "@workspace/domain"
 import { DomainEventDispatcher } from "../../core/event-dispatcher.js"
-import { ApplicationError } from "../../ports/errors.js"
+import {
+  ApplicationError,
+  type ApplicationErrorCode,
+} from "../../ports/errors.js"
 import { executeInvestmentRequest } from "../shared/execute-investment-request.js"
 import type {
   Clock,
@@ -342,7 +345,7 @@ function existingState(
     allocationEffectiveOn: position.allocationEffectiveOn,
   }
 }
-function error(code: any, message: string) {
+function error(code: ApplicationErrorCode, message: string) {
   return new ApplicationError(code, message)
 }
 function integer(v: string) {

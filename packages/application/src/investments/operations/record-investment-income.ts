@@ -10,7 +10,10 @@ import {
   Posting,
 } from "@workspace/domain"
 import { DomainEventDispatcher } from "../../core/event-dispatcher.js"
-import { ApplicationError } from "../../ports/errors.js"
+import {
+  ApplicationError,
+  type ApplicationErrorCode,
+} from "../../ports/errors.js"
 import { executeInvestmentRequest } from "../shared/execute-investment-request.js"
 import type {
   Clock,
@@ -139,7 +142,9 @@ export class RecordInvestmentIncome {
           bookId: book.id,
           occurredOn: LocalDate.parse(command.occurredOn),
           recordedAt: this.clock.now(),
-          sequence: await repositories.journalEntries.reserveNextSequence(book.id),
+          sequence: await repositories.journalEntries.reserveNextSequence(
+            book.id
+          ),
           description: command.description,
           currency: Currency.parse(book.baseCurrency.code),
           origin: "MANUAL",
@@ -237,7 +242,7 @@ function existingState(
   }
 }
 
-function error(code: any, message: string) {
+function error(code: ApplicationErrorCode, message: string) {
   return new ApplicationError(code, message)
 }
 
