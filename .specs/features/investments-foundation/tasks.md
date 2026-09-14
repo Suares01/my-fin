@@ -1962,13 +1962,33 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Registrar SALE/REDEMPTION com custo retirado explícito, ganho/perda e despesas, destinos interno/externo; fechar total, preservar zero custo com unidades e rejeitar redução inválida sem escolher FIFO/média.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 20 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Registrar SALE/REDEMPTION com custo retirado explícito, ganho/perda e despesas, destinos interno/externo; fechar total, preservar zero custo com unidades e rejeitar redução inválida sem escolher FIFO/média.
+- [x] Escrever/atualizar no mesmo commit pelo menos 20 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (Command); testes acompanham o componente nesta tarefa.
 **Gate**: Full Memory
 **Commit**: `feat(investments): registrar venda ou resgate`
+
+**Execution evidence**: baseline Memory: 43 files, 442 tests; T52: 44 files, 467 tests. Full Memory passed: Domain/Application builds, Memory 467/467 tests and Memory typecheck.
+
+| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| INV-35, INV-37, INV-39, INV-44, INV-126 | `packages/infrastructure-memory/src/use-cases/record-investment-sale.test.ts:149` `expect(...).toMatchObject({ quantity: "6", bookCostMinor: "600", status: "OPEN" })`; `:180` `expect(...postings).toEqual(...)`; `:188` `expect(...).toMatchObject({ feesMinor: "20", taxesMinor: "30", netCashFlowMinor: "450" })` | A partial exit uses the supplied cost/quantity and separates gross gain from fee/tax. | Yes |
+| INV-38, INV-40, INV-53 | `record-investment-sale.test.ts:230` `expect(...postings).toEqual(...)`; `:241` `expect(...).toMatchObject({ quantity: "0", bookCostMinor: "0", status: "CLOSED", closedOn: "2026-08-04" })`; `:270` amount-mode close assertion | Direct redemption creates one combined external journal and a zero-cost final state closes on occurredOn. | Yes |
+| INV-35, INV-36, INV-39, INV-40, INV-41 | `record-investment-sale.test.ts:285` `expect(...).toMatchObject({ quantity: "6", bookCostMinor: "0", status: "OPEN" })`; `:301`, `:312`, `:323`, `:334` exact `INVALID_INVESTMENT_OPERATION` assertions | Zero known cost retains units; omitted, excessive, or incoherent reductions cannot derive FIFO/average cost or persist state. | Yes |
+| INV-45, INV-139 | `record-investment-sale.test.ts:252` `expect(...).toMatchObject({ ok: true, value: { journalEntryIds: [] } })`; `:259` `expect(...).toEqual([])` | An internal exit at cost without expenses creates no JournalEntry; full explicit cost/quantity closes. UI prefill is T80. | Yes |
+| INV-74, INV-75, INV-76, INV-78 | `record-investment-sale.test.ts:422` exact negative-net failure; `:434` unchanged position; `:443` exact stale-CAS error; `:460`, `:464`, `:465` replay result and one effect; `:506` `BOOK_MISMATCH` | Invalid work leaves state unchanged, stale/cross-book writes fail, and matching retries retain original effects. | Yes |
+| INV-51, INV-128 | `record-investment-sale.test.ts:139` `expect(...value).toMatchObject({ allocationRevision: 2 })`; `:479` `expect(...operation).toMatchObject({ positionBefore: ..., bookCostDeltaMinor: "-400" })` | An economic reduction advances allocation revision once and records its prior allocation state. Valuation read fallback is T62. | Yes |
+
+| Test assertion | Maps to | Keep? |
+| --- | --- | --- |
+| `record-investment-sale.test.ts:149`, `:154`, `:180` partial state and posting assertions | INV-35, INV-37, INV-39, INV-44, INV-126 | Yes |
+| `:230`, `:241`, `:252` direct redemption, closed state, no-journal assertions | INV-38, INV-40, INV-45, INV-53, INV-139 | Yes |
+| `:285`, `:301/:312/:323/:334`, `:422/:434` zero-cost and invalid-reduction state/errors | INV-35, INV-36, INV-41, INV-75 | Yes |
+| `:443`, `:460/:464/:465`, `:506`, `:479` CAS, retry, book isolation, audit snapshot | INV-74, INV-76, INV-78, INV-128 | Yes |
+
+**Adequacy verdict**: PASS. Twenty-five Memory command scenarios assert position state, complete posting values, close dates, error codes, receipt replay, and audit snapshots. No test relies on mock calls or introduces an implicit FIFO/average-cost policy. INV-46 is AMORTIZATION behavior owned by T54, not a SALE/REDEMPTION behavior.
 
 ### T53: Registrar rendimento
 
