@@ -1322,13 +1322,15 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Append preserva observações e revisão; cópias não mutam dados guardados e inserções do mesmo instante continuam distintas.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 6 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Append preserva observações e revisão; cópias não mutam dados guardados e inserções do mesmo instante continuam distintas.
+- [x] Escrever/atualizar no mesmo commit pelo menos 6 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (Memory); testes acompanham o componente nesta tarefa.
 **Gate**: Full Memory
 **Commit**: `feat(investments-memory): store em memória de avaliações`
+
+**Execution evidence**: before T34: 30 files, 280 tests; after: 32 files, 286 tests. Full Memory passed: Domain/Application builds, 286/286 Memory tests, lint, typecheck and `git diff --check`. `in-memory-investment-valuation-store.test.ts:23-68` asserts append, allocation revision, same-instant distinct IDs, position retention and copy isolation. Adequacy verdict: PASS.
 
 ### T35: Store em memória de recibos
 

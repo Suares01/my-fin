@@ -13,3 +13,4 @@ export {
 export { InMemoryInvestmentInstrumentRepository } from "./in-memory-investment-instrument-repository.js"
 export { InMemoryInvestmentPositionRepository } from "./in-memory-investment-position-repository.js"
 export { InMemoryInvestmentOperationRepository } from "./in-memory-investment-operation-repository.js"
+export { InMemoryInvestmentValuationStore } from "./in-memory-investment-valuation-store.js"
