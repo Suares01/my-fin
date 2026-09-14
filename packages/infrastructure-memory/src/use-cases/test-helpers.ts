@@ -54,7 +54,7 @@ export async function createFinancialAccount(
   ).execute({
     bookId: "book-1",
     name: kind === "ASSET" ? "Checking" : "Credit card",
-    kind,
+    type: kind === "ASSET" ? "OTHER_ASSET" : "OTHER_LIABILITY",
   })
   if (!result.ok) {
     throw new Error(`Account fixture failed: ${result.error.code}`)

@@ -1525,13 +1525,31 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Trocar kind de entrada por type e migrar chamadas/facade/fixtures mecanicamente no mesmo commit; criar profile e settlement opcional validado sem identidade extra.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Trocar kind de entrada por type e migrar chamadas/facade/fixtures mecanicamente no mesmo commit; criar profile e settlement opcional validado sem identidade extra.
+- [x] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (Command); testes acompanham o componente nesta tarefa.
 **Gate**: Full Memory
 **Commit**: `feat(investments): criação de conta pelo tipo financeiro`
+
+**Execution evidence**: Memory: 310 → 313 tests. `create-financial-account.test.ts` has 10 command scenarios: typed bank, credit card, investment settlement, invalid settlement/type, normalized optional text, missing book, duplicate name, distinct derived kind, and invalid name. Full Memory passed: Domain/Application builds, 313/313 Memory tests, typecheck and `git diff --check`; Tauri facade typecheck also passed.
+
+| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| INV-01 type creates derived ledger kind and profile | `packages/infrastructure-memory/src/use-cases/create-financial-account.test.ts:26` `expect(result).toEqual({ ... kind: "ASSET", ... financialAccount: { type: "BANK_ACCOUNT" } })` | account type, not caller kind, determines a financial profile and ledger classification | Yes |
+| INV-02 / INV-03 optional institution/reference | `create-financial-account.test.ts:35` `financialAccount: { type: "BANK_ACCOUNT", institutionName: "Banco A", displayReference: "1234" }` | optional profile text is normalized and persisted | Yes |
+| INV-04 / INV-11 investment profile and optional settlement | `create-financial-account.test.ts:98` `expect(result).toMatchObject({ ... investment: { defaultSettlementAccountId: "account-99" } })`; `:120` `error: { code: "INVALID_FINANCIAL_ACCOUNT_PROFILE" }` | settlement is allowed only on an investment profile and carries no new identity | Yes |
+| INV-74 no cross-book or missing-book write | `create-financial-account.test.ts:183` `error: { code: "ENTITY_NOT_FOUND" }`; `:185` `expect(harness.store.snapshot()).toEqual(before)` | absent book rejects before persistence | Yes |
+
+| Test assertion | Maps to | Keep |
+| --- | --- | --- |
+| `create-financial-account.test.ts:26` `expect(result).toEqual(...)` | INV-01 typed bank result/profile | Yes |
+| `create-financial-account.test.ts:105` `expect(...financialAccount).toEqual(...)` | INV-04 settlement persistence | Yes |
+| `create-financial-account.test.ts:120` `error.code === "INVALID_FINANCIAL_ACCOUNT_PROFILE"` | INV-11 invalid settlement profile | Yes |
+| `create-financial-account.test.ts:180` `error.code === "DUPLICATE_ENTITY"` | account uniqueness under derived kind | Yes |
+
+**Adequacy verdict**: PASS. Tests assert stored/resulting profile state and exact error codes, not mock calls; all scenarios map to T41 requirements and follow the Memory command-test convention.
 
 ### T42: Configuração financeira e liquidação
 

@@ -2,7 +2,7 @@ import { z } from "zod"
 
 export const createAccountSchema = z.object({
   name: z.string().trim().min(1, "Informe um nome para a conta."),
-  kind: z.enum(["ASSET", "LIABILITY"], {
+  type: z.enum(["OTHER_ASSET", "OTHER_LIABILITY"], {
     error: "Escolha Ativo ou Passivo.",
   }),
 })

@@ -56,7 +56,7 @@ async function prepared() {
     harness.transactionManager,
     harness.dispatcher,
     harness.ids
-  ).execute({ bookId: "book-1", name: "Savings", kind: "ASSET" })
+  ).execute({ bookId: "book-1", name: "Savings", type: "OTHER_ASSET" })
   if (!destination.ok) {
     throw new Error(`Destination fixture failed: ${destination.error.code}`)
   }
@@ -629,7 +629,7 @@ describe("AmendJournalEntry", () => {
       fixture.harness.transactionManager,
       fixture.harness.dispatcher,
       fixture.harness.ids
-    ).execute({ bookId: "book-2", name: "Other cash", kind: "ASSET" })
+    ).execute({ bookId: "book-2", name: "Other cash", type: "OTHER_ASSET" })
     expect(otherAccount.ok).toBe(true)
     const before = fixture.harness.store.snapshot()
 

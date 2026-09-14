@@ -7,7 +7,10 @@ export interface CreateFinancialBookCommand {
 export interface CreateFinancialAccountCommand {
   readonly bookId: string
   readonly name: string
-  readonly kind: string
+  readonly type: string
+  readonly institutionName?: string
+  readonly displayReference?: string
+  readonly defaultSettlementAccountId?: string
 }
 
 export interface CreateCategoryCommand {
@@ -159,6 +162,12 @@ export interface AccountDto {
   readonly kind: string
   readonly status: string
   readonly version: number
+  readonly financialAccount?: {
+    readonly type: string
+    readonly institutionName?: string
+    readonly displayReference?: string
+    readonly investment?: { readonly defaultSettlementAccountId?: string }
+  }
 }
 
 export interface CategoryDto {

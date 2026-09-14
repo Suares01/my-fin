@@ -14,6 +14,7 @@ export { LocalDate } from "./shared/local-date.js"
 export { normalizeSearchText } from "./shared/search-text.js"
 export {
   assertFinancialAccountProfileAllowed,
+  FINANCIAL_ACCOUNT_TYPES,
   FinancialAccountProfile,
   ledgerAccountKindForFinancialType,
 } from "./accounts/financial-account-profile.js"

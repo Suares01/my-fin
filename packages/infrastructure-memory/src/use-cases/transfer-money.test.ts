@@ -47,7 +47,7 @@ async function prepared() {
     harness.transactionManager,
     harness.dispatcher,
     harness.ids
-  ).execute({ bookId: "book-1", name: "Savings", kind: "ASSET" })
+  ).execute({ bookId: "book-1", name: "Savings", type: "OTHER_ASSET" })
   if (!destinationResult.ok) {
     throw new Error(
       `Destination fixture failed: ${destinationResult.error.code}`
@@ -212,7 +212,7 @@ describe("TransferMoney", () => {
       fixture.harness.transactionManager,
       fixture.harness.dispatcher,
       fixture.harness.ids
-    ).execute({ bookId: "book-2", name: "Foreign cash", kind: "ASSET" })
+    ).execute({ bookId: "book-2", name: "Foreign cash", type: "OTHER_ASSET" })
     expect(foreignAccount.ok).toBe(true)
     fixture.harness.publisher.clear()
     const before = fixture.harness.store.snapshot()

@@ -212,13 +212,13 @@ describe("account data hooks", () => {
       await result.current.mutateAsync({
         bookId: "book-1",
         name: "Carteira",
-        kind: "ASSET",
+        type: "OTHER_ASSET",
       })
     })
     expect(execute).toHaveBeenCalledWith({
       bookId: "book-1",
       name: "Carteira",
-      kind: "ASSET",
+      type: "OTHER_ASSET",
     })
     expect(result.current.failureCount).toBe(0)
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
@@ -235,7 +235,7 @@ describe("account data hooks", () => {
       await result.current.mutateAsync({
         bookId: "book-1",
         name: "Carteira",
-        kind: "ASSET",
+        type: "OTHER_ASSET",
       })
     })
     expect(invalidate).toHaveBeenCalledWith({
@@ -261,7 +261,7 @@ describe("account data hooks", () => {
         await result.current.mutateAsync({
           bookId: "book-1",
           name: "Carteira",
-          kind: "ASSET",
+          type: "OTHER_ASSET",
         })
       })
     ).rejects.toThrow("duplicate")

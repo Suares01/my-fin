@@ -89,7 +89,7 @@ describe("SetOpeningBalance", () => {
       harness.transactionManager,
       harness.dispatcher,
       harness.ids
-    ).execute({ bookId: "book-1", name: "Savings", kind: "ASSET" })
+    ).execute({ bookId: "book-1", name: "Savings", type: "OTHER_ASSET" })
     expect(secondAccount.ok).toBe(true)
     const firstBookSecondAccount = await useCase(harness).execute(command())
     expect(firstBookSecondAccount.ok).toBe(true)
@@ -103,7 +103,7 @@ describe("SetOpeningBalance", () => {
       harness.transactionManager,
       harness.dispatcher,
       harness.ids
-    ).execute({ bookId: "book-2", name: "Other cash", kind: "ASSET" })
+    ).execute({ bookId: "book-2", name: "Other cash", type: "OTHER_ASSET" })
     expect(secondBookAccount.ok).toBe(true)
     const secondBookOpening = await useCase(harness).execute(
       command({ bookId: "book-2", accountId: "account-11" })

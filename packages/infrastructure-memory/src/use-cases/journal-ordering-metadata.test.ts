@@ -24,7 +24,7 @@ describe("Journal ordering metadata", () => {
       harness.transactionManager,
       harness.dispatcher,
       harness.ids
-    ).execute({ bookId: "book-1", name: "Savings", kind: "ASSET" })
+    ).execute({ bookId: "book-1", name: "Savings", type: "OTHER_ASSET" })
     expect(destination.ok).toBe(true)
     await createExpenseCategory(harness)
     await createIncomeCategory(harness)

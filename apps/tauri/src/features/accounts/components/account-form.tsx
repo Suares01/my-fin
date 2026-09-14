@@ -36,7 +36,7 @@ export function AccountForm({ onSuccess, onCancel }: AccountFormProps) {
     resolver: zodResolver(createAccountSchema),
     mode: "onSubmit",
     reValidateMode: "onChange",
-    defaultValues: { name: "", kind: "ASSET" },
+    defaultValues: { name: "", type: "OTHER_ASSET" },
   })
 
   const activeBookId = session.status === "ACTIVE" ? session.bookId : null
@@ -47,7 +47,7 @@ export function AccountForm({ onSuccess, onCancel }: AccountFormProps) {
     const command: CreateFinancialAccountCommand = {
       bookId: activeBookId,
       name: values.name,
-      kind: values.kind,
+      type: values.type,
     }
 
     try {
@@ -92,13 +92,13 @@ export function AccountForm({ onSuccess, onCancel }: AccountFormProps) {
         />
         <ControlledToggleGroup
           control={form.control}
-          name="kind"
+          name="type"
           label="Tipo da conta"
           description="Use Ativo para recursos e Passivo para valores que você deve."
           disabled={pending}
           options={[
-            { value: "ASSET", label: "Ativo" },
-            { value: "LIABILITY", label: "Passivo" },
+            { value: "OTHER_ASSET", label: "Ativo" },
+            { value: "OTHER_LIABILITY", label: "Passivo" },
           ]}
         />
       </FieldGroup>

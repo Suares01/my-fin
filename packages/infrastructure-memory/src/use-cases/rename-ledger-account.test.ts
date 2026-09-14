@@ -136,7 +136,7 @@ describe("RenameLedgerAccount", () => {
       harness.transactionManager,
       harness.dispatcher,
       harness.ids
-    ).execute({ bookId: "book-1", name: "Savings", kind: "ASSET" })
+    ).execute({ bookId: "book-1", name: "Savings", type: "OTHER_ASSET" })
     const before = harness.store.snapshot()
     harness.publisher.clear()
 
@@ -164,7 +164,7 @@ describe("RenameLedgerAccount", () => {
       harness.transactionManager,
       harness.dispatcher,
       harness.ids
-    ).execute({ bookId: "book-1", name: "Checking", kind: "LIABILITY" })
+    ).execute({ bookId: "book-1", name: "Checking", type: "OTHER_LIABILITY" })
 
     const result = await useCase(harness).execute({
       bookId: "book-1",

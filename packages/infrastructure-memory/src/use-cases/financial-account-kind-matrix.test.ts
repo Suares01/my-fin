@@ -87,7 +87,7 @@ describe("financial account kind matrix", () => {
       ).execute({
         bookId: "book-1",
         name: "Destination",
-        kind: destinationKind,
+        type: destinationKind === "ASSET" ? "OTHER_ASSET" : "OTHER_LIABILITY",
       })
       expect(destination.ok).toBe(true)
 

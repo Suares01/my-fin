@@ -1,8 +1,12 @@
 import {
   bookIdFromString,
+  FinancialAccountProfile,
+  FINANCIAL_ACCOUNT_TYPES,
   LedgerAccount,
+  ledgerAccountIdFromString,
   normalizeAccountName,
 } from "@workspace/domain"
+import type { FinancialAccountType } from "@workspace/domain"
 import type {
   AccountDto,
   CreateFinancialAccountCommand,
@@ -34,18 +38,37 @@ export class CreateFinancialAccount {
           )
         }
 
-        if (command.kind !== "ASSET" && command.kind !== "LIABILITY") {
+        if (!isFinancialAccountType(command.type)) {
           throw new ApplicationError(
             "INVALID_ACCOUNT_KIND",
-            "Financial accounts must be ASSET or LIABILITY"
+            "Financial account type is invalid"
           )
         }
+
+        const profile = FinancialAccountProfile.create({
+          type: command.type,
+          ...(command.institutionName === undefined
+            ? {}
+            : { institutionName: command.institutionName }),
+          ...(command.displayReference === undefined
+            ? {}
+            : { displayReference: command.displayReference }),
+          ...(command.defaultSettlementAccountId === undefined
+            ? {}
+            : {
+                investment: {
+                  defaultSettlementAccountId: ledgerAccountIdFromString(
+                    command.defaultSettlementAccountId
+                  ),
+                },
+              }),
+        })
 
         const normalizedName = normalizeAccountName(command.name)
         if (
           await repositories.accounts.existsWithName(
             book.id,
-            command.kind,
+            profile.kind,
             normalizedName
           )
         ) {
@@ -59,7 +82,8 @@ export class CreateFinancialAccount {
           id: this.ids.nextLedgerAccountId(),
           bookId: book.id,
           name: command.name,
-          kind: command.kind,
+          kind: profile.kind,
+          financialAccount: profile.toSnapshot(),
         })
         await repositories.accounts.add(account)
         return toAccountDto(account)
@@ -76,5 +100,12 @@ function toAccountDto(account: LedgerAccount): AccountDto {
     kind: account.kind,
     status: account.status,
     version: account.version,
+    ...(account.financialAccount === undefined
+      ? {}
+      : { financialAccount: account.financialAccount }),
   }
+}
+
+function isFinancialAccountType(value: string): value is FinancialAccountType {
+  return (FINANCIAL_ACCOUNT_TYPES as readonly string[]).includes(value)
 }

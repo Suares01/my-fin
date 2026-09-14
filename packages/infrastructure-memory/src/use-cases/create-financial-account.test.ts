@@ -11,14 +11,16 @@ function useCase(harness: ReturnType<typeof createHarness>) {
 }
 
 describe("CreateFinancialAccount", () => {
-  it("creates an active ASSET account at version zero", async () => {
+  it("creates an active financial account from its type at version zero", async () => {
     const harness = createHarness()
     await createBook(harness)
 
     const result = await useCase(harness).execute({
       bookId: "book-1",
       name: "  Checking  ",
-      kind: "ASSET",
+      type: "BANK_ACCOUNT",
+      institutionName: "  Banco A  ",
+      displayReference: "  1234  ",
     })
 
     expect(result).toEqual({
@@ -30,6 +32,11 @@ describe("CreateFinancialAccount", () => {
         kind: "ASSET",
         status: "ACTIVE",
         version: 0,
+        financialAccount: {
+          type: "BANK_ACCOUNT",
+          institutionName: "Banco A",
+          displayReference: "1234",
+        },
       },
     })
     expect(harness.store.getAccount("account-5" as never)).toMatchObject({
@@ -38,17 +45,22 @@ describe("CreateFinancialAccount", () => {
       kind: "ASSET",
       status: "ACTIVE",
       version: 0,
+      financialAccount: {
+        type: "BANK_ACCOUNT",
+        institutionName: "Banco A",
+        displayReference: "1234",
+      },
     })
   })
 
-  it("creates a LIABILITY account with the exact serializable event payload", async () => {
+  it("creates a credit card with the exact serializable financial profile", async () => {
     const harness = createHarness()
     await createBook(harness)
 
     const result = await useCase(harness).execute({
       bookId: "book-1",
       name: "Credit card",
-      kind: "LIABILITY",
+      type: "CREDIT_CARD",
     })
 
     expect(result.ok).toBe(true)
@@ -65,11 +77,78 @@ describe("CreateFinancialAccount", () => {
         kind: "LIABILITY",
         status: "ACTIVE",
         version: 0,
+        financialAccount: { type: "CREDIT_CARD" },
       },
     })
   })
 
-  it("rejects an unsupported kind without writing or publishing", async () => {
+  it("creates an investment account with its optional settlement reference", async () => {
+    const harness = createHarness()
+    await createBook(harness)
+
+    const result = await useCase(harness).execute({
+      bookId: "book-1",
+      name: "Brokerage",
+      type: "INVESTMENT_ACCOUNT",
+      defaultSettlementAccountId: "account-99",
+    })
+
+    expect(result).toMatchObject({
+      ok: true,
+      value: {
+        kind: "ASSET",
+        financialAccount: {
+          type: "INVESTMENT_ACCOUNT",
+          investment: { defaultSettlementAccountId: "account-99" },
+        },
+      },
+    })
+    expect(harness.store.getAccount("account-5" as never)?.financialAccount).toEqual({
+      type: "INVESTMENT_ACCOUNT",
+      investment: { defaultSettlementAccountId: "account-99" },
+    })
+  })
+
+  it("rejects a settlement reference on a non-investment financial type", async () => {
+    const harness = createHarness()
+    await createBook(harness)
+    const before = harness.store.snapshot()
+
+    const result = await useCase(harness).execute({
+      bookId: "book-1",
+      name: "Checking",
+      type: "BANK_ACCOUNT",
+      defaultSettlementAccountId: "account-99",
+    })
+
+    expect(result).toMatchObject({
+      ok: false,
+      error: { code: "INVALID_FINANCIAL_ACCOUNT_PROFILE" },
+    })
+    expect(harness.store.snapshot()).toEqual(before)
+    expect(harness.publisher.events).toEqual([])
+  })
+
+  it("normalizes omitted profile text without inventing another identity", async () => {
+    const harness = createHarness()
+    await createBook(harness)
+
+    const result = await useCase(harness).execute({
+      bookId: "book-1",
+      name: "Cash",
+      type: "CASH",
+      institutionName: "   ",
+      displayReference: "   ",
+    })
+
+    expect(result).toMatchObject({
+      ok: true,
+      value: { id: "account-5", financialAccount: { type: "CASH" } },
+    })
+    expect(result.ok && result.value.financialAccount).toEqual({ type: "CASH" })
+  })
+
+  it("rejects an unsupported financial type without writing or publishing", async () => {
     const harness = createHarness()
     await createBook(harness)
     const before = harness.store.snapshot()
@@ -77,7 +156,7 @@ describe("CreateFinancialAccount", () => {
     const result = await useCase(harness).execute({
       bookId: "book-1",
       name: "Food",
-      kind: "EXPENSE",
+      type: "EXPENSE",
     })
 
     expect(result).toMatchObject({
@@ -96,7 +175,7 @@ describe("CreateFinancialAccount", () => {
     const result = await useCase(harness).execute({
       bookId: "book-missing",
       name: "Checking",
-      kind: "ASSET",
+      type: "BANK_ACCOUNT",
     })
 
     expect(result).toMatchObject({
@@ -113,7 +192,7 @@ describe("CreateFinancialAccount", () => {
     const first = await useCase(harness).execute({
       bookId: "book-1",
       name: "Checking",
-      kind: "ASSET",
+      type: "BANK_ACCOUNT",
     })
     harness.publisher.clear()
     const before = harness.store.snapshot()
@@ -121,7 +200,7 @@ describe("CreateFinancialAccount", () => {
     const duplicate = await useCase(harness).execute({
       bookId: "book-1",
       name: "  CHECKING  ",
-      kind: "ASSET",
+      type: "BANK_ACCOUNT",
     })
 
     expect(first.ok).toBe(true)
@@ -139,13 +218,13 @@ describe("CreateFinancialAccount", () => {
     await useCase(harness).execute({
       bookId: "book-1",
       name: "Card",
-      kind: "ASSET",
+      type: "BANK_ACCOUNT",
     })
 
     const result = await useCase(harness).execute({
       bookId: "book-1",
       name: " card ",
-      kind: "LIABILITY",
+      type: "CREDIT_CARD",
     })
 
     expect(result).toMatchObject({
@@ -167,7 +246,7 @@ describe("CreateFinancialAccount", () => {
     const result = await useCase(harness).execute({
       bookId: "book-1",
       name: "   ",
-      kind: "ASSET",
+      type: "BANK_ACCOUNT",
     })
 
     expect(result).toMatchObject({
