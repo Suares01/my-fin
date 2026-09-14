@@ -1093,13 +1093,31 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Append/roundtrip exatos, sem update/delete público, preservando valuedAt/recordedAt/sequence/revision e campos ausentes.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 8 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Append/roundtrip exatos, sem update/delete público, preservando valuedAt/recordedAt/sequence/revision e campos ausentes.
+- [x] Escrever/atualizar no mesmo commit pelo menos 8 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (SQLite); testes acompanham o componente nesta tarefa.
 **Gate**: Full SQLite
 **Commit**: `feat(investments-sqlite): store sqlite de avaliações`
+
+**Execution evidence**: before T27 SQLite: 43 files, 803 tests; after: 44 files, 811 tests. Full SQLite passed: Domain/Application/Memory builds, SQLite 811/811 tests, generated migration manifest check, SQLite typecheck and `git diff --check`.
+
+| Requirement / done-when | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| INV-47, INV-48, INV-88, INV-127 | `sqlite-investment-valuation-store.test.ts:48-66` `resolves.toEqual([{ ... }])`; `:77-88` exact NULL assertions | Append preserves timestamps, sequence, allocation revision and all present/absent fields exactly. | Yes |
+| INV-49, INV-50 | `sqlite-investment-valuation-store.test.ts:90-99` `resolves.toEqual([{ id: "valuation-1" }, { id: "valuation-2" }])` | Same-instant observations remain distinct and persist in sequence order. | Yes |
+| INV-74 | `sqlite-investment-valuation-store.test.ts:111-121` duplicate ID/record sequence rejects with `DUPLICATE_ENTITY` | The book-scoped persisted keys do not admit conflicting observations. | Yes |
+| append-only / INV-88 | `sqlite-investment-valuation-store.test.ts:123-132` rollback leaves `[]`; `:136-141` update/delete reject | A failed transaction removes its append; SQLite rejects later mutation and deletion. | Yes |
+
+| Test assertion | Maps to | Keep |
+| --- | --- | --- |
+| `sqlite-investment-valuation-store.test.ts:48-66` `resolves.toEqual([{ ... }])` | INV-47, INV-88 exact persisted valuation | Yes |
+| `sqlite-investment-valuation-store.test.ts:90-99` `resolves.toEqual([{ id: "valuation-1" }, { id: "valuation-2" }])` | INV-49 append history | Yes |
+| `sqlite-investment-valuation-store.test.ts:123-132` `resolves.toEqual([])` | transaction rollback criterion | Yes |
+| `sqlite-investment-valuation-store.test.ts:136-141` mutation promises reject | append-only criterion | Yes |
+
+**Adequacy verdict**: PASS. The eight integration scenarios assert persisted values and database state, including rollback and immutability; no mock call is used as outcome evidence.
 
 ### T28: Store SQLite de recibos
 
