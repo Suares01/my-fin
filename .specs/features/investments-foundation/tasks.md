@@ -1166,13 +1166,31 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Reservar sequência positiva em transação, preservar string exata no DTO e reverter reserva em erro; rejeitar estouro antes de gravar.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 6 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full SQLite + Build` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Reservar sequência positiva em transação, preservar string exata no DTO e reverter reserva em erro; rejeitar estouro antes de gravar.
+- [x] Escrever/atualizar no mesmo commit pelo menos 6 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full SQLite + Build` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (SQLite); testes acompanham o componente nesta tarefa.
 **Gate**: Full SQLite + Build
 **Commit**: `feat(investments-sqlite): store sqlite de sequência`
+
+**Execution evidence**: before T29 SQLite: 45 files, 819 tests; after: 46 files, 825 tests. Full SQLite + Build passed: Domain/Application/Memory builds, SQLite 825/825 tests, generated migration manifest check, SQLite typecheck, lint, SQLite build and `git diff --check`.
+
+| Requirement / done-when | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| INV-50, INV-72, INV-88 | `sqlite-investment-sequence-store.test.ts:16-25` `resolves.toBe("1")` and `resolves.toBe("2")` | Reservation starts positive, is monotonic per book, and remains book-scoped. | Yes |
+| INV-82 | `sqlite-investment-sequence-store.test.ts:27-31` `resolves.toBe("9007199254740993")` | Values beyond JavaScript safe integer return as exact strings. | Yes |
+| INV-75 | `sqlite-investment-sequence-store.test.ts:33-40` transaction rolls back and next result is `"1"` | Reservation belongs to its transaction and is undone on failure. | Yes |
+| overflow | `sqlite-investment-sequence-store.test.ts:42-53` error code assertion and exact persisted max | Exhaustion rejects before modifying the int64 counter. | Yes |
+
+| Test assertion | Maps to | Keep |
+| --- | --- | --- |
+| `sqlite-investment-sequence-store.test.ts:20-21` `resolves.toBe("1")` / `resolves.toBe("2")` | INV-50, INV-72 monotonic ordering | Yes |
+| `sqlite-investment-sequence-store.test.ts:31` `resolves.toBe("9007199254740993")` | INV-82 exact string transport | Yes |
+| `sqlite-investment-sequence-store.test.ts:40` `resolves.toBe("1")` | INV-75 rollback | Yes |
+| `sqlite-investment-sequence-store.test.ts:46-53` error plus unchanged max value | overflow criterion | Yes |
+
+**Adequacy verdict**: PASS. The six SQLite scenarios assert observable counter values and rollback state, including exact large-integer transport; no test relies on a mock call or an implementation-only detail.
 
 ### Phase 6: Adapters de memória
 
