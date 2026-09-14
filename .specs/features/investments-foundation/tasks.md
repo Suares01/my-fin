@@ -2077,13 +2077,31 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Comando discriminado FEE/TAX registra despesa posterior apenas uma vez em caixa interno; aceita CLOSED com vínculos ativos sem mudar revisão e retorna aviso se caixa negativo.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full Memory + Build` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Comando discriminado FEE/TAX registra despesa posterior apenas uma vez em caixa interno; aceita CLOSED com vínculos ativos sem mudar revisão e retorna aviso se caixa negativo.
+- [x] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full Memory + Build` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (Command); testes acompanham o componente nesta tarefa.
 **Gate**: Full Memory + Build
 **Commit**: `feat(investments): registrar taxa ou imposto independente`
+
+**Execution evidence**: baseline Memory: 46 files, 489 tests; T55: 47 files, 499 tests. The 10 integration scenarios in `record-investment-expense.test.ts` cover FEE, TAX, post-closure flow, negative-cash warning, category/route/amount validation, CAS, replay, idempotency conflict, book isolation and a distinct later request. Full Memory + Build passed: Domain/Application/Memory lint, typecheck and build all passed; Memory 47/47 files and 499/499 tests passed; `git diff --check` passed.
+
+| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| INV-43, INV-44, INV-126 | `packages/infrastructure-memory/src/use-cases/record-investment-expense.test.ts:116-148` exact result, FEE journal `I=-10/F=+10`, and persisted FEE amounts; `:150-164` TAX category and operation list | A discriminated FEE or TAX records its expense once in an internal-cash journal without auxiliary operations. | Yes |
+| INV-119, INV-129 | `record-investment-expense.test.ts:169-180` accepted result and `expect(...).toMatchObject({ status: "CLOSED", allocationRevision: 2 })` | An active CLOSED position accepts later expense and remains CLOSED with unchanged allocation revision. | Yes |
+| INV-32, INV-145 | `record-investment-expense.test.ts:125-133` `warnings: [{ code: "INVESTMENT_CASH_NEGATIVE", cashMinor: "-1010"... }]` | A valid expense confirms while returning the derived negative-cash warning. | Yes |
+| INV-74, INV-75, INV-76, INV-78 | `record-investment-expense.test.ts:184-210` invalid category/route/amount state assertions; `:215-224` stale-CAS; `:229-241` replay/conflict; `:255-260` cross-book absent receipt | Invalid, stale or cross-book requests cannot partially persist; matching retry preserves one effect and changed content conflicts. | Yes |
+
+| Test assertion | Maps to | Keep? |
+| --- | --- | --- |
+| `record-investment-expense.test.ts:116-148` exact result, warning, postings and FEE operation | INV-32, INV-43, INV-44, INV-126, INV-145 | Yes |
+| `:150-180` TAX and closed-position assertions | INV-119, INV-126, INV-129 | Yes |
+| `:184-224` validation, rollback and CAS assertions | INV-43, INV-75, INV-76 | Yes |
+| `:229-275` replay/conflict/book and distinct-request assertions | INV-74, INV-78 | Yes |
+
+**Adequacy verdict**: PASS. Ten spec-scoped Memory command scenarios assert complete resulting state, postings, warning payload and stable error/receipt behavior. They do not rely on mock calls and do not alter allocation for FEE/TAX.
 
 ### Phase 10: Correções, avaliações e proteção contábil
 
