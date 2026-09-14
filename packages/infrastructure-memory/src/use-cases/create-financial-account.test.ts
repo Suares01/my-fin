@@ -103,7 +103,9 @@ describe("CreateFinancialAccount", () => {
         },
       },
     })
-    expect(harness.store.getAccount("account-5" as never)?.financialAccount).toEqual({
+    expect(
+      harness.store.getAccount("account-5" as never)?.financialAccount
+    ).toEqual({
       type: "INVESTMENT_ACCOUNT",
       investment: { defaultSettlementAccountId: "account-99" },
     })

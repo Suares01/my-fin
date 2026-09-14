@@ -55,9 +55,13 @@ export class InMemoryTransactionManager implements TransactionManager {
       books: new InMemoryFinancialBookRepository(this.store, facts),
       accounts: new InMemoryLedgerAccountRepository(this.store, facts),
       journalEntries: new InMemoryJournalEntryRepository(this.store, facts),
-      investmentInstruments: new InMemoryInvestmentInstrumentRepository(this.store),
+      investmentInstruments: new InMemoryInvestmentInstrumentRepository(
+        this.store
+      ),
       investmentPositions: new InMemoryInvestmentPositionRepository(this.store),
-      investmentOperations: new InMemoryInvestmentOperationRepository(this.store),
+      investmentOperations: new InMemoryInvestmentOperationRepository(
+        this.store
+      ),
       investmentValuations: new InMemoryInvestmentValuationStore(this.store),
       investmentRequests: new InMemoryInvestmentRequestStore(this.store),
       investmentSequences: new InMemoryInvestmentSequenceStore(this.store),

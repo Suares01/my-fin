@@ -72,14 +72,21 @@ describe("InMemoryTransactionManager", () => {
         "book-1",
         "operation-1" as never
       ),
-      receipt: await repositories.investmentRequests.find("book-1", "request-1"),
+      receipt: await repositories.investmentRequests.find(
+        "book-1",
+        "request-1"
+      ),
       sequence: await repositories.investmentSequences.next("book-1"),
       hasSettlementDependent:
         await repositories.investmentReads.hasActiveSettlementDependents(
           "book-1",
           "account-1" as never
         ),
-      cash: await repositories.investmentReads.accountCash("book-1", [], "2026-08-04"),
+      cash: await repositories.investmentReads.accountCash(
+        "book-1",
+        [],
+        "2026-08-04"
+      ),
     }))
 
     expect(result.value.instrument).toEqual({ kind: "NOT_FOUND" })
