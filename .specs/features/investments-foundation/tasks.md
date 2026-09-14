@@ -1364,13 +1364,15 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Reservar inteiro exato por livro, detectar limite e restaurar reserva após erro sem colisão entre operações/avaliações.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 6 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full Memory + Build` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Reservar inteiro exato por livro, detectar limite e restaurar reserva após erro sem colisão entre operações/avaliações.
+- [x] Escrever/atualizar no mesmo commit pelo menos 6 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full Memory + Build` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (Memory); testes acompanham o componente nesta tarefa.
 **Gate**: Full Memory + Build
 **Commit**: `feat(investments-memory): store em memória de sequência`
+
+**Execution evidence**: before T36: 34 files, 292 tests; after: 36 files, 298 tests. Full Memory + Build passed: Domain/Application/Memory builds, 298/298 Memory tests, lint, typecheck and `git diff --check`. `in-memory-investment-sequence-store.test.ts:8-53` asserts initial/large exact values, book isolation, shared stream, limit detection and rollback restoration. Adequacy verdict: PASS.
 
 ### Phase 7: Leituras de escrita e contas financeiras
 

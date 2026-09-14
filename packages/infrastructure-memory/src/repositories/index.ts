@@ -15,3 +15,4 @@ export { InMemoryInvestmentPositionRepository } from "./in-memory-investment-pos
 export { InMemoryInvestmentOperationRepository } from "./in-memory-investment-operation-repository.js"
 export { InMemoryInvestmentValuationStore } from "./in-memory-investment-valuation-store.js"
 export { InMemoryInvestmentRequestStore } from "./in-memory-investment-request-store.js"
+export { InMemoryInvestmentSequenceStore } from "./in-memory-investment-sequence-store.js"

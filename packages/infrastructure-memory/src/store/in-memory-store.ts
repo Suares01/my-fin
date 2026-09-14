@@ -258,7 +258,11 @@ export class InMemoryStore {
     )
   }
   reserveNextInvestmentSequence(bookId: BookId): string {
-    const next = (this.investmentSequences.get(bookId) ?? 0n) + 1n
+    const current = this.investmentSequences.get(bookId) ?? 0n
+    if (current >= 9223372036854775807n) {
+      throw new RangeError("Investment sequence is outside the supported range")
+    }
+    const next = current + 1n
     this.investmentSequences.set(bookId, next)
     return next.toString()
   }
