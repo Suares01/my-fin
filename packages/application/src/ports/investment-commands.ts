@@ -33,6 +33,14 @@ export interface InvestmentRequestReceipt {
   readonly recordedAt: string
 }
 
+export interface SetInvestmentOpeningBalanceCommand extends InvestmentRequest {
+  readonly accountId: string
+  readonly amountMinor: string
+  readonly currency: string
+  readonly occurredOn: string
+  readonly description: string
+}
+
 export type CashRoute =
   | { readonly mode: "INTERNAL_CASH" }
   | { readonly mode: "EXTERNAL_ACCOUNT"; readonly accountId: string }

@@ -1840,13 +1840,38 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Reutilizar trabalho transacional de SetOpeningBalance sem execute aninhado; reconhecer custo+caixa real, não valuation, preservar OPENING_BALANCE_ALREADY_SET e saldo confirmado após falha de alocação.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full Memory + Build` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Reutilizar trabalho transacional de SetOpeningBalance sem execute aninhado; reconhecer custo+caixa real, não valuation, preservar OPENING_BALANCE_ALREADY_SET e saldo confirmado após falha de alocação.
+- [x] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full Memory + Build` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (Command); testes acompanham o componente nesta tarefa.
 **Gate**: Full Memory + Build
 **Commit**: `feat(investments): saldo inicial explícito idempotente`
+
+**Execution evidence**: before T49 Memory: 40 files/393 tests; after: 41 files/408 tests. `set-investment-opening-balance.test.ts` adds 15 integration scenarios. `validate_tasks.py` passed with 0 errors/0 warnings. Full Memory + Build passed: Domain 20 files/404 tests, Application 21 files/241 tests, Memory 41 files/408 tests; lint, check-types and build passed for Domain, Application and Memory; `git diff --check` passed.
+
+| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| INV-78 idempotent retry | `set-investment-opening-balance.test.ts:70` `expect(await useCase(h).execute(command)).toEqual({ ok: true, value: { requestId: "request-1", journalEntryIds: ["entry-1"], warnings: [] } })`; `:78` `expect(h.store.listJournalEntries()).toHaveLength(1)` | retry equivalente retorna o resultado salvo sem novo efeito | Yes |
+| INV-120/INV-121 origem ausente é um passo explícito, sem alocação ou transferência implícita | `set-investment-opening-balance.test.ts:169` `expect(h.store.listInvestmentPositions()).toEqual([])`; `:170` `expect(h.store.listInvestmentOperations()).toEqual([])`; `:172` `expect(h.store.listJournalEntries()).toHaveLength(1)` | o saldo inicial é separado da alocação; não cria fallback implícito | Yes, slice T49 |
+| INV-122 custo conhecido mais caixa real, sem valuation | `set-investment-opening-balance.test.ts:52` `expect(h.store.listJournalEntries()[0]?.postings).toEqual([... amountMinor: 10500n ...])` | o lançamento reconhece o valor explícito de custo+caixa real, sem valuation | Yes, slice T49 |
+| INV-123 custo não conhecido não usa valuation como custo | `packages/application/src/ports/investment-commands.ts:36-42` expõe somente `amountMinor`, sem campo de valuation; `set-investment-opening-balance.test.ts:164` `expect(h.store.listInvestmentValuations()).toEqual([])` | não há rota de valuation neste comando; rejeição de abertura sem custo é de T50 | Yes, boundary T49 |
+| INV-124 saldo inicial já ativo | `set-investment-opening-balance.test.ts:92` `expect(...).toMatchObject({ ok: false, error: { code: "OPENING_BALANCE_ALREADY_SET" } })`; `:96` `expect(h.store.listJournalEntries()).toEqual([...])` | preservar o código e o saldo existente | Yes |
+| INV-137 confirmação permanece após falha posterior | `set-investment-opening-balance.test.ts:184` `expect(h.store.listJournalEntries()).toEqual([expect.objectContaining(...)])`; `:195` `expect(h.store.getInvestmentRequest(...)).toBeUndefined()` | saldo confirmado continua como caixa não alocado e a falha não registra recibo | Yes, boundary before T50 allocation |
+| INV-145/INV-147 recuperação não cria aviso/efeito histórico adicional | `set-investment-opening-balance.test.ts:44` `expect(result).toEqual({ ok: true, value: { ..., warnings: [] } })`; `:171` `expect(h.store.listInvestmentValuations()).toEqual([])` | saldo explícito não duplica operação, avaliação ou aviso; cálculo/remoção de aviso é T60 | Yes, boundary T49 |
+| atomicidade de falha | `set-investment-opening-balance.test.ts:109` `expect(...).toMatchObject({ ok: false, error: { code: "ENTITY_NOT_FOUND" } })`; `:113` `expect(h.store.listJournalEntries()).toEqual([])` | falha antes do commit não cria journal nem recibo | Yes |
+
+| Test assertion | Maps to | Keep? |
+| --- | --- | --- |
+| `set-investment-opening-balance.test.ts:44` `expect(result).toEqual(...)` | INV-122, INV-145 | Yes |
+| `:70` `expect(await useCase(h).execute(command)).toEqual(...)` and `:78` `expect(...).toHaveLength(1)` | INV-78 | Yes |
+| `:85` `expect(...).toMatchObject({ error: { code: "IDEMPOTENCY_CONFLICT" } })` | INV-78 conflict edge | Yes |
+| `:92` `expect(...).toMatchObject({ error: { code: "OPENING_BALANCE_ALREADY_SET" } })` | INV-124 | Yes |
+| `:109`, `:132`, `:208` failure-code assertions and receipt/journal assertions | INV-137 and command atomicity | Yes |
+| `:169-172` empty allocation/valuation assertions | INV-120, INV-121, INV-123, INV-147 boundary | Yes |
+| `:184-197` confirmed-entry and absent-receipt assertions | INV-137 | Yes |
+
+**Adequacy verdict**: PASS. The 15 spec-scoped integration scenarios assert receipt, posting amount, persisted state and stable errors, not mock calls. T50 owns rejection of an opening position without book cost; T60 owns the calculated negative-cash warning transition.
 
 ### Phase 9: Abertura e operações
 

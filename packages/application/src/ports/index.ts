@@ -138,4 +138,5 @@ export type {
   PurchaseOrApplicationDraft,
   RecordInvestmentValuationCommand,
   SaleOrRedemptionDraft,
+  SetInvestmentOpeningBalanceCommand,
 } from "./investment-commands.js"

@@ -7,6 +7,7 @@ export { CreateInvestmentInstrument } from "./investments/instruments/create-inv
 export { UpdateInvestmentInstrument } from "./investments/instruments/update-investment-instrument.js"
 export { SetInvestmentInstrumentStatus } from "./investments/instruments/set-investment-instrument-status.js"
 export { UpdateInvestmentPositionMetadata } from "./investments/positions/update-investment-position-metadata.js"
+export { SetInvestmentOpeningBalance } from "./investments/accounts/set-investment-opening-balance.js"
 export {
   canonicalize,
   executeInvestmentRequest,
