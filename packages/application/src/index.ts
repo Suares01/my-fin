@@ -15,6 +15,7 @@ export { RecordInvestmentAmortization } from "./investments/operations/record-in
 export { RecordInvestmentExpense } from "./investments/operations/record-investment-expense.js"
 export { ReverseInvestmentOperation } from "./investments/operations/reverse-investment-operation.js"
 export { AmendInvestmentOperation } from "./investments/operations/amend-investment-operation.js"
+export { RecordInvestmentValuation } from "./investments/valuations/record-investment-valuation.js"
 export { SetInvestmentOpeningBalance } from "./investments/accounts/set-investment-opening-balance.js"
 export {
   canonicalize,

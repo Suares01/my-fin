@@ -2187,13 +2187,33 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Validar expectedAllocationRevision dentro da escrita, instante UTC não futuro/quantidade/moeda; append sem alterar Position.version e corrida operação-avaliação válida nas duas ordens.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 14 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Validar expectedAllocationRevision dentro da escrita, instante UTC não futuro/quantidade/moeda; append sem alterar Position.version e corrida operação-avaliação válida nas duas ordens.
+- [x] Escrever/atualizar no mesmo commit pelo menos 14 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (Command); testes acompanham o componente nesta tarefa.
 **Gate**: Full Memory
 **Commit**: `feat(investments): registrar avaliação manual`
+
+**Execution evidence**: before T58: 49 Memory files, 552 tests; after: 50 files, 567 tests. `record-investment-valuation.test.ts` adds 15 integration tests covering 18 AC scenarios, including both serialized orders of an operation and a valuation. Full Memory passed: Domain and Application builds, Memory 50/50 files and 567/567 tests, and Memory typecheck. Changed-file lint and `git diff --check` passed.
+
+| Done-when criterion / requirement | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| INV-47/49/59/127: append-only MANUAL observation with optional values unknown | `record-investment-valuation.test.ts:92-124` - `expect(...).toEqual([expect.objectContaining({ source: "MANUAL", grossValueMinor: "1200" })])`; `:137-149` - `expect(...).toMatchObject([{ id: "valuation-1" }, { id: "valuation-2" }])`; `:130-134` - `expect(...netValueMinor).toBeUndefined()` | observation is appended, no ledger/position mutation, and omitted optional values remain unknown | Yes |
+| INV-48/84/142: invalid values, quantity and UTC instant | `record-investment-valuation.test.ts:179-229` - `expect(...error.code).toBe("INVALID_INVESTMENT_DATE")` and `expect(...error.code).toBe("INVALID_INVESTMENT_VALUATION")` | invalid/future instant, negative values, or divergent position quantity are rejected without a valuation | Yes |
+| INV-74/75/78: book scope, no partial receipt and idempotent retry | `record-investment-valuation.test.ts:239-288` - `expect(...error.code).toBe("ENTITY_NOT_FOUND")`, `expect(...error.code).toBe("BOOK_MISMATCH")`, and `expect(second).toEqual(first)` | missing/wrong-book calls persist nothing; same request returns its original result once | Yes |
+| INV-50/51/130/131: allocation revision and operation race | `record-investment-valuation.test.ts:152-177` - `expect(...error.code).toBe("INVESTMENT_ALLOCATION_CHANGED")` and `expect(...allocationRevision).toBe(1)` | evaluation after economic change is rejected; evaluation confirmed first remains historical at its revision | Yes |
+| currency basis | `record-investment-valuation.test.ts:233-237` - `expect(...currency).toBe("BRL")` | command has no caller-supplied currency; stored position currency is the sole valuation basis | Yes |
+
+| `file:line` + assertion expression | Maps to | Keep |
+| --- | --- | --- |
+| `record-investment-valuation.test.ts:92-124` - `expect(...).toEqual([expect.objectContaining(...)])` | INV-47, INV-127 and T58 append/no-position-or-ledger mutation | Yes |
+| `record-investment-valuation.test.ts:137-149` - `expect(...).toMatchObject([{ id: ... }, { id: ... }])` | INV-49 append-only correction | Yes |
+| `record-investment-valuation.test.ts:152-229` - `expect(...error.code).toBe(...)` | INV-48, INV-84, INV-131, INV-142 | Yes |
+| `record-investment-valuation.test.ts:239-288` - `expect(...).toBeUndefined()` and `expect(second).toEqual(first)` | INV-74, INV-75, INV-78 | Yes |
+| `record-investment-valuation.test.ts:164-176` - `expect(...allocationRevision).toBe(1)` | INV-50, INV-51, INV-130 serialized operation/valuation ordering | Yes |
+
+**Adequacy verdict**: PASS. The assertions inspect public envelopes and persisted valuation, position, sequence and receipt state rather than calls. The command deliberately derives currency from the persisted position because its approved DTO has no currency input; the test proves this invariant without inventing an unrepresentable mismatch case. The tests follow the Memory command convention in the Test Coverage Matrix and add no behavior outside T58.
 
 ### T59: Guard de manutenção genérica do journal
 
