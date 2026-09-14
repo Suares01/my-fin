@@ -1425,13 +1425,31 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Calcular L/C/caixa e dependentes ativos no executor recebido, após escritas; incluir aviso de cada carteira negativa, datas e saldo completo para arquivamento sem reentrância Tauri.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Calcular L/C/caixa e dependentes ativos no executor recebido, após escritas; incluir aviso de cada carteira negativa, datas e saldo completo para arquivamento sem reentrância Tauri.
+- [x] Escrever/atualizar no mesmo commit 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (SQLite); testes acompanham o componente nesta tarefa.
 **Gate**: Full SQLite
 **Commit**: `feat(investments-sqlite): leituras transacionais sqlite`
+
+**Execution evidence**: before T38: 47 files, 838 tests; after: 48 files, 850 tests. Full SQLite passed: Domain/Application/Memory builds, 850/850 SQLite tests, migration check, typecheck and `git diff --check`.
+
+| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- |
+| INV-12, INV-115 | `sqlite-investment-transaction-reads.test.ts:54` `expect(...).resolves.toBe(true)` and `:71` active-status assertion | only active investment accounts using the settlement are dependents | Yes |
+| INV-55, INV-140, INV-141 | `sqlite-investment-transaction-reads.test.ts:83` `expect(...).resolves.toBe("9007199254740993")` and `:93` date parameter assertion | ledger balance is exact and uses the requested inclusive date | Yes |
+| INV-28, INV-32, INV-60, INV-145 | `sqlite-investment-transaction-reads.test.ts:119` `expect(...).resolves.toEqual(...cashMinor: "300")` and `:136` negative `"-100"` assertion | cash equals L-C and negative cash remains observable | Yes |
+| INV-113 | `sqlite-investment-transaction-reads.test.ts:150` `expect(...).resolves.toEqual` per account | each requested account keeps an independent complete balance | Yes |
+
+| Test assertion | Maps to | Keep |
+| --- | --- | --- |
+| `sqlite-investment-transaction-reads.test.ts:54` `expect(...).resolves.toBe(true)` | INV-115 settlement use | Yes |
+| `sqlite-investment-transaction-reads.test.ts:83` `expect(...).resolves.toBe("9007199254740993")` | INV-55 exact ledger | Yes |
+| `sqlite-investment-transaction-reads.test.ts:136` `expect(...cashMinor...).toEqual("-100")` | INV-60 negative cash | Yes |
+| `sqlite-investment-transaction-reads.test.ts:189` `expect(...parameters).toEqual(["book", "account"])` | INV-74 book-scoped lookup | Yes |
+
+**Adequacy verdict**: PASS. Tests assert exact cash state, negative state, scope parameters and active settlement behavior directly; no result is inferred from a call count.
 
 ### T39: Leituras transacionais em memória
 
