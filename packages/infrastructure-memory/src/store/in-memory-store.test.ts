@@ -1,8 +1,13 @@
 import { describe, expect, it } from "vitest"
 import type {
   FinancialBookSnapshot,
+  InvestmentInstrumentSnapshot,
+  InvestmentOperationSnapshot,
+  InvestmentPositionSnapshot,
+  InvestmentValuationSnapshot,
   JournalEntrySnapshot,
 } from "@workspace/domain"
+import type { InvestmentRequestReceipt } from "@workspace/application"
 import { InMemoryStore } from "./in-memory-store.js"
 
 const book: FinancialBookSnapshot = {
@@ -38,6 +43,51 @@ const journalEntry: JournalEntrySnapshot = {
   ],
   version: 0,
 }
+
+const instrument = {
+  id: "instrument-1",
+  bookId: "book-1",
+  identifiers: [{ scheme: "TICKER", value: "ABC", market: "B3" }],
+} as unknown as InvestmentInstrumentSnapshot
+const position = {
+  id: "position-1",
+  bookId: "book-1",
+  fixedIncomeTerms: { rateKind: "PREFIXED", annualRate: "10" },
+} as unknown as InvestmentPositionSnapshot
+const operation = {
+  id: "operation-1",
+  bookId: "book-1",
+  categories: { feeCategoryId: "fee-1" },
+  positionBefore: {
+    kind: "EXISTING",
+    bookCostMinor: "100",
+    status: "OPEN",
+    openedOn: "2026-01-01",
+    allocationEffectiveOn: "2026-01-01",
+  },
+} as unknown as InvestmentOperationSnapshot
+const valuation = {
+  id: "valuation-1",
+  bookId: "book-1",
+  grossValueMinor: "100",
+} as unknown as InvestmentValuationSnapshot
+const receipt = {
+  bookId: "book-1",
+  requestId: "request-1",
+  result: {
+    requestId: "request-1",
+    journalEntryIds: ["entry-1"],
+    warnings: [
+      {
+        code: "INVESTMENT_CASH_NEGATIVE",
+        investmentAccountId: "account-1",
+        cashMinor: "-1",
+        currency: "BRL",
+        asOf: "2026-01-01",
+      },
+    ],
+  },
+} as unknown as InvestmentRequestReceipt
 
 describe("InMemoryStore", () => {
   it("returns a copy when reading a stored book", () => {
@@ -115,6 +165,12 @@ describe("InMemoryStore", () => {
       accounts: [],
       journalEntries: [],
       journalSequences: [],
+      investmentInstruments: [],
+      investmentPositions: [],
+      investmentOperations: [],
+      investmentValuations: [],
+      investmentRequests: [],
+      investmentSequences: [],
     })
 
     expect(store.snapshot()).toEqual({
@@ -122,6 +178,124 @@ describe("InMemoryStore", () => {
       accounts: [],
       journalEntries: [],
       journalSequences: [],
+      investmentInstruments: [],
+      investmentPositions: [],
+      investmentOperations: [],
+      investmentValuations: [],
+      investmentRequests: [],
+      investmentSequences: [],
     })
+  })
+
+  it("copies instrument identifiers in snapshots", () => {
+    const store = new InMemoryStore()
+    store.putInvestmentInstrument(instrument)
+    const snapshot = store.snapshot()
+    Object.assign(
+      snapshot.investmentInstruments[0]!.identifiers[0] as { value: string },
+      { value: "MUTATED" }
+    )
+    expect(
+      store.getInvestmentInstrument(instrument.id)?.identifiers[0]?.value
+    ).toBe("ABC")
+  })
+  it("copies fixed-income terms in snapshots", () => {
+    const store = new InMemoryStore()
+    store.putInvestmentPosition(position)
+    const snapshot = store.snapshot()
+    Object.assign(
+      snapshot.investmentPositions[0]!.fixedIncomeTerms as {
+        annualRate: string
+      },
+      { annualRate: "99" }
+    )
+    expect(
+      store.getInvestmentPosition(position.id)?.fixedIncomeTerms?.annualRate
+    ).toBe("10")
+  })
+  it("copies operation categories in snapshots", () => {
+    const store = new InMemoryStore()
+    store.putInvestmentOperation(operation)
+    const snapshot = store.snapshot()
+    Object.assign(
+      snapshot.investmentOperations[0]!.categories as { feeCategoryId: string },
+      { feeCategoryId: "changed" }
+    )
+    expect(
+      store.getInvestmentOperation(operation.id)?.categories.feeCategoryId
+    ).toBe("fee-1")
+  })
+  it("copies operation state-before in snapshots", () => {
+    const store = new InMemoryStore()
+    store.putInvestmentOperation(operation)
+    const snapshot = store.snapshot()
+    Object.assign(
+      snapshot.investmentOperations[0]!.positionBefore as {
+        bookCostMinor: string
+      },
+      { bookCostMinor: "999" }
+    )
+    expect(
+      (
+        store.getInvestmentOperation(operation.id)?.positionBefore as {
+          bookCostMinor: string
+        }
+      ).bookCostMinor
+    ).toBe("100")
+  })
+  it("keeps valuations in the snapshot", () => {
+    const store = new InMemoryStore()
+    store.putInvestmentValuation(valuation)
+    expect(store.snapshot().investmentValuations).toEqual([valuation])
+  })
+  it("copies receipt results and warnings", () => {
+    const store = new InMemoryStore()
+    store.putInvestmentRequest(receipt)
+    const result = store.getInvestmentRequest(
+      receipt.bookId as never,
+      receipt.requestId
+    )!
+    Object.assign(result.result.warnings[0] as { cashMinor: string }, {
+      cashMinor: "0",
+    })
+    expect(
+      store.getInvestmentRequest(receipt.bookId as never, receipt.requestId)
+        ?.result.warnings[0]?.cashMinor
+    ).toBe("-1")
+  })
+  it("isolates receipts by book and request id", () => {
+    const store = new InMemoryStore()
+    store.putInvestmentRequest(receipt)
+    expect(
+      store.getInvestmentRequest("other-book" as never, receipt.requestId)
+    ).toBeUndefined()
+  })
+  it("reserves independent exact investment sequences per book", () => {
+    const store = new InMemoryStore()
+    expect(store.reserveNextInvestmentSequence("book-1" as never)).toBe("1")
+    expect(store.reserveNextInvestmentSequence("book-2" as never)).toBe("1")
+  })
+  it("restores investment collections and sequences", () => {
+    const store = new InMemoryStore()
+    store.putInvestmentInstrument(instrument)
+    store.putInvestmentPosition(position)
+    store.putInvestmentOperation(operation)
+    store.putInvestmentValuation(valuation)
+    store.putInvestmentRequest(receipt)
+    store.reserveNextInvestmentSequence("book-1" as never)
+    const snapshot = store.snapshot()
+    store.putInvestmentInstrument({ ...instrument, id: "other" as never })
+    store.restore(snapshot)
+    expect(store.snapshot()).toEqual(snapshot)
+  })
+  it("restores investment state after a replacement", () => {
+    const store = new InMemoryStore()
+    store.putInvestmentInstrument(instrument)
+    const before = store.snapshot()
+    store.putInvestmentInstrument({ ...instrument, identifiers: [] })
+    store.restore(before)
+    expect(store.getInvestmentInstrument(instrument.id)?.identifiers).toEqual(
+      instrument.identifiers
+    )
   })
 })

@@ -229,6 +229,12 @@ describe("InMemoryTransactionManager", () => {
       accounts: [],
       journalEntries: [],
       journalSequences: [],
+      investmentInstruments: [],
+      investmentPositions: [],
+      investmentOperations: [],
+      investmentValuations: [],
+      investmentRequests: [],
+      investmentSequences: [],
     })
   })
 

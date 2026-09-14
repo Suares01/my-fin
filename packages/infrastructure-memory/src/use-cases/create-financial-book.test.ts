@@ -174,6 +174,12 @@ describe("CreateFinancialBook", () => {
       accounts: [],
       journalEntries: [],
       journalSequences: [],
+      investmentInstruments: [],
+      investmentPositions: [],
+      investmentOperations: [],
+      investmentValuations: [],
+      investmentRequests: [],
+      investmentSequences: [],
     })
     expect(publisher.events).toEqual([])
   })
@@ -192,6 +198,12 @@ describe("CreateFinancialBook", () => {
       accounts: [],
       journalEntries: [],
       journalSequences: [],
+      investmentInstruments: [],
+      investmentPositions: [],
+      investmentOperations: [],
+      investmentValuations: [],
+      investmentRequests: [],
+      investmentSequences: [],
     })
     expect(publisher.events).toEqual([])
   })
@@ -213,6 +225,12 @@ describe("CreateFinancialBook", () => {
       accounts: [],
       journalEntries: [],
       journalSequences: [],
+      investmentInstruments: [],
+      investmentPositions: [],
+      investmentOperations: [],
+      investmentValuations: [],
+      investmentRequests: [],
+      investmentSequences: [],
     })
     expect(publisher.events).toEqual([])
   })
@@ -258,6 +276,12 @@ describe("CreateFinancialBook", () => {
       accounts: [],
       journalEntries: [],
       journalSequences: [],
+      investmentInstruments: [],
+      investmentPositions: [],
+      investmentOperations: [],
+      investmentValuations: [],
+      investmentRequests: [],
+      investmentSequences: [],
     })
     expect(publisher.events).toEqual([])
   })

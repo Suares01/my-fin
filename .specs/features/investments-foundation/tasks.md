@@ -1205,13 +1205,33 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Incluir todas as coleções/contador e clone profundo; alterar cópia de profile/termos/identificador/estado anterior não contamina store ou rollback.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Incluir todas as coleções/contador e clone profundo; alterar cópia de profile/termos/identificador/estado anterior não contamina store ou rollback.
+- [x] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (Memory); testes acompanham o componente nesta tarefa.
 **Gate**: Full Memory
 **Commit**: `feat(investments-memory): snapshot de investimentos em memória`
+
+**Execution evidence**: before T30 Memory: 26 files, 246 tests; after: 26 files, 256 tests. Full Memory passed: Domain/Application builds, Memory 256/256 tests and Memory typecheck.
+
+| Requirement / done-when | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| INV-04, INV-88 | `in-memory-store.test.ts:190-200` `expect(...identifiers[0]?.value).toBe("ABC")`; `202-214` terms assertion; `216-244` categories and `positionBefore` assertions | Snapshot copies nested identifier, terms and previous state without mutable reference escape. | Yes |
+| INV-75 | `in-memory-store.test.ts:278-297` `expect(store.snapshot()).toEqual(snapshot)` and `302-304` restored identifiers | Restore returns every investment collection to its pre-failure snapshot. | Yes |
+| INV-127 | `in-memory-store.test.ts:202-214` `expect(...fixedIncomeTerms?.annualRate).toBe("10")` | Position terms remain preserved through snapshot copies. | Yes |
+| INV-132 | `in-memory-store.test.ts:216-244` exact category/state assertions | Operation normalized effects include independent category and prior economic state snapshots. | Yes |
+| counter / book scope | `in-memory-store.test.ts:273-276` `expect(...).toBe("1")` for both books | Exact sequences start at one and are isolated by book. | Yes |
+
+| Test assertion | Maps to | Keep |
+| --- | --- | --- |
+| `in-memory-store.test.ts:198-200` `expect(...value).toBe("ABC")` | INV-88 mutable identifier reconstruction | Yes |
+| `in-memory-store.test.ts:212-214` `expect(...annualRate).toBe("10")` | INV-127 terms persistence | Yes |
+| `in-memory-store.test.ts:224-244` category/state assertions | INV-132 operation snapshot | Yes |
+| `in-memory-store.test.ts:261-264` `expect(...cashMinor).toBe("-1")` | INV-75 immutable receipt state | Yes |
+| `in-memory-store.test.ts:289-297` `expect(store.snapshot()).toEqual(snapshot)` | INV-75 full rollback snapshot | Yes |
+
+**Adequacy verdict**: PASS. Ten direct scenarios cover every new collection, nested mutable structure, book-scoped sequence and snapshot restoration. Assertions target stored values, not calls or implementation-only details.
 
 ### T31: Repository em memória de instrumentos
 
