@@ -2040,13 +2040,31 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Reduzir custo sem alterar unidades, separar recebimento/principal/resultado/despesas; C1000 reduz200 recebe220 resulta custo800 e receita20.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Reduzir custo sem alterar unidades, separar recebimento/principal/resultado/despesas; C1000 reduz200 recebe220 resulta custo800 e receita20.
+- [x] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (Command); testes acompanham o componente nesta tarefa.
 **Gate**: Full Memory
 **Commit**: `feat(investments): registrar amortização`
+
+**Execution evidence**: baseline Memory: 45 files, 479 tests; T54: 46 files, 489 tests. The 10 integration scenarios in `record-investment-amortization.test.ts` cover the normative fixture, retained expenses, loss, category validation, invalid reduction/route rollback, CAS, replay, idempotency conflict and book isolation. Full Memory passed: Domain/Application builds, Memory 46/46 files and 489/489 tests, plus Memory typecheck; `git diff --check` passed.
+
+| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| INV-42, INV-46 | `packages/infrastructure-memory/src/use-cases/record-investment-amortization.test.ts:55-64` `expect(...).toMatchObject({ quantity: "10", bookCostMinor: "800", allocationRevision: 2 })`, `expect.objectContaining({ accountId: f.broker.id, amountMinor: 20n })`, and `netCashFlowMinor: "220"` | C=1000 reduced by 200 leaves cost 800 and units unchanged; R=220 produces income 20 and cash receipt 220. | Yes |
+| INV-44, INV-126 | `record-investment-amortization.test.ts:70-76` exact I=8, gain=-20, F=2 and T=10 postings plus `toEqual(["OPENING_ALLOCATION", "AMORTIZATION"])` | Retentions are distinct postings in the one amortization operation, never auxiliary FEE/TAX operations. | Yes |
+| INV-35, INV-43, INV-75 | `record-investment-amortization.test.ts:90-100` exact category/operation errors and unchanged position; `:103-106` external-route failure and empty journal | Cost reduction is explicit and valid; invalid category, amount or route leaves no partial state. | Yes |
+| INV-74, INV-76, INV-78, INV-128 | `record-investment-amortization.test.ts:111-112` stale-CAS error and unchanged revision; `:118-120` replay one effect; `:126` conflict; `:133-134` BOOK_MISMATCH and absent receipt | Stale/cross-book commands cannot write; retry returns stored IDs without duplicates; economic reduction advances allocation revision once. | Yes |
+
+| Test assertion | Maps to | Keep? |
+| --- | --- | --- |
+| `record-investment-amortization.test.ts:55-64` exact result, position, posting and net-flow assertions | INV-42, INV-46 | Yes |
+| `:70-85` fee/tax and loss posting assertions | INV-42, INV-44, INV-126 | Yes |
+| `:90-112` category, invalid-reduction/route and CAS assertions | INV-35, INV-43, INV-75, INV-76 | Yes |
+| `:118-134` replay/conflict/book-isolation assertions | INV-74, INV-78, INV-128 | Yes |
+
+**Adequacy verdict**: PASS. Ten spec-scoped Memory command scenarios assert explicit cost, preserved units, complete posting values and stable failure/receipt behavior without mock-call assertions.
 
 ### T55: Registrar taxa ou imposto independente
 
