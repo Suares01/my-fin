@@ -11,11 +11,13 @@ import { ApplicationError } from "../../ports/errors.js"
 import { DomainEventDispatcher } from "../../core/event-dispatcher.js"
 import { executeUseCase } from "../../core/use-case-executor.js"
 import type { TransactionManager } from "../../ports/transaction.js"
+import { InvestmentAccountLifecyclePolicy } from "./investment-account-lifecycle-policy.js"
 
 export class ArchiveLedgerAccount {
   constructor(
     private readonly transactionManager: TransactionManager,
-    private readonly eventDispatcher: DomainEventDispatcher
+    private readonly eventDispatcher: DomainEventDispatcher,
+    private readonly lifecyclePolicy = new InvestmentAccountLifecyclePolicy()
   ) {}
 
   async execute(command: ArchiveLedgerAccountCommand) {
@@ -45,6 +47,7 @@ export class ArchiveLedgerAccount {
 
         assertBook(account, book.id)
         assertExpectedVersion(account, command.expectedVersion)
+        await this.lifecyclePolicy.assertCanArchive(repositories, account)
 
         account.archive()
         if (account.version !== command.expectedVersion) {

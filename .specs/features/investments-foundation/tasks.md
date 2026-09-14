@@ -1602,13 +1602,34 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Conectar política compartilhada a archive/reactivate existentes; bloquear carteira com OPEN ou saldo não zero e settlement em uso; reativar preserva ID e revalida vínculos na transação.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full Memory + Build` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Conectar política compartilhada a archive/reactivate existentes; bloquear carteira com OPEN ou saldo não zero e settlement em uso; reativar preserva ID e revalida vínculos na transação.
+- [x] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full Memory + Build` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (Command); testes acompanham o componente nesta tarefa.
 **Gate**: Full Memory + Build
 **Commit**: `feat(investments): política de lifecycle de contas`
+
+**Execution evidence**: before T43 Memory: 327 tests; after: 340 tests, including 13 lifecycle scenarios. Full Memory + Build passed: Domain/Application builds; Memory 35 files/340 tests, typecheck, lint and build; Application 21 files/241 tests, lint, typecheck and build; `git diff --check`.
+
+| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| INV-113 | `investment-account-lifecycle-policy.test.ts:139` `expect(result).toMatchObject({ ok: false, error: { code: "INVESTMENT_ACCOUNT_IN_USE" } })`; `:159` same exact error for non-zero balance; `:178` `expect(result).toMatchObject({ ok: true, value: { id: "account-5", status: "ARCHIVED", version: 1 } })` | archive rejects an OPEN position or non-zero balance, but accepts CLOSED/zero | Yes |
+| INV-115 | `investment-account-lifecycle-policy.test.ts:209` `expect(result).toMatchObject({ ok: false, error: { code: "FINANCIAL_ACCOUNT_TYPE_CHANGE_NOT_ALLOWED" } })`; `:213` `expect(harness.store.snapshot()).toEqual(before)` | an active investment account's settlement cannot be archived; rejected command does not mutate state | Yes |
+| INV-116 | `investment-account-lifecycle-policy.test.ts:258` `expect(result).toMatchObject({ ok: true, value: { id: "account-5", status: "ACTIVE", version: 2 } })`; `:266` `expect(...financialAccount).toEqual({ type: "INVESTMENT_ACCOUNT", investment: { defaultSettlementAccountId: "account-6" } })` | reactivation preserves identity and profile after transactional link validation | Yes |
+| INV-12, INV-116 | `:299`, `:336`, `:364`, `:391`, `:418` each `expect(result).toMatchObject({ ok: false, error: { code: "INVALID_SETTLEMENT_ACCOUNT" } })`; paired `:303`, `:340`, `:368`, `:395`, `:422` snapshot equality | reactivation revalidates inactive, foreign-book, wrong-type, missing and self settlement links without mutation | Yes |
+| INV-74 | `archive-ledger-account.test.ts:199` `expect(result).toMatchObject({ ok: false, error: { code: "BOOK_MISMATCH" } })`; `reactivate-ledger-account.test.ts:205` same exact assertion | archive/reactivate reject a requested account from another book | Yes |
+| existing lifecycle compatibility | `investment-account-lifecycle-policy.test.ts:230` `expect(result).toMatchObject({ ok: true, value: { status: "ARCHIVED", version: 1 } })`; `:446` `expect(result).toMatchObject({ ok: true, value: { kind: "EXPENSE", status: "ARCHIVED", version: 1 } })` | already archived accounts remain idempotent and non-investment accounts retain the existing lifecycle path | Yes |
+
+| Test assertion | Maps to | Keep |
+| --- | --- | --- |
+| `investment-account-lifecycle-policy.test.ts:110-123`, `:178-180` resulting account/profile assertions | INV-113, INV-116 archive identity and permitted CLOSED/zero transition | Yes |
+| `:139-143`, `:159-163`, `:209-213` exact errors and full snapshots | INV-113, INV-115 in-use/dependent settlement rejection with no write | Yes |
+| `:258-270`, `:299-422` activation and every settlement validation error/snapshot | INV-12, INV-116 revalidate active, same-book BANK/PAYMENT linkage transactionally | Yes |
+| `archive-ledger-account.test.ts:199-203`, `reactivate-ledger-account.test.ts:205-209` exact book errors and snapshots | INV-74 book isolation for both commands | Yes |
+| `investment-account-lifecycle-policy.test.ts:230-234`, `:446-448` no-op and generic account lifecycle results | existing archive/reactivate behavior retained while applying the shared policy | Yes |
+
+**Adequacy verdict**: PASS. Thirteen Memory command scenarios assert resulting account/profile state, exact stable errors and rollback snapshots, never mock calls. They cover each lifecycle branch required by T43 and retain the existing Memory command-test convention.
 
 ### Phase 8: Catálogos e execução idempotente
 
