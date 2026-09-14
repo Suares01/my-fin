@@ -1015,13 +1015,34 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Restaurar quantidade/termos/revisão exatos, salvar uma versão e consultar uso atual/histórico; proibir alteração de identidade/mode/termos e estado corrompido.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Restaurar quantidade/termos/revisão exatos, salvar uma versão e consultar uso atual/histórico; proibir alteração de identidade/mode/termos e estado corrompido.
+- [x] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (SQLite); testes acompanham o componente nesta tarefa.
 **Gate**: Full SQLite
 **Commit**: `feat(investments-sqlite): repository sqlite de posições`
+
+**Execution evidence**: before T25 SQLite: 41 files, 774 tests; after: 42 files, 787 tests. Full SQLite passed: Domain/Application/Memory builds, SQLite 787/787 tests, generated migration manifest check, SQLite typecheck and `git diff --check`.
+
+| Requirement / done-when | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| INV-19, INV-20, INV-21, INV-22, INV-23, INV-127 | `sqlite-investment-position-repository.test.ts:120-122` `expect(...toSnapshot()).toEqual(value.toSnapshot())`; `:136-138` same assertion for AMOUNT without quantity/terms | Separate positions retain identity; units or absent AMOUNT quantity, fixed-income terms, exact cost and allocation revision round-trip. | Yes |
+| INV-74, INV-113, INV-114 | `sqlite-investment-position-repository.test.ts:146-148` `resolves.toEqual({ kind: "BOOK_MISMATCH" })`; `:161-166` `expect(...kind).toBe("FOUND")`; `:181-186` current/historical account usage | A foreign-book position is not exposed; same account/instrument positions are distinct; current and historical uses remain queryable. | Yes |
+| INV-26, INV-76, INV-128 | `sqlite-investment-position-repository.test.ts:241-243` `expect(...toSnapshot()).toEqual(updated.toSnapshot())`; `:253-259` stale save rejection and unchanged snapshot; `:273-279` immutable change rejection and original snapshot | A valid next version preserves allocation state; stale or immutable rewrites do not overwrite persisted data. | Yes |
+| INV-88, INV-113, INV-114 | `sqlite-investment-position-repository.test.ts:198-203` `hasAnyForInstrument(...).resolves.toBe(true)` and `hasOpenForInstrument(...).resolves.toBe(false)`; `:211-216` foreign-book usage is false | Repository restores scalar data and distinguishes historical/open use in the requested book only. | Yes |
+| state corruption | `sqlite-investment-position-repository.test.ts:292-294` `rejects.toMatchObject({ code: "INVALID_INVESTMENT_OPERATION" })` | A persisted CLOSED position without closedOn is not reconstructed as valid domain state. | Yes |
+
+| Test assertion | Maps to | Keep |
+| --- | --- | --- |
+| `sqlite-investment-position-repository.test.ts:120-122` `expect(...toSnapshot()).toEqual(value.toSnapshot())` | INV-19–23, INV-127 exact position and terms persistence | Yes |
+| `sqlite-investment-position-repository.test.ts:146-148` `resolves.toEqual({ kind: "BOOK_MISMATCH" })` | INV-74 book boundary | Yes |
+| `sqlite-investment-position-repository.test.ts:181-186` `hasAnyForAccount(...).resolves.toBe(true)` / `hasOpenForAccount(...).resolves.toBe(true)` | INV-113–114 historical/current account dependency | Yes |
+| `sqlite-investment-position-repository.test.ts:253-259` stale rejection plus exact snapshot | INV-76 optimistic concurrency | Yes |
+| `sqlite-investment-position-repository.test.ts:273-279` immutable rejection plus exact snapshot | INV-20, INV-23, INV-26 immutable opening contract | Yes |
+| `sqlite-investment-position-repository.test.ts:292-294` `rejects.toMatchObject({ code: "INVALID_INVESTMENT_OPERATION" })` | Done-when corrupted-state rejection | Yes |
+
+**Adequacy verdict**: PASS. The 13 SQLite scenarios assert reconstructed snapshots and typed outcomes, not calls. They cover the bounded repository contract; no spec-precision gap or scope-expanding assertion was found.
 
 ### T26: Repository SQLite de operações
 
