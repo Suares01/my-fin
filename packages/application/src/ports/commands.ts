@@ -230,6 +230,7 @@ export interface AmendJournalEntryResult {
   readonly replacementId: string
   readonly replacementVersion: number
   readonly state: "EFFECTIVE"
+  readonly warnings?: readonly import("./investment-commands.js").InvestmentWarning[]
 }
 
 export interface AccountBalanceQuery {
@@ -279,4 +280,5 @@ export interface JournalEntryDto {
   readonly description: string
   readonly currency: string
   readonly version: number
+  readonly warnings?: readonly import("./investment-commands.js").InvestmentWarning[]
 }

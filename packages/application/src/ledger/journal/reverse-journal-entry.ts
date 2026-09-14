@@ -13,6 +13,10 @@ import { ApplicationError } from "../../ports/errors.js"
 import { DomainEventDispatcher } from "../../core/event-dispatcher.js"
 import { executeUseCase } from "../../core/use-case-executor.js"
 import { assertJournalNotOwnedByInvestment } from "./investment-journal-ownership.js"
+import {
+  investmentCashWarnings,
+  withInvestmentCashWarnings,
+} from "./investment-cash-warnings.js"
 
 export class ReverseJournalEntry {
   constructor(
@@ -83,14 +87,22 @@ export class ReverseJournalEntry {
         await repositories.journalEntries.add(reversal)
         await repositories.journalEntries.save(original, expectedVersion)
 
-        return {
-          id: reversal.id,
-          bookId: reversal.bookId,
-          occurredOn: reversal.occurredOn.value,
-          description: reversal.description,
-          currency: reversal.currency.code,
-          version: reversal.version,
-        }
+        return withInvestmentCashWarnings(
+          {
+            id: reversal.id,
+            bookId: reversal.bookId,
+            occurredOn: reversal.occurredOn.value,
+            description: reversal.description,
+            currency: reversal.currency.code,
+            version: reversal.version,
+          },
+          await investmentCashWarnings(
+            repositories,
+            book.id,
+            reversal.postings.map((posting) => posting.accountId),
+            reversal.occurredOn.value
+          )
+        )
       },
     })
   }

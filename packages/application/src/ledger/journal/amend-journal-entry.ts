@@ -22,6 +22,10 @@ import { ApplicationError } from "../../ports/errors.js"
 import { DomainEventDispatcher } from "../../core/event-dispatcher.js"
 import { executeUseCase } from "../../core/use-case-executor.js"
 import { assertJournalNotOwnedByInvestment } from "./investment-journal-ownership.js"
+import {
+  investmentCashWarnings,
+  withInvestmentCashWarnings,
+} from "./investment-cash-warnings.js"
 
 export class AmendJournalEntry {
   constructor(
@@ -122,13 +126,23 @@ export class AmendJournalEntry {
         await repositories.journalEntries.add(replacement)
         await repositories.journalEntries.save(target, command.expectedVersion)
 
-        return {
-          targetId: target.id,
-          reversalId: reversal.id,
-          replacementId: replacement.id,
-          replacementVersion: replacement.version,
-          state: "EFFECTIVE",
-        }
+        return withInvestmentCashWarnings(
+          {
+            targetId: target.id,
+            reversalId: reversal.id,
+            replacementId: replacement.id,
+            replacementVersion: replacement.version,
+            state: "EFFECTIVE",
+          },
+          await investmentCashWarnings(
+            repositories,
+            book.id,
+            [target, reversal, replacement].flatMap((entry) =>
+              entry.postings.map((posting) => posting.accountId)
+            ),
+            replacement.occurredOn.value
+          )
+        )
       },
     })
   }

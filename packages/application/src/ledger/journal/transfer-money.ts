@@ -16,6 +16,10 @@ import type {
 import { ApplicationError } from "../../ports/errors.js"
 import { DomainEventDispatcher } from "../../core/event-dispatcher.js"
 import { executeUseCase } from "../../core/use-case-executor.js"
+import {
+  investmentCashWarnings,
+  withInvestmentCashWarnings,
+} from "./investment-cash-warnings.js"
 
 export class TransferMoney {
   constructor(
@@ -80,14 +84,22 @@ export class TransferMoney {
         })
         await repositories.journalEntries.add(entry)
 
-        return {
-          id: entry.id,
-          bookId: entry.bookId,
-          occurredOn: entry.occurredOn.value,
-          description: entry.description,
-          currency: entry.currency.code,
-          version: entry.version,
-        }
+        return withInvestmentCashWarnings(
+          {
+            id: entry.id,
+            bookId: entry.bookId,
+            occurredOn: entry.occurredOn.value,
+            description: entry.description,
+            currency: entry.currency.code,
+            version: entry.version,
+          },
+          await investmentCashWarnings(
+            repositories,
+            book.id,
+            entry.postings.map((posting) => posting.accountId),
+            entry.occurredOn.value
+          )
+        )
       },
     })
   }

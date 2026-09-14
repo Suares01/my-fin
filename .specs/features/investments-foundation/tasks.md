@@ -2261,13 +2261,29 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Conectar helper pós-postings a Income/Expense/Transfer/OpeningBalance e correções genéricas; warning aditivo por toda carteira afetada, inclusive ambas numa transferência, sem bloquear ou criar operação de investimento.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 14 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Conectar helper pós-postings a Income/Expense/Transfer/OpeningBalance e correções genéricas; warning aditivo por toda carteira afetada, inclusive ambas numa transferência, sem bloquear ou criar operação de investimento.
+- [x] Escrever/atualizar no mesmo commit pelo menos 14 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (Command); testes acompanham o componente nesta tarefa.
 **Gate**: Full Memory
 **Commit**: `feat(investments): avisos em comandos financeiros comuns`
+
+**Execution evidence**: before T60: 51 Memory files, 579 tests; after: 52 files, 590 tests. `investment-cash-warnings.test.ts` adds 11 integration tests covering 15 distinct AC outcomes across generic Income, Expense, Transfer, OpeningBalance, Reverse and Amend, including recovery to nonnegative cash, a non-investment account, both sides of a transfer and no hidden investment operation. Full Memory passed: Domain and Application builds, Memory 52/52 files and 590/590 tests, and Memory typecheck. Changed-file lint and `git diff --check` passed.
+
+| Done-when criterion / requirement | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| INV-28/31/32/60/145/147: common Income, Expense and OpeningBalance warnings are additive | `investment-cash-warnings.test.ts:112-203` - `expect(...value.warnings).toMatchObject(warning(...))` and `expect(...warnings).toBeUndefined()` | valid posting succeeds; every negative affected portfolio receives exact ID/cash/currency/asOf, and recovery removes warning | Yes |
+| INV-70/77/145: transfer includes every affected investment account | `investment-cash-warnings.test.ts:205-284` - `expect(...warnings).toMatchObject([warning(broker, "-1100"), warning(second, "-900")])` | both portfolios are returned when both transfer postings affect them; negative cash does not block transfer | Yes |
+| INV-75/145: generic corrections calculate post-write warnings without inventing investment work | `investment-cash-warnings.test.ts:286-355` - `expect(...warnings).toMatchObject(warning(...))` and `expect(...listInvestmentOperations()).toHaveLength(1)` | Reverse/Amend append their normal journal effects and only attach warning metadata | Yes |
+
+| `file:line` + assertion expression | Maps to | Keep |
+| --- | --- | --- |
+| `investment-cash-warnings.test.ts:112-203` - `expect(result).toMatchObject({ ok: true, value: { warnings: ... } })` | INV-28, INV-31, INV-32, INV-60, INV-145, INV-147 | Yes |
+| `investment-cash-warnings.test.ts:205-284` - `expect(result).toMatchObject({ ... warnings: [ ... ] })` | INV-70, INV-77, INV-145 all transfer accounts | Yes |
+| `investment-cash-warnings.test.ts:286-355` - `expect(...listInvestmentOperations()).toHaveLength(1)` | INV-75 and T60 no investment operation side effect | Yes |
+
+**Adequacy verdict**: PASS. Assertions prove returned warning payload fields and persisted journal/investment-operation state, not helper calls. The portfolio warning scenarios are scoped to the named common commands and corrections; no query/UI behavior is asserted ahead of its task.
 
 ### T61: Prévia da operação
 
