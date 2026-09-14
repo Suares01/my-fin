@@ -70,7 +70,11 @@ export function planInvestmentAccounting(
   }
 
   if (input.type === "OPENING_ALLOCATION") {
-    return { bookCostDeltaMinor: capital.toString(), netCashFlowMinor: "0", postings: [] }
+    return {
+      bookCostDeltaMinor: capital.toString(),
+      netCashFlowMinor: "0",
+      postings: [],
+    }
   }
 
   if (input.type === "APPLICATION" || input.type === "PURCHASE") {
@@ -83,14 +87,26 @@ export function planInvestmentAccounting(
 
   if (input.type === "FEE" || input.type === "TAX") {
     const amount = input.type === "FEE" ? fees : taxes
-    if (amount <= 0n || input.cashMode !== "INTERNAL_CASH" || capital !== 0n || gross !== 0n) invalid()
+    if (
+      amount <= 0n ||
+      input.cashMode !== "INTERNAL_CASH" ||
+      capital !== 0n ||
+      gross !== 0n
+    )
+      invalid()
     routeCash(-amount)
-    add(input.type === "FEE" ? require(accounts.feeCategoryId) : require(accounts.taxCategoryId), amount)
+    add(
+      input.type === "FEE"
+        ? require(accounts.feeCategoryId)
+        : require(accounts.taxCategoryId),
+      amount
+    )
     return result(0n, -amount, deltas)
   }
 
   if (input.type === "INCOME") {
-    if (capital !== 0n || gross <= 0n || input.cashMode !== "INTERNAL_CASH") invalid()
+    if (capital !== 0n || gross <= 0n || input.cashMode !== "INTERNAL_CASH")
+      invalid()
     const net = gross - expenses
     if (net < 0n) invalid()
     routeCash(net)
@@ -133,8 +149,16 @@ function result(
   const postings = [...grouped].flatMap(([accountId, amount]) =>
     amount === 0n ? [] : [{ accountId, amountMinor: amount.toString() }]
   )
-  if (postings.length === 1 || postings.reduce((sum, item) => sum + BigInt(item.amountMinor), 0n) !== 0n) invalid()
-  return { bookCostDeltaMinor: bookCostDeltaMinor.toString(), netCashFlowMinor: netCashFlowMinor.toString(), postings }
+  if (
+    postings.length === 1 ||
+    postings.reduce((sum, item) => sum + BigInt(item.amountMinor), 0n) !== 0n
+  )
+    invalid()
+  return {
+    bookCostDeltaMinor: bookCostDeltaMinor.toString(),
+    netCashFlowMinor: netCashFlowMinor.toString(),
+    postings,
+  }
 }
 
 function integer(value: string): bigint {
