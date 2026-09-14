@@ -1886,13 +1886,33 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Criar Position e primeira OPENING_ALLOCATION ou compra em unidade atômica; distinguir origens, não inventar saldo/quantidade/custo, permitir caixa negativo com warning e não repetir saldo inicial separado.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 18 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Criar Position e primeira OPENING_ALLOCATION ou compra em unidade atômica; distinguir origens, não inventar saldo/quantidade/custo, permitir caixa negativo com warning e não repetir saldo inicial separado.
+- [x] Escrever/atualizar no mesmo commit pelo menos 18 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (Command); testes acompanham o componente nesta tarefa.
 **Gate**: Full Memory
 **Commit**: `feat(investments): abrir posição`
+
+**Execution evidence**: baseline Memory: 42 files, 408 tests; T50: 43 files, 426 tests. Full Memory passed: Domain/Application builds, Memory 426/426 tests and Memory typecheck.
+
+| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| INV-19, INV-20, INV-27, INV-33, INV-127 | `packages/infrastructure-memory/src/use-cases/open-investment-position.test.ts:52-82` `expect(...).toEqual({ ..., positionId: "position-1", allocationRevision: 1, operationId: "operation-1", journalEntryIds: [] })`; `:72-82` operation `OPENING_ALLOCATION`/no journal | Opening atomically records the position and its first allocation, starting revision 1, without a ledger entry. | Yes |
+| INV-28, INV-32, INV-145 | `open-investment-position.test.ts:61-69` `warnings: [{ code: "INVESTMENT_CASH_NEGATIVE", cashMinor: "-1000"... }]`; `:101-108` `expect(...warnings).toMatchObject([])` | Negative cash confirms with the calculated warning; sufficient explicit balance leaves no warning. | Yes |
+| INV-21, INV-120, INV-121, INV-123 | `open-investment-position.test.ts:130-142` `expect(...code).toMatchObject({ code: "INVESTMENT_BOOK_COST_REQUIRED" })`; `:145-189` exact invalid value/quantity assertions; `:155-169` unit position with zero cost remains OPEN | Cost is mandatory when unknown; quantity/cost are never invented; a unit holding can retain zero known cost. | Yes |
+| INV-75, INV-78, INV-137 | `open-investment-position.test.ts:111-127` `expect(...positionId: "position-1", operationId: "operation-1")`, `toHaveLength(1)`, and `IDEMPOTENCY_CONFLICT`; `:274-279` absent failed receipt; `:304-324` `toHaveLength(1)` journal | Retry has no duplicate effect; invalid work rolls back; a separately confirmed opening balance is not repeated. | Yes |
+| INV-34, INV-74 | `open-investment-position.test.ts:192-247` exact `ENTITY_NOT_FOUND` and `BOOK_MISMATCH` error assertions | Missing/cross-book references cannot create an implicit source or write state. | Yes |
+
+| Test assertion | Maps to | Keep |
+| --- | --- | --- |
+| `open-investment-position.test.ts:52-82` exact result, `OPENING_ALLOCATION`, and `journalEntries=[]` assertions | INV-19, INV-27, INV-33 | Yes |
+| `:101-108`, `:282-301` warning/no-warning and ledger-length assertions | INV-28, INV-32, INV-120, INV-145 | Yes |
+| `:114-127`, `:274-279`, `:304-324` replay/conflict/rollback/separate-balance assertions | INV-75, INV-78, INV-137 | Yes |
+| `:130-189` required cost and quantity-mode assertions | INV-21, INV-121, INV-123 | Yes |
+| `:192-271` missing/cross-book/date/revision/label assertions | INV-19, INV-20, INV-74, INV-127 | Yes |
+
+**Adequacy verdict**: PASS. The 18 command scenarios assert persisted operation/position state, exact warnings and stable errors rather than calls; every scenario maps to T50 requirements and follows the Memory integration location in the Test Coverage Matrix.
 
 ### T51: Registrar compra ou aplicação
 
