@@ -2116,13 +2116,34 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Cancelar somente última efetiva; inverter deltas/postings persistidos e datar reversão no original; aplicar estado final uma vez, avançar revisão quando muda e bloquear reabertura sob cadastro arquivado.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 20 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Cancelar somente última efetiva; inverter deltas/postings persistidos e datar reversão no original; aplicar estado final uma vez, avançar revisão quando muda e bloquear reabertura sob cadastro arquivado.
+- [x] Escrever/atualizar no mesmo commit pelo menos 20 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (Command); testes acompanham o componente nesta tarefa.
 **Gate**: Full Memory
 **Commit**: `feat(investments): cancelar operação`
+
+**Execution evidence**: before T56: 48 files, 499 tests; after: 49 files, 520 tests. Full Memory passed: Domain/Application builds, 520/520 Memory tests and Memory typecheck. The 21 new Memory command scenarios are in `packages/infrastructure-memory/src/use-cases/reverse-investment-operation.test.ts`.
+
+| Done-when criterion / spec AC / listed edge case | `file:line` + assertion expression | Spec-defined outcome | Covered? |
+| --- | --- | --- | --- |
+| INV-61/62/132/133, append-only reversal and inverse persisted effects | `reverse-investment-operation.test.ts:124-154` - `expect(...).toMatchObject({ ... reversalOperationId: "operation-3" ... quantityDelta: "4", bookCostDeltaMinor: "400", netCashFlowMinor: "-500" })` | original is retained, one reversal restores its effect | Yes |
+| INV-63/72, only last effective target | `reverse-investment-operation.test.ts:256-275` - `expect(...).toMatchObject({ error: { code: "INVESTMENT_OPERATION_NOT_CORRECTABLE" } })` | corrected/replaced/non-last target is rejected | Yes |
+| INV-64/71/128, reopening and allocation revision | `reverse-investment-operation.test.ts:158-193, 360-377` - `expect(...).toMatchObject({ quantity: "10", bookCostMinor: "1000", status: "OPEN", closedOn: undefined })` | total-sale cancellation reopens; opening cancellation stays historical CLOSED zero; changed economics increments revision | Yes |
+| archived reopening edge | `reverse-investment-operation.test.ts:174-193` - `expect(...).toMatchObject({ error: { code: "INVESTMENT_ENTITY_NOT_ACTIVE" } })` | archived account cannot reopen a position | Yes |
+| INV-65/69/73/134, journal reversal | `reverse-investment-operation.test.ts:196-219, 330-334` - `expect(reversal?.postings).toEqual(... amountMinor: -posting.amountMinor)` | reversal postings persist in ledger with original occurredOn and correction recordedAt | Yes |
+| no-journal edge | `reverse-investment-operation.test.ts:222-234` - `expect(...).toMatchObject({ value: { journalEntryIds: [] } })` | no empty journal is invented | Yes |
+| INV-70/74/75/76/78/145, warning, isolation, CAS, atomic retry | `reverse-investment-operation.test.ts:236-323, 336-352` - `expect(second).toEqual(first)` and `expect(...).toMatchObject({ error: { code: "OPTIMISTIC_CONCURRENCY_FAILURE" } })` | warning is successful and additive; same request replays; conflicting/book-mismatched attempts persist no effects | Yes |
+
+| `file:line` + assertion expression | Maps to (AC / edge case / Done-when criterion) | Keep? |
+| --- | --- | --- |
+| `reverse-investment-operation.test.ts:124-154` - `expect(...reversalOperationId...).toMatchObject(...)` | INV-61, INV-62, INV-128, INV-132, INV-133 | Yes |
+| `reverse-investment-operation.test.ts:158-219` - `expect(...status: "OPEN"...)`, `expect(...amountMinor: -posting.amountMinor...)` | INV-64, INV-65, INV-69, INV-73, INV-134 | Yes |
+| `reverse-investment-operation.test.ts:222-323` - `expect(...journalEntryIds: []).toMatchObject(...)`, `expect(...error.code...).toMatchObject(...)` | INV-63, INV-74, INV-76, INV-78 | Yes |
+| `reverse-investment-operation.test.ts:330-377` - `expect(...warnings...).toMatchObject(...)`, `expect(...status: "CLOSED"...).toMatchObject(...)` | INV-70, INV-71, INV-145 | Yes |
+
+**Adequacy verdict**: PASS. The 21 command scenarios assert public result envelopes and resulting persisted state, not mock calls. They cover the task-owned cancellation paths, correct exact errors and warning payload, follow the Memory Command convention from the Test Coverage Matrix, and add no speculative behavior. INV-66/67 are explicitly delivered by T59/T70/T85; amendment-only INV-135/136 remain T57.
 
 ### T57: Substituir operação
 

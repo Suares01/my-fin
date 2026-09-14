@@ -73,10 +73,25 @@ function sameOperation(
   persisted: ReturnType<InvestmentOperation["toSnapshot"]>,
   next: ReturnType<InvestmentOperation["toSnapshot"]>
 ): boolean {
-  return (
-    persisted.reversedBy === next.reversedBy &&
-    persisted.replacedBy === next.replacedBy
-  )
+  const {
+    reversedBy: persistedReversedBy,
+    replacedBy: persistedReplacedBy,
+    version: persistedVersion,
+    ...persistedRest
+  } = persisted
+  const {
+    reversedBy: nextReversedBy,
+    replacedBy: nextReplacedBy,
+    version: nextVersion,
+    ...nextRest
+  } = next
+  void persistedReversedBy
+  void persistedReplacedBy
+  void nextReversedBy
+  void nextReplacedBy
+  void persistedVersion
+  void nextVersion
+  return JSON.stringify(persistedRest) === JSON.stringify(nextRest)
 }
 
 function concurrent(id: string): ApplicationError {

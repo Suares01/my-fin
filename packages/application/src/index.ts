@@ -13,6 +13,7 @@ export { RecordInvestmentSale } from "./investments/operations/record-investment
 export { RecordInvestmentIncome } from "./investments/operations/record-investment-income.js"
 export { RecordInvestmentAmortization } from "./investments/operations/record-investment-amortization.js"
 export { RecordInvestmentExpense } from "./investments/operations/record-investment-expense.js"
+export { ReverseInvestmentOperation } from "./investments/operations/reverse-investment-operation.js"
 export { SetInvestmentOpeningBalance } from "./investments/accounts/set-investment-opening-balance.js"
 export {
   canonicalize,
