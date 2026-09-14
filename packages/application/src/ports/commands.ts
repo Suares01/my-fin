@@ -58,6 +58,13 @@ export interface UpdateInvestmentInstrumentCommand {
   }[]
 }
 
+export interface SetInvestmentInstrumentStatusCommand {
+  readonly bookId: string
+  readonly instrumentId: string
+  readonly expectedVersion: number
+  readonly status: "ARCHIVED" | "ACTIVE"
+}
+
 export interface ConfigureFinancialAccountCommand {
   readonly bookId: string
   readonly accountId: string

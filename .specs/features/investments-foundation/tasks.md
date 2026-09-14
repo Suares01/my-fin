@@ -1739,13 +1739,37 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Oferecer archive/reactivate sobre uma transição de status; rejeitar archive com OPEN, preservar identidade e não expor hard delete.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 8 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Oferecer archive/reactivate sobre uma transição de status; rejeitar archive com OPEN, preservar identidade e não expor hard delete.
+- [x] Escrever/atualizar no mesmo commit pelo menos 8 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (Command); testes acompanham o componente nesta tarefa.
 **Gate**: Full Memory
 **Commit**: `feat(investments): lifecycle de instrumento`
+
+**Execution evidence**: baseline Memory: 37 files, 361 tests, pass; T46: 38 files, 369 tests, pass. `set-investment-instrument-status.test.ts` adds 8 spec-derived command scenarios. Full Memory passed: domain/application build, Memory 369/369, Memory typecheck.
+
+| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- |
+| archive/reactivate, INV-116 | `packages/infrastructure-memory/src/use-cases/set-investment-instrument-status.test.ts:59` `expect(result).toMatchObject({ value: { id: "instrument-1", status: "ARCHIVED", version: 1 } })` and `:83` `expect(result).toMatchObject({ value: { id: "instrument-1", status: "ACTIVE", version: 2 } })` | lifecycle preserves identity and reactivation restores active state | Yes |
+| INV-114 open guard | `set-investment-instrument-status.test.ts:101` `expect(result).toMatchObject({ error: { code: "INVESTMENT_INSTRUMENT_IN_USE" } })` | archive with OPEN position is rejected | Yes |
+| closed history | `set-investment-instrument-status.test.ts:112` `expect(await setStatus(h).execute(archive)).toMatchObject({ value: { status: "ARCHIVED" } })` | closed position does not block archive | Yes |
+| INV-74/76 | `set-investment-instrument-status.test.ts:163` `expect(result).toMatchObject({ error: { code: "BOOK_MISMATCH" } })` and `:142` `expect(result).toMatchObject({ error: { code: "OPTIMISTIC_CONCURRENCY_FAILURE" } })` | book mismatch and stale version write nothing | Yes |
+| INV-81 | `set-investment-instrument-status.test.ts:63` `expect(h.publisher.events).toEqual([{ ... aggregateVersion: 1 }])` | transition publishes a supported fact after commit | Yes |
+| INV-117 | `packages/application/src/index.ts:7` `export { SetInvestmentInstrumentStatus } ...` | public instrument lifecycle surface exposes transition only; no hard-delete command is added | Yes |
+
+| Test assertion | Maps to | Keep |
+| --- | --- | --- |
+| `set-investment-instrument-status.test.ts:59` `expect(result).toMatchObject({ ... status: "ARCHIVED" })` | archive | Yes |
+| `set-investment-instrument-status.test.ts:83` `expect(result).toMatchObject({ ... status: "ACTIVE" })` | reactivation/INV-116 | Yes |
+| `set-investment-instrument-status.test.ts:101` `expect(result).toMatchObject({ error: { code: "INVESTMENT_INSTRUMENT_IN_USE" } })` | INV-114 | Yes |
+| `set-investment-instrument-status.test.ts:112` `expect(await ...).toMatchObject({ status: "ARCHIVED" })` | closed position branch | Yes |
+| `set-investment-instrument-status.test.ts:127` `expect(result).toMatchObject({ version: 1 })` | archive no-op | Yes |
+| `set-investment-instrument-status.test.ts:142` `expect(result).toMatchObject({ error: { code: "OPTIMISTIC_CONCURRENCY_FAILURE" } })` | INV-76 | Yes |
+| `set-investment-instrument-status.test.ts:163` `expect(result).toMatchObject({ error: { code: "BOOK_MISMATCH" } })` | INV-74 | Yes |
+| `set-investment-instrument-status.test.ts:174` `expect(result).toMatchObject({ error: { code: "ENTITY_NOT_FOUND" } })` | missing entity | Yes |
+
+**Adequacy verdict**: PASS. Eight Memory command scenarios assert lifecycle DTOs, facts, stable errors and rollback snapshots. They cover the T46 transition branches without mock-call-only assertions.
 
 ### T47: Metadata da posição
 

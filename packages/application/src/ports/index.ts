@@ -23,6 +23,7 @@ export type {
   ReverseJournalEntryCommand,
   SetOpeningBalanceCommand,
   SetInvestmentSettlementAccountCommand,
+  SetInvestmentInstrumentStatusCommand,
   TransferMoneyCommand,
   UpdateCategoryCommand,
   UpdateInvestmentInstrumentCommand,
