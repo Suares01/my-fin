@@ -1462,13 +1462,17 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Calcular os mesmos saldos/avisos e dependentes que SQLite; preservar originais/reversões, data D e dados ainda não confirmados da transação corrente.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Calcular os mesmos saldos/avisos e dependentes que SQLite; preservar originais/reversões, data D e dados ainda não confirmados da transação corrente.
+- [x] Escrever/atualizar no mesmo commit 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (Memory); testes acompanham o componente nesta tarefa.
 **Gate**: Full Memory
 **Commit**: `feat(investments-memory): leituras transacionais em memória`
+
+**Execution evidence**: before T39: 298 tests; after: 308 tests. Full Memory passed: Domain/Application builds, 308/308 Memory tests, typecheck and `git diff --check`.
+
+**Adequacy verdict**: PASS. `in-memory-investment-transaction-reads.test.ts:52` asserts an exact bigint balance, `:66` the inclusive date, `:78` the excluded future balance, `:94` signed arithmetic, `:119` book isolation, `:141` active settlement dependency, `:153` archived-dependent exclusion, and `:164`/`:175` complete cash result shape. Each assertion maps to the T39 cash, date, book and settlement requirements; no mock call count substitutes for state.
 
 ### T40: Contexto transacional com investimentos
 
