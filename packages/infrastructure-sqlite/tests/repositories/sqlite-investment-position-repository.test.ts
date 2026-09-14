@@ -158,12 +158,8 @@ describe("SqliteInvestmentPositionRepository", () => {
     await repository.add(first)
     await repository.add(second)
 
-    expect(
-      (await repository.findById("book-1", first.id)).kind
-    ).toBe("FOUND")
-    expect(
-      (await repository.findById("book-1", second.id)).kind
-    ).toBe("FOUND")
+    expect((await repository.findById("book-1", first.id)).kind).toBe("FOUND")
+    expect((await repository.findById("book-1", second.id)).kind).toBe("FOUND")
   })
 
   it("reports current and historical account usage independently", async () => {
@@ -179,10 +175,16 @@ describe("SqliteInvestmentPositionRepository", () => {
     await repository.add(closed)
 
     await expect(
-      repository.hasAnyForAccount("book-1", open.toSnapshot().investmentAccountId)
+      repository.hasAnyForAccount(
+        "book-1",
+        open.toSnapshot().investmentAccountId
+      )
     ).resolves.toBe(true)
     await expect(
-      repository.hasOpenForAccount("book-1", open.toSnapshot().investmentAccountId)
+      repository.hasOpenForAccount(
+        "book-1",
+        open.toSnapshot().investmentAccountId
+      )
     ).resolves.toBe(true)
   })
 
@@ -199,7 +201,10 @@ describe("SqliteInvestmentPositionRepository", () => {
       repository.hasAnyForInstrument("book-1", closed.toSnapshot().instrumentId)
     ).resolves.toBe(true)
     await expect(
-      repository.hasOpenForInstrument("book-1", closed.toSnapshot().instrumentId)
+      repository.hasOpenForInstrument(
+        "book-1",
+        closed.toSnapshot().instrumentId
+      )
     ).resolves.toBe(false)
   })
 
@@ -209,7 +214,10 @@ describe("SqliteInvestmentPositionRepository", () => {
     await new SqliteFinancialBookRepository(database).add(book("book-2"))
 
     await expect(
-      repository.hasAnyForAccount("book-2", value.toSnapshot().investmentAccountId)
+      repository.hasAnyForAccount(
+        "book-2",
+        value.toSnapshot().investmentAccountId
+      )
     ).resolves.toBe(false)
     await expect(
       repository.hasAnyForInstrument("book-2", value.toSnapshot().instrumentId)
@@ -217,7 +225,9 @@ describe("SqliteInvestmentPositionRepository", () => {
   })
 
   it("rejects adding a position that is not at version zero", async () => {
-    await expect(repository.add(position({ version: 1 }))).rejects.toMatchObject({
+    await expect(
+      repository.add(position({ version: 1 }))
+    ).rejects.toMatchObject({
       code: "OPTIMISTIC_CONCURRENCY_FAILURE",
     })
   })
@@ -246,9 +256,17 @@ describe("SqliteInvestmentPositionRepository", () => {
   it("rejects a stale save and leaves the current position unchanged", async () => {
     const initial = position()
     await repository.add(initial)
-    const current = position({ label: "Atual", normalizedLabel: "atual", version: 1 })
+    const current = position({
+      label: "Atual",
+      normalizedLabel: "atual",
+      version: 1,
+    })
     await repository.save(current, 0)
-    const stale = position({ label: "Antiga", normalizedLabel: "antiga", version: 1 })
+    const stale = position({
+      label: "Antiga",
+      normalizedLabel: "antiga",
+      version: 1,
+    })
 
     await expect(repository.save(stale, 0)).rejects.toMatchObject({
       code: "OPTIMISTIC_CONCURRENCY_FAILURE",
@@ -289,8 +307,10 @@ describe("SqliteInvestmentPositionRepository", () => {
     )
     await database.execute("PRAGMA ignore_check_constraints = OFF")
 
-    await expect(repository.findById("book-1", value.id)).rejects.toMatchObject({
-      code: "INVALID_INVESTMENT_OPERATION",
-    })
+    await expect(repository.findById("book-1", value.id)).rejects.toMatchObject(
+      {
+        code: "INVALID_INVESTMENT_OPERATION",
+      }
+    )
   })
 })

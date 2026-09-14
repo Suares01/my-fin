@@ -159,10 +159,17 @@ function readFinancialProfile(
       type,
       ...(optional(row.institution_name, "institution_name") === undefined
         ? {}
-        : { institutionName: optional(row.institution_name, "institution_name") }),
+        : {
+            institutionName: optional(row.institution_name, "institution_name"),
+          }),
       ...(optional(row.display_reference, "display_reference") === undefined
         ? {}
-        : { displayReference: optional(row.display_reference, "display_reference") }),
+        : {
+            displayReference: optional(
+              row.display_reference,
+              "display_reference"
+            ),
+          }),
       ...(investment === undefined ? {} : { investment }),
     },
   }

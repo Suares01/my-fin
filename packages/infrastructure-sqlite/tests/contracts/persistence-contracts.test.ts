@@ -68,7 +68,8 @@ function account(
       : systemPurpose === undefined && kind === "EXPENSE"
         ? { iconKey: "label-dollar", colorHex: "f43f5e" }
         : {}),
-    ...(systemPurpose === undefined && (kind === "ASSET" || kind === "LIABILITY")
+    ...(systemPurpose === undefined &&
+    (kind === "ASSET" || kind === "LIABILITY")
       ? {
           financialAccount: {
             type: kind === "ASSET" ? "OTHER_ASSET" : "OTHER_LIABILITY",

@@ -72,10 +72,7 @@ export class SqliteInvestmentPositionRepository implements InvestmentPositionRep
     bookId: string,
     id: LedgerAccountId
   ): Promise<boolean> {
-    return this.exists(
-      "investment_account_id = ?",
-      [bookId, id]
-    )
+    return this.exists("investment_account_id = ?", [bookId, id])
   }
 
   public async hasAnyForInstrument(
@@ -89,10 +86,10 @@ export class SqliteInvestmentPositionRepository implements InvestmentPositionRep
     bookId: string,
     id: LedgerAccountId
   ): Promise<boolean> {
-    return this.exists(
-      "investment_account_id = ? AND status = 'OPEN'",
-      [bookId, id]
-    )
+    return this.exists("investment_account_id = ? AND status = 'OPEN'", [
+      bookId,
+      id,
+    ])
   }
 
   public async hasOpenForInstrument(
@@ -121,7 +118,10 @@ export class SqliteInvestmentPositionRepository implements InvestmentPositionRep
     const snapshot = value.toSnapshot()
     const persisted = await this.findById(snapshot.bookId, snapshot.id)
     if (persisted.kind === "NOT_FOUND") throw missing(value.id)
-    if (persisted.kind !== "FOUND" || !sameImmutable(persisted.value.toSnapshot(), snapshot)) {
+    if (
+      persisted.kind !== "FOUND" ||
+      !sameImmutable(persisted.value.toSnapshot(), snapshot)
+    ) {
       throw concurrent(value.id)
     }
 
@@ -194,7 +194,9 @@ export class SqliteInvestmentPositionRepository implements InvestmentPositionRep
     )
   }
 
-  private async insertTerms(snapshot: InvestmentPositionSnapshot): Promise<void> {
+  private async insertTerms(
+    snapshot: InvestmentPositionSnapshot
+  ): Promise<void> {
     const terms = snapshot.fixedIncomeTerms
     if (terms === undefined) return
     await this.executor.execute(
@@ -230,12 +232,19 @@ function toSnapshot(row: PositionRow): InvestmentPositionSnapshot {
       row.investment_account_id,
       "investment_account_id"
     ) as LedgerAccountId,
-    instrumentId: readString(row.instrument_id, "instrument_id") as InvestmentInstrumentId,
+    instrumentId: readString(
+      row.instrument_id,
+      "instrument_id"
+    ) as InvestmentInstrumentId,
     ...(optionalString(row.label, "label") === undefined
       ? {}
       : { label: optionalString(row.label, "label") }),
     normalizedLabel: readString(row.normalized_label, "normalized_label"),
-    quantityMode: enumValue(row.quantity_mode, ["UNITS", "AMOUNT"] as const, "quantity_mode"),
+    quantityMode: enumValue(
+      row.quantity_mode,
+      ["UNITS", "AMOUNT"] as const,
+      "quantity_mode"
+    ),
     ...(optionalString(row.quantity, "quantity") === undefined
       ? {}
       : { quantity: optionalString(row.quantity, "quantity") }),
@@ -251,30 +260,66 @@ function toSnapshot(row: PositionRow): InvestmentPositionSnapshot {
       : {
           fixedIncomeTerms: {
             rateKind,
-            ...(optionalEnum(row.index_name, ["CDI", "SELIC", "IPCA", "IGPM", "OTHER"] as const, "index_name") === undefined
+            ...(optionalEnum(
+              row.index_name,
+              ["CDI", "SELIC", "IPCA", "IGPM", "OTHER"] as const,
+              "index_name"
+            ) === undefined
               ? {}
-              : { index: optionalEnum(row.index_name, ["CDI", "SELIC", "IPCA", "IGPM", "OTHER"] as const, "index_name") }),
+              : {
+                  index: optionalEnum(
+                    row.index_name,
+                    ["CDI", "SELIC", "IPCA", "IGPM", "OTHER"] as const,
+                    "index_name"
+                  ),
+                }),
             ...(optionalString(row.annual_rate, "annual_rate") === undefined
               ? {}
               : { annualRate: optionalString(row.annual_rate, "annual_rate") }),
-            ...(optionalString(row.index_percentage, "index_percentage") === undefined
+            ...(optionalString(row.index_percentage, "index_percentage") ===
+            undefined
               ? {}
-              : { indexPercentage: optionalString(row.index_percentage, "index_percentage") }),
-            ...(optionalString(row.annual_spread_rate, "annual_spread_rate") === undefined
+              : {
+                  indexPercentage: optionalString(
+                    row.index_percentage,
+                    "index_percentage"
+                  ),
+                }),
+            ...(optionalString(row.annual_spread_rate, "annual_spread_rate") ===
+            undefined
               ? {}
-              : { annualSpreadRate: optionalString(row.annual_spread_rate, "annual_spread_rate") }),
+              : {
+                  annualSpreadRate: optionalString(
+                    row.annual_spread_rate,
+                    "annual_spread_rate"
+                  ),
+                }),
             ...(optionalString(row.issue_date, "issue_date") === undefined
               ? {}
               : { issueDate: optionalString(row.issue_date, "issue_date") }),
-            ...(optionalString(row.grace_period_date, "grace_period_date") === undefined
+            ...(optionalString(row.grace_period_date, "grace_period_date") ===
+            undefined
               ? {}
-              : { gracePeriodDate: optionalString(row.grace_period_date, "grace_period_date") }),
+              : {
+                  gracePeriodDate: optionalString(
+                    row.grace_period_date,
+                    "grace_period_date"
+                  ),
+                }),
             ...(optionalString(row.maturity_date, "maturity_date") === undefined
               ? {}
-              : { maturityDate: optionalString(row.maturity_date, "maturity_date") }),
+              : {
+                  maturityDate: optionalString(
+                    row.maturity_date,
+                    "maturity_date"
+                  ),
+                }),
           },
         }),
-    allocationRevision: readInteger(row.allocation_revision, "allocation_revision"),
+    allocationRevision: readInteger(
+      row.allocation_revision,
+      "allocation_revision"
+    ),
     allocationEffectiveOn: readString(
       row.allocation_effective_on,
       "allocation_effective_on"
@@ -293,7 +338,8 @@ function sameImmutable(
     persisted.instrumentId === candidate.instrumentId &&
     persisted.quantityMode === candidate.quantityMode &&
     persisted.currency === candidate.currency &&
-    JSON.stringify(persisted.fixedIncomeTerms) === JSON.stringify(candidate.fixedIncomeTerms)
+    JSON.stringify(persisted.fixedIncomeTerms) ===
+      JSON.stringify(candidate.fixedIncomeTerms)
   )
 }
 

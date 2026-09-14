@@ -260,7 +260,7 @@ function optional<Key extends string>(
   value: unknown,
   field: string,
   key: Key
-): {} | { readonly [K in Key]: string } {
+): Record<never, never> | { readonly [K in Key]: string } {
   return value === null || value === undefined
     ? {}
     : ({ [key]: required(value, field) } as { readonly [K in Key]: string })
