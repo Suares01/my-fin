@@ -198,10 +198,9 @@ describe("RecordInvestmentIncome", () => {
     const f = await setup()
     await useCase(f).execute(income(f))
     expect(f.h.store.listInvestmentOperations()).toHaveLength(2)
-    expect(f.h.store.listInvestmentOperations().map((operation) => operation.type)).toEqual([
-      "OPENING_ALLOCATION",
-      "INCOME",
-    ])
+    expect(
+      f.h.store.listInvestmentOperations().map((operation) => operation.type)
+    ).toEqual(["OPENING_ALLOCATION", "INCOME"])
     expect(f.h.store.listJournalEntries()).toHaveLength(1)
   })
 
@@ -212,7 +211,11 @@ describe("RecordInvestmentIncome", () => {
       await useCase(f).execute({ ...income(f), expectedPositionVersion: 1 })
     ).toMatchObject({
       ok: true,
-      value: { positionVersion: 2, allocationRevision: 2, operationId: "operation-3" },
+      value: {
+        positionVersion: 2,
+        allocationRevision: 2,
+        operationId: "operation-3",
+      },
     })
     expect(f.h.store.listInvestmentPositions()[0]).toMatchObject({
       quantity: "0",
@@ -227,7 +230,10 @@ describe("RecordInvestmentIncome", () => {
     const f = await setup()
     expect(
       await useCase(f).execute({ ...income(f), incomeCategoryId: undefined })
-    ).toMatchObject({ ok: false, error: { code: "INVALID_INVESTMENT_CATEGORY" } })
+    ).toMatchObject({
+      ok: false,
+      error: { code: "INVALID_INVESTMENT_CATEGORY" },
+    })
     expect(f.h.store.listInvestmentOperations()).toHaveLength(1)
   })
 
@@ -235,28 +241,40 @@ describe("RecordInvestmentIncome", () => {
     const f = await setup()
     expect(
       await useCase(f).execute({ ...income(f), feeCategoryId: undefined })
-    ).toMatchObject({ ok: false, error: { code: "INVALID_INVESTMENT_CATEGORY" } })
+    ).toMatchObject({
+      ok: false,
+      error: { code: "INVALID_INVESTMENT_CATEGORY" },
+    })
     expect(
       await useCase(f).execute({
         ...income(f),
         requestId: "income-2",
         taxCategoryId: undefined,
       })
-    ).toMatchObject({ ok: false, error: { code: "INVALID_INVESTMENT_CATEGORY" } })
+    ).toMatchObject({
+      ok: false,
+      error: { code: "INVALID_INVESTMENT_CATEGORY" },
+    })
   })
 
   it("rejects a nonpositive gross amount or a negative retained net amount", async () => {
     const f = await setup()
     expect(
       await useCase(f).execute({ ...income(f), grossAmountMinor: "0" })
-    ).toMatchObject({ ok: false, error: { code: "INVALID_INVESTMENT_OPERATION" } })
+    ).toMatchObject({
+      ok: false,
+      error: { code: "INVALID_INVESTMENT_OPERATION" },
+    })
     expect(
       await useCase(f).execute({
         ...income(f),
         requestId: "income-2",
         grossAmountMinor: "11",
       })
-    ).toMatchObject({ ok: false, error: { code: "INVALID_INVESTMENT_OPERATION" } })
+    ).toMatchObject({
+      ok: false,
+      error: { code: "INVALID_INVESTMENT_OPERATION" },
+    })
     expect(f.h.store.listInvestmentOperations()).toHaveLength(1)
   })
 
@@ -267,7 +285,10 @@ describe("RecordInvestmentIncome", () => {
         ...income(f),
         cashMode: "EXTERNAL_ACCOUNT",
       } as never)
-    ).toMatchObject({ ok: false, error: { code: "INVALID_INVESTMENT_OPERATION" } })
+    ).toMatchObject({
+      ok: false,
+      error: { code: "INVALID_INVESTMENT_OPERATION" },
+    })
     expect(f.h.store.listJournalEntries()).toEqual([])
   })
 
@@ -275,7 +296,10 @@ describe("RecordInvestmentIncome", () => {
     const f = await setup()
     expect(
       await useCase(f).execute({ ...income(f), expectedPositionVersion: 1 })
-    ).toMatchObject({ ok: false, error: { code: "OPTIMISTIC_CONCURRENCY_FAILURE" } })
+    ).toMatchObject({
+      ok: false,
+      error: { code: "OPTIMISTIC_CONCURRENCY_FAILURE" },
+    })
     expect(f.h.store.listInvestmentPositions()[0]).toMatchObject({
       bookCostMinor: "1000",
       allocationRevision: 1,
@@ -308,7 +332,11 @@ describe("RecordInvestmentIncome", () => {
       f.h.transactionManager,
       f.h.dispatcher,
       f.h.ids
-    ).execute({ name: "Other", baseCurrency: "BRL", timezone: "America/Sao_Paulo" })
+    ).execute({
+      name: "Other",
+      baseCurrency: "BRL",
+      timezone: "America/Sao_Paulo",
+    })
     if (!other.ok) throw new Error("fixture failed")
     expect(
       await useCase(f).execute({ ...income(f), bookId: other.value.id })
