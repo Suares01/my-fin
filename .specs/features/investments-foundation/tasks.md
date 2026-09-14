@@ -1301,13 +1301,15 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Preservar deltas/lineage, ordenar última efetiva por data/sequência, excluir alvo e resolver ownership sem contar reversões.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 8 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Preservar deltas/lineage, ordenar última efetiva por data/sequência, excluir alvo e resolver ownership sem contar reversões.
+- [x] Escrever/atualizar no mesmo commit pelo menos 8 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (Memory); testes acompanham o componente nesta tarefa.
 **Gate**: Full Memory
 **Commit**: `feat(investments-memory): repository em memória de operações`
+
+**Execution evidence**: before T33: 28 files, 272 tests; after: 30 files, 280 tests. Full Memory passed: Domain/Application builds, 280/280 Memory tests, lint, typecheck and `git diff --check`. `in-memory-investment-operation-repository.test.ts:30-90` asserts deltas/lineage restoration, book ownership, missing lookup, effective ordering by date and exact sequence, reversal exclusion, target exclusion and lineage CAS. Adequacy verdict: PASS.
 
 ### T34: Store em memória de avaliações
 
