@@ -6,6 +6,7 @@ export { CreateFinancialAccount } from "./ledger/accounts/create-financial-accou
 export { CreateInvestmentInstrument } from "./investments/instruments/create-investment-instrument.js"
 export { UpdateInvestmentInstrument } from "./investments/instruments/update-investment-instrument.js"
 export { SetInvestmentInstrumentStatus } from "./investments/instruments/set-investment-instrument-status.js"
+export { UpdateInvestmentPositionMetadata } from "./investments/positions/update-investment-position-metadata.js"
 export { ConfigureFinancialAccount } from "./ledger/accounts/configure-financial-account.js"
 export { CreateIncomeCategory } from "./ledger/accounts/create-income-category.js"
 export { CreateExpenseCategory } from "./ledger/accounts/create-expense-category.js"

@@ -65,6 +65,20 @@ export interface SetInvestmentInstrumentStatusCommand {
   readonly status: "ARCHIVED" | "ACTIVE"
 }
 
+export interface UpdateInvestmentPositionMetadataCommand {
+  readonly bookId: string
+  readonly positionId: string
+  readonly expectedVersion: number
+  readonly label?: string
+}
+
+export interface InvestmentPositionMetadataDto {
+  readonly id: string
+  readonly bookId: string
+  readonly label?: string
+  readonly version: number
+}
+
 export interface ConfigureFinancialAccountCommand {
   readonly bookId: string
   readonly accountId: string

@@ -27,6 +27,8 @@ export type {
   TransferMoneyCommand,
   UpdateCategoryCommand,
   UpdateInvestmentInstrumentCommand,
+  UpdateInvestmentPositionMetadataCommand,
+  InvestmentPositionMetadataDto,
 } from "./commands.js"
 export type {
   ApplicationEventType,

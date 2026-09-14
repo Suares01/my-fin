@@ -412,7 +412,7 @@ function normalizeLabel(value: string | undefined): string | undefined {
   if (value === undefined) return undefined
   const label = value.trim()
   if (label.length === 0) return undefined
-  if (label.length > 120) throw invalidOperation()
+  if (label.length > 120) throw invalidInput()
   return label
 }
 
@@ -440,6 +440,13 @@ function invalidOperation(): DomainError {
   return new DomainError(
     "INVALID_INVESTMENT_OPERATION",
     "Investment position allocation is invalid"
+  )
+}
+
+function invalidInput(): DomainError {
+  return new DomainError(
+    "INVALID_INVESTMENT_INPUT",
+    "Investment position metadata is invalid"
   )
 }
 

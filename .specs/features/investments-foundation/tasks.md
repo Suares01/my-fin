@@ -1782,13 +1782,23 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Editar só rótulo, incluindo no-op e erro de versão; manter quantidade/custo/termos/revisão/datas econômicas e histórico.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 8 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Editar só rótulo, incluindo no-op e erro de versão; manter quantidade/custo/termos/revisão/datas econômicas e histórico.
+- [x] Escrever/atualizar no mesmo commit pelo menos 8 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (Command); testes acompanham o componente nesta tarefa.
 **Gate**: Full Memory
 **Commit**: `feat(investments): metadata da posição`
+
+**Execution evidence**: baseline Memory 38 files/369 tests; T47 39 files/377 tests. Full Memory passed: domain/application build, Memory 377/377, Memory typecheck.
+
+| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| INV-20/26 label-only | `update-investment-position-metadata.test.ts:46` `expect(result).toEqual({ ... label: "Travel", version: 1 })`; `:76` `expect({...after,...}).toEqual(before)` | only label changes; economic snapshot remains intact | Yes |
+| INV-76 no-op/CAS | `update-investment-position-metadata.test.ts:106` `expect(result).toMatchObject({ value: { version: 0 } })`; `:118` `expect(result).toMatchObject({ error: { code: "OPTIMISTIC_CONCURRENCY_FAILURE" } })` | no-op retains version; stale write fails | Yes |
+| INV-74/83 | `update-investment-position-metadata.test.ts:150` `expect(result).toMatchObject({ error: { code: "BOOK_MISMATCH" } })`; `:165` `expect(result).toMatchObject({ error: { code: "INVALID_INVESTMENT_INPUT" } })` | cross-book and over-limit input write nothing | Yes |
+
+**Adequacy verdict**: PASS. Eight command scenarios assert DTO/state, facts, errors and rollback snapshots; no mock-only assertions.
 
 ### T48: Execução idempotente de investimento
 
