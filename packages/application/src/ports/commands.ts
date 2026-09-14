@@ -13,6 +13,31 @@ export interface CreateFinancialAccountCommand {
   readonly defaultSettlementAccountId?: string
 }
 
+export interface ConfigureFinancialAccountCommand {
+  readonly bookId: string
+  readonly accountId: string
+  readonly expectedVersion: number
+  readonly profile: {
+    readonly type: string
+    readonly institutionName?: string
+    readonly displayReference?: string
+    readonly defaultSettlementAccountId?: string
+  }
+}
+
+export interface SetInvestmentSettlementAccountCommand {
+  readonly bookId: string
+  readonly accountId: string
+  readonly expectedVersion: number
+  readonly settlementAccountId: string
+}
+
+export interface ClearInvestmentSettlementAccountCommand {
+  readonly bookId: string
+  readonly accountId: string
+  readonly expectedVersion: number
+}
+
 export interface CreateCategoryCommand {
   readonly bookId: string
   readonly name: string

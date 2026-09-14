@@ -1562,13 +1562,34 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Implementar configuração e wrappers set/clear de settlement sobre uma única mutação; validar posições históricas/dependentes e tipo/kind/livro/status, no-op e CAS, sem postings.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 14 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Implementar configuração e wrappers set/clear de settlement sobre uma única mutação; validar posições históricas/dependentes e tipo/kind/livro/status, no-op e CAS, sem postings.
+- [x] Escrever/atualizar no mesmo commit pelo menos 14 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (Command); testes acompanham o componente nesta tarefa.
 **Gate**: Full Memory
 **Commit**: `feat(investments): configuração financeira e liquidação`
+
+**Execution evidence**: before T42 Memory: 313 tests; after: 327 tests. Full Memory passed: Domain/Application builds, Memory 327/327 tests, Memory typecheck and `git diff --check`.
+
+| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| INV-04, INV-07, INV-11, INV-13, INV-138 | `configure-financial-account.test.ts:63` `expect(result).toMatchObject({ value: { id: "account-5", kind: "ASSET", version: 1, financialAccount: { type: "CASH" } } })`; `:77` `expect(...listJournalEntries()).toEqual(beforeJournals)` | compatible reclassification preserves identity/kind and creates no posting | Yes |
+| INV-08 | `:112` / `:133` / `:166` exact `error.code === "FINANCIAL_ACCOUNT_TYPE_CHANGE_NOT_ALLOWED"` | kind change, historical investment removal and incompatible active settlement change reject | Yes |
+| INV-12 | `:185`, `:205`, `:233`, `:252`, `:270` exact `error.code === "INVALID_SETTLEMENT_ACCOUNT"` | self, inactive, cross-book, non-bank/payment and absent settlement reject | Yes |
+| INV-04, INV-11 | `:290` `expect(result).toMatchObject({ value: { id: "account-5", version: 1, financialAccount: { investment: { defaultSettlementAccountId: "account-6" } } } })`; `:325` clear result includes the same id and `investment: {}` | set/clear wrappers use one aggregate mutation and retain the account identity | Yes |
+| INV-74, INV-76 | `:352` exact `OPTIMISTIC_CONCURRENCY_FAILURE` and `:356` snapshot equality; `:381` exact `BOOK_MISMATCH` and `:382` snapshot equality | stale CAS and foreign-book reference reject without mutation | Yes |
+| no-op | `:94` `version: 0`; `:95-96` snapshot/event equality | unchanged normalized profile has no write or event | Yes |
+
+| Test assertion | Maps to | Keep |
+| --- | --- | --- |
+| `configure-financial-account.test.ts:63-77` resulting profile/account and unchanged journal assertions | INV-04, INV-07, INV-11, INV-13, INV-138 | Yes |
+| `:112-170` three exact type-change errors and snapshots | INV-08, INV-115 | Yes |
+| `:185-272` five exact settlement errors | INV-12 | Yes |
+| `:290-336` set/clear profile, identity and version assertions | INV-04, INV-11 | Yes |
+| `:352-382` CAS/book error and immutable snapshot assertions | INV-74, INV-76 | Yes |
+
+**Adequacy verdict**: PASS. Fourteen command scenarios assert persisted/resulting profile state, exact stable errors, versions and absence of postings, not mock calls. The Memory command-test conventions in `packages/infrastructure-memory/src/use-cases/` were followed.
 
 ### T43: Política de lifecycle de contas
 

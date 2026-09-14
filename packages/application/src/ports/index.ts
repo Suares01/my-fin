@@ -7,6 +7,8 @@ export type {
   AccountDto,
   BookDto,
   CategoryDto,
+  ClearInvestmentSettlementAccountCommand,
+  ConfigureFinancialAccountCommand,
   CreateCategoryCommand,
   CreateFinancialAccountCommand,
   CreateFinancialBookCommand,
@@ -18,6 +20,7 @@ export type {
   ReactivateLedgerAccountCommand,
   ReverseJournalEntryCommand,
   SetOpeningBalanceCommand,
+  SetInvestmentSettlementAccountCommand,
   TransferMoneyCommand,
   UpdateCategoryCommand,
 } from "./commands.js"
