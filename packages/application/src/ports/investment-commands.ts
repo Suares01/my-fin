@@ -121,6 +121,26 @@ export type InvestmentOperationDraft =
   | AmortizationDraft
   | FeeOrTaxDraft
 
+export interface PreviewInvestmentOperationCommand {
+  readonly bookId: string
+  readonly draft: InvestmentOperationDraft
+}
+
+export interface InvestmentOperationPreview {
+  readonly positionId: string
+  readonly positionVersion: number
+  readonly allocationRevision: number
+  readonly bookCostDeltaMinor: string
+  readonly netCashFlowMinor: string
+  readonly postings: readonly {
+    readonly accountId: string
+    readonly amountMinor: string
+  }[]
+  readonly categories: Readonly<Record<string, string>>
+  readonly projectedCashMinor: string
+  readonly warnings: readonly InvestmentWarning[]
+}
+
 export interface OpenInvestmentPositionCommand extends InvestmentRequest {
   readonly investmentAccountId: string
   readonly instrumentId: string

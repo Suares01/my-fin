@@ -2296,13 +2296,33 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Read-only chama planner com estado atual e retorna custo/fluxo/categorias/caixa/versões; não grava recibo, ID, sequência ou fact; caixa negativo não é erro e confirmação revalida tudo.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full Memory + Build` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Read-only chama planner com estado atual e retorna custo/fluxo/categorias/caixa/versões; não grava recibo, ID, sequência ou fact; caixa negativo não é erro e confirmação revalida tudo.
+- [x] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full Memory + Build` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (Command); testes acompanham o componente nesta tarefa.
 **Gate**: Full Memory + Build
 **Commit**: `feat(investments): prévia da operação`
+
+**Execution evidence**: before T61: 52 Memory files, 590 tests; after: 53 files, 604 tests. `preview-investment-operation.test.ts` adds 14 integration scenarios for PURCHASE/APPLICATION, SALE, INCOME, AMORTIZATION, FEE and TAX. Full Memory + Build passed: Domain 20 files/404 tests, Application 21 files/241 tests, Memory 53 files/604 tests; lint, check-types and build passed for Domain, Application and Memory; `git diff --check` passed.
+
+| Done-when criterion / requirement | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| INV-100: prévia mostra custo, fluxo líquido e efeito em contas/categorias antes de salvar | `preview-investment-operation.test.ts:137-148` - `expect(...).toEqual({ value: { bookCostDeltaMinor: "200", netCashFlowMinor: "-200", postings: [], categories: {}, ... } })`; `:169-180` - `expect(result).toMatchObject({ value: { postings: expect.arrayContaining([...]) } })`; `:191-201` - `expect(result).toMatchObject({ value: { categories: { gainCategoryId: ... } } })` | cada modo devolve os deltas e contas/categorias normalizados pelo planner | Yes |
+| INV-13, INV-74: rota externa explícita e isolamento de livro | `preview-investment-operation.test.ts:160-180` - `expect(result).toMatchObject({ value: { postings: expect.arrayContaining([{ accountId: f.bank.id, amountMinor: "-215" }]) } })`; `:367-372` - `expect(...).toMatchObject({ ok: false, error: { code: "BOOK_MISMATCH" } })` | a conta externa escolhida é a enviada; draft de outro livro falha sem expor ou gravar posição | Yes |
+| INV-36, INV-76, INV-139: estado atual, custo/unidades explícitos e CAS | `preview-investment-operation.test.ts:348-360` - `expect(...).toMatchObject({ error: { code: "OPTIMISTIC_CONCURRENCY_FAILURE" } })`; `:375-394` - `expect(...).toMatchObject({ error: { code: "INVALID_INVESTMENT_OPERATION" } })` | versão obsoleta, custo acima do atual ou unidades acima da posição não recebem prévia válida | Yes |
+| INV-145, INV-148: caixa negativo é sucesso com aviso, sem bloquear | `preview-investment-operation.test.ts:141-150` - `expect(...).toEqual({ value: { projectedCashMinor: "-1200", warnings: [{ code: "INVESTMENT_CASH_NEGATIVE", cashMinor: "-1200" }] } })`; `:292-298` - `expect(...).toMatchObject({ ok: true, value: { projectedCashMinor: "-1010" } })` | caixa projetado negativo retorna sucesso e aviso completo, inclusive para taxa | Yes |
+| read-only e confirmação revalida | `preview-investment-operation.test.ts:327-345` - `expect(f.h.store.snapshot()).toEqual(before)` and `expect(...operationId).toMatchObject({ operationId: "operation-2" })`; `:410-434` - `expect(...).toMatchObject({ error: { code: "OPTIMISTIC_CONCURRENCY_FAILURE" } })` | prévia não grava receipt/ID/sequence/facts; confirmação posterior repete CAS e rejeita versão consumida | Yes |
+
+| `file:line` + assertion expression | Maps to | Keep |
+| --- | --- | --- |
+| `preview-investment-operation.test.ts:129-152` - `expect(await preview(...)).toEqual({ ok: true, value: { ... } })` | INV-100, INV-145, INV-148: compra interna exibe custo/fluxo/versões/caixa/warning | Yes |
+| `preview-investment-operation.test.ts:155-324` - `expect(result).toMatchObject({ ok: true, value: { ... } })` | INV-13, INV-100: rotas e categorias de APPLICATION/SALE/INCOME/AMORTIZATION/FEE/TAX | Yes |
+| `preview-investment-operation.test.ts:327-346` - `expect(f.h.store.snapshot()).toEqual(before)`; `expect(...operationId).toMatchObject({ operationId: "operation-2" })` | T61 read-only: ausência de writes, IDs e sequência reservados | Yes |
+| `preview-investment-operation.test.ts:348-407` - `expect(...error.code).toBe(...)` via `toMatchObject` | INV-36, INV-74, INV-76: CAS, livro e limites de saída | Yes |
+| `preview-investment-operation.test.ts:410-434` - `expect(...).toMatchObject({ error: { code: "OPTIMISTIC_CONCURRENCY_FAILURE" } })` | INV-76: confirmar revalida a versão visualizada | Yes |
+
+**Adequacy review**: PASS. Check A mapeia todos os critérios da T61 e seus ramos aos valores públicos da prévia ou ao estado persistido. Check B verifica payloads, caixa e warnings, não contagem de chamadas. Check C limita os 14 cenários aos seis drafts, isolamento, CAS e read-only desta tarefa. Check D segue a convenção Vitest de integração em `packages/infrastructure-memory/src/use-cases/`.
 
 ### Phase 11: Consultas de investimentos
 

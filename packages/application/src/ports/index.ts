@@ -136,6 +136,8 @@ export type {
   InvestmentWarning,
   OpenInvestmentPositionCommand,
   PurchaseOrApplicationDraft,
+  PreviewInvestmentOperationCommand,
+  InvestmentOperationPreview,
   RecordInvestmentValuationCommand,
   SaleOrRedemptionDraft,
   SetInvestmentOpeningBalanceCommand,
