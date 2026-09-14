@@ -70,12 +70,7 @@ export interface InvestmentOperationSnapshot {
 }
 export type RecordInvestmentOperationInput = Omit<
   InvestmentOperationSnapshot,
-  | "role"
-  | "reversalOf"
-  | "reversedBy"
-  | "replacementOf"
-  | "replacedBy"
-  | "version"
+  "role" | "reversalOf" | "reversedBy" | "replacedBy" | "version"
 >
 
 export class InvestmentOperation extends AggregateRoot<

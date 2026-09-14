@@ -2156,13 +2156,25 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Amendment mantém tipo/posição/conta, valida data entre anterior e hoje e uma única versão/revisão final; cobrir quatro combinações de journal e rollback após cada escrita sem links órfãos.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 24 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Amendment mantém tipo/posição/conta, valida data entre anterior e hoje e uma única versão/revisão final; cobrir quatro combinações de journal e rollback após cada escrita sem links órfãos.
+- [x] Escrever/atualizar no mesmo commit pelo menos 24 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (Command); testes acompanham o componente nesta tarefa.
 **Gate**: Full Memory
 **Commit**: `feat(investments): substituir operação`
+
+**Execution evidence**: before T57: 49 Memory files, 520 tests; after: 49 files, 552 tests. `amend-investment-operation.test.ts` adds 32 integration scenarios: four original/replacement journal combinations, PURCHASE/SALE/INCOME/AMORTIZATION/FEE, validation/idempotency/concurrency branches, and eight injected persistence failures. Full Memory passed: Domain and Application build, Memory 49/49 files and 552/552 tests, Memory check-types; changed-package lint and `git diff --check` passed. Amendment reuses the domain `planInvestmentAccounting` planner; no registrars were refactored.
+
+| Done-when criterion / requirement | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| INV-61, INV-132, INV-133, INV-144: append-only original, inverse reversal and replacement; final state once | `amend-investment-operation.test.ts:142-179` `expect(...replacementOperationId...).toMatchObject(...)`, `expect(...Positions()[0]).toMatchObject({ quantity: "5", bookCostMinor: "500", version: 2, allocationRevision: 3 })` | Original persists, inverse effects are appended, replacement applies once. | Yes |
+| INV-65, INV-135, INV-136: all four journal combinations | `amend-investment-operation.test.ts:182-231` `expect(...journalEntryIds...).toMatchObject(...)`, `expect(...JournalEntries()).toEqual([])` | Create only journals justified by original/replacement effects. | Yes |
+| INV-63, INV-72, INV-73: correctable target, version and date boundaries | `amend-investment-operation.test.ts:234-315` `expect(...error.code).toBe(...)`, `expect(...Operations()).toHaveLength(2)` | Invalid target, stale version and invalid date do not change state. | Yes |
+| INV-128, INV-129: all economic types retain lineage and no duplicate auxiliary effect | `amend-investment-operation.test.ts:365-515` `expect(...replacementOperationId).toMatchObject(...)`, `expect(...Operations()).toHaveLength(4)` | PURCHASE, SALE, INCOME, AMORTIZATION and FEE use the new fact only once. | Yes |
+| INV-74, INV-75, INV-76, INV-78, INV-145: atomic request and persistence rollback | `amend-investment-operation.test.ts:538-552` `expect(...Operations()).toHaveLength(2)`, `expect(...Positions()[0]).toMatchObject(...)` | Each intermediate write failure rolls back position, journals and lineage. | Yes |
+
+**Adequacy review**: PASS. Check A maps every task-owned criterion to result/state assertions. Check B rejects call-count-only proof; all payload, lineage and persisted-state assertions survive independent write-failure injection. Check C maps the 32 scenarios to T57 requirements and its four journal/rollback fixtures. Check D follows the package-local Vitest integration convention in `packages/infrastructure-memory/src/use-cases/`.
 
 ### T58: Registrar avaliação manual
 

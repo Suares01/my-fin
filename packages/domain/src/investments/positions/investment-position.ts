@@ -18,6 +18,7 @@ import {
   type FixedIncomeTermsInput,
   type FixedIncomeTermsSnapshot,
 } from "./fixed-income-terms.js"
+import type { PositionEconomicState } from "../operations/investment-operation.js"
 
 export type InvestmentQuantityMode = "UNITS" | "AMOUNT"
 export type InvestmentPositionStatus = "OPEN" | "CLOSED"
@@ -240,6 +241,42 @@ export class InvestmentPosition extends AggregateRoot<
       parseCost(correction.bookCostMinor, currency),
       occurredOn
     )
+  }
+
+  /** Applies an amendment from the original operation's persisted prior state once. */
+  replaceOperation(input: {
+    readonly state: PositionEconomicState
+    readonly effect: PositionOperationEffect
+  }): void {
+    const state = input.state
+    const quantity =
+      state.kind === "UNOPENED"
+        ? this.position.quantityMode === "UNITS"
+          ? Decimal.parse("0")
+          : undefined
+        : correctedQuantity(this.position.quantityMode, state.quantity)
+    const cost =
+      state.kind === "UNOPENED"
+        ? 0n
+        : parseCost(state.bookCostMinor, Currency.parse(this.position.currency))
+    const status = deriveStatus(this.position.quantityMode, quantity, cost)
+    this.position = {
+      ...this.position,
+      ...(quantity === undefined
+        ? { quantity: undefined }
+        : { quantity: quantity.toString() }),
+      bookCostMinor: cost.toString(),
+      status,
+      ...(status === "CLOSED"
+        ? {
+            closedOn:
+              state.kind === "EXISTING"
+                ? state.closedOn
+                : input.effect.occurredOn,
+          }
+        : { closedOn: undefined }),
+    }
+    this.applyOperation(input.effect)
   }
 
   toSnapshot(): InvestmentPositionSnapshot {
