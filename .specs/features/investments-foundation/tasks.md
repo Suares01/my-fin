@@ -1130,13 +1130,30 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Guardar e recuperar resultado imutável por livro/request, detectar duplicata e não reaplicar efeitos; rollback remove recibo junto do fato.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 8 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Guardar e recuperar resultado imutável por livro/request, detectar duplicata e não reaplicar efeitos; rollback remove recibo junto do fato.
+- [x] Escrever/atualizar no mesmo commit pelo menos 8 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (SQLite); testes acompanham o componente nesta tarefa.
 **Gate**: Full SQLite
 **Commit**: `feat(investments-sqlite): store sqlite de recibos`
+
+**Execution evidence**: before T28 SQLite: 44 files, 811 tests; after: 45 files, 819 tests. Full SQLite passed: Domain/Application/Memory builds, SQLite 819/819 tests, generated migration manifest check, SQLite typecheck and `git diff --check`.
+
+| Requirement / done-when | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| INV-74, INV-78, INV-80, INV-88 | `sqlite-investment-request-store.test.ts:50-54` `resolves.toEqual(value)`; `:56-59` both scoped lookup assertions are null | The exact command/result is recovered only for its book/request identity. | Yes |
+| INV-79 | `sqlite-investment-request-store.test.ts:68-74` duplicate rejects `DUPLICATE_ENTITY` and `find(...).resolves.toEqual(first)` | A reused key cannot overwrite the original receipt. | Yes |
+| INV-75 | `sqlite-investment-request-store.test.ts:93-100` transaction throws and `find(...).resolves.toBeNull()` | Rollback removes the receipt with its enclosing unit of work. | Yes |
+| stored-result variants | `sqlite-investment-request-store.test.ts:61-66` `resolves.toEqual(value)`; `:76-91` two request IDs persist | Empty optional result IDs and independent requests retain exact semantics. | Yes |
+
+| Test assertion | Maps to | Keep |
+| --- | --- | --- |
+| `sqlite-investment-request-store.test.ts:52-54` `resolves.toEqual(value)` | INV-78, INV-80 immutable retry result | Yes |
+| `sqlite-investment-request-store.test.ts:71-74` duplicate error and first result equality | INV-79 idempotency conflict | Yes |
+| `sqlite-investment-request-store.test.ts:93-100` `find(...).resolves.toBeNull()` | INV-75 rollback | Yes |
+
+**Adequacy verdict**: PASS. The eight SQLite scenarios assert durable receipt state, book scope, duplicate protection and rollback, without mock-only evidence.
 
 ### T29: Store SQLite de sequência
 
