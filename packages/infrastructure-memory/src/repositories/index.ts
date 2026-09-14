@@ -10,3 +10,4 @@ export {
   InMemoryJournalEntryRepository,
   journalEntrySnapshot,
 } from "./in-memory-journal-entry-repository.js"
+export { InMemoryInvestmentInstrumentRepository } from "./in-memory-investment-instrument-repository.js"

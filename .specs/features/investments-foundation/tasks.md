@@ -1244,13 +1244,30 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Implementar lookup, unicidade, lifecycle e CAS equivalentes ao adapter SQLite sem retornar referências mutáveis.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 8 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Implementar lookup, unicidade, lifecycle e CAS equivalentes ao adapter SQLite sem retornar referências mutáveis.
+- [x] Escrever/atualizar no mesmo commit pelo menos 8 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (Memory); testes acompanham o componente nesta tarefa.
 **Gate**: Full Memory
 **Commit**: `feat(investments-memory): repository em memória de instrumentos`
+
+**Execution evidence**: before T31 Memory: 26 files, 256 tests; after: 27 files, 264 tests. Full Memory passed: Domain/Application builds, Memory 264/264 tests and Memory typecheck.
+
+| Requirement / done-when | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| INV-14, INV-74 | `in-memory-investment-instrument-repository.test.ts:30-41` `toMatchObject({ kind: "FOUND"... })`; `44-52` `toEqual({ kind: "BOOK_MISMATCH" })` | Lookup returns a same-book instrument and never exposes another book. | Yes |
+| INV-17, INV-18 | `:62-69` `toBe(true)` for trimmed/uppercase TICKER; `:72-81` book scope | Identifier matching uses the normalized identifier and book boundary. | Yes |
+| INV-26, INV-114, INV-116 | `:84-92` nonzero add error; `:95-104` stale save error | Lifecycle version and CAS reject invalid persistence without replacement. | Yes |
+
+| Test assertion | Maps to | Keep |
+| --- | --- | --- |
+| `in-memory-investment-instrument-repository.test.ts:36-40` `toMatchObject({ kind: "FOUND" })` | INV-14 lookup | Yes |
+| `:50-52` `toEqual({ kind: "BOOK_MISMATCH" })` | INV-74 isolation | Yes |
+| `:67-69` `toBe(true)` | INV-17 normalization | Yes |
+| `:101-104` concurrency error code | INV-76 CAS | Yes |
+
+**Adequacy verdict**: PASS. Eight scenarios assert public results and stable error codes for lookup, isolation, normalized identifiers and optimistic concurrency.
 
 ### T32: Repository em memória de posições
 
