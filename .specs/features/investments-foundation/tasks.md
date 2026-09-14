@@ -1811,13 +1811,23 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Canonicalizar payload/versões, buscar recibo antes de CAS/status/data, salvar resultado com facts numa transação e preservar request em erro indeterminado; expor recuperação read-only e testar retry após correção posterior.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 16 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Canonicalizar payload/versões, buscar recibo antes de CAS/status/data, salvar resultado com facts numa transação e preservar request em erro indeterminado; expor recuperação read-only e testar retry após correção posterior.
+- [x] Escrever/atualizar no mesmo commit pelo menos 16 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (Command); testes acompanham o componente nesta tarefa.
 **Gate**: Full Memory
 **Commit**: `feat(investments): execução idempotente de investimento`
+
+**Execution evidence**: baseline Memory 39 files/377 tests; T48 40 files/393 tests. `execute-investment-request.test.ts` adds 16 spec-derived scenarios. Full Memory passed: domain/application build, Memory 393/393, Memory typecheck.
+
+| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| INV-78 retry | `execute-investment-request.test.ts:42` `expect(await execute(h)).toEqual({ ok: true, value: result() })` | equivalent retry returns saved result | Yes |
+| INV-79 conflict | `execute-investment-request.test.ts:49` `expect(...).toMatchObject({ error: { code: "IDEMPOTENCY_CONFLICT" } })` | differing payload under same request ID fails | Yes |
+| INV-74 read recovery | `execute-investment-request.test.ts:29` `expect(await getInvestmentRequestResult(...)).toMatchObject(...)` | receipt remains book-scoped and recoverable | Yes |
+
+**Adequacy verdict**: PASS. Sixteen tests assert canonical values, receipt state, retry results and stable conflicts; no mock-only assertions.
 
 ### T49: Saldo inicial explícito idempotente
 

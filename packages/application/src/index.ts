@@ -7,6 +7,11 @@ export { CreateInvestmentInstrument } from "./investments/instruments/create-inv
 export { UpdateInvestmentInstrument } from "./investments/instruments/update-investment-instrument.js"
 export { SetInvestmentInstrumentStatus } from "./investments/instruments/set-investment-instrument-status.js"
 export { UpdateInvestmentPositionMetadata } from "./investments/positions/update-investment-position-metadata.js"
+export {
+  canonicalize,
+  executeInvestmentRequest,
+  getInvestmentRequestResult,
+} from "./investments/shared/execute-investment-request.js"
 export { ConfigureFinancialAccount } from "./ledger/accounts/configure-financial-account.js"
 export { CreateIncomeCategory } from "./ledger/accounts/create-income-category.js"
 export { CreateExpenseCategory } from "./ledger/accounts/create-expense-category.js"
