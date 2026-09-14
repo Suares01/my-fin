@@ -1644,13 +1644,43 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Validar livro/moeda e identificadores, criar aggregate ativo/fact e confirmar unicidade na transação; falha não deixa filhas órfãs.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Validar livro/moeda e identificadores, criar aggregate ativo/fact e confirmar unicidade na transação; falha não deixa filhas órfãs.
+- [x] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full Memory` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (Command); testes acompanham o componente nesta tarefa.
 **Gate**: Full Memory
 **Commit**: `feat(investments): criar instrumento`
+
+**Execution evidence**: baseline Memory: 35 files, 340 tests, pass; T44: 36 files, 351 tests, pass. `create-investment-instrument.test.ts` adds 11 spec-derived command scenarios. Full Memory passed: domain/application build, Memory 351/351, Memory typecheck.
+
+| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| INV-14 active creation | `packages/infrastructure-memory/src/use-cases/create-investment-instrument.test.ts:27` `expect(result).toEqual({ ... status: "ACTIVE", version: 0 })` | active instrument persists name, type, base currency with optional issuer and no identifiers | Yes |
+| INV-15 normative class | `packages/infrastructure-memory/src/use-cases/create-investment-instrument.test.ts:34` `instrumentClass: "FIXED_INCOME"` | CDB derives class exclusively from the normative type table | Yes |
+| INV-16 book currency | `packages/infrastructure-memory/src/use-cases/create-investment-instrument.test.ts:169` `expect(result).toMatchObject({ error: { code: "INVESTMENT_CURRENCY_MISMATCH" } })` | mismatched currency is rejected before writing | Yes |
+| INV-17 identifier normalization | `packages/infrastructure-memory/src/use-cases/create-investment-instrument.test.ts:57` `identifiers: [{ scheme: "TICKER", value: "CDBX", market: "B3" }]` and `:82` `value: "BRABCD123456"` | ticker/ISIN and market trim-uppercase; registration preserves internal content | Yes |
+| INV-18 identifier uniqueness | `packages/infrastructure-memory/src/use-cases/create-investment-instrument.test.ts:209` `expect(result).toMatchObject({ error: { code: "DUPLICATE_INSTRUMENT_IDENTIFIER" } })` | equivalent identifier in same book is rejected without a new aggregate | Yes |
+| INV-74/81 book-scoped fact | `packages/infrastructure-memory/src/use-cases/create-investment-instrument.test.ts:97` `expect(harness.publisher.events).toEqual([... bookId: "book-1" ...])` | committed fact carries supported type, book ID, aggregate ID and version | Yes |
+| INV-75 rollback | `packages/infrastructure-memory/src/use-cases/create-investment-instrument.test.ts:213` `expect(harness.store.snapshot()).toEqual(before)` | duplicate failure leaves no persisted aggregate or children | Yes |
+| INV-83 input validation | `packages/infrastructure-memory/src/use-cases/create-investment-instrument.test.ts:186` `expect(result).toMatchObject({ error: { code: "INVALID_INVESTMENT_INPUT" } })` | malformed identifier is rejected before writing | Yes |
+| INV-89 provider-free command | `packages/application/src/investments/instruments/create-investment-instrument.ts:58` `InvestmentInstrument.create({ ... })` | command uses only local domain IDs/types, no provider dependency | Yes |
+
+| Test assertion | Maps to | Keep |
+| --- | --- | --- |
+| `create-investment-instrument.test.ts:27` `expect(result).toEqual({ ... })` | INV-14, INV-15 creation outcome | Yes |
+| `create-investment-instrument.test.ts:53` `expect(result).toMatchObject({ ... })` | INV-14/17 optional issuer and ticker normalization | Yes |
+| `create-investment-instrument.test.ts:78` `expect(result).toMatchObject({ ... })` | INV-17 ISIN/registration normalization | Yes |
+| `create-investment-instrument.test.ts:97` `expect(harness.publisher.events).toEqual([...])` | INV-81 fact payload | Yes |
+| `create-investment-instrument.test.ts:118` `expect(result).toMatchObject({ error: { code: "ENTITY_NOT_FOUND" } })` | INV-74 missing-book rejection | Yes |
+| `create-investment-instrument.test.ts:135` `expect(result).toMatchObject({ error: { code: "INVALID_INVESTMENT_INPUT" } })` | INV-83 invalid type | Yes |
+| `create-investment-instrument.test.ts:152` `expect(result).toMatchObject({ error: { code: "INVALID_INVESTMENT_INPUT" } })` | INV-17/83 invalid scheme | Yes |
+| `create-investment-instrument.test.ts:169` `expect(result).toMatchObject({ error: { code: "INVESTMENT_CURRENCY_MISMATCH" } })` | INV-16 | Yes |
+| `create-investment-instrument.test.ts:186` `expect(result).toMatchObject({ error: { code: "INVALID_INVESTMENT_INPUT" } })` | INV-17/83 malformed identifier | Yes |
+| `create-investment-instrument.test.ts:209` `expect(result).toMatchObject({ error: { code: "DUPLICATE_INSTRUMENT_IDENTIFIER" } })` | INV-18 existing-book duplicate | Yes |
+| `create-investment-instrument.test.ts:230` `expect(result).toMatchObject({ error: { code: "DUPLICATE_INSTRUMENT_IDENTIFIER" } })` | INV-18 same-command duplicate | Yes |
+
+**Adequacy verdict**: PASS. Eleven Memory command scenarios assert persisted/resulting state, exact stable errors, fact identity and rollback snapshots. They cover the applicable T44 outcomes without mock-call-only or extra behavior tests.
 
 ### T45: Atualizar instrumento
 

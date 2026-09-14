@@ -13,6 +13,36 @@ export interface CreateFinancialAccountCommand {
   readonly defaultSettlementAccountId?: string
 }
 
+export interface CreateInvestmentInstrumentCommand {
+  readonly bookId: string
+  readonly name: string
+  readonly type: string
+  readonly currency: string
+  readonly issuerName?: string
+  readonly identifiers?: readonly {
+    readonly scheme: string
+    readonly value: string
+    readonly market?: string
+  }[]
+}
+
+export interface InvestmentInstrumentDto {
+  readonly id: string
+  readonly bookId: string
+  readonly name: string
+  readonly type: string
+  readonly instrumentClass: string
+  readonly currency: string
+  readonly issuerName?: string
+  readonly identifiers: readonly {
+    readonly scheme: string
+    readonly value: string
+    readonly market?: string
+  }[]
+  readonly status: "ACTIVE" | "ARCHIVED"
+  readonly version: number
+}
+
 export interface ConfigureFinancialAccountCommand {
   readonly bookId: string
   readonly accountId: string
