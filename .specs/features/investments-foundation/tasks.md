@@ -1387,13 +1387,32 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Somar bigint em páginas internas de até 512 usando chave estável e reader recebido; cobrir totais >int64, sinais, filtros e reversões sem SUM/TOTAL float ou nova transação.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Somar bigint em páginas internas de até 512 usando chave estável e reader recebido; cobrir totais >int64, sinais, filtros e reversões sem SUM/TOTAL float ou nova transação.
+- [x] Escrever/atualizar no mesmo commit 13 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (SQLite); testes acompanham o componente nesta tarefa.
 **Gate**: Full SQLite
 **Commit**: `feat(investments-sqlite): agregador exato de postings`
+
+**Execution evidence**: before T37: 46 files, 825 tests; after: 47 files, 838 tests. Full SQLite passed: Domain/Application/Memory builds, 838/838 SQLite tests, migration check, typecheck and `git diff --check`.
+
+| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| INV-55, INV-82 | `sqlite-exact-ledger-totals.test.ts:80` `expect(...).resolves.toBe("18446744073709551614")` | totals preserve bigint beyond int64 | Yes |
+| INV-55, INV-103 | `sqlite-exact-ledger-totals.test.ts:70` `expect(...).resolves.toBe("9223372036854775800")` | signed postings preserve their exact sum | Yes |
+| INV-57, INV-140, INV-141 | `sqlite-exact-ledger-totals.test.ts:108` `expect(...).toContain("e.occurred_on <= ?")` | date filter is inclusive and bound in the received reader | Yes |
+| INV-55, INV-56, INV-57 | `sqlite-exact-ledger-totals.test.ts:92` `expect(queries).toHaveLength(2)` and `:93` cursor assertion | each scan page has at most 512 rows and uses a stable key | Yes |
+| INV-55, INV-103 | `sqlite-exact-ledger-totals.test.ts:167` `expect(...).not.toMatch(/\\b(SUM|TOTAL)\\s*\\(/i)` | aggregation does not use SQLite SUM or TOTAL | Yes |
+
+| Test assertion | Maps to | Keep |
+| --- | --- | --- |
+| `sqlite-exact-ledger-totals.test.ts:80` `expect(...).resolves.toBe("18446744073709551614")` | INV-82 exact money | Yes |
+| `sqlite-exact-ledger-totals.test.ts:70` `expect(...).resolves.toBe("9223372036854775800")` | INV-55 signed cash total | Yes |
+| `sqlite-exact-ledger-totals.test.ts:93` `expect(...).toBe("0511")` | T37 512-row stable cursor | Yes |
+| `sqlite-exact-ledger-totals.test.ts:167` `expect(...).not.toMatch(...)` | T37 no SQL aggregate | Yes |
+
+**Adequacy verdict**: PASS. Assertions target exact outputs, cursor state and SQL safety constraints; the persisted SQLite scenario covers the received transaction reader. SQLite test placement follows the coverage matrix.
 
 ### T38: Leituras transacionais SQLite
 

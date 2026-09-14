@@ -32,7 +32,7 @@ function bindStatement(
 class ScopedReader implements SqliteReader {
   private active = true
 
-  public constructor(private readonly database: BetterSqliteDatabase) {}
+  public constructor(protected readonly database: BetterSqliteDatabase) {}
 
   public invalidate(): void {
     this.active = false

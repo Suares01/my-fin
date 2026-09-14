@@ -5,6 +5,7 @@ export { SqliteFinancialBookRepository } from "./repositories/sqlite-financial-b
 export { SqliteJournalEntryRepository } from "./repositories/sqlite-journal-entry-repository.js"
 export { SqliteLedgerAccountRepository } from "./repositories/sqlite-ledger-account-repository.js"
 export { SqliteLedgerQueries } from "./queries/sqlite-ledger-queries.js"
+export { SqliteExactLedgerTotals } from "./queries/sqlite-exact-ledger-totals.js"
 export { SqliteJournalViewQueries } from "./queries/sqlite-journal-view-queries.js"
 export { SqliteInsightQueries } from "./queries/sqlite-insight-queries.js"
 export * from "./queries/catalog/index.js"
