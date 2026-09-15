@@ -27,7 +27,7 @@ export class SqliteInsightQueries implements InsightQueries {
       const rows = await reader.query<MonthlyCashFlowRow>(
         "SELECT b.base_currency, substr(e.occurred_on, 1, 7) AS month, " +
           "a.kind AS account_kind, " +
-          "CAST(COALESCE(SUM(p.amount_minor), 0) AS TEXT) AS amount_minor " +
+          "CAST(p.amount_minor AS TEXT) AS amount_minor " +
           "FROM financial_books b " +
           "LEFT JOIN journal_entries e ON e.book_id = b.id " +
           "AND e.occurred_on >= ? AND e.occurred_on < ? " +
@@ -37,8 +37,7 @@ export class SqliteInsightQueries implements InsightQueries {
           "AND a.id = p.account_id " +
           "AND a.kind IN ('INCOME', 'EXPENSE') " +
           "WHERE b.id = ? " +
-          "GROUP BY b.base_currency, substr(e.occurred_on, 1, 7), a.kind " +
-          "ORDER BY month ASC, a.kind ASC",
+          "ORDER BY month ASC, a.kind ASC, p.id ASC",
         [`${input.fromMonth}-01`, monthAfter(input.toMonth), input.bookId]
       )
       const currency =
@@ -87,9 +86,7 @@ export class SqliteInsightQueries implements InsightQueries {
     ]
     let sql =
       "SELECT a.id AS category_id, a.name AS category_name, a.status, " +
-      "CAST(COALESCE(SUM(p.amount_minor), 0) AS TEXT) AS amount_minor, " +
-      "COUNT(DISTINCT CASE WHEN p.amount_minor > 0 " +
-      "AND e.reversal_of_id IS NULL THEN e.id END) AS transaction_count " +
+      "CAST(p.amount_minor AS TEXT) AS amount_minor, e.id AS entry_id, e.reversal_of_id " +
       "FROM ledger_accounts a " +
       "JOIN postings p ON p.book_id = a.book_id AND p.account_id = a.id " +
       "JOIN journal_entries e ON e.book_id = p.book_id " +
@@ -102,14 +99,38 @@ export class SqliteInsightQueries implements InsightQueries {
       parameters.push(input.categoryId)
     }
 
-    sql += " GROUP BY a.id, a.name, a.status"
+    sql += " ORDER BY a.id ASC, p.id ASC"
     const rows = await this.database.query<CategorySpendingRow>(sql, parameters)
-    const values = rows.map((row) => ({
-      categoryId: readString(row.category_id, "category_id"),
-      categoryName: readString(row.category_name, "category_name"),
-      amount: readBigInt(row.amount_minor, "amount_minor"),
-      transactionCount: readInteger(row.transaction_count, "transaction_count"),
-      archived: readAccountStatus(row.status) === "ARCHIVED",
+    const grouped = new Map<
+      string,
+      {
+        categoryId: string
+        categoryName: string
+        amount: bigint
+        entries: Set<string>
+        archived: boolean
+      }
+    >()
+    for (const row of rows) {
+      const categoryId = readString(row.category_id, "category_id")
+      const current = grouped.get(categoryId) ?? {
+        categoryId,
+        categoryName: readString(row.category_name, "category_name"),
+        amount: 0n,
+        entries: new Set<string>(),
+        archived: readAccountStatus(row.status) === "ARCHIVED",
+      }
+      current.amount += readBigInt(row.amount_minor, "amount_minor")
+      if (
+        readBigInt(row.amount_minor, "amount_minor") > 0n &&
+        row.reversal_of_id === null
+      )
+        current.entries.add(readString(row.entry_id, "entry_id"))
+      grouped.set(categoryId, current)
+    }
+    const values = [...grouped.values()].map((value) => ({
+      ...value,
+      transactionCount: value.entries.size,
     }))
     const denominator = values.reduce(
       (sum, value) => sum + (value.amount > 0n ? value.amount : 0n),
@@ -143,6 +164,24 @@ export class SqliteInsightQueries implements InsightQueries {
   }
 
   public async getNetWorth(input: GetNetWorthInput): Promise<NetWorthView> {
+    return this.database.readTransaction(async (reader) => {
+      const exact = await this.readExactKindTotals(
+        reader,
+        input.bookId,
+        input.asOf?.value
+      )
+      const currency = await this.readBookCurrency(reader, input.bookId)
+      const assetMinor = exact.get("ASSET") ?? 0n
+      const liabilityMinor = -(exact.get("LIABILITY") ?? 0n)
+      return {
+        assetMinor: assetMinor.toString(),
+        liabilityMinor: liabilityMinor.toString(),
+        netWorthMinor: (assetMinor - liabilityMinor).toString(),
+        currency,
+        asOf: input.asOf?.value ?? null,
+      }
+    })
+    /*
     const parameters: (string | null)[] = []
     let sql =
       "SELECT b.base_currency, a.kind AS account_kind, " +
@@ -194,6 +233,42 @@ export class SqliteInsightQueries implements InsightQueries {
       currency,
       asOf: input.asOf?.value ?? null,
     }
+    */
+  }
+
+  private async readExactKindTotals(
+    reader: SqliteReader,
+    bookId: string,
+    asOf?: string
+  ): Promise<Map<string, bigint>> {
+    const totals = new Map<string, bigint>()
+    let afterId = ""
+    for (;;) {
+      const params =
+        asOf === undefined
+          ? [bookId, afterId, "512"]
+          : [bookId, afterId, asOf, "512"]
+      const rows = await reader.query<{
+        readonly id: unknown
+        readonly kind: unknown
+        readonly amount_minor: unknown
+      }>(
+        "SELECT p.id,a.kind,CAST(p.amount_minor AS TEXT) amount_minor FROM postings p JOIN journal_entries e ON e.id=p.journal_entry_id AND e.book_id=p.book_id JOIN ledger_accounts a ON a.id=p.account_id AND a.book_id=p.book_id WHERE p.book_id=? AND p.id>?" +
+          (asOf === undefined ? "" : " AND e.occurred_on<=?") +
+          " AND a.kind IN ('ASSET','LIABILITY') ORDER BY p.id LIMIT ?",
+        params
+      )
+      for (const row of rows) {
+        const kind = readString(row.kind, "kind")
+        totals.set(
+          kind,
+          (totals.get(kind) ?? 0n) +
+            readBigInt(row.amount_minor, "amount_minor")
+        )
+      }
+      if (rows.length < 512) return totals
+      afterId = readString(rows.at(-1)?.id, "id")
+    }
   }
 
   private async readBookCurrency(
@@ -225,6 +300,8 @@ type CategorySpendingRow = {
   readonly status: unknown
   readonly amount_minor: unknown
   readonly transaction_count: unknown
+  readonly entry_id: unknown
+  readonly reversal_of_id: unknown
 }
 
 type NetWorthRow = {

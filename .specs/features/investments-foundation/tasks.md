@@ -2503,9 +2503,11 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Migrar NetWorth, monthly cash flow e category spending para soma exata; preservar semântica temporal/reversões e somar renda/despesa mistas uma vez. O teste legado que exige uma única instrução agrupada deve passar a verificar leitura consistente, lotes limitados e ausência de N+1, preservando todos os oráculos monetários; a mudança decorre do design aprovado.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 14 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Migrar NetWorth, monthly cash flow e category spending para soma exata; preservar semântica temporal/reversões e somar renda/despesa mistas uma vez. O teste legado que exige uma única instrução agrupada deve passar a verificar leitura consistente, lotes limitados e ausência de N+1, preservando todos os oráculos monetários; a mudança decorre do design aprovado.
+- [x] Escrever/atualizar no mesmo commit pelo menos 14 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Evidência T69 (2026-09-15):** NetWorth usa scan exato em lotes; monthly cash flow e category spending recebem linhas de posting e agrupam por bigint no adapter, preservando mês, kind, reversões e contagem distinta. As três suítes focais somam 27 cenários (incluindo int64, data, sinais, renda/despesa e reversões). A expectativa legada agora prova duas consultas constantes e oráculo monetário. Full SQLite: 53 arquivos, 927 testes; builds/migrations/typecheck verdes. Adequação: valores, temporalidade e percentuais são assertados sem `SUM` vulnerável.
 
 **Tests**: integration (SQLite); testes acompanham o componente nesta tarefa.
 **Gate**: Full SQLite
