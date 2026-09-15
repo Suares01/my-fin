@@ -3,7 +3,6 @@ import type {
   InvestmentAccountQueries,
   InvestmentAccountQueryInput,
   InvestmentAccountView,
-  InvestmentWarning,
 } from "@workspace/application"
 import type { SqliteDatabase, SqliteReader } from "../../database/index.js"
 import { readBigInt, readString } from "../sqlite-query-values.js"
