@@ -22,6 +22,11 @@ export { ListInvestmentAccounts } from "./investments/queries/list-investment-ac
 export { ListInvestmentInstruments } from "./investments/queries/list-investment-instruments.js"
 export { ListInvestmentPositions } from "./investments/queries/list-investment-positions.js"
 export { ListInvestmentOperations } from "./investments/queries/list-investment-operations.js"
+export { ListInvestmentValuations } from "./investments/queries/list-investment-valuations.js"
+export {
+  decodeInvestmentValuationCursor,
+  encodeInvestmentValuationCursor,
+} from "./querying/investment-valuation-cursor.js"
 export {
   decodeInvestmentOperationCursor,
   encodeInvestmentOperationCursor,

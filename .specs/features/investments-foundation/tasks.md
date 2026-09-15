@@ -2459,9 +2459,11 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Paginar observações por valuedAt/sequence/id com cursor iv1 independente das operações; preservar antigas revisões/valores desconhecidos e seleção vigente não usa ID aleatório. Incluir o handler de aplicação e validação da query correspondente, com testes próprios no mesmo commit.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full SQLite + Build` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Paginar observações por valuedAt/sequence/id com cursor iv1 independente das operações; preservar antigas revisões/valores desconhecidos e seleção vigente não usa ID aleatório. Incluir o handler de aplicação e validação da query correspondente, com testes próprios no mesmo commit.
+- [x] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full SQLite + Build` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Evidência T67 (2026-09-15):** 10 cenários SQLite cobrem ordem, revisões históricas, valor, isolamento, paginação, fingerprint, sequence e ausência de linha; handler cobre IDs/default de 25. `iv1` é independente de `io1` e o cursor contém livro/posição. Full SQLite + Build: 53 arquivos, 927 testes; builds, migrations, typecheck, lint e `git diff --check` verdes. Adequação: asserts observam página/revisão/valor e a query ordena por colunas estáveis, não por ID aleatório.
 
 **Tests**: integration (SQLite); testes acompanham o componente nesta tarefa.
 **Gate**: Full SQLite + Build
