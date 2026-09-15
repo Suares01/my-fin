@@ -11,6 +11,7 @@ export { SqliteInvestmentPortfolioSummary } from "./queries/investments/sqlite-i
 export { SqliteInvestmentAccountQueries } from "./queries/investments/sqlite-investment-account-queries.js"
 export { SqliteInvestmentInstrumentQueries } from "./queries/investments/sqlite-investment-instrument-queries.js"
 export { SqliteInvestmentPositionQueries } from "./queries/investments/sqlite-investment-position-queries.js"
+export { SqliteInvestmentOperationQueries } from "./queries/investments/sqlite-investment-operation-queries.js"
 export { SqliteJournalViewQueries } from "./queries/sqlite-journal-view-queries.js"
 export { SqliteInsightQueries } from "./queries/sqlite-insight-queries.js"
 export * from "./queries/catalog/index.js"

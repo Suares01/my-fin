@@ -117,6 +117,12 @@ export interface InvestmentOperationHistoryItem {
   readonly sequence: string
   readonly grossAmountMinor: string
   readonly netCashFlowMinor: string
+  readonly bookCostDeltaMinor?: string
+  readonly journalEntryId?: string
+  readonly reversalOf?: string
+  readonly reversedBy?: string
+  readonly replacementOf?: string
+  readonly replacedBy?: string
 }
 export interface InvestmentValuationHistoryItem {
   readonly id: string

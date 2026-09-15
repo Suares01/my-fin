@@ -2438,9 +2438,11 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Paginar por data/sequence/id, incluir efeitos/lineage histórico e vínculos de journal opcionais; cursor io1 valida livro/posição/filtros e não perde operação sem journal. Incluir o handler de aplicação e validação da query correspondente, com testes próprios no mesmo commit.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Paginar por data/sequence/id, incluir efeitos/lineage histórico e vínculos de journal opcionais; cursor io1 valida livro/posição/filtros e não perde operação sem journal. Incluir o handler de aplicação e validação da query correspondente, com testes próprios no mesmo commit.
+- [x] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Evidência T66 (2026-09-15):** 12 cenários SQLite cobrem ordem, journal presente/ausente, lineage, efeitos, posição/livro, paginação/fingerprint, tipo, sequence e última página; handler cobre defaults/IDs. `io1` associa livro e posição no fingerprint. Full SQLite: 52 arquivos, 917 testes; migrations/typecheck verdes. Adequação: asserts observam valores e links, incluindo a operação sem journal.
 
 **Tests**: integration (SQLite); testes acompanham o componente nesta tarefa.
 **Gate**: Full SQLite
