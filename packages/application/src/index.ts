@@ -20,6 +20,11 @@ export { PreviewInvestmentOperation } from "./investments/queries/preview-invest
 export { GetInvestmentPortfolioSummary } from "./investments/queries/get-investment-portfolio-summary.js"
 export { ListInvestmentAccounts } from "./investments/queries/list-investment-accounts.js"
 export { ListInvestmentInstruments } from "./investments/queries/list-investment-instruments.js"
+export { ListInvestmentPositions } from "./investments/queries/list-investment-positions.js"
+export {
+  decodeInvestmentPositionCursor,
+  encodeInvestmentPositionCursor,
+} from "./querying/investment-position-cursor.js"
 export { SetInvestmentOpeningBalance } from "./investments/accounts/set-investment-opening-balance.js"
 export {
   canonicalize,

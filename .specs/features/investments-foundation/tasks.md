@@ -2417,9 +2417,11 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] List/detail paginados por nome/rótulo/ID e filtros, termos/valores vigentes; cursor25/100 com fingerprint, LIKE literal e joins indexados sem uma busca de aggregate por linha. Incluir o handler de aplicação e validação da query correspondente, com testes próprios no mesmo commit.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 16 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] List/detail paginados por nome/rótulo/ID e filtros, termos/valores vigentes; cursor25/100 com fingerprint, LIKE literal e joins indexados sem uma busca de aggregate por linha. Incluir o handler de aplicação e validação da query correspondente, com testes próprios no mesmo commit.
+- [x] Escrever/atualizar no mesmo commit pelo menos 16 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Evidência T65 (2026-09-15):** 16 cenários SQLite cobrem status, ordem, fallback, CLOSED, LIKE literal, filtros, isolamento, limite/cursor, quantidade/moeda/rótulo e página vazia; o handler cobre defaults/validação. O cursor `ip1` inclui fingerprint de livro/filtros e a valuation vigente é selecionada por revisão no join. Full SQLite: 51 arquivos, 905 testes; migrations/typecheck verdes. Adequação: asserts observam páginas e valores, sem aggregate por linha.
 
 **Tests**: integration (SQLite); testes acompanham o componente nesta tarefa.
 **Gate**: Full SQLite
