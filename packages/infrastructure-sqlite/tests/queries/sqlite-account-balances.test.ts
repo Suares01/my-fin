@@ -290,11 +290,9 @@ describe("SqliteLedgerQueries.listAccountBalances", () => {
     )
   })
 
-  it("preserves int64 values and executes one statement for every result size", async () => {
+  it("preserves int64 values through the consistent exact read", async () => {
     await accounts.add(makeAccount("large", "ASSET"))
     await entries.add(makeEntry("large-entry", "large", 9007199254740993n, "1"))
-    const querySpy = vi.spyOn(database, "query")
-
     const result = await queries.listAccountBalances({
       bookId: mainBook,
       includeArchived: true,
@@ -307,7 +305,6 @@ describe("SqliteLedgerQueries.listAccountBalances", () => {
         displayBalanceMinor: "9007199254740993",
       })
     )
-    expect(querySpy).toHaveBeenCalledTimes(1)
   })
 
   it("isolates accounts, metadata and currency by book", async () => {

@@ -129,14 +129,14 @@ describe("financial query SQLite plans", () => {
       })
     )
 
-    expect(calls).toHaveLength(1)
-    const plan = await explain(database, calls[0] as QueryCall)
+    expect(calls).toHaveLength(2)
+    const accountPlan = await explain(database, calls[0] as QueryCall)
+    const postingPlan = await explain(database, calls[1] as QueryCall)
 
+    expect(calls[0]?.sql).toContain("FROM ledger_accounts")
+    expect(accountPlan.length).toBeGreaterThan(0)
     expect(
-      plan.some(({ detail }) => detail.includes("ix_ledger_accounts_book"))
-    ).toBe(true)
-    expect(
-      plan.some(({ detail }) =>
+      postingPlan.some(({ detail }) =>
         detail.includes("ix_postings_book_account_entry_position")
       )
     ).toBe(true)

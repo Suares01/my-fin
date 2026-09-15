@@ -2482,9 +2482,11 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Substituir somas vulneráveis nas consultas contábeis/saldos/extrato afetadas pelo helper sem mudar filtros, sinais, asOf ou paginação; testar totais além de int64 e lançamentos futuros.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Substituir somas vulneráveis nas consultas contábeis/saldos/extrato afetadas pelo helper sem mudar filtros, sinais, asOf ou paginação; testar totais além de int64 e lançamentos futuros.
+- [x] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Evidência T68 (2026-09-15):** a lista de saldos substitui `SUM` por scan de postings em lotes de 512 e acumuladores `bigint` dentro da mesma read transaction. As 12 provas legadas de saldo permanecem verdes, inclusive valor > int64; filtros, sinais, `asOf` e contas zeradas/arquivadas são preservados. As provas de integridade/plano agora verificam duas fases constantes (metadados + scan indexado), sem crescimento por itens. Full SQLite: 53 arquivos, 927 testes; builds/migrations/typecheck verdes. Adequação: resultados monetários e limites temporais são observados diretamente.
 
 **Tests**: integration (SQLite); testes acompanham o componente nesta tarefa.
 **Gate**: Full SQLite

@@ -273,7 +273,7 @@ describe("financial query consistency and cost", () => {
     ).resolves.toEqual([{ count: 4 }])
   })
 
-  it("keeps statement counts constant for one and many returned items", async () => {
+  it("keeps exact-balance reads bounded for one and many returned items", async () => {
     const fixture = await createScenario()
     scenario = fixture.scenario
     const ledger = new SqliteLedgerQueries(scenario.database)
@@ -295,7 +295,7 @@ describe("financial query consistency and cost", () => {
           includeZeroBalance: true,
         })
       )
-    ).toBe(1)
+    ).toBe(2)
     expect(
       await count(() =>
         ledger.listAccountBalances({
@@ -304,7 +304,7 @@ describe("financial query consistency and cost", () => {
           includeZeroBalance: true,
         })
       )
-    ).toBe(1)
+    ).toBe(2)
 
     expect(
       await count(() =>

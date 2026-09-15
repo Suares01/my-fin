@@ -109,67 +109,82 @@ export class SqliteLedgerQueries implements LedgerQueries, LedgerReadQueries {
       return []
     }
 
-    const parameters: (string | null)[] = []
-    let sql =
-      "SELECT a.id AS account_id, a.name AS account_name, a.kind, a.status, a.version, " +
-      "b.base_currency, " +
-      "CAST(COALESCE(SUM(CASE WHEN e.id IS NOT NULL " +
-      "THEN p.amount_minor ELSE 0 END), 0) AS TEXT) AS raw_balance_minor " +
-      "FROM ledger_accounts a JOIN financial_books b " +
-      "ON b.id = a.book_id " +
-      "LEFT JOIN postings p ON p.book_id = a.book_id " +
-      "AND p.account_id = a.id " +
-      "LEFT JOIN journal_entries e ON e.id = p.journal_entry_id " +
-      "AND e.book_id = p.book_id"
+    return this.executor.readTransaction(async (reader) => {
+      const parameters: (string | null)[] = []
+      let sql =
+        "SELECT a.id AS account_id, a.name AS account_name, a.kind, a.status, a.version, " +
+        "b.base_currency, " +
+        "'0' AS raw_balance_minor " +
+        "FROM ledger_accounts a JOIN financial_books b " +
+        "ON b.id = a.book_id "
 
-    if (input.asOf !== undefined) {
-      sql += " AND e.occurred_on <= ?"
-      parameters.push(input.asOf.value)
-    }
+      sql += " WHERE a.book_id = ?"
+      parameters.push(input.bookId)
 
-    sql += " WHERE a.book_id = ?"
-    parameters.push(input.bookId)
-
-    if (input.accountKinds !== undefined) {
-      sql += ` AND a.kind IN (${input.accountKinds.map(() => "?").join(", ")})`
-      parameters.push(...input.accountKinds)
-    }
-
-    sql +=
-      " GROUP BY a.id, a.name, a.kind, a.status, a.version, b.base_currency " +
-      "ORDER BY a.kind ASC, a.name ASC, a.id ASC"
-
-    const rows = await this.executor.query<AccountBalanceRow>(sql, parameters)
-    return rows.flatMap((row) => {
-      const status = readAccountStatus(row.status)
-      if (!input.includeArchived && status === "ARCHIVED") {
-        return []
+      if (input.accountKinds !== undefined) {
+        sql += ` AND a.kind IN (${input.accountKinds.map(() => "?").join(", ")})`
+        parameters.push(...input.accountKinds)
       }
 
-      const kind = readAccountKind(row.kind)
-      const rawBalanceMinor = readBigInt(
-        row.raw_balance_minor,
-        "raw_balance_minor"
-      )
-      if (!input.includeZeroBalance && rawBalanceMinor === 0n) {
-        return []
-      }
+      sql += " ORDER BY a.kind ASC, a.name ASC, a.id ASC"
 
-      const displayBalanceMinor = toDisplayMinor(rawBalanceMinor, kind)
-      return [
-        {
-          accountId: readString(row.account_id, "account_id"),
-          accountName: readString(row.account_name, "account_name"),
-          accountKind: kind,
-          rawBalanceMinor: rawBalanceMinor.toString(),
-          displayBalanceMinor,
-          amountMinor: displayBalanceMinor,
-          currency: readString(row.base_currency, "base_currency"),
-          asOf: input.asOf?.value ?? null,
-          archived: status === "ARCHIVED",
-          version: readInteger(row.version, "account_version"),
-        } satisfies AccountBalanceItemView,
-      ]
+      const rows = await reader.query<AccountBalanceRow>(sql, parameters)
+      const totals = new Map<string, bigint>()
+      let afterId = ""
+      for (;;) {
+        const postingParameters: string[] = [input.bookId, afterId]
+        let postingSql =
+          "SELECT p.id AS posting_id,p.account_id,CAST(p.amount_minor AS TEXT) amount_minor FROM postings p JOIN journal_entries e ON e.id=p.journal_entry_id AND e.book_id=p.book_id WHERE p.book_id=? AND p.id>?"
+        if (input.asOf !== undefined) {
+          postingSql += " AND e.occurred_on<=?"
+          postingParameters.push(input.asOf.value)
+        }
+        postingSql += " ORDER BY p.id ASC LIMIT 512"
+        const postings = await reader.query<{
+          readonly posting_id: unknown
+          readonly account_id: unknown
+          readonly amount_minor: unknown
+        }>(postingSql, postingParameters)
+        for (const posting of postings) {
+          const id = readString(posting.account_id, "account_id")
+          totals.set(
+            id,
+            (totals.get(id) ?? 0n) +
+              readBigInt(posting.amount_minor, "amount_minor")
+          )
+        }
+        if (postings.length < 512) break
+        afterId = readString(postings.at(-1)?.posting_id, "posting_id")
+      }
+      return rows.flatMap((row) => {
+        const status = readAccountStatus(row.status)
+        if (!input.includeArchived && status === "ARCHIVED") {
+          return []
+        }
+
+        const kind = readAccountKind(row.kind)
+        const rawBalanceMinor =
+          totals.get(readString(row.account_id, "account_id")) ?? 0n
+        if (!input.includeZeroBalance && rawBalanceMinor === 0n) {
+          return []
+        }
+
+        const displayBalanceMinor = toDisplayMinor(rawBalanceMinor, kind)
+        return [
+          {
+            accountId: readString(row.account_id, "account_id"),
+            accountName: readString(row.account_name, "account_name"),
+            accountKind: kind,
+            rawBalanceMinor: rawBalanceMinor.toString(),
+            displayBalanceMinor,
+            amountMinor: displayBalanceMinor,
+            currency: readString(row.base_currency, "base_currency"),
+            asOf: input.asOf?.value ?? null,
+            archived: status === "ARCHIVED",
+            version: readInteger(row.version, "account_version"),
+          } satisfies AccountBalanceItemView,
+        ]
+      })
     })
   }
 
