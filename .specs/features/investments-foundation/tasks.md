@@ -2337,13 +2337,32 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Usar uma leitura consistente com D do livro, L/C/V e tupla vigente; fórmulas exatas >int64, cobertura real, custo fallback, moedas/vazio, arquivadas, warnings por carteira e filtro de lista sem efeito no total. Incluir o handler de aplicação que resolve Clock.localDate/moeda e repassa D uma única vez; testar o handler junto da consulta.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 20 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Usar uma leitura consistente com D do livro, L/C/V e tupla vigente; fórmulas exatas >int64, cobertura real, custo fallback, moedas/vazio, arquivadas, warnings por carteira e filtro de lista sem efeito no total. Incluir o handler de aplicação que resolve Clock.localDate/moeda e repassa D uma única vez; testar o handler junto da consulta.
+- [x] Escrever/atualizar no mesmo commit pelo menos 20 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (SQLite); testes acompanham o componente nesta tarefa.
 **Gate**: Full SQLite
 **Commit**: `feat(investments-sqlite): resumo patrimonial`
+
+**Execution evidence**: before T62: 856 SQLite tests; after: 871 SQLite tests. The T62 suites add 20 scenarios (15 SQLite + 5 application). Full SQLite passed: Domain/Application/Memory builds, 871/871 SQLite tests, migration manifest check, SQLite typecheck and `git diff --check`.
+
+| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| INV-55, INV-56, INV-93, INV-140, INV-141 | `sqlite-investment-portfolio-summary.test.ts:33-52` `expect(summary()).resolves.toEqual({ ..., asOf: "2026-08-04", ... })`; `:88-93` `expect(...availableMinor).toMatchObject({ availableMinor: "100" })` | Empty book retains its currency and zeroes; the accounting and investment totals use one inclusive reference date. | Yes |
+| INV-50, INV-51, INV-52, INV-53, INV-54, INV-58, INV-59, INV-130 | `sqlite-investment-portfolio-summary.test.ts:106-117` `expect(...investmentMarketValueMinor: "1200")`; `:121-150` `expect(...investmentMarketValueMinor: "1000")`; `:154-172` exact tuple winner | Gross current-revision valuation wins by tuple; stale/future values fall back to cost; closed positions contribute zero; coverage dates expose only valuations used. | Yes |
+| INV-57, INV-60, INV-82, INV-145, INV-146, INV-147 | `sqlite-investment-portfolio-summary.test.ts:55-102` exact active/archived and bigint assertions; `:175-217` `expect(...investmentCashMinor: "-1000")` and warning payload | Financial profile boundaries, signed cash and totals remain exact; negative cash remains visible with an account warning and archived investment balances still compose. | Yes |
+| Handler / book scope and currency | `get-investment-portfolio-summary.test.ts:55-64` `expect(clock.localDate).toHaveBeenCalledTimes(1)`; `:77-82` USD input assertion; `:88-108` stable query/not-found failures | The handler resolves the active book's timezone and currency once, passes D explicitly, and does not expose absent books. | Yes |
+
+| Test assertion | Maps to | Keep |
+| --- | --- | --- |
+| `sqlite-investment-portfolio-summary.test.ts:61-65` `expect(...availableMinor: "100", ...archivedDailyAccountBalanceMinor: "40")` | INV-55, INV-57, INV-93 | Yes |
+| `sqlite-investment-portfolio-summary.test.ts:101-103` `expect(...availableMinor: "9007199254741000")` | INV-82 | Yes |
+| `sqlite-investment-portfolio-summary.test.ts:111-118` `expect(...unrealizedResultMinor: "200")` | INV-54, INV-56, INV-58 | Yes |
+| `sqlite-investment-portfolio-summary.test.ts:179-189` exact warning object | INV-60, INV-145, INV-146 | Yes |
+| `get-investment-portfolio-summary.test.ts:58-64` one Clock call and `{ currency: "BRL", asOf: "2026-09-15" }` | INV-140, INV-141 | Yes |
+
+**Adequacy verdict**: PASS. Check A maps the applicable summary outcomes to exact values and warning payload fields. Check B asserts outputs, not only calls, except the single-call Clock contract specified by D7. Check C keeps all 20 scenarios within T62. Check D follows the SQLite integration placement and Vitest conventions in the coverage matrix.
 
 ### T63: Consulta de carteiras
 

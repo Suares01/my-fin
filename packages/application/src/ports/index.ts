@@ -112,8 +112,10 @@ export type {
 } from "./investment-repositories.js"
 export type {
   InvestmentAccountView,
+  GetInvestmentPortfolioSummaryInput,
   InvestmentOperationHistoryItem,
   InvestmentPortfolioSummary,
+  InvestmentPortfolioSummaryQueries,
   InvestmentPositionView,
   InvestmentQueries,
   InvestmentValuationHistoryItem,

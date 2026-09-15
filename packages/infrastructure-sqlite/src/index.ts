@@ -7,6 +7,7 @@ export { SqliteLedgerAccountRepository } from "./repositories/sqlite-ledger-acco
 export { SqliteLedgerQueries } from "./queries/sqlite-ledger-queries.js"
 export { SqliteExactLedgerTotals } from "./queries/sqlite-exact-ledger-totals.js"
 export { SqliteInvestmentTransactionReads } from "./queries/sqlite-investment-transaction-reads.js"
+export { SqliteInvestmentPortfolioSummary } from "./queries/investments/sqlite-investment-portfolio-summary.js"
 export { SqliteJournalViewQueries } from "./queries/sqlite-journal-view-queries.js"
 export { SqliteInsightQueries } from "./queries/sqlite-insight-queries.js"
 export * from "./queries/catalog/index.js"

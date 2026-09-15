@@ -23,6 +23,16 @@ export interface InvestmentPortfolioSummary {
   } | null
   readonly warnings: readonly InvestmentWarning[]
 }
+export interface GetInvestmentPortfolioSummaryInput {
+  readonly bookId: string
+  readonly currency: string
+  readonly asOf: string
+}
+export interface InvestmentPortfolioSummaryQueries {
+  getPortfolioSummary(
+    input: GetInvestmentPortfolioSummaryInput
+  ): Promise<InvestmentPortfolioSummary>
+}
 export interface PositionValuationView {
   readonly basis: "VALUATION" | "BOOK_COST" | "CLOSED"
   readonly currentValueMinor: string
@@ -92,7 +102,6 @@ export interface ListInvestmentValuationsQuery {
   readonly cursor?: string
 }
 export interface InvestmentQueries {
-  getPortfolioSummary(bookId: string): Promise<InvestmentPortfolioSummary>
   listPositions(
     query: ListInvestmentPositionsQuery
   ): Promise<QueryPage<InvestmentPositionView>>
