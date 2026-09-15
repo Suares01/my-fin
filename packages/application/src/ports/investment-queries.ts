@@ -59,11 +59,33 @@ export interface InvestmentAccountView {
   readonly id: string
   readonly name: string
   readonly currency: string
+  readonly status: "ACTIVE" | "ARCHIVED"
+  readonly institutionName?: string
+  readonly displayReference?: string
+  readonly defaultSettlementAccountId?: string
   readonly ledgerBalanceMinor: string
   readonly positionCostMinor: string
   readonly cashMinor: string
   readonly marketValueMinor: string
   readonly unrealizedResultMinor: string
+}
+export interface InvestmentAccountDetailView extends InvestmentAccountView {
+  readonly positionCount: number
+  readonly openPositionCount: number
+  readonly warnings: readonly InvestmentWarning[]
+}
+export interface InvestmentAccountQueryInput {
+  readonly bookId: string
+  readonly currency: string
+  readonly asOf: string
+}
+export interface InvestmentAccountQueries {
+  listInvestmentAccounts(
+    input: InvestmentAccountQueryInput
+  ): Promise<readonly InvestmentAccountView[]>
+  getInvestmentAccountDetail(
+    input: InvestmentAccountQueryInput & { readonly accountId: string }
+  ): Promise<InvestmentAccountDetailView | null>
 }
 export interface InvestmentOperationHistoryItem {
   readonly id: string

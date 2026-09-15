@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import { initializeSqliteDatabase } from "../../src/database/initialize-sqlite-database.js"
 import { SqliteInvestmentPortfolioSummary } from "../../src/queries/investments/sqlite-investment-portfolio-summary.js"
+import { SqliteInvestmentAccountQueries } from "../../src/queries/investments/sqlite-investment-account-queries.js"
 import { BetterSqliteDatabase } from "../support/better-sqlite-database.js"
 
 type Account = {
@@ -18,6 +19,7 @@ type Account = {
 describe("SqliteInvestmentPortfolioSummary", () => {
   let database: BetterSqliteDatabase
   let queries: SqliteInvestmentPortfolioSummary
+  let accountQueries: SqliteInvestmentAccountQueries
 
   beforeEach(async () => {
     database = new BetterSqliteDatabase()
@@ -27,6 +29,7 @@ describe("SqliteInvestmentPortfolioSummary", () => {
       ["book-1", "Book", "BRL", "America/Sao_Paulo", 0]
     )
     queries = new SqliteInvestmentPortfolioSummary(database)
+    accountQueries = new SqliteInvestmentAccountQueries(database)
   })
   afterEach(async () => database.close())
 
@@ -259,9 +262,121 @@ describe("SqliteInvestmentPortfolioSummary", () => {
     })
   })
 
+  it("lists an empty investment account set", async () => {
+    await expect(accounts()).resolves.toEqual([])
+  })
+
+  it("lists account metadata in deterministic name order", async () => {
+    await investmentAccount("zulu")
+    await investmentAccount("alpha")
+    await expect(accounts()).resolves.toMatchObject([
+      { id: "alpha" },
+      { id: "zulu" },
+    ])
+  })
+
+  it("preserves an absent settlement account", async () => {
+    await investmentAccount("broker")
+    await expect(accounts()).resolves.toMatchObject([{ id: "broker" }])
+    expect((await accounts())[0]).not.toHaveProperty(
+      "defaultSettlementAccountId"
+    )
+  })
+
+  it("keeps archived accounts in the list", async () => {
+    await investmentAccount("broker", "ARCHIVED")
+    await expect(accounts()).resolves.toMatchObject([{ status: "ARCHIVED" }])
+  })
+
+  it("calculates ledger, cost, cash and market values", async () => {
+    await investmentAccount("broker")
+    await posting("broker", "1000")
+    await position({ id: "position-1", accountId: "broker", cost: "700" })
+    await valuation({ positionId: "position-1", gross: "900" })
+    await expect(accounts()).resolves.toMatchObject([
+      {
+        ledgerBalanceMinor: "1000",
+        positionCostMinor: "700",
+        cashMinor: "300",
+        marketValueMinor: "1200",
+        unrealizedResultMinor: "200",
+      },
+    ])
+  })
+
+  it("falls back to cost without a current valuation", async () => {
+    await investmentAccount("broker")
+    await position({ id: "position-1", accountId: "broker", cost: "700" })
+    await expect(accounts()).resolves.toMatchObject([
+      { marketValueMinor: "0", unrealizedResultMinor: "0" },
+    ])
+  })
+
+  it("does not include closed position cost", async () => {
+    await investmentAccount("broker")
+    await position({
+      id: "position-1",
+      accountId: "broker",
+      cost: "700",
+      status: "CLOSED",
+    })
+    await expect(accounts()).resolves.toMatchObject([
+      { positionCostMinor: "0" },
+    ])
+  })
+
+  it("keeps the explicit query currency", async () => {
+    await investmentAccount("broker")
+    await expect(
+      accountQueries.listInvestmentAccounts({
+        bookId: "book-1",
+        currency: "USD",
+        asOf: "2026-08-04",
+      })
+    ).resolves.toMatchObject([{ currency: "USD" }])
+  })
+
+  it("returns detail counts without operation history", async () => {
+    await investmentAccount("broker")
+    await position({ id: "open", accountId: "broker", cost: "1" })
+    await position({
+      id: "closed",
+      accountId: "broker",
+      cost: "0",
+      status: "CLOSED",
+    })
+    await expect(detail("broker")).resolves.toMatchObject({
+      positionCount: 2,
+      openPositionCount: 1,
+    })
+  })
+
+  it("returns a signed-cash warning on account detail", async () => {
+    await investmentAccount("broker")
+    await posting("broker", "-1")
+    await expect(detail("broker")).resolves.toMatchObject({
+      warnings: [expect.objectContaining({ cashMinor: "-1", currency: "BRL" })],
+    })
+  })
+
   function summary() {
     return queries.getPortfolioSummary({
       bookId: "book-1",
+      currency: "BRL",
+      asOf: "2026-08-04",
+    })
+  }
+  function accounts() {
+    return accountQueries.listInvestmentAccounts({
+      bookId: "book-1",
+      currency: "BRL",
+      asOf: "2026-08-04",
+    })
+  }
+  function detail(accountId: string) {
+    return accountQueries.getInvestmentAccountDetail({
+      bookId: "book-1",
+      accountId,
       currency: "BRL",
       asOf: "2026-08-04",
     })

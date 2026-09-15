@@ -2375,9 +2375,11 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] List/detail retornam metadata e totais por carteira sem histórico infinito ou N+1; settlement ausente permanece ausente e warnings/saldos preservam sinais/moeda. Incluir o handler de aplicação e validação da query correspondente, com testes próprios no mesmo commit.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] List/detail retornam metadata e totais por carteira sem histórico infinito ou N+1; settlement ausente permanece ausente e warnings/saldos preservam sinais/moeda. Incluir o handler de aplicação e validação da query correspondente, com testes próprios no mesmo commit.
+- [x] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Evidência T63 (2026-09-15):** `sqlite-investment-portfolio-summary.test.ts` passou de 15 para 25 cenários: lista vazia, ordenação, settlement ausente, arquivamento, L/C/caixa/mercado/resultado, fallback, fechada, moeda, detalhe/contagens e warning assinado; `list-investment-accounts.test.ts` cobre moeda/data única e erro de query. Full SQLite: 49 arquivos, 881 testes; migrations e typecheck verdes. Adequação: os testes observam resultados, isolamento é parametrizado por `book_id`, e a leitura usa uma transação sem histórico de operações ou consulta por conta.
 
 **Tests**: integration (SQLite); testes acompanham o componente nesta tarefa.
 **Gate**: Full SQLite
