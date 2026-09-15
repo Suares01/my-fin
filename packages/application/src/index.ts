@@ -19,6 +19,7 @@ export { RecordInvestmentValuation } from "./investments/valuations/record-inves
 export { PreviewInvestmentOperation } from "./investments/queries/preview-investment-operation.js"
 export { GetInvestmentPortfolioSummary } from "./investments/queries/get-investment-portfolio-summary.js"
 export { ListInvestmentAccounts } from "./investments/queries/list-investment-accounts.js"
+export { ListInvestmentInstruments } from "./investments/queries/list-investment-instruments.js"
 export { SetInvestmentOpeningBalance } from "./investments/accounts/set-investment-opening-balance.js"
 export {
   canonicalize,

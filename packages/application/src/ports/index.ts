@@ -115,6 +115,8 @@ export type {
   InvestmentAccountDetailView,
   InvestmentAccountQueries,
   InvestmentAccountQueryInput,
+  InvestmentInstrumentQueries,
+  InvestmentInstrumentView,
   GetInvestmentPortfolioSummaryInput,
   InvestmentOperationHistoryItem,
   InvestmentPortfolioSummary,

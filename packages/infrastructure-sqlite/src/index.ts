@@ -9,6 +9,7 @@ export { SqliteExactLedgerTotals } from "./queries/sqlite-exact-ledger-totals.js
 export { SqliteInvestmentTransactionReads } from "./queries/sqlite-investment-transaction-reads.js"
 export { SqliteInvestmentPortfolioSummary } from "./queries/investments/sqlite-investment-portfolio-summary.js"
 export { SqliteInvestmentAccountQueries } from "./queries/investments/sqlite-investment-account-queries.js"
+export { SqliteInvestmentInstrumentQueries } from "./queries/investments/sqlite-investment-instrument-queries.js"
 export { SqliteJournalViewQueries } from "./queries/sqlite-journal-view-queries.js"
 export { SqliteInsightQueries } from "./queries/sqlite-insight-queries.js"
 export * from "./queries/catalog/index.js"

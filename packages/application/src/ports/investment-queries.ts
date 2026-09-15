@@ -87,6 +87,29 @@ export interface InvestmentAccountQueries {
     input: InvestmentAccountQueryInput & { readonly accountId: string }
   ): Promise<InvestmentAccountDetailView | null>
 }
+export interface InvestmentInstrumentView {
+  readonly id: string
+  readonly name: string
+  readonly type: string
+  readonly currency: string
+  readonly issuerName?: string
+  readonly status: "ACTIVE" | "ARCHIVED"
+  readonly identifiers: readonly {
+    readonly scheme: string
+    readonly value: string
+    readonly market?: string
+  }[]
+}
+export interface InvestmentInstrumentQueries {
+  listInvestmentInstruments(input: {
+    readonly bookId: string
+    readonly status?: "ACTIVE" | "ARCHIVED"
+  }): Promise<readonly InvestmentInstrumentView[]>
+  getInvestmentInstrumentDetail(input: {
+    readonly bookId: string
+    readonly instrumentId: string
+  }): Promise<InvestmentInstrumentView | null>
+}
 export interface InvestmentOperationHistoryItem {
   readonly id: string
   readonly type: string

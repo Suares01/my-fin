@@ -2396,9 +2396,11 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Listar/detalhar instrumentos para manutenção e seleção, status/filtros/ordem determinísticos, identificadores normalizados e isolamento; seletores novos só ativos. Incluir o handler de aplicação e validação da query correspondente, com testes próprios no mesmo commit.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 8 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Listar/detalhar instrumentos para manutenção e seleção, status/filtros/ordem determinísticos, identificadores normalizados e isolamento; seletores novos só ativos. Incluir o handler de aplicação e validação da query correspondente, com testes próprios no mesmo commit.
+- [x] Escrever/atualizar no mesmo commit pelo menos 8 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Evidência T64 (2026-09-15):** `sqlite-investment-instrument-queries.test.ts` adiciona 8 cenários: catálogo vazio, ordem, ACTIVE, ARCHIVED, issuer opcional, identificador/mercado, detalhe ausente/outro livro e isolamento. O handler valida `bookId` e existência do livro antes da consulta. Full SQLite: 50 arquivos, 889 testes; migrations e typecheck verdes. Adequação: resultados e filtros são observados diretamente, parâmetros mantêm isolamento e o seletor ACTIVE é explícito.
 
 **Tests**: integration (SQLite); testes acompanham o componente nesta tarefa.
 **Gate**: Full SQLite
