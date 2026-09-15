@@ -151,7 +151,7 @@ export async function createFinancialQueryScenario(
       ).execute({
         bookId: "book-1",
         name: input.name ?? (kind === "ASSET" ? "Checking" : "Credit card"),
-        kind,
+        type: kind === "ASSET" ? "BANK_ACCOUNT" : "CREDIT_CARD",
       })
       const account = unwrap(result, "financial account fixture")
       clearPublishedEvents(publisher)
