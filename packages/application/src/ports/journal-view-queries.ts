@@ -11,6 +11,7 @@ export type JournalBusinessType =
   | "OPENING_BALANCE"
   | "INCOME"
   | "EXPENSE"
+  | "INVESTMENT"
   | "TRANSFER"
 
 export type JournalChainStatus = "ACTIVE" | "EDITED" | "CANCELLED"
@@ -26,14 +27,25 @@ export interface JournalChainListItem {
   readonly sequence: string
   readonly description: string
   readonly origin: JournalEntryOrigin
+  readonly canEditWithGenericFlow: boolean
   readonly amountMinor: string
   readonly currency: string
   readonly financialAccounts: readonly AccountSummaryView[]
   readonly categories: readonly AccountSummaryView[]
+  readonly investment?: InvestmentJournalLink
   readonly transfer?: {
     readonly source: AccountSummaryView
     readonly destination: AccountSummaryView
   }
+}
+
+export interface InvestmentJournalLink {
+  readonly operationId: string
+  readonly positionId: string
+  readonly operationType: string
+  readonly netCashFlowMinor: string
+  readonly grossAmountMinor: string
+  readonly bookCostDeltaMinor: string
 }
 
 export interface JournalChainCursorKey {

@@ -493,7 +493,7 @@ describe("SqliteJournalViewQueries.listJournalChains", () => {
     })
   })
 
-  it("filters cancelled chains while preserving their presented amount", async () => {
+  it("keeps cancelled chains counted while zeroing their financial contribution", async () => {
     await scenario.reverse({ journalEntryId: expenseId })
 
     const result = await queries.getJournalChainSummary({
@@ -504,8 +504,8 @@ describe("SqliteJournalViewQueries.listJournalChains", () => {
 
     expect(result).toEqual({
       incomeMinor: "0",
-      expenseMinor: "700",
-      largestTransactionMinor: "700",
+      expenseMinor: "0",
+      largestTransactionMinor: "0",
       transactionCount: 1,
       currency: "BRL",
     })
@@ -579,7 +579,7 @@ describe("SqliteJournalViewQueries.listJournalChains", () => {
     expect(result.largestTransactionMinor).toBe("9007199254740993")
   })
 
-  it("executes one aggregate statement without list hydration", async () => {
+  it("uses bounded reads for an exact summary without per-chain hydration", async () => {
     const original = scenario.database.queryOnConnection.bind(scenario.database)
     const spy = vi
       .spyOn(scenario.database, "queryOnConnection")
@@ -587,8 +587,10 @@ describe("SqliteJournalViewQueries.listJournalChains", () => {
 
     await queries.getJournalChainSummary({ bookId })
 
-    expect(spy).toHaveBeenCalledTimes(1)
-    expect(spy.mock.calls[0]?.[0]).toContain("chain_amounts")
+    expect(spy).toHaveBeenCalledTimes(3)
+    expect(spy.mock.calls[0]?.[0]).toContain("WITH RECURSIVE chain")
+    expect(spy.mock.calls[1]?.[0]).toContain("FROM postings")
+    expect(spy.mock.calls[2]?.[0]).toContain("financial_books")
     spy.mockRestore()
   })
 
@@ -1069,6 +1071,277 @@ describe("SqliteJournalViewQueries.listJournalChains", () => {
   })
 })
 
+describe("SqliteJournalViewQueries investment read model", () => {
+  let scenario: FinancialQueryScenario
+  let queries: SqliteJournalViewQueries
+  let checking: string
+  let food: string
+  let salary: string
+  let incomeId: string
+  let expenseId: string
+
+  beforeEach(async () => {
+    scenario = await createFinancialQueryScenario()
+    await scenario.createBook()
+    checking = (await scenario.createFinancialAccount()).id
+    food = (await scenario.createExpenseCategory()).id
+    salary = (await scenario.createIncomeCategory()).id
+    incomeId = await scenario.recordIncome({
+      accountId: checking,
+      categoryId: salary,
+      amountMinor: "2500",
+      occurredOn: "2026-08-02",
+      description: "Investment income",
+    })
+    expenseId = await scenario.recordExpense({
+      accountId: checking,
+      categoryId: food,
+      amountMinor: "700",
+      occurredOn: "2026-08-03",
+      description: "Investment expense",
+    })
+    await createInvestmentFixture(scenario, checking)
+    queries = new SqliteJournalViewQueries(scenario.database)
+  })
+
+  afterEach(async () => {
+    await scenario.close()
+  })
+
+  it("prioritizes investment ownership over an income posting", async () => {
+    await linkInvestmentOperation(scenario, { journalEntryId: incomeId })
+
+    const result = await queries.listJournalChains({ bookId, limit: 10 })
+
+    expect(
+      result.items.find((item) => item.presentedEntryId === incomeId)
+    ).toMatchObject({
+      type: "INVESTMENT",
+    })
+  })
+
+  it("prioritizes investment ownership over an expense posting", async () => {
+    await linkInvestmentOperation(scenario, { journalEntryId: expenseId })
+
+    const result = await queries.listJournalChains({ bookId, limit: 10 })
+
+    expect(
+      result.items.find((item) => item.presentedEntryId === expenseId)
+    ).toMatchObject({
+      type: "INVESTMENT",
+    })
+  })
+
+  it("filters chains by the investment business type", async () => {
+    await linkInvestmentOperation(scenario, { journalEntryId: incomeId })
+
+    const result = await queries.listJournalChains({
+      bookId,
+      types: ["INVESTMENT"],
+      limit: 10,
+    })
+
+    expect(result.items.map((item) => item.presentedEntryId)).toEqual([
+      incomeId,
+    ])
+  })
+
+  it("exposes the linked operation and position identifiers", async () => {
+    await linkInvestmentOperation(scenario, {
+      id: "operation-linked",
+      journalEntryId: incomeId,
+    })
+
+    const result = await queries.listJournalChains({ bookId, limit: 10 })
+
+    expect(
+      result.items.find((item) => item.presentedEntryId === incomeId)
+        ?.investment
+    ).toEqual({
+      operationId: "operation-linked",
+      positionId: "investment-position-1",
+      operationType: "PURCHASE",
+      netCashFlowMinor: "-2500",
+      grossAmountMinor: "2500",
+      bookCostDeltaMinor: "2500",
+    })
+  })
+
+  it("uses the absolute investment net cash flow as the list amount", async () => {
+    await linkInvestmentOperation(scenario, {
+      journalEntryId: incomeId,
+      netCashFlowMinor: "-2500",
+    })
+
+    const result = await queries.listJournalChains({ bookId, limit: 10 })
+
+    expect(
+      result.items.find((item) => item.presentedEntryId === incomeId)
+        ?.amountMinor
+    ).toBe("2500")
+  })
+
+  it("preserves a zero investment net cash flow as a zero amount", async () => {
+    await linkInvestmentOperation(scenario, {
+      journalEntryId: incomeId,
+      netCashFlowMinor: "0",
+    })
+
+    const result = await queries.listJournalChains({ bookId, limit: 10 })
+
+    expect(
+      result.items.find((item) => item.presentedEntryId === incomeId)
+        ?.amountMinor
+    ).toBe("0")
+  })
+
+  it("disables generic editing for investment-owned chains", async () => {
+    await linkInvestmentOperation(scenario, { journalEntryId: incomeId })
+
+    const result = await queries.listJournalChains({ bookId, limit: 10 })
+
+    expect(
+      result.items.find((item) => item.presentedEntryId === incomeId)
+        ?.canEditWithGenericFlow
+    ).toBe(false)
+  })
+
+  it("keeps generic editing enabled for ordinary chains", async () => {
+    const result = await queries.listJournalChains({ bookId, limit: 10 })
+
+    expect(
+      result.items.find((item) => item.presentedEntryId === incomeId)
+        ?.canEditWithGenericFlow
+    ).toBe(true)
+  })
+
+  it("exposes investment ownership on the chain detail", async () => {
+    await linkInvestmentOperation(scenario, { journalEntryId: incomeId })
+
+    const result = await queries.getJournalChainDetail({
+      bookId,
+      entryId: incomeId as never,
+    })
+
+    expect(result).toMatchObject({
+      type: "INVESTMENT",
+      canEditWithGenericFlow: false,
+      investment: expect.objectContaining({
+        positionId: "investment-position-1",
+      }),
+    })
+  })
+
+  it("does not synthesize a transaction row for an operation without journal", async () => {
+    await linkInvestmentOperation(scenario, { id: "operation-without-journal" })
+
+    const result = await queries.listJournalChains({ bookId, limit: 10 })
+
+    expect(
+      result.items.some(
+        (item) => item.investment?.operationId === "operation-without-journal"
+      )
+    ).toBe(false)
+  })
+
+  it("isolates an investment ownership link from another book", async () => {
+    await scenario.database.execute(
+      "INSERT INTO financial_books (id, name, base_currency, timezone, version) VALUES (?, ?, ?, ?, ?)",
+      ["book-2", "Other", "USD", "UTC", 0]
+    )
+    await linkInvestmentOperation(scenario, { journalEntryId: incomeId })
+
+    const result = await queries.listJournalChains({
+      bookId: "book-2" as never,
+      limit: 10,
+    })
+
+    expect(result.items).toEqual([])
+  })
+
+  it("counts an investment chain once in the summary", async () => {
+    await linkInvestmentOperation(scenario, { journalEntryId: incomeId })
+
+    const result = await queries.getJournalChainSummary({
+      bookId,
+      types: ["INVESTMENT"],
+    })
+
+    expect(result.transactionCount).toBe(1)
+  })
+
+  it("derives investment summary income from all income postings", async () => {
+    const mixedId = await scenario.addSplit({
+      accountId: checking,
+      categories: [
+        { accountId: salary, amountMinor: "-1000" },
+        { accountId: food, amountMinor: "1200" },
+      ],
+      occurredOn: "2026-08-04",
+      description: "Mixed investment result",
+    })
+    await linkInvestmentOperation(scenario, { journalEntryId: mixedId })
+
+    const result = await queries.getJournalChainSummary({
+      bookId,
+      types: ["INVESTMENT"],
+    })
+
+    expect(result.incomeMinor).toBe("1000")
+  })
+
+  it("derives investment summary expense from all expense postings", async () => {
+    const mixedId = await scenario.addSplit({
+      accountId: checking,
+      categories: [
+        { accountId: salary, amountMinor: "-1000" },
+        { accountId: food, amountMinor: "1200" },
+      ],
+      occurredOn: "2026-08-04",
+      description: "Mixed investment result",
+    })
+    await linkInvestmentOperation(scenario, { journalEntryId: mixedId })
+
+    const result = await queries.getJournalChainSummary({
+      bookId,
+      types: ["INVESTMENT"],
+    })
+
+    expect(result.expenseMinor).toBe("1200")
+  })
+
+  it("uses the absolute investment amount when selecting the summary largest transaction", async () => {
+    await linkInvestmentOperation(scenario, {
+      journalEntryId: incomeId,
+      netCashFlowMinor: "-9007199254740993",
+    })
+
+    const result = await queries.getJournalChainSummary({
+      bookId,
+      types: ["INVESTMENT"],
+    })
+
+    expect(result.largestTransactionMinor).toBe("9007199254740993")
+  })
+
+  it("keeps cancelled investment chains counted while their financial contribution is zero", async () => {
+    await scenario.reverse({ journalEntryId: incomeId })
+    await linkInvestmentOperation(scenario, { journalEntryId: incomeId })
+
+    const result = await queries.getJournalChainSummary({
+      bookId,
+      types: ["INVESTMENT"],
+      status: "CANCELLED",
+    })
+
+    expect(result).toMatchObject({
+      incomeMinor: "0",
+      expenseMinor: "0",
+      transactionCount: 1,
+    })
+  })
+})
+
 async function insertReplacement(
   scenario: FinancialQueryScenario,
   originalId: string,
@@ -1086,6 +1359,97 @@ async function insertReplacement(
     description: "Corrected lunch",
     amountMinor: "800",
   })
+}
+
+async function createInvestmentFixture(
+  scenario: FinancialQueryScenario,
+  accountId: string
+): Promise<void> {
+  await scenario.database.execute(
+    "UPDATE financial_accounts SET type = 'INVESTMENT_ACCOUNT' WHERE ledger_account_id = ? AND book_id = ?",
+    [accountId, "book-1"]
+  )
+  await scenario.database.execute(
+    "INSERT INTO investment_accounts (ledger_account_id, book_id) VALUES (?, ?)",
+    [accountId, "book-1"]
+  )
+  await scenario.database.execute(
+    "INSERT INTO investment_instruments (id, book_id, name, normalized_name, type, currency, status, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+    [
+      "investment-instrument-1",
+      "book-1",
+      "Investment fixture",
+      "investment fixture",
+      "CDB",
+      "BRL",
+      "ACTIVE",
+      0,
+    ]
+  )
+  await scenario.database.execute(
+    "INSERT INTO investment_positions (id, book_id, investment_account_id, instrument_id, label, normalized_label, quantity_mode, quantity, book_cost_minor, currency, opened_on, closed_on, status, allocation_revision, allocation_effective_on, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    [
+      "investment-position-1",
+      "book-1",
+      accountId,
+      "investment-instrument-1",
+      null,
+      "",
+      "UNITS",
+      "1",
+      0,
+      "BRL",
+      "2026-08-01",
+      null,
+      "OPEN",
+      1,
+      "2026-08-01",
+      0,
+    ]
+  )
+}
+
+async function linkInvestmentOperation(
+  scenario: FinancialQueryScenario,
+  input: {
+    readonly id?: string
+    readonly journalEntryId?: string
+    readonly netCashFlowMinor?: string
+  }
+): Promise<void> {
+  const id =
+    input.id ?? `operation-${input.journalEntryId ?? "without-journal"}`
+  await scenario.database.execute(
+    "INSERT INTO investment_operations (id, book_id, position_id, type, role, occurred_on, recorded_at, sequence, description, currency, book_cost_delta_minor, gross_amount_minor, fees_minor, taxes_minor, net_cash_flow_minor, cash_mode, before_kind, version, journal_entry_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    [
+      id,
+      "book-1",
+      "investment-position-1",
+      "PURCHASE",
+      "BUSINESS",
+      "2026-08-03",
+      "2026-08-04T12:00:00.000Z",
+      nextInvestmentSequence(id),
+      "Investment fixture",
+      "BRL",
+      "2500",
+      "2500",
+      "0",
+      "0",
+      input.netCashFlowMinor ?? "-2500",
+      "NONE",
+      "EXISTING",
+      0,
+      input.journalEntryId ?? null,
+    ]
+  )
+}
+
+function nextInvestmentSequence(id: string): number {
+  return [...id].reduce(
+    (total, character) => total + character.charCodeAt(0),
+    0
+  )
 }
 
 async function insertReplacementValues(

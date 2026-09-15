@@ -25,6 +25,7 @@ const listItem: JournalChainListItem = {
   sequence: "10",
   description: "Move funds",
   origin: "MANUAL",
+  canEditWithGenericFlow: true,
   amountMinor: "1000",
   currency: "BRL",
   financialAccounts: [account],

@@ -19,16 +19,16 @@ Ciclo por tarefa: teste derivado da spec → implementação → gate → revis�
 
 > Generated from codebase, project guidelines, and spec - confirm before Execute. Não foram encontrados AGENTS.md, CONTRIBUTING.md, docs de testes, workflows de CI ou thresholds de cobertura. Aplicam-se os padrões fortes da skill. Manifests dos cinco packages e de apps/tauri fornecem os comandos; eslint.config de cada package integra Prettier. README não especifica testes. Configuração de Vite não define cobertura.
 
-| Code Layer | Required Test Type | Coverage Expectation | Location Pattern | Run Command |
-| --- | --- | --- | --- | --- |
-| Domain | unit | Todos os ramos econômicos e validações dos ACs atribuídos; todos os fixtures normativos pertinentes, com valores literais | packages/domain/src/**/*.test.ts | `pnpm --filter @workspace/domain exec vitest run` |
-| Application | unit | Contratos públicos, variantes impossíveis, códigos/envelopes exatos e falhas pré/pós-commit | packages/application/src/**/*.test.ts | `pnpm --filter @workspace/application exec vitest run` |
-| Command | integration | Happy + erro + edge por AC; CAS, livro, atomicidade, retry e fatos; doubles apenas para injetar falha, valores esperados vêm da spec | packages/infrastructure-memory/src/use-cases/investments/*.test.ts e suites genéricas tocadas | `pnpm --filter @workspace/infrastructure-memory exec vitest run` |
-| Memory | integration | Mesmos contratos do SQLite, clones, ordering, CAS e rollback de todas as coleções | packages/infrastructure-memory/src/**/*.test.ts | `pnpm --filter @workspace/infrastructure-memory exec vitest run` |
-| SQLite | integration | SQLite real via better-sqlite3: roundtrip, constraints, queries-chave, falhas, migrações e grandes valores; unit no mapper quando necessário | packages/infrastructure-sqlite/tests/**/*.test.ts e src/**/*.test.ts | `pnpm --filter @workspace/infrastructure-sqlite exec vitest run` |
-| Integration | integration | Contexto completo, memória/SQLite e adapter Tauri scoped; commit, falha intermediária, concorrência e IPC exato | Suites de transaction/contracts dos adapters e database do Tauri | Gates Full Cross e Native |
-| React | integration | RHF/React Query/Router em jsdom: happy + erro + edge por AC, acessibilidade observável, livro e retry; UAT real complementa layout/foco/persistência | apps/tauri/src/**/*.test.ts e *.test.tsx | `pnpm --filter tauri exec vitest run` |
-| Native UAT | interactive integration | Jornadas N1–N8 abaixo com banco real, reinício, teclado e 360px/1280px; mock não é evidência substituta | Evidência vinculada à tarefa de integração e validation.md do Verifier | `pnpm --filter tauri tauri dev` e roteiro Native |
+| Code Layer  | Required Test Type      | Coverage Expectation                                                                                                                                 | Location Pattern                                                                               | Run Command                                                      |
+| ----------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Domain      | unit                    | Todos os ramos econômicos e validações dos ACs atribuídos; todos os fixtures normativos pertinentes, com valores literais                            | packages/domain/src/\*_/_.test.ts                                                              | `pnpm --filter @workspace/domain exec vitest run`                |
+| Application | unit                    | Contratos públicos, variantes impossíveis, códigos/envelopes exatos e falhas pré/pós-commit                                                          | packages/application/src/\*_/_.test.ts                                                         | `pnpm --filter @workspace/application exec vitest run`           |
+| Command     | integration             | Happy + erro + edge por AC; CAS, livro, atomicidade, retry e fatos; doubles apenas para injetar falha, valores esperados vêm da spec                 | packages/infrastructure-memory/src/use-cases/investments/\*.test.ts e suites genéricas tocadas | `pnpm --filter @workspace/infrastructure-memory exec vitest run` |
+| Memory      | integration             | Mesmos contratos do SQLite, clones, ordering, CAS e rollback de todas as coleções                                                                    | packages/infrastructure-memory/src/\*_/_.test.ts                                               | `pnpm --filter @workspace/infrastructure-memory exec vitest run` |
+| SQLite      | integration             | SQLite real via better-sqlite3: roundtrip, constraints, queries-chave, falhas, migrações e grandes valores; unit no mapper quando necessário         | packages/infrastructure-sqlite/tests/**/\*.test.ts e src/**/\*.test.ts                         | `pnpm --filter @workspace/infrastructure-sqlite exec vitest run` |
+| Integration | integration             | Contexto completo, memória/SQLite e adapter Tauri scoped; commit, falha intermediária, concorrência e IPC exato                                      | Suites de transaction/contracts dos adapters e database do Tauri                               | Gates Full Cross e Native                                        |
+| React       | integration             | RHF/React Query/Router em jsdom: happy + erro + edge por AC, acessibilidade observável, livro e retry; UAT real complementa layout/foco/persistência | apps/tauri/src/\*_/_.test.ts e \*.test.tsx                                                     | `pnpm --filter tauri exec vitest run`                            |
+| Native UAT  | interactive integration | Jornadas N1–N8 abaixo com banco real, reinício, teclado e 360px/1280px; mock não é evidência substituta                                              | Evidência vinculada à tarefa de integração e validation.md do Verifier                         | `pnpm --filter tauri tauri dev` e roteiro Native                 |
 
 Amostras lidas: domain/shared/money.test.ts; domain/ledger/accounts/ledger-account.test.ts; application/core/use-case-executor.test.ts; infrastructure-memory/use-cases/amend-journal-entry.test.ts e transaction/in-memory-transaction-manager.test.ts; infrastructure-sqlite/tests/migrations/category-visual-metadata.test.ts e tests/queries/sqlite-net-worth.test.ts; infrastructure-tauri/database/protocol.test.ts; apps/tauri/bootstrap/create-services.test.ts e features/transactions/components/transaction-delete-dialog.test.tsx. Os caminhos abreviados seguem os roots dos packages. Padrão observado: Vitest, testes próximos do código ou tests/ no SQLite, jsdom explícito nos componentes e assertions de valores/códigos exatos.
 
@@ -38,17 +38,17 @@ Amostras lidas: domain/shared/money.test.ts; domain/ledger/accounts/ledger-accou
 
 > Generated from codebase - confirm before Execute. Rodar a partir da raiz. Nos packages, `check-types` é o script real; no app usar os binários locais. Lint já verifica formatação via Prettier. `format --write` não é gate.
 
-| Gate Level | When to Use | Command |
-| --- | --- | --- |
-| Quick Domain | Domain | `pnpm --filter @workspace/domain exec vitest run && pnpm --filter @workspace/domain check-types` |
-| Quick Application | Contratos/executor/dispatcher | `pnpm --filter @workspace/domain build && pnpm --filter @workspace/application exec vitest run && pnpm --filter @workspace/application check-types` |
-| Full Memory | Adapter memory ou Command | `pnpm --filter @workspace/domain build && pnpm --filter @workspace/application build && pnpm --filter @workspace/infrastructure-memory exec vitest run && pnpm --filter @workspace/infrastructure-memory check-types` |
-| Full SQLite | Repository/query/migration SQLite | `pnpm --filter @workspace/domain build && pnpm --filter @workspace/application build && pnpm --filter @workspace/infrastructure-memory build && pnpm --filter @workspace/infrastructure-sqlite exec vitest run && pnpm --filter @workspace/infrastructure-sqlite check:migrations && pnpm --filter @workspace/infrastructure-sqlite check-types` |
-| Full Cross | Contextos ou contrato transversal | Full Memory + Full SQLite + `pnpm --filter @workspace/infrastructure-sqlite build && pnpm --filter @workspace/infrastructure-tauri exec vitest run && pnpm --filter @workspace/infrastructure-tauri check-types` |
-| Full React | Hook/form/componente/facade | Build Dependências abaixo + `pnpm --filter tauri exec vitest run && pnpm --filter tauri exec tsc --noEmit` |
-| Build | Última tarefa de cada fase, além do gate da tarefa | Testes de todos os packages tocados na fase + lint/check-types/build desses packages em ordem de dependência; comandos concretos abaixo; `git diff --check` |
-| Native | T93: N1–N6/N8 e N7 restrito a Investimentos; T94: N7 completo e regressões afetadas | `pnpm --filter tauri tauri dev`; executar N1–N8, com evidência. Se Rust mudar: `cargo test --manifest-path apps/tauri/src-tauri/Cargo.toml` e `cargo fmt --manifest-path apps/tauri/src-tauri/Cargo.toml -- --check` |
-| Final | T94, antes do Verifier | Full Cross + Full React + Build para todos os packages afetados; Native completo após T93/T94. Executar validação independente e sensor depois do commit final |
+| Gate Level        | When to Use                                                                         | Command                                                                                                                                                                                                                                                                                                                                          |
+| ----------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Quick Domain      | Domain                                                                              | `pnpm --filter @workspace/domain exec vitest run && pnpm --filter @workspace/domain check-types`                                                                                                                                                                                                                                                 |
+| Quick Application | Contratos/executor/dispatcher                                                       | `pnpm --filter @workspace/domain build && pnpm --filter @workspace/application exec vitest run && pnpm --filter @workspace/application check-types`                                                                                                                                                                                              |
+| Full Memory       | Adapter memory ou Command                                                           | `pnpm --filter @workspace/domain build && pnpm --filter @workspace/application build && pnpm --filter @workspace/infrastructure-memory exec vitest run && pnpm --filter @workspace/infrastructure-memory check-types`                                                                                                                            |
+| Full SQLite       | Repository/query/migration SQLite                                                   | `pnpm --filter @workspace/domain build && pnpm --filter @workspace/application build && pnpm --filter @workspace/infrastructure-memory build && pnpm --filter @workspace/infrastructure-sqlite exec vitest run && pnpm --filter @workspace/infrastructure-sqlite check:migrations && pnpm --filter @workspace/infrastructure-sqlite check-types` |
+| Full Cross        | Contextos ou contrato transversal                                                   | Full Memory + Full SQLite + `pnpm --filter @workspace/infrastructure-sqlite build && pnpm --filter @workspace/infrastructure-tauri exec vitest run && pnpm --filter @workspace/infrastructure-tauri check-types`                                                                                                                                 |
+| Full React        | Hook/form/componente/facade                                                         | Build Dependências abaixo + `pnpm --filter tauri exec vitest run && pnpm --filter tauri exec tsc --noEmit`                                                                                                                                                                                                                                       |
+| Build             | Última tarefa de cada fase, além do gate da tarefa                                  | Testes de todos os packages tocados na fase + lint/check-types/build desses packages em ordem de dependência; comandos concretos abaixo; `git diff --check`                                                                                                                                                                                      |
+| Native            | T93: N1–N6/N8 e N7 restrito a Investimentos; T94: N7 completo e regressões afetadas | `pnpm --filter tauri tauri dev`; executar N1–N8, com evidência. Se Rust mudar: `cargo test --manifest-path apps/tauri/src-tauri/Cargo.toml` e `cargo fmt --manifest-path apps/tauri/src-tauri/Cargo.toml -- --check`                                                                                                                             |
+| Final             | T94, antes do Verifier                                                              | Full Cross + Full React + Build para todos os packages afetados; Native completo após T93/T94. Executar validação independente e sensor depois do commit final                                                                                                                                                                                   |
 
 Build Dependências para o app, cada comando em sequência:
 
@@ -230,19 +230,19 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: baseline Domain: 11 files, 178 tests, pass; T1: 12 files, 199 tests, pass. `decimal.test.ts` adds 21 spec-derived scenarios. `pnpm --filter @workspace/domain exec vitest run` and `check-types` passed.
 
-| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
-| --- | --- | --- | --- |
-| INV-82 decimal exact | `packages/domain/src/shared/decimal.test.ts:16` `expect(...).toBe("0.3")` | `0.1 + 0.2 = 0.3` without float | Yes |
-| INV-82 normalized zero/sign | `packages/domain/src/shared/decimal.test.ts:12` `expect(...).toBe(expected)` | `0010.5000 → 10.5`; `-0.00 → 0` | Yes |
-| INV-83 canonical limits | `packages/domain/src/shared/decimal.test.ts:61` `expectInvalidInput(input)` and `:82` `expect(...code).toBe("INVALID_INVESTMENT_INPUT")` | reject exponent, >80 chars, precision >38 and scale >18 | Yes |
-| exact comparison | `packages/domain/src/shared/decimal.test.ts:45` `expect(...compare(...)).toBe(expected)` and `:49` `expect(...equals(...)).toBe(true)` | compare/equals exact, no float | Yes |
+| Done-when / requirement     | Evidence                                                                                                                                 | Spec-defined outcome                                    | Covered |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- | ------- |
+| INV-82 decimal exact        | `packages/domain/src/shared/decimal.test.ts:16` `expect(...).toBe("0.3")`                                                                | `0.1 + 0.2 = 0.3` without float                         | Yes     |
+| INV-82 normalized zero/sign | `packages/domain/src/shared/decimal.test.ts:12` `expect(...).toBe(expected)`                                                             | `0010.5000 → 10.5`; `-0.00 → 0`                         | Yes     |
+| INV-83 canonical limits     | `packages/domain/src/shared/decimal.test.ts:61` `expectInvalidInput(input)` and `:82` `expect(...code).toBe("INVALID_INVESTMENT_INPUT")` | reject exponent, >80 chars, precision >38 and scale >18 | Yes     |
+| exact comparison            | `packages/domain/src/shared/decimal.test.ts:45` `expect(...compare(...)).toBe(expected)` and `:49` `expect(...equals(...)).toBe(true)`   | compare/equals exact, no float                          | Yes     |
 
-| Test assertion | Maps to | Keep |
-| --- | --- | --- |
-| `decimal.test.ts:16` `expect(...).toBe("0.3")` | INV-82 normative precision fixture | Yes |
-| `decimal.test.ts:12` `expect(...).toBe(expected)` | INV-82 canonical decimal normalization | Yes |
-| `decimal.test.ts:61` `expectInvalidInput(input)` | INV-83 invalid input/bounds | Yes |
-| `decimal.test.ts:45` `expect(...).toBe(expected)` | T1 exact comparison criterion | Yes |
+| Test assertion                                    | Maps to                                | Keep |
+| ------------------------------------------------- | -------------------------------------- | ---- |
+| `decimal.test.ts:16` `expect(...).toBe("0.3")`    | INV-82 normative precision fixture     | Yes  |
+| `decimal.test.ts:12` `expect(...).toBe(expected)` | INV-82 canonical decimal normalization | Yes  |
+| `decimal.test.ts:61` `expectInvalidInput(input)`  | INV-83 invalid input/bounds            | Yes  |
+| `decimal.test.ts:45` `expect(...).toBe(expected)` | T1 exact comparison criterion          | Yes  |
 
 **Adequacy verdict**: PASS. Assertions target normative values and error code; no mock, tautological, or out-of-scope test. The Domain test location follows the Test Coverage Matrix; no project testing guideline was found.
 
@@ -267,24 +267,24 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: before T2 Domain: 12 files, 199 tests, pass; after: 13 files, 216 tests, pass. `investment-values.test.ts` adds 17 spec-derived scenarios. Quick Domain and supplemental domain lint passed.
 
-| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
-| --- | --- | --- | --- |
-| INV-21 quantity | `packages/domain/src/investments/values/investment-values.test.ts:23` `expect(...).toBe(expected)` and `:27` `expectCode(..., "INVALID_INVESTMENT_INPUT")` | quantity is non-negative; absence is not converted to zero | Yes |
-| INV-24 percentage | `investment-values.test.ts:37` `expect(...).toBe(expected)` for `105` and `:42` `expectCode(..., "INVALID_INVESTMENT_INPUT")` | 105 is valid; negative percentage is rejected | Yes |
-| INV-36 numeric bounds | `investment-values.test.ts:69` `expectCode(..., "INVESTMENT_VALUE_OUT_OF_RANGE")` | persisted individual money accepts only symmetric int64 range | Yes |
-| INV-48 unit price | `investment-values.test.ts:49` `expect(...).toBe(expected)` and `:53` `expectCode(..., "INVALID_INVESTMENT_INPUT")` | unit price is non-negative | Yes |
-| INV-82 exact money bounds | `investment-values.test.ts:60` `expect(...amountMinor).toBe(amount)` | both ±9223372036854775807 are accepted | Yes |
-| INV-83 validation | `investment-values.test.ts:69` `expectCode(..., "INVESTMENT_VALUE_OUT_OF_RANGE")` | out-of-range persisted money is rejected | Yes |
-| INV-84 date code | `investment-values.test.ts:92` `expectCode(..., "INVALID_INVESTMENT_DATE")` | invalid local date gets stable investment code | Yes |
-| INV-123 absent cost | `investment-values.test.ts:76` `expect(...).toBe(0n)` and `:77` `expectCode(..., "INVESTMENT_BOOK_COST_REQUIRED")` | explicit zero remains valid; missing cost rejects | Yes |
+| Done-when / requirement   | Evidence                                                                                                                                                   | Spec-defined outcome                                          | Covered |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- | ------- |
+| INV-21 quantity           | `packages/domain/src/investments/values/investment-values.test.ts:23` `expect(...).toBe(expected)` and `:27` `expectCode(..., "INVALID_INVESTMENT_INPUT")` | quantity is non-negative; absence is not converted to zero    | Yes     |
+| INV-24 percentage         | `investment-values.test.ts:37` `expect(...).toBe(expected)` for `105` and `:42` `expectCode(..., "INVALID_INVESTMENT_INPUT")`                              | 105 is valid; negative percentage is rejected                 | Yes     |
+| INV-36 numeric bounds     | `investment-values.test.ts:69` `expectCode(..., "INVESTMENT_VALUE_OUT_OF_RANGE")`                                                                          | persisted individual money accepts only symmetric int64 range | Yes     |
+| INV-48 unit price         | `investment-values.test.ts:49` `expect(...).toBe(expected)` and `:53` `expectCode(..., "INVALID_INVESTMENT_INPUT")`                                        | unit price is non-negative                                    | Yes     |
+| INV-82 exact money bounds | `investment-values.test.ts:60` `expect(...amountMinor).toBe(amount)`                                                                                       | both ±9223372036854775807 are accepted                        | Yes     |
+| INV-83 validation         | `investment-values.test.ts:69` `expectCode(..., "INVESTMENT_VALUE_OUT_OF_RANGE")`                                                                          | out-of-range persisted money is rejected                      | Yes     |
+| INV-84 date code          | `investment-values.test.ts:92` `expectCode(..., "INVALID_INVESTMENT_DATE")`                                                                                | invalid local date gets stable investment code                | Yes     |
+| INV-123 absent cost       | `investment-values.test.ts:76` `expect(...).toBe(0n)` and `:77` `expectCode(..., "INVESTMENT_BOOK_COST_REQUIRED")`                                         | explicit zero remains valid; missing cost rejects             | Yes     |
 
-| Test assertion | Maps to | Keep |
-| --- | --- | --- |
-| `investment-values.test.ts:23` `expect(...).toBe(expected)` | INV-21 quantity representation | Yes |
-| `investment-values.test.ts:37` `expect(...).toBe(expected)` | INV-24 no 100 percentage cap | Yes |
-| `investment-values.test.ts:69` `expectCode(..., "INVESTMENT_VALUE_OUT_OF_RANGE")` | INV-36/82 persisted money bounds | Yes |
-| `investment-values.test.ts:76` `expect(...).toBe(0n)` | INV-123 zero distinct from absent cost | Yes |
-| `investment-values.test.ts:92` `expectCode(..., "INVALID_INVESTMENT_DATE")` | INV-84 stable invalid-date code | Yes |
+| Test assertion                                                                    | Maps to                                | Keep |
+| --------------------------------------------------------------------------------- | -------------------------------------- | ---- |
+| `investment-values.test.ts:23` `expect(...).toBe(expected)`                       | INV-21 quantity representation         | Yes  |
+| `investment-values.test.ts:37` `expect(...).toBe(expected)`                       | INV-24 no 100 percentage cap           | Yes  |
+| `investment-values.test.ts:69` `expectCode(..., "INVESTMENT_VALUE_OUT_OF_RANGE")` | INV-36/82 persisted money bounds       | Yes  |
+| `investment-values.test.ts:76` `expect(...).toBe(0n)`                             | INV-123 zero distinct from absent cost | Yes  |
+| `investment-values.test.ts:92` `expectCode(..., "INVALID_INVESTMENT_DATE")`       | INV-84 stable invalid-date code        | Yes  |
 
 **Adequacy verdict**: PASS. Tests assert domain values and stable errors directly, cover zero/negative/boundary paths, and add no behavior beyond the named requirements. The Domain test location follows the Test Coverage Matrix; no project testing guideline was found.
 
@@ -309,19 +309,19 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: before T3 Domain: 13 files, 216 tests; after: 14 files, 232 tests. Quick Domain and supplemental lint passed.
 
-| Requirement | Evidence | Spec outcome | Covered |
-| --- | --- | --- | --- |
-| INV-01 | `financial-account-profile.test.ts:20` `expect(...).toBe(kind)` | every normative type derives its listed kind | Yes |
-| INV-02 | `financial-account-profile.test.ts:20` | profile map yields only ASSET/LIABILITY and does not extend LedgerAccountKind | Yes |
-| INV-03 | `financial-account-profile.test.ts:72` `expectInvalid(...)`, `:106` exact code | category, EQUITY and system association reject | Yes |
-| INV-11 | `financial-account-profile.test.ts:24` `expect(...).toEqual(...)` | investment institution and settlement may be absent | Yes |
-| INV-12 | `financial-account-profile.test.ts:53` `expectInvalid(...)` | settlement profile is exclusive to INVESTMENT_ACCOUNT | Yes |
+| Requirement | Evidence                                                                       | Spec outcome                                                                  | Covered |
+| ----------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------- | ------- |
+| INV-01      | `financial-account-profile.test.ts:20` `expect(...).toBe(kind)`                | every normative type derives its listed kind                                  | Yes     |
+| INV-02      | `financial-account-profile.test.ts:20`                                         | profile map yields only ASSET/LIABILITY and does not extend LedgerAccountKind | Yes     |
+| INV-03      | `financial-account-profile.test.ts:72` `expectInvalid(...)`, `:106` exact code | category, EQUITY and system association reject                                | Yes     |
+| INV-11      | `financial-account-profile.test.ts:24` `expect(...).toEqual(...)`              | investment institution and settlement may be absent                           | Yes     |
+| INV-12      | `financial-account-profile.test.ts:53` `expectInvalid(...)`                    | settlement profile is exclusive to INVESTMENT_ACCOUNT                         | Yes     |
 
-| Test assertion | Maps to | Keep |
-| --- | --- | --- |
-| `financial-account-profile.test.ts:20` `expect(...).toBe(kind)` | INV-01/02 type map | Yes |
-| `financial-account-profile.test.ts:28` `expect(...).toEqual(...)` | INV-11 optional fields | Yes |
-| `financial-account-profile.test.ts:106` `expect(...code).toBe(...)` | INV-03 structural rejection | Yes |
+| Test assertion                                                      | Maps to                     | Keep |
+| ------------------------------------------------------------------- | --------------------------- | ---- |
+| `financial-account-profile.test.ts:20` `expect(...).toBe(kind)`     | INV-01/02 type map          | Yes  |
+| `financial-account-profile.test.ts:28` `expect(...).toEqual(...)`   | INV-11 optional fields      | Yes  |
+| `financial-account-profile.test.ts:106` `expect(...code).toBe(...)` | INV-03 structural rejection | Yes  |
 
 **Adequacy verdict**: PASS. The 16 scenarios assert all type branches, optional values and structural failures directly. Domain co-location follows the Test Coverage Matrix; no project testing guideline was found.
 
@@ -346,19 +346,19 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: before T4 Domain: 14 files, 232 tests; after: 14 files, 244 tests. Quick Domain and lint passed. Assertions at `ledger-account.test.ts:274-367` cover OTHER derivation, version/facts, no-op, structural rejection and restore.
 
-| Requirement | Evidence | Spec outcome | Covered |
-| --- | --- | --- | --- |
-| INV-02/03 | `ledger-account.test.ts:331` `expect(...).toThrowError(...)` | invalid profile association does not mutate | Yes |
-| INV-04 | `ledger-account.test.ts:284` `expect(account.version).toBe(1)` | profile shares aggregate identity/version | Yes |
-| INV-07 | `ledger-account.test.ts:313` `expect(...).toEqual(before)` | no-op preserves account state/history | Yes |
-| INV-11 | `ledger-account.test.ts:286` `expect(...).toEqual(...)` | investment profile accepts optional fields | Yes |
-| INV-76 | `ledger-account.test.ts:358` `expect(restored.pullDomainFacts()).toEqual([])` | restore creates no facts | Yes |
+| Requirement | Evidence                                                                      | Spec outcome                                | Covered |
+| ----------- | ----------------------------------------------------------------------------- | ------------------------------------------- | ------- |
+| INV-02/03   | `ledger-account.test.ts:331` `expect(...).toThrowError(...)`                  | invalid profile association does not mutate | Yes     |
+| INV-04      | `ledger-account.test.ts:284` `expect(account.version).toBe(1)`                | profile shares aggregate identity/version   | Yes     |
+| INV-07      | `ledger-account.test.ts:313` `expect(...).toEqual(before)`                    | no-op preserves account state/history       | Yes     |
+| INV-11      | `ledger-account.test.ts:286` `expect(...).toEqual(...)`                       | investment profile accepts optional fields  | Yes     |
+| INV-76      | `ledger-account.test.ts:358` `expect(restored.pullDomainFacts()).toEqual([])` | restore creates no facts                    | Yes     |
 
-| Test assertion | Maps to | Keep |
-| --- | --- | --- |
-| `ledger-account.test.ts:284` `expect(account.version).toBe(1)` | INV-04 | Yes |
-| `ledger-account.test.ts:297` `expect(...type).toBe(...)` | configuration fact | Yes |
-| `ledger-account.test.ts:313` `expect(...).toEqual(before)` | INV-07 no-op | Yes |
+| Test assertion                                                 | Maps to            | Keep |
+| -------------------------------------------------------------- | ------------------ | ---- |
+| `ledger-account.test.ts:284` `expect(account.version).toBe(1)` | INV-04             | Yes  |
+| `ledger-account.test.ts:297` `expect(...type).toBe(...)`       | configuration fact | Yes  |
+| `ledger-account.test.ts:313` `expect(...).toEqual(before)`     | INV-07 no-op       | Yes  |
 
 **Adequacy verdict**: PASS. The 12 new scenarios assert aggregate state/facts and clone/restore outcomes, with no mock-only assertions.
 
@@ -383,17 +383,17 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: before T5 Domain: 14 files, 244 tests; after: 14 files, 248 tests. Phase build passed: Domain 248/248, Application 209/209, Memory 246/246 and Tauri 63/63; check-types, lint, build and `git diff --check` passed for each touched package.
 
-| Requirement | Evidence | Spec outcome | Covered |
-| --- | --- | --- | --- |
-| INV-19 | `identity.test.ts:46-52` `expect(fromString(value)).toBe(value)` | each investment entity has its own stable internal identity | Yes |
-| INV-78 | `deterministic-adapters.test.ts:37-40` `expect(ids.nextInvestment...Id()).toBe(...)` | sequential adapter creates deterministic IDs for idempotent commands | Yes |
-| INV-89 | `platform.test.ts:47-58` `expect(generated).toEqual([...])`; `expect(new Set(generated)).toHaveLength(9)` | Tauri generates real, distinct UUID-backed investment IDs | Yes |
+| Requirement | Evidence                                                                                                  | Spec outcome                                                         | Covered |
+| ----------- | --------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- | ------- |
+| INV-19      | `identity.test.ts:46-52` `expect(fromString(value)).toBe(value)`                                          | each investment entity has its own stable internal identity          | Yes     |
+| INV-78      | `deterministic-adapters.test.ts:37-40` `expect(ids.nextInvestment...Id()).toBe(...)`                      | sequential adapter creates deterministic IDs for idempotent commands | Yes     |
+| INV-89      | `platform.test.ts:47-58` `expect(generated).toEqual([...])`; `expect(new Set(generated)).toHaveLength(9)` | Tauri generates real, distinct UUID-backed investment IDs            | Yes     |
 
-| Test assertion | Maps to | Keep |
-| --- | --- | --- |
-| `identity.test.ts:52` `expect(fromString(value)).toBe(value)` | INV-19 dedicated identity constructors | Yes |
-| `deterministic-adapters.test.ts:37-40` `expect(ids.nextInvestment...Id()).toBe(...)` | INV-78 deterministic internal IDs | Yes |
-| `platform.test.ts:47-58` `expect(generated).toEqual([...])`; `expect(new Set(generated)).toHaveLength(9)` | INV-89 real adapter contract | Yes |
+| Test assertion                                                                                            | Maps to                                | Keep |
+| --------------------------------------------------------------------------------------------------------- | -------------------------------------- | ---- |
+| `identity.test.ts:52` `expect(fromString(value)).toBe(value)`                                             | INV-19 dedicated identity constructors | Yes  |
+| `deterministic-adapters.test.ts:37-40` `expect(ids.nextInvestment...Id()).toBe(...)`                      | INV-78 deterministic internal IDs      | Yes  |
+| `platform.test.ts:47-58` `expect(generated).toEqual([...])`; `expect(new Set(generated)).toHaveLength(9)` | INV-89 real adapter contract           | Yes  |
 
 **Adequacy verdict**: PASS. Eight new assertions across six parameterized/domain and adapter scenarios cover every new identity and generator outcome; assertions verify values and distinctness, not only calls.
 
@@ -420,21 +420,21 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: before T6 Domain: 14 files, 248 tests; after: 15 files, 285 tests. Quick Domain passed: 285/285; check-types, lint and `git diff --check` passed.
 
-| Requirement | Evidence | Spec outcome | Covered |
-| --- | --- | --- | --- |
-| INV-14/15 | `investment-instrument.test.ts:26-59` `expect(...).toMatchObject(...)`; `expect(investmentInstrumentClassFor(type)).toBe(instrumentClass)` | active instrument and normative type-to-class map | Yes |
-| INV-16 | `investment-instrument.test.ts:61-66` `toThrowError(...INVESTMENT_CURRENCY_MISMATCH)` | book-currency mismatch is rejected | Yes |
-| INV-17/18 | `investment-instrument.test.ts:68-103` `toEqual(...)`; `toThrowError(...DUPLICATE_INSTRUMENT_IDENTIFIER)` | scheme normalization and duplicate rejection | Yes |
-| INV-26 | `investment-instrument.test.ts:105-136` `expect(instrument.version).toBe(0)`; immutable type error | metadata versioning and type after use | Yes |
-| INV-114/116 | `investment-instrument.test.ts:138-153` `toThrowError(...INVESTMENT_INSTRUMENT_IN_USE)`; `expect(instrument.status).toBe(...)` | archive guard and reactivation lifecycle | Yes |
-| INV-83/89 | `investment-instrument.test.ts:82-89,167-175` `toThrowError(...INVALID_INVESTMENT_INPUT)` | bounded validation without external-provider dependency | Yes |
+| Requirement | Evidence                                                                                                                                   | Spec outcome                                            | Covered |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------- | ------- |
+| INV-14/15   | `investment-instrument.test.ts:26-59` `expect(...).toMatchObject(...)`; `expect(investmentInstrumentClassFor(type)).toBe(instrumentClass)` | active instrument and normative type-to-class map       | Yes     |
+| INV-16      | `investment-instrument.test.ts:61-66` `toThrowError(...INVESTMENT_CURRENCY_MISMATCH)`                                                      | book-currency mismatch is rejected                      | Yes     |
+| INV-17/18   | `investment-instrument.test.ts:68-103` `toEqual(...)`; `toThrowError(...DUPLICATE_INSTRUMENT_IDENTIFIER)`                                  | scheme normalization and duplicate rejection            | Yes     |
+| INV-26      | `investment-instrument.test.ts:105-136` `expect(instrument.version).toBe(0)`; immutable type error                                         | metadata versioning and type after use                  | Yes     |
+| INV-114/116 | `investment-instrument.test.ts:138-153` `toThrowError(...INVESTMENT_INSTRUMENT_IN_USE)`; `expect(instrument.status).toBe(...)`             | archive guard and reactivation lifecycle                | Yes     |
+| INV-83/89   | `investment-instrument.test.ts:82-89,167-175` `toThrowError(...INVALID_INVESTMENT_INPUT)`                                                  | bounded validation without external-provider dependency | Yes     |
 
-| Test assertion | Maps to | Keep |
-| --- | --- | --- |
-| `investment-instrument.test.ts:45` `expect(investmentInstrumentClassFor(type)).toBe(instrumentClass)` | INV-15 all instrument types | Yes |
-| `investment-instrument.test.ts:81` `expect(...).toEqual({ scheme: "TICKER", value: "PETR4", market: "B3" })` | INV-17 normalization | Yes |
-| `investment-instrument.test.ts:114` `expect(instrument.pullDomainFacts()).toHaveLength(1)` | INV-26 versioned metadata fact | Yes |
-| `investment-instrument.test.ts:147` `toThrowError(...INVESTMENT_INSTRUMENT_IN_USE)` | INV-114 archive guard | Yes |
+| Test assertion                                                                                               | Maps to                        | Keep |
+| ------------------------------------------------------------------------------------------------------------ | ------------------------------ | ---- |
+| `investment-instrument.test.ts:45` `expect(investmentInstrumentClassFor(type)).toBe(instrumentClass)`        | INV-15 all instrument types    | Yes  |
+| `investment-instrument.test.ts:81` `expect(...).toEqual({ scheme: "TICKER", value: "PETR4", market: "B3" })` | INV-17 normalization           | Yes  |
+| `investment-instrument.test.ts:114` `expect(instrument.pullDomainFacts()).toHaveLength(1)`                   | INV-26 versioned metadata fact | Yes  |
+| `investment-instrument.test.ts:147` `toThrowError(...INVESTMENT_INSTRUMENT_IN_USE)`                          | INV-114 archive guard          | Yes  |
 
 **Adequacy verdict**: PASS. Thirty-seven new domain cases map to the normative aggregate contract, including every type, invalid identifier branch, lifecycle path and immutable contract; no assertion relies solely on a mock call.
 
@@ -459,23 +459,23 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: before T7 Domain: 15 files, 285 tests; after: 16 files, 311 tests. `fixed-income-terms.test.ts` adds 26 spec-derived scenarios. Quick Domain, supplemental domain lint and `git diff --check` passed.
 
-| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
-| --- | --- | --- | --- |
-| INV-22 | `fixed-income-terms.test.ts:16` `expect(...).toEqual({ rateKind: "PREFIXED", annualRate: "12.5" })`; `:26` INDEXED; `:37-42` HYBRID; `:7` `toBeUndefined()` | Unknown terms and each complete rate variant are accepted. | Yes |
-| INV-23 | `fixed-income-terms.test.ts:110-116` `expectInvalid(...)`; `:119-130` `expectInvalid(...)`; `:146-151` `expectInvalid(...)`; `:154-157` `expectInvalid(...)` | Terms outside FIXED_INCOME, incomplete variants and invalid known date pairs reject with `INVALID_FIXED_INCOME_TERMS`. | Yes |
-| INV-24 | `fixed-income-terms.test.ts:26` `expect(...).toEqual(...indexPercentage: "105")`; `:88-96` `expect(...).toBe("0")` | 105% and non-negative decimal rates/spreads are accepted without a 100 cap. | Yes |
-| INV-25 | `fixed-income-terms.test.ts:59-64` `expect(...maturityDate).toBe("2020-01-01")` | Elapsed maturity remains descriptive; no remuneration or closing is calculated. | Yes |
-| INV-26 | `fixed-income-terms.test.ts:99-107` `expect(...annualRate).toBe("10")` | Contracted terms remain immutable through snapshot copies. | Yes |
+| Done-when / requirement | Evidence                                                                                                                                                     | Spec-defined outcome                                                                                                   | Covered |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- | ------- |
+| INV-22                  | `fixed-income-terms.test.ts:16` `expect(...).toEqual({ rateKind: "PREFIXED", annualRate: "12.5" })`; `:26` INDEXED; `:37-42` HYBRID; `:7` `toBeUndefined()`  | Unknown terms and each complete rate variant are accepted.                                                             | Yes     |
+| INV-23                  | `fixed-income-terms.test.ts:110-116` `expectInvalid(...)`; `:119-130` `expectInvalid(...)`; `:146-151` `expectInvalid(...)`; `:154-157` `expectInvalid(...)` | Terms outside FIXED_INCOME, incomplete variants and invalid known date pairs reject with `INVALID_FIXED_INCOME_TERMS`. | Yes     |
+| INV-24                  | `fixed-income-terms.test.ts:26` `expect(...).toEqual(...indexPercentage: "105")`; `:88-96` `expect(...).toBe("0")`                                           | 105% and non-negative decimal rates/spreads are accepted without a 100 cap.                                            | Yes     |
+| INV-25                  | `fixed-income-terms.test.ts:59-64` `expect(...maturityDate).toBe("2020-01-01")`                                                                              | Elapsed maturity remains descriptive; no remuneration or closing is calculated.                                        | Yes     |
+| INV-26                  | `fixed-income-terms.test.ts:99-107` `expect(...annualRate).toBe("10")`                                                                                       | Contracted terms remain immutable through snapshot copies.                                                             | Yes     |
 
-| Evidence | Maps to | Keep? |
-| --- | --- | --- |
-| `fixed-income-terms.test.ts:7` `expect(...).toBeUndefined()` | INV-22 unknown terms | Yes |
-| `:16`, `:26`, `:37-42` `expect(...).toEqual(...)` | INV-22 variants | Yes |
-| `:52-56`, `:74` `expect(...).toEqual(...)` | INV-22 partial terms and known dates | Yes |
-| `:64` `expect(...).toBe("2020-01-01")` | INV-25 maturity does not close | Yes |
-| `:85`, `:96` `expect(...).toEqual(...)` / `toBe("0")` | INV-24 allowed index and non-negative rates | Yes |
-| `:107` `expect(...annualRate).toBe("10")` | INV-26 immutable terms snapshot | Yes |
-| `:110-116`, `:119-130`, `:133-143`, `:146-157`, `:167` `expect(...code).toBe("INVALID_FIXED_INCOME_TERMS")` | INV-23 invalid class, components, index/rates and dates | Yes |
+| Evidence                                                                                                    | Maps to                                                 | Keep? |
+| ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- | ----- |
+| `fixed-income-terms.test.ts:7` `expect(...).toBeUndefined()`                                                | INV-22 unknown terms                                    | Yes   |
+| `:16`, `:26`, `:37-42` `expect(...).toEqual(...)`                                                           | INV-22 variants                                         | Yes   |
+| `:52-56`, `:74` `expect(...).toEqual(...)`                                                                  | INV-22 partial terms and known dates                    | Yes   |
+| `:64` `expect(...).toBe("2020-01-01")`                                                                      | INV-25 maturity does not close                          | Yes   |
+| `:85`, `:96` `expect(...).toEqual(...)` / `toBe("0")`                                                       | INV-24 allowed index and non-negative rates             | Yes   |
+| `:107` `expect(...annualRate).toBe("10")`                                                                   | INV-26 immutable terms snapshot                         | Yes   |
+| `:110-116`, `:119-130`, `:133-143`, `:146-157`, `:167` `expect(...code).toBe("INVALID_FIXED_INCOME_TERMS")` | INV-23 invalid class, components, index/rates and dates | Yes   |
 
 **Adequacy verdict**: PASS. The 26 direct assertions cover every selected rate branch, allowed partial/unknown terms, all known-date ordering pairs, immutable snapshots and the stable rejection code. No test relies on a mock or tautology; the Domain co-location follows the Test Coverage Matrix.
 
@@ -500,24 +500,24 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: before T8 Domain: 16 files, 311 tests; after: 17 files, 343 tests. `investment-position.test.ts` adds 32 spec-derived scenarios. Quick Domain, supplemental Domain lint and `git diff --check` passed.
 
-| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
-| --- | --- | --- |
-| INV-19, INV-20 | `investment-position.test.ts:36` `expect(first.id).not.toBe(second.id)`; `:43-47` `expect(...).toMatchObject(...)` | Positions remain distinct; identities and quantity mode remain fixed. | Yes |
-| INV-21, INV-35 | `:55` `expect(...).toMatchObject({ quantity: "10", bookCostMinor: "0", status: "OPEN" })`; `:70-77` `expectInvalid(...)`; `:157-159` `expectInvalid(...)` | Opening does not infer quantity; units/amount opening rules and explicit cost effect are enforced. | Yes |
-| INV-25, INV-26 | `:90-110` `expect(...).toMatchObject({ ...fixedIncomeTerms ... })`; `:113-125` `expect(...type).toBe("InvestmentPositionChanged")` | Terms are retained at opening and metadata changes do not overwrite allocation/contract. | Yes |
-| INV-39, INV-40, INV-46 | `:150-154` `expect(...).toMatchObject({ quantity: "6", bookCostMinor: "600", status: "OPEN" })`; `:170-173`, `:185-188`, `:209-212` | Partial exit changes only supplied cost/units; zero allocation closes; amortization-like effect preserves units. | Yes |
-| INV-51, INV-127, INV-128, INV-129 | `:83-87`, `:223-227`, `:237-241`, `:252-257`, `:268-272`, `:288-291` | Revision starts at 1, advances once only when final allocation changes, and stays independent from version. | Yes |
-| INV-53, INV-62, INV-71 | `:307-310` `expect(...).toMatchObject({ status: "OPEN", closedOn: undefined, allocationRevision: 3 })`; `:318-323` | Corrections reopen auditably; cancelling opening preserves zeroed CLOSED history. | Yes |
-| INV-118, INV-119, INV-144 | `:334`, `:346`, `:357-359`, `:370`, `:407` `expect(...code).toBe("INVESTMENT_ENTITY_NOT_ACTIVE")` | Closed/inactive allocation and inactive reopens reject; active post-close cash flow remains permitted. | Yes |
+| Done-when / requirement           | Evidence                                                                                                                                                  | Spec-defined outcome                                                                                             | Covered |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ------- |
+| INV-19, INV-20                    | `investment-position.test.ts:36` `expect(first.id).not.toBe(second.id)`; `:43-47` `expect(...).toMatchObject(...)`                                        | Positions remain distinct; identities and quantity mode remain fixed.                                            | Yes     |
+| INV-21, INV-35                    | `:55` `expect(...).toMatchObject({ quantity: "10", bookCostMinor: "0", status: "OPEN" })`; `:70-77` `expectInvalid(...)`; `:157-159` `expectInvalid(...)` | Opening does not infer quantity; units/amount opening rules and explicit cost effect are enforced.               | Yes     |
+| INV-25, INV-26                    | `:90-110` `expect(...).toMatchObject({ ...fixedIncomeTerms ... })`; `:113-125` `expect(...type).toBe("InvestmentPositionChanged")`                        | Terms are retained at opening and metadata changes do not overwrite allocation/contract.                         | Yes     |
+| INV-39, INV-40, INV-46            | `:150-154` `expect(...).toMatchObject({ quantity: "6", bookCostMinor: "600", status: "OPEN" })`; `:170-173`, `:185-188`, `:209-212`                       | Partial exit changes only supplied cost/units; zero allocation closes; amortization-like effect preserves units. | Yes     |
+| INV-51, INV-127, INV-128, INV-129 | `:83-87`, `:223-227`, `:237-241`, `:252-257`, `:268-272`, `:288-291`                                                                                      | Revision starts at 1, advances once only when final allocation changes, and stays independent from version.      | Yes     |
+| INV-53, INV-62, INV-71            | `:307-310` `expect(...).toMatchObject({ status: "OPEN", closedOn: undefined, allocationRevision: 3 })`; `:318-323`                                        | Corrections reopen auditably; cancelling opening preserves zeroed CLOSED history.                                | Yes     |
+| INV-118, INV-119, INV-144         | `:334`, `:346`, `:357-359`, `:370`, `:407` `expect(...code).toBe("INVESTMENT_ENTITY_NOT_ACTIVE")`                                                         | Closed/inactive allocation and inactive reopens reject; active post-close cash flow remains permitted.           | Yes     |
 
-| Evidence | Maps to | Keep? |
-| --- | --- | --- |
-| `investment-position.test.ts:36`, `:43-47`, `:55`, `:63-77` | INV-19–21 opening identity and allocation matrix | Yes |
-| `:83-87`, `:102-110`, `:118-139` | INV-25, INV-26, INV-127 metadata, terms and independent revision | Yes |
-| `:150-212` | INV-35, INV-39, INV-40, INV-46 final operation state | Yes |
-| `:223-291`, `:307-323` | INV-51, INV-53, INV-62, INV-71, INV-128, INV-129 correction/revision transitions | Yes |
-| `:334`, `:346`, `:357-370`, `:407` | INV-118, INV-119, INV-144 activity guards | Yes |
-| `:380-387` | INV-127 restore and independent snapshot persistence | Yes |
+| Evidence                                                    | Maps to                                                                          | Keep? |
+| ----------------------------------------------------------- | -------------------------------------------------------------------------------- | ----- |
+| `investment-position.test.ts:36`, `:43-47`, `:55`, `:63-77` | INV-19–21 opening identity and allocation matrix                                 | Yes   |
+| `:83-87`, `:102-110`, `:118-139`                            | INV-25, INV-26, INV-127 metadata, terms and independent revision                 | Yes   |
+| `:150-212`                                                  | INV-35, INV-39, INV-40, INV-46 final operation state                             | Yes   |
+| `:223-291`, `:307-323`                                      | INV-51, INV-53, INV-62, INV-71, INV-128, INV-129 correction/revision transitions | Yes   |
+| `:334`, `:346`, `:357-370`, `:407`                          | INV-118, INV-119, INV-144 activity guards                                        | Yes   |
+| `:380-387`                                                  | INV-127 restore and independent snapshot persistence                             | Yes   |
 
 **Adequacy verdict**: PASS. The 32 direct assertions cover every opening branch, economic final state, cancellation/reopening path, revision invariant, contract snapshot and activity guard assigned to T8. No test relies on a mock or tautology; the Domain co-location follows the Test Coverage Matrix.
 
@@ -542,20 +542,20 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: before T9 Domain: 17 files, 343 tests; after: 18 files, 364 tests. `investment-operation.test.ts` adds 21 spec-derived scenarios. Quick Domain, supplemental Domain lint and `git diff --check` passed.
 
-| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
-| --- | --- | --- |
-| INV-34, INV-132 | `investment-operation.test.ts:43-54` `expect(...).toMatchObject({ role: "BUSINESS", quantityDelta: "-4", bookCostDeltaMinor: "-400", netCashFlowMinor: "470", positionBefore: ... })` | Normalized authoritative effects, explicit cash mode and prior economic state persist. | Yes |
-| INV-61, INV-63, INV-68 | `:75-81` `expect(...reversedBy).toMatchObject(...)`; `:155` `expect(reversal.isEffective()).toBe(false)`; `:169-171` `expect(...id).toBe("operation-0")` | Lineage changes only links/version; an unlinked BUSINESS fact is the only effective candidate. | Yes |
-| INV-72, INV-73, INV-134 | `:111-128` `expect(...).toMatchObject({ occurredOn: "2026-01-02", recordedAt: "2026-02-01T10:00:00.000Z" ... })`; `:158-169` invalid sequence/timestamp rejection | Sequence is positive persisted text; reversal preserves original occurrence and records the real correction instant. | Yes |
-| INV-133 | `:120-128` `expect(...quantityDelta).toBe("4")` and `bookCostDeltaMinor: "400"`, `netCashFlowMinor: "-470"`; `:140-144` descriptive amounts | Reversal inverses stored deltas without recalculating descriptive amounts. | Yes |
-| INV-81 | `:59-63` `expect(...).toMatchObject({ type: "InvestmentOperationRecorded", aggregateId: "operation-1", aggregateVersion: 0 })` | Recorded operation emits a typed versioned fact. | Yes |
+| Done-when / requirement | Evidence                                                                                                                                                                              | Spec-defined outcome                                                                                                 | Covered |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ------- |
+| INV-34, INV-132         | `investment-operation.test.ts:43-54` `expect(...).toMatchObject({ role: "BUSINESS", quantityDelta: "-4", bookCostDeltaMinor: "-400", netCashFlowMinor: "470", positionBefore: ... })` | Normalized authoritative effects, explicit cash mode and prior economic state persist.                               | Yes     |
+| INV-61, INV-63, INV-68  | `:75-81` `expect(...reversedBy).toMatchObject(...)`; `:155` `expect(reversal.isEffective()).toBe(false)`; `:169-171` `expect(...id).toBe("operation-0")`                              | Lineage changes only links/version; an unlinked BUSINESS fact is the only effective candidate.                       | Yes     |
+| INV-72, INV-73, INV-134 | `:111-128` `expect(...).toMatchObject({ occurredOn: "2026-01-02", recordedAt: "2026-02-01T10:00:00.000Z" ... })`; `:158-169` invalid sequence/timestamp rejection                     | Sequence is positive persisted text; reversal preserves original occurrence and records the real correction instant. | Yes     |
+| INV-133                 | `:120-128` `expect(...quantityDelta).toBe("4")` and `bookCostDeltaMinor: "400"`, `netCashFlowMinor: "-470"`; `:140-144` descriptive amounts                                           | Reversal inverses stored deltas without recalculating descriptive amounts.                                           | Yes     |
+| INV-81                  | `:59-63` `expect(...).toMatchObject({ type: "InvestmentOperationRecorded", aggregateId: "operation-1", aggregateVersion: 0 })`                                                        | Recorded operation emits a typed versioned fact.                                                                     | Yes     |
 
-| Evidence | Maps to | Keep? |
-| --- | --- | --- |
-| `investment-operation.test.ts:43-67`, `:178-201` | Persisted operation contract, optional references and snapshot cloning | Yes |
-| `:75-108`, `:147-155` | INV-61, INV-63, INV-68 lineage and effective-state boundaries | Yes |
-| `:111-144` | INV-73, INV-132, INV-133, INV-134 reversal contract | Yes |
-| `:158-175`, `:204-208`, `:218` | Sequence/timestamp/delta validation and restore behavior | Yes |
+| Evidence                                         | Maps to                                                                | Keep? |
+| ------------------------------------------------ | ---------------------------------------------------------------------- | ----- |
+| `investment-operation.test.ts:43-67`, `:178-201` | Persisted operation contract, optional references and snapshot cloning | Yes   |
+| `:75-108`, `:147-155`                            | INV-61, INV-63, INV-68 lineage and effective-state boundaries          | Yes   |
+| `:111-144`                                       | INV-73, INV-132, INV-133, INV-134 reversal contract                    | Yes   |
+| `:158-175`, `:204-208`, `:218`                   | Sequence/timestamp/delta validation and restore behavior               | Yes   |
 
 **Adequacy verdict**: PASS. The 21 direct assertions cover every aggregate-owned role, lineage, stored-delta, reversal and ordering branch. Journal coordination, generic journal protection and coordinated position correction remain in their explicitly assigned later tasks; no test relies on a mock or tautology.
 
@@ -580,18 +580,18 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: before T10 Domain: 18 files, 364 tests; after: 19 files, 380 tests. `investment-valuation.test.ts` adds 16 spec-derived scenarios. Quick Domain, Domain lint, Domain build and `git diff --check` passed.
 
-| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
-| --- | --- | --- |
-| INV-47, INV-49 | `investment-valuation.test.ts:33-39` `expect(...).toMatchObject({ source: "MANUAL", grossValueMinor: "1200", allocationRevision: 2 })`; `:39` `expect(...).toEqual([])` | Manual values are immutable observations with no aggregate fact, journal or position mutation. | Yes |
-| INV-48, INV-142 | `:59-68`, `:69-80`, `:91-102`, `:121` `expect(...code).toBe("INVALID_INVESTMENT_VALUATION")` | Negative values, mismatch currency/quantity and invalid value timestamps reject with the stable valuation code. | Yes |
-| INV-59 | `:46-50` `expect(...).toMatchObject({ netValueMinor: undefined, withdrawableValueMinor: undefined, grossValueMinor: "1200" })` | Unknown optional values remain absent, not zero or gross. | Yes |
-| INV-82, INV-83, INV-84 | `:93-97` `expect(...unitPrice).toBe("120.5")`; `:98-106` `expectInvalid(...)` | Decimal values are canonical and invalid temporal/sequence input rejects. | Yes |
+| Done-when / requirement | Evidence                                                                                                                                                                | Spec-defined outcome                                                                                            | Covered |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ------- |
+| INV-47, INV-49          | `investment-valuation.test.ts:33-39` `expect(...).toMatchObject({ source: "MANUAL", grossValueMinor: "1200", allocationRevision: 2 })`; `:39` `expect(...).toEqual([])` | Manual values are immutable observations with no aggregate fact, journal or position mutation.                  | Yes     |
+| INV-48, INV-142         | `:59-68`, `:69-80`, `:91-102`, `:121` `expect(...code).toBe("INVALID_INVESTMENT_VALUATION")`                                                                            | Negative values, mismatch currency/quantity and invalid value timestamps reject with the stable valuation code. | Yes     |
+| INV-59                  | `:46-50` `expect(...).toMatchObject({ netValueMinor: undefined, withdrawableValueMinor: undefined, grossValueMinor: "1200" })`                                          | Unknown optional values remain absent, not zero or gross.                                                       | Yes     |
+| INV-82, INV-83, INV-84  | `:93-97` `expect(...unitPrice).toBe("120.5")`; `:98-106` `expectInvalid(...)`                                                                                           | Decimal values are canonical and invalid temporal/sequence input rejects.                                       | Yes     |
 
-| Evidence | Maps to | Keep? |
-| --- | --- | --- |
-| `investment-valuation.test.ts:33-58`, `:108-112` | INV-47, INV-49, INV-59 immutable append-only snapshot | Yes |
-| `:59-102`, `:104-106`, `:121` | INV-48, INV-142 invalid monetary, quantity and temporal paths | Yes |
-| `:93-97` | INV-82, INV-83 canonical precise unit price | Yes |
+| Evidence                                         | Maps to                                                       | Keep? |
+| ------------------------------------------------ | ------------------------------------------------------------- | ----- |
+| `investment-valuation.test.ts:33-58`, `:108-112` | INV-47, INV-49, INV-59 immutable append-only snapshot         | Yes   |
+| `:59-102`, `:104-106`, `:121`                    | INV-48, INV-142 invalid monetary, quantity and temporal paths | Yes   |
+| `:93-97`                                         | INV-82, INV-83 canonical precise unit price                   | Yes   |
 
 **Adequacy verdict**: PASS. The 16 direct assertions cover every task-owned optional-value, quantity, currency, precision and immutability branch. No test relies on a mock or tautology; the Domain co-location follows the Test Coverage Matrix.
 
@@ -618,17 +618,17 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: before T11 Domain: 19 files, 380 tests; after: 20 files, 404 tests. `investment-accounting-plan.test.ts` adds 24 spec-derived scenarios. Quick Domain passed: 20 files, 404 tests, 0 failures; `check-types` passed.
 
-| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
-| --- | --- | --- |
-| INV-27, INV-29, INV-30, INV-125 | `investment-accounting-plan.test.ts:28-31`, `:45-47` `expect(result.bookCostDeltaMinor).toBe(cost)` | Opening has no journal; purchase/application preserves principal and never capitalizes fees/taxes. | Yes |
-| INV-35–INV-46, INV-126 | `:32-42`, `:45-47` `expect(...postings).toEqual(expected)` | Sale/redemption/amortization/income/fee/tax use literal principal, result, expenses and cash deltas. | Yes |
-| INV-45 | `:36`, `:47` `expect(...).toEqual([])` | Internal sale at cost with no expenses produces no empty journal. | Yes |
-| INV-36, INV-132 | `:50-61` `expect(...).toThrow("Invalid investment accounting plan")` | Impossible routes, required categories, negative net cash and malformed monetary values reject. | Yes |
+| Done-when / requirement         | Evidence                                                                                            | Spec-defined outcome                                                                                 | Covered |
+| ------------------------------- | --------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ------- |
+| INV-27, INV-29, INV-30, INV-125 | `investment-accounting-plan.test.ts:28-31`, `:45-47` `expect(result.bookCostDeltaMinor).toBe(cost)` | Opening has no journal; purchase/application preserves principal and never capitalizes fees/taxes.   | Yes     |
+| INV-35–INV-46, INV-126          | `:32-42`, `:45-47` `expect(...postings).toEqual(expected)`                                          | Sale/redemption/amortization/income/fee/tax use literal principal, result, expenses and cash deltas. | Yes     |
+| INV-45                          | `:36`, `:47` `expect(...).toEqual([])`                                                              | Internal sale at cost with no expenses produces no empty journal.                                    | Yes     |
+| INV-36, INV-132                 | `:50-61` `expect(...).toThrow("Invalid investment accounting plan")`                                | Impossible routes, required categories, negative net cash and malformed monetary values reject.      | Yes     |
 
-| Test assertion | Maps to | Keep |
-| --- | --- | --- |
-| `investment-accounting-plan.test.ts:45-47` | INV-27, INV-29, INV-30, INV-35–INV-46, INV-125, INV-126 literal accounting matrix | Yes |
-| `:61` | INV-36 invalid operation boundaries | Yes |
+| Test assertion                             | Maps to                                                                           | Keep |
+| ------------------------------------------ | --------------------------------------------------------------------------------- | ---- |
+| `investment-accounting-plan.test.ts:45-47` | INV-27, INV-29, INV-30, INV-35–INV-46, INV-125, INV-126 literal accounting matrix | Yes  |
+| `:61`                                      | INV-36 invalid operation boundaries                                               | Yes  |
 
 **Adequacy verdict**: PASS. The 24 assertions cover every planner operation branch, no-empty-journal grouping and required invalid inputs with literal spec outcomes.
 
@@ -653,12 +653,12 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: before T12 Application: 18 files, 209 tests; after: 19 files, 218 tests. `investment-commands.test.ts` adds 9 spec-derived scenarios. Quick Application passed: 19 files, 218 tests, 0 failures; application check-types passed after Domain build.
 
-| Requirement | Evidence | Spec-defined outcome | Covered |
-| --- | --- | --- | --- |
-| INV-36, INV-82, INV-83 | `investment-commands.test.ts:25`, `:34`, `:42` `expect(...).toMatchObject(...)` | Drafts preserve explicit strings for cost, gross and expense values. | Yes |
-| INV-74, INV-78, INV-79 | `:13`, `:45-49` `expect(receipt).toMatchObject({ formatVersion: 1, result: ... })` | bookId/requestId envelope and versioned canonical receipt preserve replay result. | Yes |
-| INV-145 | `:39` `expect(warning).toEqual(...)` | Warning exposes code, investment account, cash, currency and asOf. | Yes |
-| INV-89, INV-90 | `:51` `expectTypeOf<InvestmentOperationDraft>().not.toHaveProperty("postings")` | Contract accepts no arbitrary postings or provider surface. | Yes |
+| Requirement            | Evidence                                                                           | Spec-defined outcome                                                              | Covered |
+| ---------------------- | ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | ------- |
+| INV-36, INV-82, INV-83 | `investment-commands.test.ts:25`, `:34`, `:42` `expect(...).toMatchObject(...)`    | Drafts preserve explicit strings for cost, gross and expense values.              | Yes     |
+| INV-74, INV-78, INV-79 | `:13`, `:45-49` `expect(receipt).toMatchObject({ formatVersion: 1, result: ... })` | bookId/requestId envelope and versioned canonical receipt preserve replay result. | Yes     |
+| INV-145                | `:39` `expect(warning).toEqual(...)`                                               | Warning exposes code, investment account, cash, currency and asOf.                | Yes     |
+| INV-89, INV-90         | `:51` `expectTypeOf<InvestmentOperationDraft>().not.toHaveProperty("postings")`    | Contract accepts no arbitrary postings or provider surface.                       | Yes     |
 
 **Adequacy verdict**: PASS. Every assertion maps to a public command boundary; routes are discriminated and all result/warning payload fields are asserted.
 
@@ -683,11 +683,11 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: before T13 Application: 19 files, 218 tests; after: 20 files, 224 tests. `investment-repositories.test.ts` adds 6 contract scenarios. Quick Application passed: 20 files, 224 tests, 0 failures; application check-types passed after Domain build.
 
-| Requirement | Evidence | Spec-defined outcome | Covered |
-| --- | --- | --- | --- |
-| INV-74 | `investment-repositories.test.ts:6-8` `expect(...).toEqual(["FOUND", "NOT_FOUND", "BOOK_MISMATCH"])` | Book lookup distinguishes absence from another book. | Yes |
-| INV-75, INV-76, INV-78, INV-88 | `:9-12` `expectTypeOf<Parameters<...>>().toEqualTypeOf<...>()` | Receipt, sequence, valuation and scoped reads remain typed at the application boundary. | Yes |
-| INV-89, INV-132 | `:13` `expectTypeOf<RepositoryContext>().not.toHaveProperty("investmentPositions")` | New ports are additive and do not require infrastructure or legacy context changes. | Yes |
+| Requirement                    | Evidence                                                                                             | Spec-defined outcome                                                                    | Covered |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | ------- |
+| INV-74                         | `investment-repositories.test.ts:6-8` `expect(...).toEqual(["FOUND", "NOT_FOUND", "BOOK_MISMATCH"])` | Book lookup distinguishes absence from another book.                                    | Yes     |
+| INV-75, INV-76, INV-78, INV-88 | `:9-12` `expectTypeOf<Parameters<...>>().toEqualTypeOf<...>()`                                       | Receipt, sequence, valuation and scoped reads remain typed at the application boundary. | Yes     |
+| INV-89, INV-132                | `:13` `expectTypeOf<RepositoryContext>().not.toHaveProperty("investmentPositions")`                  | New ports are additive and do not require infrastructure or legacy context changes.     | Yes     |
 
 **Adequacy verdict**: PASS. The six contract checks cover lookup discrimination, append-only/idempotent stores and scoped transaction reads.
 
@@ -758,11 +758,11 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: before T16 Application: 21 files, 233 tests; after: 21 files, 235 tests. Existing executor coverage plus two post-commit scenarios cover ten commit/dispatch/error branches. Quick Application and Build passed: 21 files, 235 tests, 0 failures; check-types, eslint, application build and `git diff --check` passed after Domain build.
 
-| Requirement | Evidence | Spec-defined outcome | Covered |
-| --- | --- | --- | --- |
-| INV-75, INV-78 | `use-case-executor.test.ts:411-424` `expect(result).toEqual(Result.ok("saved"))` | A known committed result stays successful when dispatch and reporter fail. | Yes |
-| INV-80, INV-81 | `:426-438` `expect(result.error.code).toBe("UNEXPECTED_ERROR")`; existing `:383-402` publish-after-commit assertions | Default legacy behavior is retained; events remain post-commit. | Yes |
-| INV-90 | `use-case-executor.ts:20-25` maps post-commit failure to stable ApplicationError before reporting. | Reporter observes only stable error context, not a financial payload. | Yes |
+| Requirement    | Evidence                                                                                                             | Spec-defined outcome                                                       | Covered |
+| -------------- | -------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- | ------- |
+| INV-75, INV-78 | `use-case-executor.test.ts:411-424` `expect(result).toEqual(Result.ok("saved"))`                                     | A known committed result stays successful when dispatch and reporter fail. | Yes     |
+| INV-80, INV-81 | `:426-438` `expect(result.error.code).toBe("UNEXPECTED_ERROR")`; existing `:383-402` publish-after-commit assertions | Default legacy behavior is retained; events remain post-commit.            | Yes     |
+| INV-90         | `use-case-executor.ts:20-25` maps post-commit failure to stable ApplicationError before reporting.                   | Reporter observes only stable error context, not a financial payload.      | Yes     |
 
 **Adequacy verdict**: PASS. The post-commit tests assert the two mutually exclusive policies and existing tests retain pre-commit rollback/error behavior and event order.
 
@@ -789,20 +789,20 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: baseline SQLite: 39 files, 692 tests; after: 40 files, 703 tests. Full SQLite passed: Domain/Application/Memory builds, SQLite 703/703 tests, migration manifest check and typecheck.
 
-| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
-| --- | --- | --- |
-| INV-01, INV-03 | `tests/migrations/investment-migrations.test.ts:87-103` `rejects.toThrow("financial account profile must match")` | profiles accept only matching non-system financial parent accounts | Yes |
-| INV-05, INV-06 | `:53-72` `resolves.toEqual([...OTHER_ASSET, OTHER_LIABILITY])`; `:75-84` `resolves.toEqual([{ version: 7 }])` | active/archived ASSET and LIABILITY backfill once; categories/system, account versions and postings remain intact | Yes |
-| INV-85, INV-86 | `:39-50` `sql: expect.stringContaining("STRICT")`; `:134-140` migration list is `1..5` after repeated execution | empty and v4 databases get strict, book-scoped profiles without modifying prior migrations | Yes |
-| INV-87 | `:143-150` `resolves.toEqual([])` / versions `1..4` | failed v5 rolls back only itself and can be retried | Yes |
-| INV-88 | `:106-131` exact child profile selection and invalid settlement assertions | persisted profile relations retain book-scoped parent integrity | Yes |
+| Done-when / requirement | Evidence                                                                                                          | Spec-defined outcome                                                                                              | Covered |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ------- |
+| INV-01, INV-03          | `tests/migrations/investment-migrations.test.ts:87-103` `rejects.toThrow("financial account profile must match")` | profiles accept only matching non-system financial parent accounts                                                | Yes     |
+| INV-05, INV-06          | `:53-72` `resolves.toEqual([...OTHER_ASSET, OTHER_LIABILITY])`; `:75-84` `resolves.toEqual([{ version: 7 }])`     | active/archived ASSET and LIABILITY backfill once; categories/system, account versions and postings remain intact | Yes     |
+| INV-85, INV-86          | `:39-50` `sql: expect.stringContaining("STRICT")`; `:134-140` migration list is `1..5` after repeated execution   | empty and v4 databases get strict, book-scoped profiles without modifying prior migrations                        | Yes     |
+| INV-87                  | `:143-150` `resolves.toEqual([])` / versions `1..4`                                                               | failed v5 rolls back only itself and can be retried                                                               | Yes     |
+| INV-88                  | `:106-131` exact child profile selection and invalid settlement assertions                                        | persisted profile relations retain book-scoped parent integrity                                                   | Yes     |
 
-| Test assertion | Maps to | Keep |
-| --- | --- | --- |
-| `investment-migrations.test.ts:60-64` `resolves.toEqual([...])` | INV-05/06 normative OTHER backfill | Yes |
-| `:92`, `:100`, `:103` `rejects.toThrow(...)` | INV-01/03 profile parent constraints | Yes |
-| `:111`, `:119`, `:128`, `:131` direct relation assertions | INV-01/03 investment-profile and settlement constraints | Yes |
-| `:140`, `:149-150` migration-state assertions | INV-85/86/87 repeatability and rollback | Yes |
+| Test assertion                                                  | Maps to                                                 | Keep |
+| --------------------------------------------------------------- | ------------------------------------------------------- | ---- |
+| `investment-migrations.test.ts:60-64` `resolves.toEqual([...])` | INV-05/06 normative OTHER backfill                      | Yes  |
+| `:92`, `:100`, `:103` `rejects.toThrow(...)`                    | INV-01/03 profile parent constraints                    | Yes  |
+| `:111`, `:119`, `:128`, `:131` direct relation assertions       | INV-01/03 investment-profile and settlement constraints | Yes  |
+| `:140`, `:149-150` migration-state assertions                   | INV-85/86/87 repeatability and rollback                 | Yes  |
 
 **Adequacy verdict**: PASS. Eleven integration scenarios assert schema state, persisted values and rollback metadata directly. No scenario relies solely on mock calls; existing SQLite migration-test conventions were followed.
 
@@ -827,20 +827,20 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: before T18 SQLite: 40 files, 703 tests; after: 40 files, 712 tests. Full SQLite passed: dependency builds, SQLite 712/712 tests, generated manifest check and typecheck.
 
-| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
-| --- | --- | --- |
-| INV-14 | `tests/migrations/investment-migrations.test.ts:154-162` `sql: expect.stringContaining("STRICT")`; `:218-227` rejects invalid enum/currency/status | instrument catalog is strict and preserves the approved type/lifecycle value set | Yes |
-| INV-17 | `:177-198` exact TICKER `market: "B3"`, ISIN `market: ""`, and invalid market rejections | TICKER requires market, ISIN forbids it, and missing market is canonical empty text | Yes |
-| INV-18 | `:201-215` collision and foreign-key rejection assertions | normalized identifier is unique per book/scheme/market and cannot cross books | Yes |
-| INV-74 | `:210-215` `rejects.toThrow()` | a child identifier cannot reference a parent from another book | Yes |
-| INV-85, INV-86, INV-87 | `:230-242` version `1..6`, absent tables and preserved `1..5` assertions | reexecution is safe and a failed v6 rolls back only itself | Yes |
+| Done-when / requirement | Evidence                                                                                                                                           | Spec-defined outcome                                                                | Covered |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ------- |
+| INV-14                  | `tests/migrations/investment-migrations.test.ts:154-162` `sql: expect.stringContaining("STRICT")`; `:218-227` rejects invalid enum/currency/status | instrument catalog is strict and preserves the approved type/lifecycle value set    | Yes     |
+| INV-17                  | `:177-198` exact TICKER `market: "B3"`, ISIN `market: ""`, and invalid market rejections                                                           | TICKER requires market, ISIN forbids it, and missing market is canonical empty text | Yes     |
+| INV-18                  | `:201-215` collision and foreign-key rejection assertions                                                                                          | normalized identifier is unique per book/scheme/market and cannot cross books       | Yes     |
+| INV-74                  | `:210-215` `rejects.toThrow()`                                                                                                                     | a child identifier cannot reference a parent from another book                      | Yes     |
+| INV-85, INV-86, INV-87  | `:230-242` version `1..6`, absent tables and preserved `1..5` assertions                                                                           | reexecution is safe and a failed v6 rolls back only itself                          | Yes     |
 
-| Test assertion | Maps to | Keep |
-| --- | --- | --- |
-| `investment-migrations.test.ts:182` exact ticker row | INV-17 canonical market | Yes |
-| `:190` `market: ""` | INV-17 ISIN canonical market | Yes |
-| `:197-198`, `:207`, `:215` rejections | INV-17/18/74 schema integrity | Yes |
-| `:234`, `:241-242` migration-state assertions | INV-85/86/87 retry and rollback | Yes |
+| Test assertion                                       | Maps to                         | Keep |
+| ---------------------------------------------------- | ------------------------------- | ---- |
+| `investment-migrations.test.ts:182` exact ticker row | INV-17 canonical market         | Yes  |
+| `:190` `market: ""`                                  | INV-17 ISIN canonical market    | Yes  |
+| `:197-198`, `:207`, `:215` rejections                | INV-17/18/74 schema integrity   | Yes  |
+| `:234`, `:241-242` migration-state assertions        | INV-85/86/87 retry and rollback | Yes  |
 
 **Adequacy verdict**: PASS. Nine integration scenarios assert persisted canonical fields, unique/FK constraints, strict values and retry state. No mock-only assertion or unclaimed scenario was added.
 
@@ -865,11 +865,11 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: before T19 SQLite: 40 files, 712 tests; after: 40 files, 720 tests. Full SQLite passed: dependency builds, SQLite 720/720, manifest check and typecheck.
 
-| Requirement | Evidence | Outcome | Covered |
-| --- | --- | --- | --- |
-| INV-19, INV-20, INV-21, INV-127 | `tests/migrations/investment-migrations.test.ts:256-264` exact two-position and invalid quantity/revision assertions | multiple positions are allowed; mode and revision constraints persist | Yes |
-| INV-22, INV-23 | `:266-267` exact three rate kinds; `:268` invalid variant/date rejections | all complete variants persist; incomplete and reversed dates reject | Yes |
-| INV-74, INV-85, INV-86 | `:265`, `:269` FK and v7 rollback assertions | book-scoped parents and migration atomicity hold | Yes |
+| Requirement                     | Evidence                                                                                                             | Outcome                                                               | Covered |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- | ------- |
+| INV-19, INV-20, INV-21, INV-127 | `tests/migrations/investment-migrations.test.ts:256-264` exact two-position and invalid quantity/revision assertions | multiple positions are allowed; mode and revision constraints persist | Yes     |
+| INV-22, INV-23                  | `:266-267` exact three rate kinds; `:268` invalid variant/date rejections                                            | all complete variants persist; incomplete and reversed dates reject   | Yes     |
+| INV-74, INV-85, INV-86          | `:265`, `:269` FK and v7 rollback assertions                                                                         | book-scoped parents and migration atomicity hold                      | Yes     |
 
 **Adequacy verdict**: PASS. Eight integration scenarios assert stored rows and direct SQL rejection paths; all map to the task requirements and avoid mock-only coverage.
 
@@ -965,12 +965,12 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: before T23 SQLite: 40 files, 746 tests; after: 40 files, 761 tests. Full SQLite passed: Domain/Application/Memory builds, SQLite 761/761 tests, generated migration manifest check and SQLite typecheck.
 
-| Requirement / done-when | Evidence | Spec-defined outcome | Covered |
-| --- | --- | --- | --- |
-| INV-01, INV-04, INV-11, INV-88 | `sqlite-ledger-account-repository.test.ts:176-198` `expect(...toSnapshot()).toEqual(investment.toSnapshot())` | Investment account profile, optional metadata and settlement round-trip with the account identity and version. | Yes |
-| INV-03, INV-74, INV-76 | `sqlite-ledger-account-repository.test.ts:201-226` `expect(...toSnapshot()).toEqual(updated.toSnapshot())`; `:247-267` `rejects.toMatchObject({ code: "UNEXPECTED_ERROR" })` and `resolves.toBeNull()` | CAS persists the profile atomically; an invalid settlement cannot leave a persisted aggregate. | Yes |
-| INV-05, INV-06, INV-07 | `persistence-contracts.test.ts:58-80` explicit OTHER profile fixtures; `sqlite-ledger-account-repository.test.ts:229-245` `expect(...toSnapshot()).toEqual(updated.toSnapshot())` | Financial types remain compatible with their ASSET/LIABILITY aggregate; same-kind reclassification retains account identity and versioned state. | Yes |
-| INV-76, INV-88 | `ledger-account-mapper.test.ts:105-129` `toThrow(...)` assertions | A post-migration financial account with missing or malformed profile data is rejected during restore. | Yes |
+| Requirement / done-when        | Evidence                                                                                                                                                                                               | Spec-defined outcome                                                                                                                             | Covered |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------- |
+| INV-01, INV-04, INV-11, INV-88 | `sqlite-ledger-account-repository.test.ts:176-198` `expect(...toSnapshot()).toEqual(investment.toSnapshot())`                                                                                          | Investment account profile, optional metadata and settlement round-trip with the account identity and version.                                   | Yes     |
+| INV-03, INV-74, INV-76         | `sqlite-ledger-account-repository.test.ts:201-226` `expect(...toSnapshot()).toEqual(updated.toSnapshot())`; `:247-267` `rejects.toMatchObject({ code: "UNEXPECTED_ERROR" })` and `resolves.toBeNull()` | CAS persists the profile atomically; an invalid settlement cannot leave a persisted aggregate.                                                   | Yes     |
+| INV-05, INV-06, INV-07         | `persistence-contracts.test.ts:58-80` explicit OTHER profile fixtures; `sqlite-ledger-account-repository.test.ts:229-245` `expect(...toSnapshot()).toEqual(updated.toSnapshot())`                      | Financial types remain compatible with their ASSET/LIABILITY aggregate; same-kind reclassification retains account identity and versioned state. | Yes     |
+| INV-76, INV-88                 | `ledger-account-mapper.test.ts:105-129` `toThrow(...)` assertions                                                                                                                                      | A post-migration financial account with missing or malformed profile data is rejected during restore.                                            | Yes     |
 
 **Adequacy verdict**: PASS. The 15 added focused scenarios assert persisted state and rollback outcomes, not only SQL calls. Each maps to T23 requirements; the adapted contract/query fixtures preserve their existing assertions under strict restore.
 
@@ -995,12 +995,12 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: before T24 SQLite: 40 files, 761 tests; after: 41 files, 774 tests. Full SQLite passed: Domain/Application/Memory builds, SQLite 774/774 tests, generated migration manifest check and SQLite typecheck.
 
-| Requirement / done-when | Evidence | Spec-defined outcome | Covered |
-| --- | --- | --- | --- |
-| INV-14, INV-16, INV-17 | `sqlite-investment-instrument-repository.test.ts:67-81` `expect(...toSnapshot()).toEqual(value.toSnapshot())`; `:103-127` `resolves.toBe(true)` | Scalar fields and normalized TICKER/ISIN identifiers persist and restore exactly. | Yes |
-| INV-18, INV-74 | `sqlite-investment-instrument-repository.test.ts:84-91` `resolves.toEqual({ kind: "BOOK_MISMATCH" })`; `:177-193` duplicate rejects and second lookup is `NOT_FOUND` | Other-book lookup exposes no entity; duplicate normalized identifier rolls back its instrument. | Yes |
-| INV-26, INV-76 | `sqlite-investment-instrument-repository.test.ts:159-174` `expect(value.version).toBe(0)`; `:196-244` snapshot equality after CAS and stale failure | Metadata no-op preserves version; save replaces children only with the exact next version. | Yes |
-| INV-88, INV-114, INV-116 | `sqlite-investment-instrument-repository.test.ts:94-100` `resolves.toBeUndefined()`; `:130-156` scoped/excluded identifier assertions | Reconstructed instruments preserve independent IDs, and repository uniqueness is book-scoped without treating a display name as an identifier key. | Yes |
+| Requirement / done-when  | Evidence                                                                                                                                                             | Spec-defined outcome                                                                                                                               | Covered |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| INV-14, INV-16, INV-17   | `sqlite-investment-instrument-repository.test.ts:67-81` `expect(...toSnapshot()).toEqual(value.toSnapshot())`; `:103-127` `resolves.toBe(true)`                      | Scalar fields and normalized TICKER/ISIN identifiers persist and restore exactly.                                                                  | Yes     |
+| INV-18, INV-74           | `sqlite-investment-instrument-repository.test.ts:84-91` `resolves.toEqual({ kind: "BOOK_MISMATCH" })`; `:177-193` duplicate rejects and second lookup is `NOT_FOUND` | Other-book lookup exposes no entity; duplicate normalized identifier rolls back its instrument.                                                    | Yes     |
+| INV-26, INV-76           | `sqlite-investment-instrument-repository.test.ts:159-174` `expect(value.version).toBe(0)`; `:196-244` snapshot equality after CAS and stale failure                  | Metadata no-op preserves version; save replaces children only with the exact next version.                                                         | Yes     |
+| INV-88, INV-114, INV-116 | `sqlite-investment-instrument-repository.test.ts:94-100` `resolves.toBeUndefined()`; `:130-156` scoped/excluded identifier assertions                                | Reconstructed instruments preserve independent IDs, and repository uniqueness is book-scoped without treating a display name as an identifier key. | Yes     |
 
 **Adequacy verdict**: PASS. The 13 scenarios assert returned snapshots, typed lookup envelopes, child state and rollback. Each is requirement-bound; no assertion is only a mock-call count.
 
@@ -1025,22 +1025,22 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: before T25 SQLite: 41 files, 774 tests; after: 42 files, 787 tests. Full SQLite passed: Domain/Application/Memory builds, SQLite 787/787 tests, generated migration manifest check, SQLite typecheck and `git diff --check`.
 
-| Requirement / done-when | Evidence | Spec-defined outcome | Covered |
-| --- | --- | --- | --- |
-| INV-19, INV-20, INV-21, INV-22, INV-23, INV-127 | `sqlite-investment-position-repository.test.ts:120-122` `expect(...toSnapshot()).toEqual(value.toSnapshot())`; `:136-138` same assertion for AMOUNT without quantity/terms | Separate positions retain identity; units or absent AMOUNT quantity, fixed-income terms, exact cost and allocation revision round-trip. | Yes |
-| INV-74, INV-113, INV-114 | `sqlite-investment-position-repository.test.ts:146-148` `resolves.toEqual({ kind: "BOOK_MISMATCH" })`; `:161-166` `expect(...kind).toBe("FOUND")`; `:181-186` current/historical account usage | A foreign-book position is not exposed; same account/instrument positions are distinct; current and historical uses remain queryable. | Yes |
-| INV-26, INV-76, INV-128 | `sqlite-investment-position-repository.test.ts:241-243` `expect(...toSnapshot()).toEqual(updated.toSnapshot())`; `:253-259` stale save rejection and unchanged snapshot; `:273-279` immutable change rejection and original snapshot | A valid next version preserves allocation state; stale or immutable rewrites do not overwrite persisted data. | Yes |
-| INV-88, INV-113, INV-114 | `sqlite-investment-position-repository.test.ts:198-203` `hasAnyForInstrument(...).resolves.toBe(true)` and `hasOpenForInstrument(...).resolves.toBe(false)`; `:211-216` foreign-book usage is false | Repository restores scalar data and distinguishes historical/open use in the requested book only. | Yes |
-| state corruption | `sqlite-investment-position-repository.test.ts:292-294` `rejects.toMatchObject({ code: "INVALID_INVESTMENT_OPERATION" })` | A persisted CLOSED position without closedOn is not reconstructed as valid domain state. | Yes |
+| Requirement / done-when                         | Evidence                                                                                                                                                                                                                             | Spec-defined outcome                                                                                                                    | Covered |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| INV-19, INV-20, INV-21, INV-22, INV-23, INV-127 | `sqlite-investment-position-repository.test.ts:120-122` `expect(...toSnapshot()).toEqual(value.toSnapshot())`; `:136-138` same assertion for AMOUNT without quantity/terms                                                           | Separate positions retain identity; units or absent AMOUNT quantity, fixed-income terms, exact cost and allocation revision round-trip. | Yes     |
+| INV-74, INV-113, INV-114                        | `sqlite-investment-position-repository.test.ts:146-148` `resolves.toEqual({ kind: "BOOK_MISMATCH" })`; `:161-166` `expect(...kind).toBe("FOUND")`; `:181-186` current/historical account usage                                       | A foreign-book position is not exposed; same account/instrument positions are distinct; current and historical uses remain queryable.   | Yes     |
+| INV-26, INV-76, INV-128                         | `sqlite-investment-position-repository.test.ts:241-243` `expect(...toSnapshot()).toEqual(updated.toSnapshot())`; `:253-259` stale save rejection and unchanged snapshot; `:273-279` immutable change rejection and original snapshot | A valid next version preserves allocation state; stale or immutable rewrites do not overwrite persisted data.                           | Yes     |
+| INV-88, INV-113, INV-114                        | `sqlite-investment-position-repository.test.ts:198-203` `hasAnyForInstrument(...).resolves.toBe(true)` and `hasOpenForInstrument(...).resolves.toBe(false)`; `:211-216` foreign-book usage is false                                  | Repository restores scalar data and distinguishes historical/open use in the requested book only.                                       | Yes     |
+| state corruption                                | `sqlite-investment-position-repository.test.ts:292-294` `rejects.toMatchObject({ code: "INVALID_INVESTMENT_OPERATION" })`                                                                                                            | A persisted CLOSED position without closedOn is not reconstructed as valid domain state.                                                | Yes     |
 
-| Test assertion | Maps to | Keep |
-| --- | --- | --- |
-| `sqlite-investment-position-repository.test.ts:120-122` `expect(...toSnapshot()).toEqual(value.toSnapshot())` | INV-19–23, INV-127 exact position and terms persistence | Yes |
-| `sqlite-investment-position-repository.test.ts:146-148` `resolves.toEqual({ kind: "BOOK_MISMATCH" })` | INV-74 book boundary | Yes |
-| `sqlite-investment-position-repository.test.ts:181-186` `hasAnyForAccount(...).resolves.toBe(true)` / `hasOpenForAccount(...).resolves.toBe(true)` | INV-113–114 historical/current account dependency | Yes |
-| `sqlite-investment-position-repository.test.ts:253-259` stale rejection plus exact snapshot | INV-76 optimistic concurrency | Yes |
-| `sqlite-investment-position-repository.test.ts:273-279` immutable rejection plus exact snapshot | INV-20, INV-23, INV-26 immutable opening contract | Yes |
-| `sqlite-investment-position-repository.test.ts:292-294` `rejects.toMatchObject({ code: "INVALID_INVESTMENT_OPERATION" })` | Done-when corrupted-state rejection | Yes |
+| Test assertion                                                                                                                                     | Maps to                                                 | Keep |
+| -------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- | ---- |
+| `sqlite-investment-position-repository.test.ts:120-122` `expect(...toSnapshot()).toEqual(value.toSnapshot())`                                      | INV-19–23, INV-127 exact position and terms persistence | Yes  |
+| `sqlite-investment-position-repository.test.ts:146-148` `resolves.toEqual({ kind: "BOOK_MISMATCH" })`                                              | INV-74 book boundary                                    | Yes  |
+| `sqlite-investment-position-repository.test.ts:181-186` `hasAnyForAccount(...).resolves.toBe(true)` / `hasOpenForAccount(...).resolves.toBe(true)` | INV-113–114 historical/current account dependency       | Yes  |
+| `sqlite-investment-position-repository.test.ts:253-259` stale rejection plus exact snapshot                                                        | INV-76 optimistic concurrency                           | Yes  |
+| `sqlite-investment-position-repository.test.ts:273-279` immutable rejection plus exact snapshot                                                    | INV-20, INV-23, INV-26 immutable opening contract       | Yes  |
+| `sqlite-investment-position-repository.test.ts:292-294` `rejects.toMatchObject({ code: "INVALID_INVESTMENT_OPERATION" })`                          | Done-when corrupted-state rejection                     | Yes  |
 
 **Adequacy verdict**: PASS. The 13 SQLite scenarios assert reconstructed snapshots and typed outcomes, not calls. They cover the bounded repository contract; no spec-precision gap or scope-expanding assertion was found.
 
@@ -1065,20 +1065,20 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: before T26 SQLite: 42 files, 787 tests; after: 43 files, 803 tests. Full SQLite passed: Domain/Application/Memory builds, SQLite 803/803 tests, generated migration manifest check, SQLite typecheck and `git diff --check`.
 
-| Requirement / done-when | Evidence | Spec-defined outcome | Covered |
-| --- | --- | --- | --- |
-| INV-61, INV-65, INV-88, INV-132, INV-133, INV-134 | `sqlite-investment-operation-repository.test.ts:143-145` `expect(...toSnapshot()).toEqual(value.toSnapshot())`; `:282-284` same assertion after `saveLineage` | Snapshot retains normalized effects, state-before, categories, journal and lineage without rewriting effects. | Yes |
-| INV-63, INV-68, INV-72 | `sqlite-investment-operation-repository.test.ts:196-201` `resolves.toMatchObject({ id: "later" })`; `:213-218` same-day sequence assertion; `:231-237` target exclusion assertion | Last effective business operation is ordered by date/sequence and excludes the correction target. | Yes |
-| INV-74, INV-76 | `sqlite-investment-operation-repository.test.ts:172-174` `resolves.toEqual({ kind: "BOOK_MISMATCH" })`; `:302-308` stale save rejection and persisted link is `"reversal"` | Foreign-book operation is hidden; stale lineage cannot overwrite the persisted link. | Yes |
-| INV-135, INV-136 | `sqlite-investment-operation-repository.test.ts:354-365` parameterized `expect(...journalEntryId).toBe(originalJournal/reversalJournal)` | Original and reversal preserve all four journal-presence combinations without fabricating a journal. | Yes |
+| Requirement / done-when                           | Evidence                                                                                                                                                                          | Spec-defined outcome                                                                                          | Covered |
+| ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ------- |
+| INV-61, INV-65, INV-88, INV-132, INV-133, INV-134 | `sqlite-investment-operation-repository.test.ts:143-145` `expect(...toSnapshot()).toEqual(value.toSnapshot())`; `:282-284` same assertion after `saveLineage`                     | Snapshot retains normalized effects, state-before, categories, journal and lineage without rewriting effects. | Yes     |
+| INV-63, INV-68, INV-72                            | `sqlite-investment-operation-repository.test.ts:196-201` `resolves.toMatchObject({ id: "later" })`; `:213-218` same-day sequence assertion; `:231-237` target exclusion assertion | Last effective business operation is ordered by date/sequence and excludes the correction target.             | Yes     |
+| INV-74, INV-76                                    | `sqlite-investment-operation-repository.test.ts:172-174` `resolves.toEqual({ kind: "BOOK_MISMATCH" })`; `:302-308` stale save rejection and persisted link is `"reversal"`        | Foreign-book operation is hidden; stale lineage cannot overwrite the persisted link.                          | Yes     |
+| INV-135, INV-136                                  | `sqlite-investment-operation-repository.test.ts:354-365` parameterized `expect(...journalEntryId).toBe(originalJournal/reversalJournal)`                                          | Original and reversal preserve all four journal-presence combinations without fabricating a journal.          | Yes     |
 
-| Test assertion | Maps to | Keep |
-| --- | --- | --- |
-| `sqlite-investment-operation-repository.test.ts:143-145` `expect(...toSnapshot()).toEqual(value.toSnapshot())` | INV-88, INV-132 authoritative snapshot restore | Yes |
-| `sqlite-investment-operation-repository.test.ts:282-284` `expect(...toSnapshot()).toEqual(original.toSnapshot())` | INV-61, INV-65, INV-133 lineage-only save | Yes |
-| `sqlite-investment-operation-repository.test.ts:196-201` `resolves.toMatchObject({ id: "later" })` | INV-68, INV-72 effective ordering | Yes |
-| `sqlite-investment-operation-repository.test.ts:302-308` stale rejection and `toBe("reversal")` | INV-76 CAS preservation | Yes |
-| `sqlite-investment-operation-repository.test.ts:354-365` `toBe(originalJournal)` / `toBe(reversalJournal)` | INV-135, INV-136 journal combinations | Yes |
+| Test assertion                                                                                                    | Maps to                                        | Keep |
+| ----------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- | ---- |
+| `sqlite-investment-operation-repository.test.ts:143-145` `expect(...toSnapshot()).toEqual(value.toSnapshot())`    | INV-88, INV-132 authoritative snapshot restore | Yes  |
+| `sqlite-investment-operation-repository.test.ts:282-284` `expect(...toSnapshot()).toEqual(original.toSnapshot())` | INV-61, INV-65, INV-133 lineage-only save      | Yes  |
+| `sqlite-investment-operation-repository.test.ts:196-201` `resolves.toMatchObject({ id: "later" })`                | INV-68, INV-72 effective ordering              | Yes  |
+| `sqlite-investment-operation-repository.test.ts:302-308` stale rejection and `toBe("reversal")`                   | INV-76 CAS preservation                        | Yes  |
+| `sqlite-investment-operation-repository.test.ts:354-365` `toBe(originalJournal)` / `toBe(reversalJournal)`        | INV-135, INV-136 journal combinations          | Yes  |
 
 **Adequacy verdict**: PASS. The 16 SQLite scenarios assert persisted snapshots and query outcomes, including all journal combinations. No assertion is a spy/call-count surrogate or exceeds the operation repository contract.
 
@@ -1103,19 +1103,19 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: before T27 SQLite: 43 files, 803 tests; after: 44 files, 811 tests. Full SQLite passed: Domain/Application/Memory builds, SQLite 811/811 tests, generated migration manifest check, SQLite typecheck and `git diff --check`.
 
-| Requirement / done-when | Evidence | Spec-defined outcome | Covered |
-| --- | --- | --- | --- |
-| INV-47, INV-48, INV-88, INV-127 | `sqlite-investment-valuation-store.test.ts:48-66` `resolves.toEqual([{ ... }])`; `:77-88` exact NULL assertions | Append preserves timestamps, sequence, allocation revision and all present/absent fields exactly. | Yes |
-| INV-49, INV-50 | `sqlite-investment-valuation-store.test.ts:90-99` `resolves.toEqual([{ id: "valuation-1" }, { id: "valuation-2" }])` | Same-instant observations remain distinct and persist in sequence order. | Yes |
-| INV-74 | `sqlite-investment-valuation-store.test.ts:111-121` duplicate ID/record sequence rejects with `DUPLICATE_ENTITY` | The book-scoped persisted keys do not admit conflicting observations. | Yes |
-| append-only / INV-88 | `sqlite-investment-valuation-store.test.ts:123-132` rollback leaves `[]`; `:136-141` update/delete reject | A failed transaction removes its append; SQLite rejects later mutation and deletion. | Yes |
+| Requirement / done-when         | Evidence                                                                                                             | Spec-defined outcome                                                                              | Covered |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ------- |
+| INV-47, INV-48, INV-88, INV-127 | `sqlite-investment-valuation-store.test.ts:48-66` `resolves.toEqual([{ ... }])`; `:77-88` exact NULL assertions      | Append preserves timestamps, sequence, allocation revision and all present/absent fields exactly. | Yes     |
+| INV-49, INV-50                  | `sqlite-investment-valuation-store.test.ts:90-99` `resolves.toEqual([{ id: "valuation-1" }, { id: "valuation-2" }])` | Same-instant observations remain distinct and persist in sequence order.                          | Yes     |
+| INV-74                          | `sqlite-investment-valuation-store.test.ts:111-121` duplicate ID/record sequence rejects with `DUPLICATE_ENTITY`     | The book-scoped persisted keys do not admit conflicting observations.                             | Yes     |
+| append-only / INV-88            | `sqlite-investment-valuation-store.test.ts:123-132` rollback leaves `[]`; `:136-141` update/delete reject            | A failed transaction removes its append; SQLite rejects later mutation and deletion.              | Yes     |
 
-| Test assertion | Maps to | Keep |
-| --- | --- | --- |
-| `sqlite-investment-valuation-store.test.ts:48-66` `resolves.toEqual([{ ... }])` | INV-47, INV-88 exact persisted valuation | Yes |
-| `sqlite-investment-valuation-store.test.ts:90-99` `resolves.toEqual([{ id: "valuation-1" }, { id: "valuation-2" }])` | INV-49 append history | Yes |
-| `sqlite-investment-valuation-store.test.ts:123-132` `resolves.toEqual([])` | transaction rollback criterion | Yes |
-| `sqlite-investment-valuation-store.test.ts:136-141` mutation promises reject | append-only criterion | Yes |
+| Test assertion                                                                                                       | Maps to                                  | Keep |
+| -------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- | ---- |
+| `sqlite-investment-valuation-store.test.ts:48-66` `resolves.toEqual([{ ... }])`                                      | INV-47, INV-88 exact persisted valuation | Yes  |
+| `sqlite-investment-valuation-store.test.ts:90-99` `resolves.toEqual([{ id: "valuation-1" }, { id: "valuation-2" }])` | INV-49 append history                    | Yes  |
+| `sqlite-investment-valuation-store.test.ts:123-132` `resolves.toEqual([])`                                           | transaction rollback criterion           | Yes  |
+| `sqlite-investment-valuation-store.test.ts:136-141` mutation promises reject                                         | append-only criterion                    | Yes  |
 
 **Adequacy verdict**: PASS. The eight integration scenarios assert persisted values and database state, including rollback and immutability; no mock call is used as outcome evidence.
 
@@ -1140,18 +1140,18 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: before T28 SQLite: 44 files, 811 tests; after: 45 files, 819 tests. Full SQLite passed: Domain/Application/Memory builds, SQLite 819/819 tests, generated migration manifest check, SQLite typecheck and `git diff --check`.
 
-| Requirement / done-when | Evidence | Spec-defined outcome | Covered |
-| --- | --- | --- | --- |
-| INV-74, INV-78, INV-80, INV-88 | `sqlite-investment-request-store.test.ts:50-54` `resolves.toEqual(value)`; `:56-59` both scoped lookup assertions are null | The exact command/result is recovered only for its book/request identity. | Yes |
-| INV-79 | `sqlite-investment-request-store.test.ts:68-74` duplicate rejects `DUPLICATE_ENTITY` and `find(...).resolves.toEqual(first)` | A reused key cannot overwrite the original receipt. | Yes |
-| INV-75 | `sqlite-investment-request-store.test.ts:93-100` transaction throws and `find(...).resolves.toBeNull()` | Rollback removes the receipt with its enclosing unit of work. | Yes |
-| stored-result variants | `sqlite-investment-request-store.test.ts:61-66` `resolves.toEqual(value)`; `:76-91` two request IDs persist | Empty optional result IDs and independent requests retain exact semantics. | Yes |
+| Requirement / done-when        | Evidence                                                                                                                     | Spec-defined outcome                                                       | Covered |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- | ------- |
+| INV-74, INV-78, INV-80, INV-88 | `sqlite-investment-request-store.test.ts:50-54` `resolves.toEqual(value)`; `:56-59` both scoped lookup assertions are null   | The exact command/result is recovered only for its book/request identity.  | Yes     |
+| INV-79                         | `sqlite-investment-request-store.test.ts:68-74` duplicate rejects `DUPLICATE_ENTITY` and `find(...).resolves.toEqual(first)` | A reused key cannot overwrite the original receipt.                        | Yes     |
+| INV-75                         | `sqlite-investment-request-store.test.ts:93-100` transaction throws and `find(...).resolves.toBeNull()`                      | Rollback removes the receipt with its enclosing unit of work.              | Yes     |
+| stored-result variants         | `sqlite-investment-request-store.test.ts:61-66` `resolves.toEqual(value)`; `:76-91` two request IDs persist                  | Empty optional result IDs and independent requests retain exact semantics. | Yes     |
 
-| Test assertion | Maps to | Keep |
-| --- | --- | --- |
-| `sqlite-investment-request-store.test.ts:52-54` `resolves.toEqual(value)` | INV-78, INV-80 immutable retry result | Yes |
-| `sqlite-investment-request-store.test.ts:71-74` duplicate error and first result equality | INV-79 idempotency conflict | Yes |
-| `sqlite-investment-request-store.test.ts:93-100` `find(...).resolves.toBeNull()` | INV-75 rollback | Yes |
+| Test assertion                                                                            | Maps to                               | Keep |
+| ----------------------------------------------------------------------------------------- | ------------------------------------- | ---- |
+| `sqlite-investment-request-store.test.ts:52-54` `resolves.toEqual(value)`                 | INV-78, INV-80 immutable retry result | Yes  |
+| `sqlite-investment-request-store.test.ts:71-74` duplicate error and first result equality | INV-79 idempotency conflict           | Yes  |
+| `sqlite-investment-request-store.test.ts:93-100` `find(...).resolves.toBeNull()`          | INV-75 rollback                       | Yes  |
 
 **Adequacy verdict**: PASS. The eight SQLite scenarios assert durable receipt state, book scope, duplicate protection and rollback, without mock-only evidence.
 
@@ -1176,19 +1176,19 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: before T29 SQLite: 45 files, 819 tests; after: 46 files, 825 tests. Full SQLite + Build passed: Domain/Application/Memory builds, SQLite 825/825 tests, generated migration manifest check, SQLite typecheck, lint, SQLite build and `git diff --check`.
 
-| Requirement / done-when | Evidence | Spec-defined outcome | Covered |
-| --- | --- | --- | --- |
-| INV-50, INV-72, INV-88 | `sqlite-investment-sequence-store.test.ts:16-25` `resolves.toBe("1")` and `resolves.toBe("2")` | Reservation starts positive, is monotonic per book, and remains book-scoped. | Yes |
-| INV-82 | `sqlite-investment-sequence-store.test.ts:27-31` `resolves.toBe("9007199254740993")` | Values beyond JavaScript safe integer return as exact strings. | Yes |
-| INV-75 | `sqlite-investment-sequence-store.test.ts:33-40` transaction rolls back and next result is `"1"` | Reservation belongs to its transaction and is undone on failure. | Yes |
-| overflow | `sqlite-investment-sequence-store.test.ts:42-53` error code assertion and exact persisted max | Exhaustion rejects before modifying the int64 counter. | Yes |
+| Requirement / done-when | Evidence                                                                                         | Spec-defined outcome                                                         | Covered |
+| ----------------------- | ------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- | ------- |
+| INV-50, INV-72, INV-88  | `sqlite-investment-sequence-store.test.ts:16-25` `resolves.toBe("1")` and `resolves.toBe("2")`   | Reservation starts positive, is monotonic per book, and remains book-scoped. | Yes     |
+| INV-82                  | `sqlite-investment-sequence-store.test.ts:27-31` `resolves.toBe("9007199254740993")`             | Values beyond JavaScript safe integer return as exact strings.               | Yes     |
+| INV-75                  | `sqlite-investment-sequence-store.test.ts:33-40` transaction rolls back and next result is `"1"` | Reservation belongs to its transaction and is undone on failure.             | Yes     |
+| overflow                | `sqlite-investment-sequence-store.test.ts:42-53` error code assertion and exact persisted max    | Exhaustion rejects before modifying the int64 counter.                       | Yes     |
 
-| Test assertion | Maps to | Keep |
-| --- | --- | --- |
-| `sqlite-investment-sequence-store.test.ts:20-21` `resolves.toBe("1")` / `resolves.toBe("2")` | INV-50, INV-72 monotonic ordering | Yes |
-| `sqlite-investment-sequence-store.test.ts:31` `resolves.toBe("9007199254740993")` | INV-82 exact string transport | Yes |
-| `sqlite-investment-sequence-store.test.ts:40` `resolves.toBe("1")` | INV-75 rollback | Yes |
-| `sqlite-investment-sequence-store.test.ts:46-53` error plus unchanged max value | overflow criterion | Yes |
+| Test assertion                                                                               | Maps to                           | Keep |
+| -------------------------------------------------------------------------------------------- | --------------------------------- | ---- |
+| `sqlite-investment-sequence-store.test.ts:20-21` `resolves.toBe("1")` / `resolves.toBe("2")` | INV-50, INV-72 monotonic ordering | Yes  |
+| `sqlite-investment-sequence-store.test.ts:31` `resolves.toBe("9007199254740993")`            | INV-82 exact string transport     | Yes  |
+| `sqlite-investment-sequence-store.test.ts:40` `resolves.toBe("1")`                           | INV-75 rollback                   | Yes  |
+| `sqlite-investment-sequence-store.test.ts:46-53` error plus unchanged max value              | overflow criterion                | Yes  |
 
 **Adequacy verdict**: PASS. The six SQLite scenarios assert observable counter values and rollback state, including exact large-integer transport; no test relies on a mock call or an implementation-only detail.
 
@@ -1215,21 +1215,21 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: before T30 Memory: 26 files, 246 tests; after: 26 files, 256 tests. Full Memory passed: Domain/Application builds, Memory 256/256 tests and Memory typecheck.
 
-| Requirement / done-when | Evidence | Spec-defined outcome | Covered |
-| --- | --- | --- | --- |
-| INV-04, INV-88 | `in-memory-store.test.ts:190-200` `expect(...identifiers[0]?.value).toBe("ABC")`; `202-214` terms assertion; `216-244` categories and `positionBefore` assertions | Snapshot copies nested identifier, terms and previous state without mutable reference escape. | Yes |
-| INV-75 | `in-memory-store.test.ts:278-297` `expect(store.snapshot()).toEqual(snapshot)` and `302-304` restored identifiers | Restore returns every investment collection to its pre-failure snapshot. | Yes |
-| INV-127 | `in-memory-store.test.ts:202-214` `expect(...fixedIncomeTerms?.annualRate).toBe("10")` | Position terms remain preserved through snapshot copies. | Yes |
-| INV-132 | `in-memory-store.test.ts:216-244` exact category/state assertions | Operation normalized effects include independent category and prior economic state snapshots. | Yes |
-| counter / book scope | `in-memory-store.test.ts:273-276` `expect(...).toBe("1")` for both books | Exact sequences start at one and are isolated by book. | Yes |
+| Requirement / done-when | Evidence                                                                                                                                                          | Spec-defined outcome                                                                          | Covered |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- | ------- |
+| INV-04, INV-88          | `in-memory-store.test.ts:190-200` `expect(...identifiers[0]?.value).toBe("ABC")`; `202-214` terms assertion; `216-244` categories and `positionBefore` assertions | Snapshot copies nested identifier, terms and previous state without mutable reference escape. | Yes     |
+| INV-75                  | `in-memory-store.test.ts:278-297` `expect(store.snapshot()).toEqual(snapshot)` and `302-304` restored identifiers                                                 | Restore returns every investment collection to its pre-failure snapshot.                      | Yes     |
+| INV-127                 | `in-memory-store.test.ts:202-214` `expect(...fixedIncomeTerms?.annualRate).toBe("10")`                                                                            | Position terms remain preserved through snapshot copies.                                      | Yes     |
+| INV-132                 | `in-memory-store.test.ts:216-244` exact category/state assertions                                                                                                 | Operation normalized effects include independent category and prior economic state snapshots. | Yes     |
+| counter / book scope    | `in-memory-store.test.ts:273-276` `expect(...).toBe("1")` for both books                                                                                          | Exact sequences start at one and are isolated by book.                                        | Yes     |
 
-| Test assertion | Maps to | Keep |
-| --- | --- | --- |
-| `in-memory-store.test.ts:198-200` `expect(...value).toBe("ABC")` | INV-88 mutable identifier reconstruction | Yes |
-| `in-memory-store.test.ts:212-214` `expect(...annualRate).toBe("10")` | INV-127 terms persistence | Yes |
-| `in-memory-store.test.ts:224-244` category/state assertions | INV-132 operation snapshot | Yes |
-| `in-memory-store.test.ts:261-264` `expect(...cashMinor).toBe("-1")` | INV-75 immutable receipt state | Yes |
-| `in-memory-store.test.ts:289-297` `expect(store.snapshot()).toEqual(snapshot)` | INV-75 full rollback snapshot | Yes |
+| Test assertion                                                                 | Maps to                                  | Keep |
+| ------------------------------------------------------------------------------ | ---------------------------------------- | ---- |
+| `in-memory-store.test.ts:198-200` `expect(...value).toBe("ABC")`               | INV-88 mutable identifier reconstruction | Yes  |
+| `in-memory-store.test.ts:212-214` `expect(...annualRate).toBe("10")`           | INV-127 terms persistence                | Yes  |
+| `in-memory-store.test.ts:224-244` category/state assertions                    | INV-132 operation snapshot               | Yes  |
+| `in-memory-store.test.ts:261-264` `expect(...cashMinor).toBe("-1")`            | INV-75 immutable receipt state           | Yes  |
+| `in-memory-store.test.ts:289-297` `expect(store.snapshot()).toEqual(snapshot)` | INV-75 full rollback snapshot            | Yes  |
 
 **Adequacy verdict**: PASS. Ten direct scenarios cover every new collection, nested mutable structure, book-scoped sequence and snapshot restoration. Assertions target stored values, not calls or implementation-only details.
 
@@ -1254,18 +1254,18 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: before T31 Memory: 26 files, 256 tests; after: 27 files, 264 tests. Full Memory passed: Domain/Application builds, Memory 264/264 tests and Memory typecheck.
 
-| Requirement / done-when | Evidence | Spec-defined outcome | Covered |
-| --- | --- | --- | --- |
-| INV-14, INV-74 | `in-memory-investment-instrument-repository.test.ts:30-41` `toMatchObject({ kind: "FOUND"... })`; `44-52` `toEqual({ kind: "BOOK_MISMATCH" })` | Lookup returns a same-book instrument and never exposes another book. | Yes |
-| INV-17, INV-18 | `:62-69` `toBe(true)` for trimmed/uppercase TICKER; `:72-81` book scope | Identifier matching uses the normalized identifier and book boundary. | Yes |
-| INV-26, INV-114, INV-116 | `:84-92` nonzero add error; `:95-104` stale save error | Lifecycle version and CAS reject invalid persistence without replacement. | Yes |
+| Requirement / done-when  | Evidence                                                                                                                                       | Spec-defined outcome                                                      | Covered |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ------- |
+| INV-14, INV-74           | `in-memory-investment-instrument-repository.test.ts:30-41` `toMatchObject({ kind: "FOUND"... })`; `44-52` `toEqual({ kind: "BOOK_MISMATCH" })` | Lookup returns a same-book instrument and never exposes another book.     | Yes     |
+| INV-17, INV-18           | `:62-69` `toBe(true)` for trimmed/uppercase TICKER; `:72-81` book scope                                                                        | Identifier matching uses the normalized identifier and book boundary.     | Yes     |
+| INV-26, INV-114, INV-116 | `:84-92` nonzero add error; `:95-104` stale save error                                                                                         | Lifecycle version and CAS reject invalid persistence without replacement. | Yes     |
 
-| Test assertion | Maps to | Keep |
-| --- | --- | --- |
-| `in-memory-investment-instrument-repository.test.ts:36-40` `toMatchObject({ kind: "FOUND" })` | INV-14 lookup | Yes |
-| `:50-52` `toEqual({ kind: "BOOK_MISMATCH" })` | INV-74 isolation | Yes |
-| `:67-69` `toBe(true)` | INV-17 normalization | Yes |
-| `:101-104` concurrency error code | INV-76 CAS | Yes |
+| Test assertion                                                                                | Maps to              | Keep |
+| --------------------------------------------------------------------------------------------- | -------------------- | ---- |
+| `in-memory-investment-instrument-repository.test.ts:36-40` `toMatchObject({ kind: "FOUND" })` | INV-14 lookup        | Yes  |
+| `:50-52` `toEqual({ kind: "BOOK_MISMATCH" })`                                                 | INV-74 isolation     | Yes  |
+| `:67-69` `toBe(true)`                                                                         | INV-17 normalization | Yes  |
+| `:101-104` concurrency error code                                                             | INV-76 CAS           | Yes  |
 
 **Adequacy verdict**: PASS. Eight scenarios assert public results and stable error codes for lookup, isolation, normalized identifiers and optimistic concurrency.
 
@@ -1397,20 +1397,20 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: before T37: 46 files, 825 tests; after: 47 files, 838 tests. Full SQLite passed: Domain/Application/Memory builds, 838/838 SQLite tests, migration check, typecheck and `git diff --check`.
 
-| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
-| --- | --- | --- | --- |
-| INV-55, INV-82 | `sqlite-exact-ledger-totals.test.ts:80` `expect(...).resolves.toBe("18446744073709551614")` | totals preserve bigint beyond int64 | Yes |
-| INV-55, INV-103 | `sqlite-exact-ledger-totals.test.ts:70` `expect(...).resolves.toBe("9223372036854775800")` | signed postings preserve their exact sum | Yes |
-| INV-57, INV-140, INV-141 | `sqlite-exact-ledger-totals.test.ts:108` `expect(...).toContain("e.occurred_on <= ?")` | date filter is inclusive and bound in the received reader | Yes |
-| INV-55, INV-56, INV-57 | `sqlite-exact-ledger-totals.test.ts:92` `expect(queries).toHaveLength(2)` and `:93` cursor assertion | each scan page has at most 512 rows and uses a stable key | Yes |
-| INV-55, INV-103 | `sqlite-exact-ledger-totals.test.ts:167` `expect(...).not.toMatch(/\\b(SUM|TOTAL)\\s*\\(/i)` | aggregation does not use SQLite SUM or TOTAL | Yes |
+| Done-when / requirement  | Evidence                                                                                             | Spec-defined outcome                                      | Covered                                      |
+| ------------------------ | ---------------------------------------------------------------------------------------------------- | --------------------------------------------------------- | -------------------------------------------- | --- |
+| INV-55, INV-82           | `sqlite-exact-ledger-totals.test.ts:80` `expect(...).resolves.toBe("18446744073709551614")`          | totals preserve bigint beyond int64                       | Yes                                          |
+| INV-55, INV-103          | `sqlite-exact-ledger-totals.test.ts:70` `expect(...).resolves.toBe("9223372036854775800")`           | signed postings preserve their exact sum                  | Yes                                          |
+| INV-57, INV-140, INV-141 | `sqlite-exact-ledger-totals.test.ts:108` `expect(...).toContain("e.occurred_on <= ?")`               | date filter is inclusive and bound in the received reader | Yes                                          |
+| INV-55, INV-56, INV-57   | `sqlite-exact-ledger-totals.test.ts:92` `expect(queries).toHaveLength(2)` and `:93` cursor assertion | each scan page has at most 512 rows and uses a stable key | Yes                                          |
+| INV-55, INV-103          | `sqlite-exact-ledger-totals.test.ts:167` `expect(...).not.toMatch(/\\b(SUM                           | TOTAL)\\s\*\\(/i)`                                        | aggregation does not use SQLite SUM or TOTAL | Yes |
 
-| Test assertion | Maps to | Keep |
-| --- | --- | --- |
-| `sqlite-exact-ledger-totals.test.ts:80` `expect(...).resolves.toBe("18446744073709551614")` | INV-82 exact money | Yes |
-| `sqlite-exact-ledger-totals.test.ts:70` `expect(...).resolves.toBe("9223372036854775800")` | INV-55 signed cash total | Yes |
-| `sqlite-exact-ledger-totals.test.ts:93` `expect(...).toBe("0511")` | T37 512-row stable cursor | Yes |
-| `sqlite-exact-ledger-totals.test.ts:167` `expect(...).not.toMatch(...)` | T37 no SQL aggregate | Yes |
+| Test assertion                                                                              | Maps to                   | Keep |
+| ------------------------------------------------------------------------------------------- | ------------------------- | ---- |
+| `sqlite-exact-ledger-totals.test.ts:80` `expect(...).resolves.toBe("18446744073709551614")` | INV-82 exact money        | Yes  |
+| `sqlite-exact-ledger-totals.test.ts:70` `expect(...).resolves.toBe("9223372036854775800")`  | INV-55 signed cash total  | Yes  |
+| `sqlite-exact-ledger-totals.test.ts:93` `expect(...).toBe("0511")`                          | T37 512-row stable cursor | Yes  |
+| `sqlite-exact-ledger-totals.test.ts:167` `expect(...).not.toMatch(...)`                     | T37 no SQL aggregate      | Yes  |
 
 **Adequacy verdict**: PASS. Assertions target exact outputs, cursor state and SQL safety constraints; the persisted SQLite scenario covers the received transaction reader. SQLite test placement follows the coverage matrix.
 
@@ -1435,19 +1435,19 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: before T38: 47 files, 838 tests; after: 48 files, 850 tests. Full SQLite passed: Domain/Application/Memory builds, 850/850 SQLite tests, migration check, typecheck and `git diff --check`.
 
-| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
-| --- | --- | --- |
-| INV-12, INV-115 | `sqlite-investment-transaction-reads.test.ts:54` `expect(...).resolves.toBe(true)` and `:71` active-status assertion | only active investment accounts using the settlement are dependents | Yes |
-| INV-55, INV-140, INV-141 | `sqlite-investment-transaction-reads.test.ts:83` `expect(...).resolves.toBe("9007199254740993")` and `:93` date parameter assertion | ledger balance is exact and uses the requested inclusive date | Yes |
-| INV-28, INV-32, INV-60, INV-145 | `sqlite-investment-transaction-reads.test.ts:119` `expect(...).resolves.toEqual(...cashMinor: "300")` and `:136` negative `"-100"` assertion | cash equals L-C and negative cash remains observable | Yes |
-| INV-113 | `sqlite-investment-transaction-reads.test.ts:150` `expect(...).resolves.toEqual` per account | each requested account keeps an independent complete balance | Yes |
+| Done-when / requirement         | Evidence                                                                                                                                     | Spec-defined outcome                                                | Covered |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- | ------- |
+| INV-12, INV-115                 | `sqlite-investment-transaction-reads.test.ts:54` `expect(...).resolves.toBe(true)` and `:71` active-status assertion                         | only active investment accounts using the settlement are dependents | Yes     |
+| INV-55, INV-140, INV-141        | `sqlite-investment-transaction-reads.test.ts:83` `expect(...).resolves.toBe("9007199254740993")` and `:93` date parameter assertion          | ledger balance is exact and uses the requested inclusive date       | Yes     |
+| INV-28, INV-32, INV-60, INV-145 | `sqlite-investment-transaction-reads.test.ts:119` `expect(...).resolves.toEqual(...cashMinor: "300")` and `:136` negative `"-100"` assertion | cash equals L-C and negative cash remains observable                | Yes     |
+| INV-113                         | `sqlite-investment-transaction-reads.test.ts:150` `expect(...).resolves.toEqual` per account                                                 | each requested account keeps an independent complete balance        | Yes     |
 
-| Test assertion | Maps to | Keep |
-| --- | --- | --- |
-| `sqlite-investment-transaction-reads.test.ts:54` `expect(...).resolves.toBe(true)` | INV-115 settlement use | Yes |
-| `sqlite-investment-transaction-reads.test.ts:83` `expect(...).resolves.toBe("9007199254740993")` | INV-55 exact ledger | Yes |
-| `sqlite-investment-transaction-reads.test.ts:136` `expect(...cashMinor...).toEqual("-100")` | INV-60 negative cash | Yes |
-| `sqlite-investment-transaction-reads.test.ts:189` `expect(...parameters).toEqual(["book", "account"])` | INV-74 book-scoped lookup | Yes |
+| Test assertion                                                                                         | Maps to                   | Keep |
+| ------------------------------------------------------------------------------------------------------ | ------------------------- | ---- |
+| `sqlite-investment-transaction-reads.test.ts:54` `expect(...).resolves.toBe(true)`                     | INV-115 settlement use    | Yes  |
+| `sqlite-investment-transaction-reads.test.ts:83` `expect(...).resolves.toBe("9007199254740993")`       | INV-55 exact ledger       | Yes  |
+| `sqlite-investment-transaction-reads.test.ts:136` `expect(...cashMinor...).toEqual("-100")`            | INV-60 negative cash      | Yes  |
+| `sqlite-investment-transaction-reads.test.ts:189` `expect(...parameters).toEqual(["book", "account"])` | INV-74 book-scoped lookup | Yes  |
 
 **Adequacy verdict**: PASS. Tests assert exact cash state, negative state, scope parameters and active settlement behavior directly; no result is inferred from a call count.
 
@@ -1495,22 +1495,22 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: Application: 235 → 241 tests; Memory: 308 → 310 tests; SQLite: 850 → 856 tests. The 14 added/updated scenarios are seven required public context ports, two Memory transaction scenarios, the SQLite context shape, and six SQLite scoped-executor routes. Full Cross passed: Domain/Application builds, 310/310 Memory tests, 856/856 SQLite tests, migration check, SQLite build/typecheck, 63/63 Tauri protocol tests/typecheck, and `git diff --check`.
 
-| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
-| --- | --- | --- | --- |
-| INV-74 scoped repository context | `packages/application/src/ports/investment-repositories.test.ts:39` `expectTypeOf<RepositoryContext>().toHaveProperty("investmentInstruments")`; `:51` `...("investmentReads")` | context requires investment ports and book-scoped reads | Yes |
-| INV-75 pre-commit rollback | `packages/infrastructure-memory/src/transaction/in-memory-transaction-manager.test.ts:111` `rejects.toThrow("rollback investments")`; `:114` `expect(...next(...)).toBe("1")`; `:116` `expect(...find(...)).toBeNull()` | receipt and sequence are reverted with the enclosing write | Yes |
-| INV-76 / INV-77 transaction-scoped persistence | `packages/infrastructure-memory/src/transaction/in-memory-transaction-manager.test.ts:85` `expect(...instrument).toEqual({ kind: "NOT_FOUND" })`; `:86-91` assertions for position, operation, receipt, sequence, dependency and cash | all investment state is accessed within the same transaction context | Yes |
-| INV-78 / INV-80 receipt and retry substrate | `packages/application/src/ports/investment-repositories.test.ts:25` `expectTypeOf<Parameters<InvestmentRequestStore["find"]>>().toEqualTypeOf<[string, string]>()`; `packages/infrastructure-memory/src/transaction/in-memory-transaction-manager.test.ts:116` `expect(...find(...)).toBeNull()` after rollback | receipts remain book/request scoped and never survive a failed commit | Yes |
-| INV-81 facts stay on the common context | `packages/infrastructure-sqlite/src/repositories/create-sqlite-repository-context.test.ts:128` `expect(fixture.context.facts).toBe(fixture.facts)` | facts are collected by the transaction context, not a separate write path | Yes |
-| INV-88 / INV-89 real SQLite wiring without provider coupling | `packages/infrastructure-sqlite/src/repositories/create-sqlite-repository-context.test.ts:115` exact key assertion; `:148` `resolves.toEqual({ kind: "NOT_FOUND" })`; `packages/infrastructure-tauri/src/database/tauri-sqlite-database.test.ts:163` `expect(calls[2]!.args).toEqual(...transactionId: "tx-1")` | all investment adapters are concrete SQLite adapters and use the scoped native executor without provider contracts | Yes |
+| Done-when / requirement                                      | Evidence                                                                                                                                                                                                                                                                                                        | Spec-defined outcome                                                                                               | Covered |
+| ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ------- |
+| INV-74 scoped repository context                             | `packages/application/src/ports/investment-repositories.test.ts:39` `expectTypeOf<RepositoryContext>().toHaveProperty("investmentInstruments")`; `:51` `...("investmentReads")`                                                                                                                                 | context requires investment ports and book-scoped reads                                                            | Yes     |
+| INV-75 pre-commit rollback                                   | `packages/infrastructure-memory/src/transaction/in-memory-transaction-manager.test.ts:111` `rejects.toThrow("rollback investments")`; `:114` `expect(...next(...)).toBe("1")`; `:116` `expect(...find(...)).toBeNull()`                                                                                         | receipt and sequence are reverted with the enclosing write                                                         | Yes     |
+| INV-76 / INV-77 transaction-scoped persistence               | `packages/infrastructure-memory/src/transaction/in-memory-transaction-manager.test.ts:85` `expect(...instrument).toEqual({ kind: "NOT_FOUND" })`; `:86-91` assertions for position, operation, receipt, sequence, dependency and cash                                                                           | all investment state is accessed within the same transaction context                                               | Yes     |
+| INV-78 / INV-80 receipt and retry substrate                  | `packages/application/src/ports/investment-repositories.test.ts:25` `expectTypeOf<Parameters<InvestmentRequestStore["find"]>>().toEqualTypeOf<[string, string]>()`; `packages/infrastructure-memory/src/transaction/in-memory-transaction-manager.test.ts:116` `expect(...find(...)).toBeNull()` after rollback | receipts remain book/request scoped and never survive a failed commit                                              | Yes     |
+| INV-81 facts stay on the common context                      | `packages/infrastructure-sqlite/src/repositories/create-sqlite-repository-context.test.ts:128` `expect(fixture.context.facts).toBe(fixture.facts)`                                                                                                                                                              | facts are collected by the transaction context, not a separate write path                                          | Yes     |
+| INV-88 / INV-89 real SQLite wiring without provider coupling | `packages/infrastructure-sqlite/src/repositories/create-sqlite-repository-context.test.ts:115` exact key assertion; `:148` `resolves.toEqual({ kind: "NOT_FOUND" })`; `packages/infrastructure-tauri/src/database/tauri-sqlite-database.test.ts:163` `expect(calls[2]!.args).toEqual(...transactionId: "tx-1")` | all investment adapters are concrete SQLite adapters and use the scoped native executor without provider contracts | Yes     |
 
-| Test assertion | Maps to | Keep |
-| --- | --- | --- |
-| `in-memory-transaction-manager.test.ts:114` `expect(...next(...)).toBe("1")` | INV-75 atomic rollback | Yes |
-| `in-memory-transaction-manager.test.ts:116` `expect(...find(...)).toBeNull()` | INV-75/78 receipt rollback | Yes |
-| `create-sqlite-repository-context.test.ts:115` `expect(Object.keys(...).sort()).toEqual([...])` | T40 complete concrete context wiring | Yes |
-| `create-sqlite-repository-context.test.ts:148` `resolves.toEqual({ kind: "NOT_FOUND" })` | INV-74 book-scoped instrument adapter routing | Yes |
-| `create-sqlite-repository-context.test.ts:193` `resolves.toBe(false)` | INV-77 transaction-scoped settlement dependency read | Yes |
+| Test assertion                                                                                  | Maps to                                              | Keep |
+| ----------------------------------------------------------------------------------------------- | ---------------------------------------------------- | ---- |
+| `in-memory-transaction-manager.test.ts:114` `expect(...next(...)).toBe("1")`                    | INV-75 atomic rollback                               | Yes  |
+| `in-memory-transaction-manager.test.ts:116` `expect(...find(...)).toBeNull()`                   | INV-75/78 receipt rollback                           | Yes  |
+| `create-sqlite-repository-context.test.ts:115` `expect(Object.keys(...).sort()).toEqual([...])` | T40 complete concrete context wiring                 | Yes  |
+| `create-sqlite-repository-context.test.ts:148` `resolves.toEqual({ kind: "NOT_FOUND" })`        | INV-74 book-scoped instrument adapter routing        | Yes  |
+| `create-sqlite-repository-context.test.ts:193` `resolves.toBe(false)`                           | INV-77 transaction-scoped settlement dependency read | Yes  |
 
 **Adequacy verdict**: PASS. Assertions check required context members, exact lookup/read outcomes, and rollback state rather than mock calls; all tests map to T40 and the Integration/Memory/SQLite location conventions in the coverage matrix. Tauri protocol tests are mock-native transport proof only; native UAT remains future T93/T94 scope.
 
@@ -1535,19 +1535,19 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: Memory: 310 → 313 tests. `create-financial-account.test.ts` has 10 command scenarios: typed bank, credit card, investment settlement, invalid settlement/type, normalized optional text, missing book, duplicate name, distinct derived kind, and invalid name. Full Memory passed: Domain/Application builds, 313/313 Memory tests, typecheck and `git diff --check`; Tauri facade typecheck also passed.
 
-| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
-| --- | --- | --- | --- |
-| INV-01 type creates derived ledger kind and profile | `packages/infrastructure-memory/src/use-cases/create-financial-account.test.ts:26` `expect(result).toEqual({ ... kind: "ASSET", ... financialAccount: { type: "BANK_ACCOUNT" } })` | account type, not caller kind, determines a financial profile and ledger classification | Yes |
-| INV-02 / INV-03 optional institution/reference | `create-financial-account.test.ts:35` `financialAccount: { type: "BANK_ACCOUNT", institutionName: "Banco A", displayReference: "1234" }` | optional profile text is normalized and persisted | Yes |
-| INV-04 / INV-11 investment profile and optional settlement | `create-financial-account.test.ts:98` `expect(result).toMatchObject({ ... investment: { defaultSettlementAccountId: "account-99" } })`; `:120` `error: { code: "INVALID_FINANCIAL_ACCOUNT_PROFILE" }` | settlement is allowed only on an investment profile and carries no new identity | Yes |
-| INV-74 no cross-book or missing-book write | `create-financial-account.test.ts:183` `error: { code: "ENTITY_NOT_FOUND" }`; `:185` `expect(harness.store.snapshot()).toEqual(before)` | absent book rejects before persistence | Yes |
+| Done-when / requirement                                    | Evidence                                                                                                                                                                                              | Spec-defined outcome                                                                    | Covered |
+| ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | ------- |
+| INV-01 type creates derived ledger kind and profile        | `packages/infrastructure-memory/src/use-cases/create-financial-account.test.ts:26` `expect(result).toEqual({ ... kind: "ASSET", ... financialAccount: { type: "BANK_ACCOUNT" } })`                    | account type, not caller kind, determines a financial profile and ledger classification | Yes     |
+| INV-02 / INV-03 optional institution/reference             | `create-financial-account.test.ts:35` `financialAccount: { type: "BANK_ACCOUNT", institutionName: "Banco A", displayReference: "1234" }`                                                              | optional profile text is normalized and persisted                                       | Yes     |
+| INV-04 / INV-11 investment profile and optional settlement | `create-financial-account.test.ts:98` `expect(result).toMatchObject({ ... investment: { defaultSettlementAccountId: "account-99" } })`; `:120` `error: { code: "INVALID_FINANCIAL_ACCOUNT_PROFILE" }` | settlement is allowed only on an investment profile and carries no new identity         | Yes     |
+| INV-74 no cross-book or missing-book write                 | `create-financial-account.test.ts:183` `error: { code: "ENTITY_NOT_FOUND" }`; `:185` `expect(harness.store.snapshot()).toEqual(before)`                                                               | absent book rejects before persistence                                                  | Yes     |
 
-| Test assertion | Maps to | Keep |
-| --- | --- | --- |
-| `create-financial-account.test.ts:26` `expect(result).toEqual(...)` | INV-01 typed bank result/profile | Yes |
-| `create-financial-account.test.ts:105` `expect(...financialAccount).toEqual(...)` | INV-04 settlement persistence | Yes |
-| `create-financial-account.test.ts:120` `error.code === "INVALID_FINANCIAL_ACCOUNT_PROFILE"` | INV-11 invalid settlement profile | Yes |
-| `create-financial-account.test.ts:180` `error.code === "DUPLICATE_ENTITY"` | account uniqueness under derived kind | Yes |
+| Test assertion                                                                              | Maps to                               | Keep |
+| ------------------------------------------------------------------------------------------- | ------------------------------------- | ---- |
+| `create-financial-account.test.ts:26` `expect(result).toEqual(...)`                         | INV-01 typed bank result/profile      | Yes  |
+| `create-financial-account.test.ts:105` `expect(...financialAccount).toEqual(...)`           | INV-04 settlement persistence         | Yes  |
+| `create-financial-account.test.ts:120` `error.code === "INVALID_FINANCIAL_ACCOUNT_PROFILE"` | INV-11 invalid settlement profile     | Yes  |
+| `create-financial-account.test.ts:180` `error.code === "DUPLICATE_ENTITY"`                  | account uniqueness under derived kind | Yes  |
 
 **Adequacy verdict**: PASS. Tests assert stored/resulting profile state and exact error codes, not mock calls; all scenarios map to T41 requirements and follow the Memory command-test convention.
 
@@ -1572,22 +1572,22 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: before T42 Memory: 313 tests; after: 327 tests. Full Memory passed: Domain/Application builds, Memory 327/327 tests, Memory typecheck and `git diff --check`.
 
-| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
-| --- | --- | --- | --- |
-| INV-04, INV-07, INV-11, INV-13, INV-138 | `configure-financial-account.test.ts:63` `expect(result).toMatchObject({ value: { id: "account-5", kind: "ASSET", version: 1, financialAccount: { type: "CASH" } } })`; `:77` `expect(...listJournalEntries()).toEqual(beforeJournals)` | compatible reclassification preserves identity/kind and creates no posting | Yes |
-| INV-08 | `:112` / `:133` / `:166` exact `error.code === "FINANCIAL_ACCOUNT_TYPE_CHANGE_NOT_ALLOWED"` | kind change, historical investment removal and incompatible active settlement change reject | Yes |
-| INV-12 | `:185`, `:205`, `:233`, `:252`, `:270` exact `error.code === "INVALID_SETTLEMENT_ACCOUNT"` | self, inactive, cross-book, non-bank/payment and absent settlement reject | Yes |
-| INV-04, INV-11 | `:290` `expect(result).toMatchObject({ value: { id: "account-5", version: 1, financialAccount: { investment: { defaultSettlementAccountId: "account-6" } } } })`; `:325` clear result includes the same id and `investment: {}` | set/clear wrappers use one aggregate mutation and retain the account identity | Yes |
-| INV-74, INV-76 | `:352` exact `OPTIMISTIC_CONCURRENCY_FAILURE` and `:356` snapshot equality; `:381` exact `BOOK_MISMATCH` and `:382` snapshot equality | stale CAS and foreign-book reference reject without mutation | Yes |
-| no-op | `:94` `version: 0`; `:95-96` snapshot/event equality | unchanged normalized profile has no write or event | Yes |
+| Done-when / requirement                 | Evidence                                                                                                                                                                                                                                | Spec-defined outcome                                                                        | Covered |
+| --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- | ------- |
+| INV-04, INV-07, INV-11, INV-13, INV-138 | `configure-financial-account.test.ts:63` `expect(result).toMatchObject({ value: { id: "account-5", kind: "ASSET", version: 1, financialAccount: { type: "CASH" } } })`; `:77` `expect(...listJournalEntries()).toEqual(beforeJournals)` | compatible reclassification preserves identity/kind and creates no posting                  | Yes     |
+| INV-08                                  | `:112` / `:133` / `:166` exact `error.code === "FINANCIAL_ACCOUNT_TYPE_CHANGE_NOT_ALLOWED"`                                                                                                                                             | kind change, historical investment removal and incompatible active settlement change reject | Yes     |
+| INV-12                                  | `:185`, `:205`, `:233`, `:252`, `:270` exact `error.code === "INVALID_SETTLEMENT_ACCOUNT"`                                                                                                                                              | self, inactive, cross-book, non-bank/payment and absent settlement reject                   | Yes     |
+| INV-04, INV-11                          | `:290` `expect(result).toMatchObject({ value: { id: "account-5", version: 1, financialAccount: { investment: { defaultSettlementAccountId: "account-6" } } } })`; `:325` clear result includes the same id and `investment: {}`         | set/clear wrappers use one aggregate mutation and retain the account identity               | Yes     |
+| INV-74, INV-76                          | `:352` exact `OPTIMISTIC_CONCURRENCY_FAILURE` and `:356` snapshot equality; `:381` exact `BOOK_MISMATCH` and `:382` snapshot equality                                                                                                   | stale CAS and foreign-book reference reject without mutation                                | Yes     |
+| no-op                                   | `:94` `version: 0`; `:95-96` snapshot/event equality                                                                                                                                                                                    | unchanged normalized profile has no write or event                                          | Yes     |
 
-| Test assertion | Maps to | Keep |
-| --- | --- | --- |
-| `configure-financial-account.test.ts:63-77` resulting profile/account and unchanged journal assertions | INV-04, INV-07, INV-11, INV-13, INV-138 | Yes |
-| `:112-170` three exact type-change errors and snapshots | INV-08, INV-115 | Yes |
-| `:185-272` five exact settlement errors | INV-12 | Yes |
-| `:290-336` set/clear profile, identity and version assertions | INV-04, INV-11 | Yes |
-| `:352-382` CAS/book error and immutable snapshot assertions | INV-74, INV-76 | Yes |
+| Test assertion                                                                                         | Maps to                                 | Keep |
+| ------------------------------------------------------------------------------------------------------ | --------------------------------------- | ---- |
+| `configure-financial-account.test.ts:63-77` resulting profile/account and unchanged journal assertions | INV-04, INV-07, INV-11, INV-13, INV-138 | Yes  |
+| `:112-170` three exact type-change errors and snapshots                                                | INV-08, INV-115                         | Yes  |
+| `:185-272` five exact settlement errors                                                                | INV-12                                  | Yes  |
+| `:290-336` set/clear profile, identity and version assertions                                          | INV-04, INV-11                          | Yes  |
+| `:352-382` CAS/book error and immutable snapshot assertions                                            | INV-74, INV-76                          | Yes  |
 
 **Adequacy verdict**: PASS. Fourteen command scenarios assert persisted/resulting profile state, exact stable errors, versions and absence of postings, not mock calls. The Memory command-test conventions in `packages/infrastructure-memory/src/use-cases/` were followed.
 
@@ -1612,22 +1612,22 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: before T43 Memory: 327 tests; after: 340 tests, including 13 lifecycle scenarios. Full Memory + Build passed: Domain/Application builds; Memory 35 files/340 tests, typecheck, lint and build; Application 21 files/241 tests, lint, typecheck and build; `git diff --check`.
 
-| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
-| --- | --- | --- | --- |
-| INV-113 | `investment-account-lifecycle-policy.test.ts:139` `expect(result).toMatchObject({ ok: false, error: { code: "INVESTMENT_ACCOUNT_IN_USE" } })`; `:159` same exact error for non-zero balance; `:178` `expect(result).toMatchObject({ ok: true, value: { id: "account-5", status: "ARCHIVED", version: 1 } })` | archive rejects an OPEN position or non-zero balance, but accepts CLOSED/zero | Yes |
-| INV-115 | `investment-account-lifecycle-policy.test.ts:209` `expect(result).toMatchObject({ ok: false, error: { code: "FINANCIAL_ACCOUNT_TYPE_CHANGE_NOT_ALLOWED" } })`; `:213` `expect(harness.store.snapshot()).toEqual(before)` | an active investment account's settlement cannot be archived; rejected command does not mutate state | Yes |
-| INV-116 | `investment-account-lifecycle-policy.test.ts:258` `expect(result).toMatchObject({ ok: true, value: { id: "account-5", status: "ACTIVE", version: 2 } })`; `:266` `expect(...financialAccount).toEqual({ type: "INVESTMENT_ACCOUNT", investment: { defaultSettlementAccountId: "account-6" } })` | reactivation preserves identity and profile after transactional link validation | Yes |
-| INV-12, INV-116 | `:299`, `:336`, `:364`, `:391`, `:418` each `expect(result).toMatchObject({ ok: false, error: { code: "INVALID_SETTLEMENT_ACCOUNT" } })`; paired `:303`, `:340`, `:368`, `:395`, `:422` snapshot equality | reactivation revalidates inactive, foreign-book, wrong-type, missing and self settlement links without mutation | Yes |
-| INV-74 | `archive-ledger-account.test.ts:199` `expect(result).toMatchObject({ ok: false, error: { code: "BOOK_MISMATCH" } })`; `reactivate-ledger-account.test.ts:205` same exact assertion | archive/reactivate reject a requested account from another book | Yes |
-| existing lifecycle compatibility | `investment-account-lifecycle-policy.test.ts:230` `expect(result).toMatchObject({ ok: true, value: { status: "ARCHIVED", version: 1 } })`; `:446` `expect(result).toMatchObject({ ok: true, value: { kind: "EXPENSE", status: "ARCHIVED", version: 1 } })` | already archived accounts remain idempotent and non-investment accounts retain the existing lifecycle path | Yes |
+| Done-when / requirement          | Evidence                                                                                                                                                                                                                                                                                                     | Spec-defined outcome                                                                                            | Covered |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- | ------- |
+| INV-113                          | `investment-account-lifecycle-policy.test.ts:139` `expect(result).toMatchObject({ ok: false, error: { code: "INVESTMENT_ACCOUNT_IN_USE" } })`; `:159` same exact error for non-zero balance; `:178` `expect(result).toMatchObject({ ok: true, value: { id: "account-5", status: "ARCHIVED", version: 1 } })` | archive rejects an OPEN position or non-zero balance, but accepts CLOSED/zero                                   | Yes     |
+| INV-115                          | `investment-account-lifecycle-policy.test.ts:209` `expect(result).toMatchObject({ ok: false, error: { code: "FINANCIAL_ACCOUNT_TYPE_CHANGE_NOT_ALLOWED" } })`; `:213` `expect(harness.store.snapshot()).toEqual(before)`                                                                                     | an active investment account's settlement cannot be archived; rejected command does not mutate state            | Yes     |
+| INV-116                          | `investment-account-lifecycle-policy.test.ts:258` `expect(result).toMatchObject({ ok: true, value: { id: "account-5", status: "ACTIVE", version: 2 } })`; `:266` `expect(...financialAccount).toEqual({ type: "INVESTMENT_ACCOUNT", investment: { defaultSettlementAccountId: "account-6" } })`              | reactivation preserves identity and profile after transactional link validation                                 | Yes     |
+| INV-12, INV-116                  | `:299`, `:336`, `:364`, `:391`, `:418` each `expect(result).toMatchObject({ ok: false, error: { code: "INVALID_SETTLEMENT_ACCOUNT" } })`; paired `:303`, `:340`, `:368`, `:395`, `:422` snapshot equality                                                                                                    | reactivation revalidates inactive, foreign-book, wrong-type, missing and self settlement links without mutation | Yes     |
+| INV-74                           | `archive-ledger-account.test.ts:199` `expect(result).toMatchObject({ ok: false, error: { code: "BOOK_MISMATCH" } })`; `reactivate-ledger-account.test.ts:205` same exact assertion                                                                                                                           | archive/reactivate reject a requested account from another book                                                 | Yes     |
+| existing lifecycle compatibility | `investment-account-lifecycle-policy.test.ts:230` `expect(result).toMatchObject({ ok: true, value: { status: "ARCHIVED", version: 1 } })`; `:446` `expect(result).toMatchObject({ ok: true, value: { kind: "EXPENSE", status: "ARCHIVED", version: 1 } })`                                                   | already archived accounts remain idempotent and non-investment accounts retain the existing lifecycle path      | Yes     |
 
-| Test assertion | Maps to | Keep |
-| --- | --- | --- |
-| `investment-account-lifecycle-policy.test.ts:110-123`, `:178-180` resulting account/profile assertions | INV-113, INV-116 archive identity and permitted CLOSED/zero transition | Yes |
-| `:139-143`, `:159-163`, `:209-213` exact errors and full snapshots | INV-113, INV-115 in-use/dependent settlement rejection with no write | Yes |
-| `:258-270`, `:299-422` activation and every settlement validation error/snapshot | INV-12, INV-116 revalidate active, same-book BANK/PAYMENT linkage transactionally | Yes |
-| `archive-ledger-account.test.ts:199-203`, `reactivate-ledger-account.test.ts:205-209` exact book errors and snapshots | INV-74 book isolation for both commands | Yes |
-| `investment-account-lifecycle-policy.test.ts:230-234`, `:446-448` no-op and generic account lifecycle results | existing archive/reactivate behavior retained while applying the shared policy | Yes |
+| Test assertion                                                                                                        | Maps to                                                                           | Keep |
+| --------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | ---- |
+| `investment-account-lifecycle-policy.test.ts:110-123`, `:178-180` resulting account/profile assertions                | INV-113, INV-116 archive identity and permitted CLOSED/zero transition            | Yes  |
+| `:139-143`, `:159-163`, `:209-213` exact errors and full snapshots                                                    | INV-113, INV-115 in-use/dependent settlement rejection with no write              | Yes  |
+| `:258-270`, `:299-422` activation and every settlement validation error/snapshot                                      | INV-12, INV-116 revalidate active, same-book BANK/PAYMENT linkage transactionally | Yes  |
+| `archive-ledger-account.test.ts:199-203`, `reactivate-ledger-account.test.ts:205-209` exact book errors and snapshots | INV-74 book isolation for both commands                                           | Yes  |
+| `investment-account-lifecycle-policy.test.ts:230-234`, `:446-448` no-op and generic account lifecycle results         | existing archive/reactivate behavior retained while applying the shared policy    | Yes  |
 
 **Adequacy verdict**: PASS. Thirteen Memory command scenarios assert resulting account/profile state, exact stable errors and rollback snapshots, never mock calls. They cover each lifecycle branch required by T43 and retain the existing Memory command-test convention.
 
@@ -1654,31 +1654,31 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: baseline Memory: 35 files, 340 tests, pass; T44: 36 files, 351 tests, pass. `create-investment-instrument.test.ts` adds 11 spec-derived command scenarios. Full Memory passed: domain/application build, Memory 351/351, Memory typecheck.
 
-| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
-| --- | --- | --- | --- |
-| INV-14 active creation | `packages/infrastructure-memory/src/use-cases/create-investment-instrument.test.ts:27` `expect(result).toEqual({ ... status: "ACTIVE", version: 0 })` | active instrument persists name, type, base currency with optional issuer and no identifiers | Yes |
-| INV-15 normative class | `packages/infrastructure-memory/src/use-cases/create-investment-instrument.test.ts:34` `instrumentClass: "FIXED_INCOME"` | CDB derives class exclusively from the normative type table | Yes |
-| INV-16 book currency | `packages/infrastructure-memory/src/use-cases/create-investment-instrument.test.ts:169` `expect(result).toMatchObject({ error: { code: "INVESTMENT_CURRENCY_MISMATCH" } })` | mismatched currency is rejected before writing | Yes |
-| INV-17 identifier normalization | `packages/infrastructure-memory/src/use-cases/create-investment-instrument.test.ts:57` `identifiers: [{ scheme: "TICKER", value: "CDBX", market: "B3" }]` and `:82` `value: "BRABCD123456"` | ticker/ISIN and market trim-uppercase; registration preserves internal content | Yes |
-| INV-18 identifier uniqueness | `packages/infrastructure-memory/src/use-cases/create-investment-instrument.test.ts:209` `expect(result).toMatchObject({ error: { code: "DUPLICATE_INSTRUMENT_IDENTIFIER" } })` | equivalent identifier in same book is rejected without a new aggregate | Yes |
-| INV-74/81 book-scoped fact | `packages/infrastructure-memory/src/use-cases/create-investment-instrument.test.ts:97` `expect(harness.publisher.events).toEqual([... bookId: "book-1" ...])` | committed fact carries supported type, book ID, aggregate ID and version | Yes |
-| INV-75 rollback | `packages/infrastructure-memory/src/use-cases/create-investment-instrument.test.ts:213` `expect(harness.store.snapshot()).toEqual(before)` | duplicate failure leaves no persisted aggregate or children | Yes |
-| INV-83 input validation | `packages/infrastructure-memory/src/use-cases/create-investment-instrument.test.ts:186` `expect(result).toMatchObject({ error: { code: "INVALID_INVESTMENT_INPUT" } })` | malformed identifier is rejected before writing | Yes |
-| INV-89 provider-free command | `packages/application/src/investments/instruments/create-investment-instrument.ts:58` `InvestmentInstrument.create({ ... })` | command uses only local domain IDs/types, no provider dependency | Yes |
+| Done-when / requirement         | Evidence                                                                                                                                                                                    | Spec-defined outcome                                                                         | Covered |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ------- |
+| INV-14 active creation          | `packages/infrastructure-memory/src/use-cases/create-investment-instrument.test.ts:27` `expect(result).toEqual({ ... status: "ACTIVE", version: 0 })`                                       | active instrument persists name, type, base currency with optional issuer and no identifiers | Yes     |
+| INV-15 normative class          | `packages/infrastructure-memory/src/use-cases/create-investment-instrument.test.ts:34` `instrumentClass: "FIXED_INCOME"`                                                                    | CDB derives class exclusively from the normative type table                                  | Yes     |
+| INV-16 book currency            | `packages/infrastructure-memory/src/use-cases/create-investment-instrument.test.ts:169` `expect(result).toMatchObject({ error: { code: "INVESTMENT_CURRENCY_MISMATCH" } })`                 | mismatched currency is rejected before writing                                               | Yes     |
+| INV-17 identifier normalization | `packages/infrastructure-memory/src/use-cases/create-investment-instrument.test.ts:57` `identifiers: [{ scheme: "TICKER", value: "CDBX", market: "B3" }]` and `:82` `value: "BRABCD123456"` | ticker/ISIN and market trim-uppercase; registration preserves internal content               | Yes     |
+| INV-18 identifier uniqueness    | `packages/infrastructure-memory/src/use-cases/create-investment-instrument.test.ts:209` `expect(result).toMatchObject({ error: { code: "DUPLICATE_INSTRUMENT_IDENTIFIER" } })`              | equivalent identifier in same book is rejected without a new aggregate                       | Yes     |
+| INV-74/81 book-scoped fact      | `packages/infrastructure-memory/src/use-cases/create-investment-instrument.test.ts:97` `expect(harness.publisher.events).toEqual([... bookId: "book-1" ...])`                               | committed fact carries supported type, book ID, aggregate ID and version                     | Yes     |
+| INV-75 rollback                 | `packages/infrastructure-memory/src/use-cases/create-investment-instrument.test.ts:213` `expect(harness.store.snapshot()).toEqual(before)`                                                  | duplicate failure leaves no persisted aggregate or children                                  | Yes     |
+| INV-83 input validation         | `packages/infrastructure-memory/src/use-cases/create-investment-instrument.test.ts:186` `expect(result).toMatchObject({ error: { code: "INVALID_INVESTMENT_INPUT" } })`                     | malformed identifier is rejected before writing                                              | Yes     |
+| INV-89 provider-free command    | `packages/application/src/investments/instruments/create-investment-instrument.ts:58` `InvestmentInstrument.create({ ... })`                                                                | command uses only local domain IDs/types, no provider dependency                             | Yes     |
 
-| Test assertion | Maps to | Keep |
-| --- | --- | --- |
-| `create-investment-instrument.test.ts:27` `expect(result).toEqual({ ... })` | INV-14, INV-15 creation outcome | Yes |
-| `create-investment-instrument.test.ts:53` `expect(result).toMatchObject({ ... })` | INV-14/17 optional issuer and ticker normalization | Yes |
-| `create-investment-instrument.test.ts:78` `expect(result).toMatchObject({ ... })` | INV-17 ISIN/registration normalization | Yes |
-| `create-investment-instrument.test.ts:97` `expect(harness.publisher.events).toEqual([...])` | INV-81 fact payload | Yes |
-| `create-investment-instrument.test.ts:118` `expect(result).toMatchObject({ error: { code: "ENTITY_NOT_FOUND" } })` | INV-74 missing-book rejection | Yes |
-| `create-investment-instrument.test.ts:135` `expect(result).toMatchObject({ error: { code: "INVALID_INVESTMENT_INPUT" } })` | INV-83 invalid type | Yes |
-| `create-investment-instrument.test.ts:152` `expect(result).toMatchObject({ error: { code: "INVALID_INVESTMENT_INPUT" } })` | INV-17/83 invalid scheme | Yes |
-| `create-investment-instrument.test.ts:169` `expect(result).toMatchObject({ error: { code: "INVESTMENT_CURRENCY_MISMATCH" } })` | INV-16 | Yes |
-| `create-investment-instrument.test.ts:186` `expect(result).toMatchObject({ error: { code: "INVALID_INVESTMENT_INPUT" } })` | INV-17/83 malformed identifier | Yes |
-| `create-investment-instrument.test.ts:209` `expect(result).toMatchObject({ error: { code: "DUPLICATE_INSTRUMENT_IDENTIFIER" } })` | INV-18 existing-book duplicate | Yes |
-| `create-investment-instrument.test.ts:230` `expect(result).toMatchObject({ error: { code: "DUPLICATE_INSTRUMENT_IDENTIFIER" } })` | INV-18 same-command duplicate | Yes |
+| Test assertion                                                                                                                    | Maps to                                            | Keep |
+| --------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- | ---- |
+| `create-investment-instrument.test.ts:27` `expect(result).toEqual({ ... })`                                                       | INV-14, INV-15 creation outcome                    | Yes  |
+| `create-investment-instrument.test.ts:53` `expect(result).toMatchObject({ ... })`                                                 | INV-14/17 optional issuer and ticker normalization | Yes  |
+| `create-investment-instrument.test.ts:78` `expect(result).toMatchObject({ ... })`                                                 | INV-17 ISIN/registration normalization             | Yes  |
+| `create-investment-instrument.test.ts:97` `expect(harness.publisher.events).toEqual([...])`                                       | INV-81 fact payload                                | Yes  |
+| `create-investment-instrument.test.ts:118` `expect(result).toMatchObject({ error: { code: "ENTITY_NOT_FOUND" } })`                | INV-74 missing-book rejection                      | Yes  |
+| `create-investment-instrument.test.ts:135` `expect(result).toMatchObject({ error: { code: "INVALID_INVESTMENT_INPUT" } })`        | INV-83 invalid type                                | Yes  |
+| `create-investment-instrument.test.ts:152` `expect(result).toMatchObject({ error: { code: "INVALID_INVESTMENT_INPUT" } })`        | INV-17/83 invalid scheme                           | Yes  |
+| `create-investment-instrument.test.ts:169` `expect(result).toMatchObject({ error: { code: "INVESTMENT_CURRENCY_MISMATCH" } })`    | INV-16                                             | Yes  |
+| `create-investment-instrument.test.ts:186` `expect(result).toMatchObject({ error: { code: "INVALID_INVESTMENT_INPUT" } })`        | INV-17/83 malformed identifier                     | Yes  |
+| `create-investment-instrument.test.ts:209` `expect(result).toMatchObject({ error: { code: "DUPLICATE_INSTRUMENT_IDENTIFIER" } })` | INV-18 existing-book duplicate                     | Yes  |
+| `create-investment-instrument.test.ts:230` `expect(result).toMatchObject({ error: { code: "DUPLICATE_INSTRUMENT_IDENTIFIER" } })` | INV-18 same-command duplicate                      | Yes  |
 
 **Adequacy verdict**: PASS. Eleven Memory command scenarios assert persisted/resulting state, exact stable errors, fact identity and rollback snapshots. They cover the applicable T44 outcomes without mock-call-only or extra behavior tests.
 
@@ -1703,28 +1703,28 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: baseline Memory: 36 files, 351 tests, pass; T45: 37 files, 361 tests, pass. `update-investment-instrument.test.ts` adds 10 spec-derived command scenarios. Full Memory passed: domain/application build, Memory 361/361, Memory typecheck.
 
-| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
-| --- | --- | --- | --- |
-| INV-16 currency | `packages/infrastructure-memory/src/use-cases/update-investment-instrument.test.ts:171` `expect(result).toMatchObject({ error: { code: "INVESTMENT_CURRENCY_MISMATCH" } })` | a currency distinct from the book base currency is rejected without changing the instrument | Yes |
-| INV-17/18 metadata identifiers | `packages/infrastructure-memory/src/use-cases/update-investment-instrument.test.ts:78` `identifiers: [{ scheme: "TICKER", value: "CDBN", market: "B3" }]` and `:253` `expect(result).toMatchObject({ error: { code: "DUPLICATE_INSTRUMENT_IDENTIFIER" } })` | normalized metadata persists; equivalent identifier cannot duplicate another instrument in book | Yes |
-| INV-26 immutable economics | `packages/infrastructure-memory/src/use-cases/update-investment-instrument.test.ts:136` `expect(result).toMatchObject({ error: { code: "INVESTMENT_INSTRUMENT_TYPE_IMMUTABLE" } })` and `:155` `expect(...getInvestmentPosition(...)).toEqual(beforePosition)` | type is immutable after first position and metadata does not alter prior economic state | Yes |
-| INV-74 book isolation | `packages/infrastructure-memory/src/use-cases/update-investment-instrument.test.ts:230` `expect(result).toMatchObject({ error: { code: "BOOK_MISMATCH" } })` | cross-book reference is rejected without writing | Yes |
-| INV-76 CAS/no-op | `packages/infrastructure-memory/src/use-cases/update-investment-instrument.test.ts:104` `expect(result).toMatchObject({ ok: true, value: { version: 0 } })` and `:189` `expect(result).toMatchObject({ error: { code: "OPTIMISTIC_CONCURRENCY_FAILURE" } })` | no-op keeps version; stale expectedVersion cannot overwrite | Yes |
-| INV-81 fact | `packages/infrastructure-memory/src/use-cases/update-investment-instrument.test.ts:82` `expect(harness.publisher.events).toEqual([{ ... aggregateVersion: 1 }])` | committed update publishes supported versioned fact | Yes |
-| INV-83 input validation | `packages/application/src/investments/instruments/update-investment-instrument.ts:52` `if (!isInstrumentType(command.type) || !isIdentifierList(command))` | invalid type/scheme is rejected before write | Yes |
+| Done-when / requirement        | Evidence                                                                                                                                                                                                                                                       | Spec-defined outcome                                                                            | Covered                      |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------------- | -------------------------------------------- | --- |
+| INV-16 currency                | `packages/infrastructure-memory/src/use-cases/update-investment-instrument.test.ts:171` `expect(result).toMatchObject({ error: { code: "INVESTMENT_CURRENCY_MISMATCH" } })`                                                                                    | a currency distinct from the book base currency is rejected without changing the instrument     | Yes                          |
+| INV-17/18 metadata identifiers | `packages/infrastructure-memory/src/use-cases/update-investment-instrument.test.ts:78` `identifiers: [{ scheme: "TICKER", value: "CDBN", market: "B3" }]` and `:253` `expect(result).toMatchObject({ error: { code: "DUPLICATE_INSTRUMENT_IDENTIFIER" } })`    | normalized metadata persists; equivalent identifier cannot duplicate another instrument in book | Yes                          |
+| INV-26 immutable economics     | `packages/infrastructure-memory/src/use-cases/update-investment-instrument.test.ts:136` `expect(result).toMatchObject({ error: { code: "INVESTMENT_INSTRUMENT_TYPE_IMMUTABLE" } })` and `:155` `expect(...getInvestmentPosition(...)).toEqual(beforePosition)` | type is immutable after first position and metadata does not alter prior economic state         | Yes                          |
+| INV-74 book isolation          | `packages/infrastructure-memory/src/use-cases/update-investment-instrument.test.ts:230` `expect(result).toMatchObject({ error: { code: "BOOK_MISMATCH" } })`                                                                                                   | cross-book reference is rejected without writing                                                | Yes                          |
+| INV-76 CAS/no-op               | `packages/infrastructure-memory/src/use-cases/update-investment-instrument.test.ts:104` `expect(result).toMatchObject({ ok: true, value: { version: 0 } })` and `:189` `expect(result).toMatchObject({ error: { code: "OPTIMISTIC_CONCURRENCY_FAILURE" } })`   | no-op keeps version; stale expectedVersion cannot overwrite                                     | Yes                          |
+| INV-81 fact                    | `packages/infrastructure-memory/src/use-cases/update-investment-instrument.test.ts:82` `expect(harness.publisher.events).toEqual([{ ... aggregateVersion: 1 }])`                                                                                               | committed update publishes supported versioned fact                                             | Yes                          |
+| INV-83 input validation        | `packages/application/src/investments/instruments/update-investment-instrument.ts:52` `if (!isInstrumentType(command.type)                                                                                                                                     |                                                                                                 | !isIdentifierList(command))` | invalid type/scheme is rejected before write | Yes |
 
-| Test assertion | Maps to | Keep |
-| --- | --- | --- |
-| `update-investment-instrument.test.ts:70` `expect(result).toMatchObject({ ... version: 1 })` | metadata update/CAS | Yes |
-| `update-investment-instrument.test.ts:104` `expect(result).toMatchObject({ ok: true, value: { version: 0 } })` | no-op | Yes |
-| `update-investment-instrument.test.ts:118` `expect(result).toMatchObject({ type: "STOCK", instrumentClass: "EQUITY" })` | type before history | Yes |
-| `update-investment-instrument.test.ts:136` `expect(result).toMatchObject({ error: { code: "INVESTMENT_INSTRUMENT_TYPE_IMMUTABLE" } })` | INV-26 immutable type | Yes |
-| `update-investment-instrument.test.ts:155` `expect(...getInvestmentPosition(...)).toEqual(beforePosition)` | preserve economic history | Yes |
-| `update-investment-instrument.test.ts:171` `expect(result).toMatchObject({ error: { code: "INVESTMENT_CURRENCY_MISMATCH" } })` | INV-16 currency | Yes |
-| `update-investment-instrument.test.ts:189` `expect(result).toMatchObject({ error: { code: "OPTIMISTIC_CONCURRENCY_FAILURE" } })` | INV-76 | Yes |
-| `update-investment-instrument.test.ts:203` `expect(result).toMatchObject({ error: { code: "ENTITY_NOT_FOUND" } })` | missing instrument | Yes |
-| `update-investment-instrument.test.ts:230` `expect(result).toMatchObject({ error: { code: "BOOK_MISMATCH" } })` | INV-74 | Yes |
-| `update-investment-instrument.test.ts:253` `expect(result).toMatchObject({ error: { code: "DUPLICATE_INSTRUMENT_IDENTIFIER" } })` | INV-18 | Yes |
+| Test assertion                                                                                                                         | Maps to                   | Keep |
+| -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- | ---- |
+| `update-investment-instrument.test.ts:70` `expect(result).toMatchObject({ ... version: 1 })`                                           | metadata update/CAS       | Yes  |
+| `update-investment-instrument.test.ts:104` `expect(result).toMatchObject({ ok: true, value: { version: 0 } })`                         | no-op                     | Yes  |
+| `update-investment-instrument.test.ts:118` `expect(result).toMatchObject({ type: "STOCK", instrumentClass: "EQUITY" })`                | type before history       | Yes  |
+| `update-investment-instrument.test.ts:136` `expect(result).toMatchObject({ error: { code: "INVESTMENT_INSTRUMENT_TYPE_IMMUTABLE" } })` | INV-26 immutable type     | Yes  |
+| `update-investment-instrument.test.ts:155` `expect(...getInvestmentPosition(...)).toEqual(beforePosition)`                             | preserve economic history | Yes  |
+| `update-investment-instrument.test.ts:171` `expect(result).toMatchObject({ error: { code: "INVESTMENT_CURRENCY_MISMATCH" } })`         | INV-16 currency           | Yes  |
+| `update-investment-instrument.test.ts:189` `expect(result).toMatchObject({ error: { code: "OPTIMISTIC_CONCURRENCY_FAILURE" } })`       | INV-76                    | Yes  |
+| `update-investment-instrument.test.ts:203` `expect(result).toMatchObject({ error: { code: "ENTITY_NOT_FOUND" } })`                     | missing instrument        | Yes  |
+| `update-investment-instrument.test.ts:230` `expect(result).toMatchObject({ error: { code: "BOOK_MISMATCH" } })`                        | INV-74                    | Yes  |
+| `update-investment-instrument.test.ts:253` `expect(result).toMatchObject({ error: { code: "DUPLICATE_INSTRUMENT_IDENTIFIER" } })`      | INV-18                    | Yes  |
 
 **Adequacy verdict**: PASS. Ten Memory command scenarios assert resulting DTOs, events, stable errors and full rollback snapshots. The tests cover each T45 branch and do not rely on mock-call counts.
 
@@ -1749,25 +1749,25 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: baseline Memory: 37 files, 361 tests, pass; T46: 38 files, 369 tests, pass. `set-investment-instrument-status.test.ts` adds 8 spec-derived command scenarios. Full Memory passed: domain/application build, Memory 369/369, Memory typecheck.
 
-| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
-| --- | --- | --- |
-| archive/reactivate, INV-116 | `packages/infrastructure-memory/src/use-cases/set-investment-instrument-status.test.ts:59` `expect(result).toMatchObject({ value: { id: "instrument-1", status: "ARCHIVED", version: 1 } })` and `:83` `expect(result).toMatchObject({ value: { id: "instrument-1", status: "ACTIVE", version: 2 } })` | lifecycle preserves identity and reactivation restores active state | Yes |
-| INV-114 open guard | `set-investment-instrument-status.test.ts:101` `expect(result).toMatchObject({ error: { code: "INVESTMENT_INSTRUMENT_IN_USE" } })` | archive with OPEN position is rejected | Yes |
-| closed history | `set-investment-instrument-status.test.ts:112` `expect(await setStatus(h).execute(archive)).toMatchObject({ value: { status: "ARCHIVED" } })` | closed position does not block archive | Yes |
-| INV-74/76 | `set-investment-instrument-status.test.ts:163` `expect(result).toMatchObject({ error: { code: "BOOK_MISMATCH" } })` and `:142` `expect(result).toMatchObject({ error: { code: "OPTIMISTIC_CONCURRENCY_FAILURE" } })` | book mismatch and stale version write nothing | Yes |
-| INV-81 | `set-investment-instrument-status.test.ts:63` `expect(h.publisher.events).toEqual([{ ... aggregateVersion: 1 }])` | transition publishes a supported fact after commit | Yes |
-| INV-117 | `packages/application/src/index.ts:7` `export { SetInvestmentInstrumentStatus } ...` | public instrument lifecycle surface exposes transition only; no hard-delete command is added | Yes |
+| Done-when / requirement     | Evidence                                                                                                                                                                                                                                                                                               | Spec-defined outcome                                                                         | Covered |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- | ------- |
+| archive/reactivate, INV-116 | `packages/infrastructure-memory/src/use-cases/set-investment-instrument-status.test.ts:59` `expect(result).toMatchObject({ value: { id: "instrument-1", status: "ARCHIVED", version: 1 } })` and `:83` `expect(result).toMatchObject({ value: { id: "instrument-1", status: "ACTIVE", version: 2 } })` | lifecycle preserves identity and reactivation restores active state                          | Yes     |
+| INV-114 open guard          | `set-investment-instrument-status.test.ts:101` `expect(result).toMatchObject({ error: { code: "INVESTMENT_INSTRUMENT_IN_USE" } })`                                                                                                                                                                     | archive with OPEN position is rejected                                                       | Yes     |
+| closed history              | `set-investment-instrument-status.test.ts:112` `expect(await setStatus(h).execute(archive)).toMatchObject({ value: { status: "ARCHIVED" } })`                                                                                                                                                          | closed position does not block archive                                                       | Yes     |
+| INV-74/76                   | `set-investment-instrument-status.test.ts:163` `expect(result).toMatchObject({ error: { code: "BOOK_MISMATCH" } })` and `:142` `expect(result).toMatchObject({ error: { code: "OPTIMISTIC_CONCURRENCY_FAILURE" } })`                                                                                   | book mismatch and stale version write nothing                                                | Yes     |
+| INV-81                      | `set-investment-instrument-status.test.ts:63` `expect(h.publisher.events).toEqual([{ ... aggregateVersion: 1 }])`                                                                                                                                                                                      | transition publishes a supported fact after commit                                           | Yes     |
+| INV-117                     | `packages/application/src/index.ts:7` `export { SetInvestmentInstrumentStatus } ...`                                                                                                                                                                                                                   | public instrument lifecycle surface exposes transition only; no hard-delete command is added | Yes     |
 
-| Test assertion | Maps to | Keep |
-| --- | --- | --- |
-| `set-investment-instrument-status.test.ts:59` `expect(result).toMatchObject({ ... status: "ARCHIVED" })` | archive | Yes |
-| `set-investment-instrument-status.test.ts:83` `expect(result).toMatchObject({ ... status: "ACTIVE" })` | reactivation/INV-116 | Yes |
-| `set-investment-instrument-status.test.ts:101` `expect(result).toMatchObject({ error: { code: "INVESTMENT_INSTRUMENT_IN_USE" } })` | INV-114 | Yes |
-| `set-investment-instrument-status.test.ts:112` `expect(await ...).toMatchObject({ status: "ARCHIVED" })` | closed position branch | Yes |
-| `set-investment-instrument-status.test.ts:127` `expect(result).toMatchObject({ version: 1 })` | archive no-op | Yes |
-| `set-investment-instrument-status.test.ts:142` `expect(result).toMatchObject({ error: { code: "OPTIMISTIC_CONCURRENCY_FAILURE" } })` | INV-76 | Yes |
-| `set-investment-instrument-status.test.ts:163` `expect(result).toMatchObject({ error: { code: "BOOK_MISMATCH" } })` | INV-74 | Yes |
-| `set-investment-instrument-status.test.ts:174` `expect(result).toMatchObject({ error: { code: "ENTITY_NOT_FOUND" } })` | missing entity | Yes |
+| Test assertion                                                                                                                       | Maps to                | Keep |
+| ------------------------------------------------------------------------------------------------------------------------------------ | ---------------------- | ---- |
+| `set-investment-instrument-status.test.ts:59` `expect(result).toMatchObject({ ... status: "ARCHIVED" })`                             | archive                | Yes  |
+| `set-investment-instrument-status.test.ts:83` `expect(result).toMatchObject({ ... status: "ACTIVE" })`                               | reactivation/INV-116   | Yes  |
+| `set-investment-instrument-status.test.ts:101` `expect(result).toMatchObject({ error: { code: "INVESTMENT_INSTRUMENT_IN_USE" } })`   | INV-114                | Yes  |
+| `set-investment-instrument-status.test.ts:112` `expect(await ...).toMatchObject({ status: "ARCHIVED" })`                             | closed position branch | Yes  |
+| `set-investment-instrument-status.test.ts:127` `expect(result).toMatchObject({ version: 1 })`                                        | archive no-op          | Yes  |
+| `set-investment-instrument-status.test.ts:142` `expect(result).toMatchObject({ error: { code: "OPTIMISTIC_CONCURRENCY_FAILURE" } })` | INV-76                 | Yes  |
+| `set-investment-instrument-status.test.ts:163` `expect(result).toMatchObject({ error: { code: "BOOK_MISMATCH" } })`                  | INV-74                 | Yes  |
+| `set-investment-instrument-status.test.ts:174` `expect(result).toMatchObject({ error: { code: "ENTITY_NOT_FOUND" } })`               | missing entity         | Yes  |
 
 **Adequacy verdict**: PASS. Eight Memory command scenarios assert lifecycle DTOs, facts, stable errors and rollback snapshots. They cover the T46 transition branches without mock-call-only assertions.
 
@@ -1792,11 +1792,11 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: baseline Memory 38 files/369 tests; T47 39 files/377 tests. Full Memory passed: domain/application build, Memory 377/377, Memory typecheck.
 
-| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
-| --- | --- | --- | --- |
-| INV-20/26 label-only | `update-investment-position-metadata.test.ts:46` `expect(result).toEqual({ ... label: "Travel", version: 1 })`; `:76` `expect({...after,...}).toEqual(before)` | only label changes; economic snapshot remains intact | Yes |
-| INV-76 no-op/CAS | `update-investment-position-metadata.test.ts:106` `expect(result).toMatchObject({ value: { version: 0 } })`; `:118` `expect(result).toMatchObject({ error: { code: "OPTIMISTIC_CONCURRENCY_FAILURE" } })` | no-op retains version; stale write fails | Yes |
-| INV-74/83 | `update-investment-position-metadata.test.ts:150` `expect(result).toMatchObject({ error: { code: "BOOK_MISMATCH" } })`; `:165` `expect(result).toMatchObject({ error: { code: "INVALID_INVESTMENT_INPUT" } })` | cross-book and over-limit input write nothing | Yes |
+| Done-when / requirement | Evidence                                                                                                                                                                                                       | Spec-defined outcome                                 | Covered |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- | ------- |
+| INV-20/26 label-only    | `update-investment-position-metadata.test.ts:46` `expect(result).toEqual({ ... label: "Travel", version: 1 })`; `:76` `expect({...after,...}).toEqual(before)`                                                 | only label changes; economic snapshot remains intact | Yes     |
+| INV-76 no-op/CAS        | `update-investment-position-metadata.test.ts:106` `expect(result).toMatchObject({ value: { version: 0 } })`; `:118` `expect(result).toMatchObject({ error: { code: "OPTIMISTIC_CONCURRENCY_FAILURE" } })`      | no-op retains version; stale write fails             | Yes     |
+| INV-74/83               | `update-investment-position-metadata.test.ts:150` `expect(result).toMatchObject({ error: { code: "BOOK_MISMATCH" } })`; `:165` `expect(result).toMatchObject({ error: { code: "INVALID_INVESTMENT_INPUT" } })` | cross-book and over-limit input write nothing        | Yes     |
 
 **Adequacy verdict**: PASS. Eight command scenarios assert DTO/state, facts, errors and rollback snapshots; no mock-only assertions.
 
@@ -1821,11 +1821,11 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: baseline Memory 39 files/377 tests; T48 40 files/393 tests. `execute-investment-request.test.ts` adds 16 spec-derived scenarios. Full Memory passed: domain/application build, Memory 393/393, Memory typecheck.
 
-| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
-| --- | --- | --- | --- |
-| INV-78 retry | `execute-investment-request.test.ts:42` `expect(await execute(h)).toEqual({ ok: true, value: result() })` | equivalent retry returns saved result | Yes |
-| INV-79 conflict | `execute-investment-request.test.ts:49` `expect(...).toMatchObject({ error: { code: "IDEMPOTENCY_CONFLICT" } })` | differing payload under same request ID fails | Yes |
-| INV-74 read recovery | `execute-investment-request.test.ts:29` `expect(await getInvestmentRequestResult(...)).toMatchObject(...)` | receipt remains book-scoped and recoverable | Yes |
+| Done-when / requirement | Evidence                                                                                                         | Spec-defined outcome                          | Covered |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------- | --------------------------------------------- | ------- |
+| INV-78 retry            | `execute-investment-request.test.ts:42` `expect(await execute(h)).toEqual({ ok: true, value: result() })`        | equivalent retry returns saved result         | Yes     |
+| INV-79 conflict         | `execute-investment-request.test.ts:49` `expect(...).toMatchObject({ error: { code: "IDEMPOTENCY_CONFLICT" } })` | differing payload under same request ID fails | Yes     |
+| INV-74 read recovery    | `execute-investment-request.test.ts:29` `expect(await getInvestmentRequestResult(...)).toMatchObject(...)`       | receipt remains book-scoped and recoverable   | Yes     |
 
 **Adequacy verdict**: PASS. Sixteen tests assert canonical values, receipt state, retry results and stable conflicts; no mock-only assertions.
 
@@ -1850,26 +1850,26 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: before T49 Memory: 40 files/393 tests; after: 41 files/408 tests. `set-investment-opening-balance.test.ts` adds 15 integration scenarios. `validate_tasks.py` passed with 0 errors/0 warnings. Full Memory + Build passed: Domain 20 files/404 tests, Application 21 files/241 tests, Memory 41 files/408 tests; lint, check-types and build passed for Domain, Application and Memory; `git diff --check` passed.
 
-| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
-| --- | --- | --- | --- |
-| INV-78 idempotent retry | `set-investment-opening-balance.test.ts:70` `expect(await useCase(h).execute(command)).toEqual({ ok: true, value: { requestId: "request-1", journalEntryIds: ["entry-1"], warnings: [] } })`; `:78` `expect(h.store.listJournalEntries()).toHaveLength(1)` | retry equivalente retorna o resultado salvo sem novo efeito | Yes |
-| INV-120/INV-121 origem ausente é um passo explícito, sem alocação ou transferência implícita | `set-investment-opening-balance.test.ts:169` `expect(h.store.listInvestmentPositions()).toEqual([])`; `:170` `expect(h.store.listInvestmentOperations()).toEqual([])`; `:172` `expect(h.store.listJournalEntries()).toHaveLength(1)` | o saldo inicial é separado da alocação; não cria fallback implícito | Yes, slice T49 |
-| INV-122 custo conhecido mais caixa real, sem valuation | `set-investment-opening-balance.test.ts:52` `expect(h.store.listJournalEntries()[0]?.postings).toEqual([... amountMinor: 10500n ...])` | o lançamento reconhece o valor explícito de custo+caixa real, sem valuation | Yes, slice T49 |
-| INV-123 custo não conhecido não usa valuation como custo | `packages/application/src/ports/investment-commands.ts:36-42` expõe somente `amountMinor`, sem campo de valuation; `set-investment-opening-balance.test.ts:164` `expect(h.store.listInvestmentValuations()).toEqual([])` | não há rota de valuation neste comando; rejeição de abertura sem custo é de T50 | Yes, boundary T49 |
-| INV-124 saldo inicial já ativo | `set-investment-opening-balance.test.ts:92` `expect(...).toMatchObject({ ok: false, error: { code: "OPENING_BALANCE_ALREADY_SET" } })`; `:96` `expect(h.store.listJournalEntries()).toEqual([...])` | preservar o código e o saldo existente | Yes |
-| INV-137 confirmação permanece após falha posterior | `set-investment-opening-balance.test.ts:184` `expect(h.store.listJournalEntries()).toEqual([expect.objectContaining(...)])`; `:195` `expect(h.store.getInvestmentRequest(...)).toBeUndefined()` | saldo confirmado continua como caixa não alocado e a falha não registra recibo | Yes, boundary before T50 allocation |
-| INV-145/INV-147 recuperação não cria aviso/efeito histórico adicional | `set-investment-opening-balance.test.ts:44` `expect(result).toEqual({ ok: true, value: { ..., warnings: [] } })`; `:171` `expect(h.store.listInvestmentValuations()).toEqual([])` | saldo explícito não duplica operação, avaliação ou aviso; cálculo/remoção de aviso é T60 | Yes, boundary T49 |
-| atomicidade de falha | `set-investment-opening-balance.test.ts:109` `expect(...).toMatchObject({ ok: false, error: { code: "ENTITY_NOT_FOUND" } })`; `:113` `expect(h.store.listJournalEntries()).toEqual([])` | falha antes do commit não cria journal nem recibo | Yes |
+| Done-when / requirement                                                                      | Evidence                                                                                                                                                                                                                                                   | Spec-defined outcome                                                                     | Covered                             |
+| -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | ----------------------------------- |
+| INV-78 idempotent retry                                                                      | `set-investment-opening-balance.test.ts:70` `expect(await useCase(h).execute(command)).toEqual({ ok: true, value: { requestId: "request-1", journalEntryIds: ["entry-1"], warnings: [] } })`; `:78` `expect(h.store.listJournalEntries()).toHaveLength(1)` | retry equivalente retorna o resultado salvo sem novo efeito                              | Yes                                 |
+| INV-120/INV-121 origem ausente é um passo explícito, sem alocação ou transferência implícita | `set-investment-opening-balance.test.ts:169` `expect(h.store.listInvestmentPositions()).toEqual([])`; `:170` `expect(h.store.listInvestmentOperations()).toEqual([])`; `:172` `expect(h.store.listJournalEntries()).toHaveLength(1)`                       | o saldo inicial é separado da alocação; não cria fallback implícito                      | Yes, slice T49                      |
+| INV-122 custo conhecido mais caixa real, sem valuation                                       | `set-investment-opening-balance.test.ts:52` `expect(h.store.listJournalEntries()[0]?.postings).toEqual([... amountMinor: 10500n ...])`                                                                                                                     | o lançamento reconhece o valor explícito de custo+caixa real, sem valuation              | Yes, slice T49                      |
+| INV-123 custo não conhecido não usa valuation como custo                                     | `packages/application/src/ports/investment-commands.ts:36-42` expõe somente `amountMinor`, sem campo de valuation; `set-investment-opening-balance.test.ts:164` `expect(h.store.listInvestmentValuations()).toEqual([])`                                   | não há rota de valuation neste comando; rejeição de abertura sem custo é de T50          | Yes, boundary T49                   |
+| INV-124 saldo inicial já ativo                                                               | `set-investment-opening-balance.test.ts:92` `expect(...).toMatchObject({ ok: false, error: { code: "OPENING_BALANCE_ALREADY_SET" } })`; `:96` `expect(h.store.listJournalEntries()).toEqual([...])`                                                        | preservar o código e o saldo existente                                                   | Yes                                 |
+| INV-137 confirmação permanece após falha posterior                                           | `set-investment-opening-balance.test.ts:184` `expect(h.store.listJournalEntries()).toEqual([expect.objectContaining(...)])`; `:195` `expect(h.store.getInvestmentRequest(...)).toBeUndefined()`                                                            | saldo confirmado continua como caixa não alocado e a falha não registra recibo           | Yes, boundary before T50 allocation |
+| INV-145/INV-147 recuperação não cria aviso/efeito histórico adicional                        | `set-investment-opening-balance.test.ts:44` `expect(result).toEqual({ ok: true, value: { ..., warnings: [] } })`; `:171` `expect(h.store.listInvestmentValuations()).toEqual([])`                                                                          | saldo explícito não duplica operação, avaliação ou aviso; cálculo/remoção de aviso é T60 | Yes, boundary T49                   |
+| atomicidade de falha                                                                         | `set-investment-opening-balance.test.ts:109` `expect(...).toMatchObject({ ok: false, error: { code: "ENTITY_NOT_FOUND" } })`; `:113` `expect(h.store.listJournalEntries()).toEqual([])`                                                                    | falha antes do commit não cria journal nem recibo                                        | Yes                                 |
 
-| Test assertion | Maps to | Keep? |
-| --- | --- | --- |
-| `set-investment-opening-balance.test.ts:44` `expect(result).toEqual(...)` | INV-122, INV-145 | Yes |
-| `:70` `expect(await useCase(h).execute(command)).toEqual(...)` and `:78` `expect(...).toHaveLength(1)` | INV-78 | Yes |
-| `:85` `expect(...).toMatchObject({ error: { code: "IDEMPOTENCY_CONFLICT" } })` | INV-78 conflict edge | Yes |
-| `:92` `expect(...).toMatchObject({ error: { code: "OPENING_BALANCE_ALREADY_SET" } })` | INV-124 | Yes |
-| `:109`, `:132`, `:208` failure-code assertions and receipt/journal assertions | INV-137 and command atomicity | Yes |
-| `:169-172` empty allocation/valuation assertions | INV-120, INV-121, INV-123, INV-147 boundary | Yes |
-| `:184-197` confirmed-entry and absent-receipt assertions | INV-137 | Yes |
+| Test assertion                                                                                         | Maps to                                     | Keep? |
+| ------------------------------------------------------------------------------------------------------ | ------------------------------------------- | ----- |
+| `set-investment-opening-balance.test.ts:44` `expect(result).toEqual(...)`                              | INV-122, INV-145                            | Yes   |
+| `:70` `expect(await useCase(h).execute(command)).toEqual(...)` and `:78` `expect(...).toHaveLength(1)` | INV-78                                      | Yes   |
+| `:85` `expect(...).toMatchObject({ error: { code: "IDEMPOTENCY_CONFLICT" } })`                         | INV-78 conflict edge                        | Yes   |
+| `:92` `expect(...).toMatchObject({ error: { code: "OPENING_BALANCE_ALREADY_SET" } })`                  | INV-124                                     | Yes   |
+| `:109`, `:132`, `:208` failure-code assertions and receipt/journal assertions                          | INV-137 and command atomicity               | Yes   |
+| `:169-172` empty allocation/valuation assertions                                                       | INV-120, INV-121, INV-123, INV-147 boundary | Yes   |
+| `:184-197` confirmed-entry and absent-receipt assertions                                               | INV-137                                     | Yes   |
 
 **Adequacy verdict**: PASS. The 15 spec-scoped integration scenarios assert receipt, posting amount, persisted state and stable errors, not mock calls. T50 owns rejection of an opening position without book cost; T60 owns the calculated negative-cash warning transition.
 
@@ -1896,21 +1896,21 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: baseline Memory: 42 files, 408 tests; T50: 43 files, 426 tests. Full Memory passed: Domain/Application builds, Memory 426/426 tests and Memory typecheck.
 
-| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
-| --- | --- | --- | --- |
-| INV-19, INV-20, INV-27, INV-33, INV-127 | `packages/infrastructure-memory/src/use-cases/open-investment-position.test.ts:52-82` `expect(...).toEqual({ ..., positionId: "position-1", allocationRevision: 1, operationId: "operation-1", journalEntryIds: [] })`; `:72-82` operation `OPENING_ALLOCATION`/no journal | Opening atomically records the position and its first allocation, starting revision 1, without a ledger entry. | Yes |
-| INV-28, INV-32, INV-145 | `open-investment-position.test.ts:61-69` `warnings: [{ code: "INVESTMENT_CASH_NEGATIVE", cashMinor: "-1000"... }]`; `:101-108` `expect(...warnings).toMatchObject([])` | Negative cash confirms with the calculated warning; sufficient explicit balance leaves no warning. | Yes |
-| INV-21, INV-120, INV-121, INV-123 | `open-investment-position.test.ts:130-142` `expect(...code).toMatchObject({ code: "INVESTMENT_BOOK_COST_REQUIRED" })`; `:145-189` exact invalid value/quantity assertions; `:155-169` unit position with zero cost remains OPEN | Cost is mandatory when unknown; quantity/cost are never invented; a unit holding can retain zero known cost. | Yes |
-| INV-75, INV-78, INV-137 | `open-investment-position.test.ts:111-127` `expect(...positionId: "position-1", operationId: "operation-1")`, `toHaveLength(1)`, and `IDEMPOTENCY_CONFLICT`; `:274-279` absent failed receipt; `:304-324` `toHaveLength(1)` journal | Retry has no duplicate effect; invalid work rolls back; a separately confirmed opening balance is not repeated. | Yes |
-| INV-34, INV-74 | `open-investment-position.test.ts:192-247` exact `ENTITY_NOT_FOUND` and `BOOK_MISMATCH` error assertions | Missing/cross-book references cannot create an implicit source or write state. | Yes |
+| Done-when / requirement                 | Evidence                                                                                                                                                                                                                                                                   | Spec-defined outcome                                                                                            | Covered |
+| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ------- |
+| INV-19, INV-20, INV-27, INV-33, INV-127 | `packages/infrastructure-memory/src/use-cases/open-investment-position.test.ts:52-82` `expect(...).toEqual({ ..., positionId: "position-1", allocationRevision: 1, operationId: "operation-1", journalEntryIds: [] })`; `:72-82` operation `OPENING_ALLOCATION`/no journal | Opening atomically records the position and its first allocation, starting revision 1, without a ledger entry.  | Yes     |
+| INV-28, INV-32, INV-145                 | `open-investment-position.test.ts:61-69` `warnings: [{ code: "INVESTMENT_CASH_NEGATIVE", cashMinor: "-1000"... }]`; `:101-108` `expect(...warnings).toMatchObject([])`                                                                                                     | Negative cash confirms with the calculated warning; sufficient explicit balance leaves no warning.              | Yes     |
+| INV-21, INV-120, INV-121, INV-123       | `open-investment-position.test.ts:130-142` `expect(...code).toMatchObject({ code: "INVESTMENT_BOOK_COST_REQUIRED" })`; `:145-189` exact invalid value/quantity assertions; `:155-169` unit position with zero cost remains OPEN                                            | Cost is mandatory when unknown; quantity/cost are never invented; a unit holding can retain zero known cost.    | Yes     |
+| INV-75, INV-78, INV-137                 | `open-investment-position.test.ts:111-127` `expect(...positionId: "position-1", operationId: "operation-1")`, `toHaveLength(1)`, and `IDEMPOTENCY_CONFLICT`; `:274-279` absent failed receipt; `:304-324` `toHaveLength(1)` journal                                        | Retry has no duplicate effect; invalid work rolls back; a separately confirmed opening balance is not repeated. | Yes     |
+| INV-34, INV-74                          | `open-investment-position.test.ts:192-247` exact `ENTITY_NOT_FOUND` and `BOOK_MISMATCH` error assertions                                                                                                                                                                   | Missing/cross-book references cannot create an implicit source or write state.                                  | Yes     |
 
-| Test assertion | Maps to | Keep |
-| --- | --- | --- |
-| `open-investment-position.test.ts:52-82` exact result, `OPENING_ALLOCATION`, and `journalEntries=[]` assertions | INV-19, INV-27, INV-33 | Yes |
-| `:101-108`, `:282-301` warning/no-warning and ledger-length assertions | INV-28, INV-32, INV-120, INV-145 | Yes |
-| `:114-127`, `:274-279`, `:304-324` replay/conflict/rollback/separate-balance assertions | INV-75, INV-78, INV-137 | Yes |
-| `:130-189` required cost and quantity-mode assertions | INV-21, INV-121, INV-123 | Yes |
-| `:192-271` missing/cross-book/date/revision/label assertions | INV-19, INV-20, INV-74, INV-127 | Yes |
+| Test assertion                                                                                                  | Maps to                          | Keep |
+| --------------------------------------------------------------------------------------------------------------- | -------------------------------- | ---- |
+| `open-investment-position.test.ts:52-82` exact result, `OPENING_ALLOCATION`, and `journalEntries=[]` assertions | INV-19, INV-27, INV-33           | Yes  |
+| `:101-108`, `:282-301` warning/no-warning and ledger-length assertions                                          | INV-28, INV-32, INV-120, INV-145 | Yes  |
+| `:114-127`, `:274-279`, `:304-324` replay/conflict/rollback/separate-balance assertions                         | INV-75, INV-78, INV-137          | Yes  |
+| `:130-189` required cost and quantity-mode assertions                                                           | INV-21, INV-121, INV-123         | Yes  |
+| `:192-271` missing/cross-book/date/revision/label assertions                                                    | INV-19, INV-20, INV-74, INV-127  | Yes  |
 
 **Adequacy verdict**: PASS. The 18 command scenarios assert persisted operation/position state, exact warnings and stable errors rather than calls; every scenario maps to T50 requirements and follows the Memory integration location in the Test Coverage Matrix.
 
@@ -1935,19 +1935,19 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: baseline Memory: 43 files, 426 tests; T51: 44 files, 442 tests. Full Memory passed: Domain/Application builds, Memory 442/442 tests and Memory typecheck.
 
-| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
-| --- | --- | --- | --- |
-| INV-29, INV-35, INV-45, INV-128 | `packages/infrastructure-memory/src/use-cases/record-investment-purchase.test.ts:89-103` `expect(...positionVersion: 1, allocationRevision: 2, journalEntryIds: [])` and `expect(...quantity: "12", bookCostMinor: "1200")` | Internal purchase changes only explicit units/cost, advances allocation revision once, and creates no zero-effect journal. | Yes |
-| INV-30, INV-44, INV-125, INV-126 | `record-investment-purchase.test.ts:118-133` `journalEntryIds: ["entry-1"]`, `bookCostMinor: "1200"`, and postings `-215n/+200n/+10n/+5n` | External application creates one combined journal and never capitalizes fee/tax into cost. | Yes |
-| INV-32, INV-76, INV-77, INV-78, INV-145 | `record-investment-purchase.test.ts:144-168` exact stale-CAS, replay length, and conflict assertions; `:214-226` warning `cashMinor: "-1200"` | Stale writes fail, matching retries do not duplicate, and negative cash remains a warning. | Yes |
-| INV-34, INV-36, INV-74, INV-118 | `record-investment-purchase.test.ts:135-142`, `:170-180`, `:228-250` exact route/entity/quantity/error assertions | Funding is explicit; invalid reference, amount, or units cannot persist a purchase. | Yes |
+| Done-when / requirement                 | Evidence                                                                                                                                                                                                                    | Spec-defined outcome                                                                                                       | Covered |
+| --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------- |
+| INV-29, INV-35, INV-45, INV-128         | `packages/infrastructure-memory/src/use-cases/record-investment-purchase.test.ts:89-103` `expect(...positionVersion: 1, allocationRevision: 2, journalEntryIds: [])` and `expect(...quantity: "12", bookCostMinor: "1200")` | Internal purchase changes only explicit units/cost, advances allocation revision once, and creates no zero-effect journal. | Yes     |
+| INV-30, INV-44, INV-125, INV-126        | `record-investment-purchase.test.ts:118-133` `journalEntryIds: ["entry-1"]`, `bookCostMinor: "1200"`, and postings `-215n/+200n/+10n/+5n`                                                                                   | External application creates one combined journal and never capitalizes fee/tax into cost.                                 | Yes     |
+| INV-32, INV-76, INV-77, INV-78, INV-145 | `record-investment-purchase.test.ts:144-168` exact stale-CAS, replay length, and conflict assertions; `:214-226` warning `cashMinor: "-1200"`                                                                               | Stale writes fail, matching retries do not duplicate, and negative cash remains a warning.                                 | Yes     |
+| INV-34, INV-36, INV-74, INV-118         | `record-investment-purchase.test.ts:135-142`, `:170-180`, `:228-250` exact route/entity/quantity/error assertions                                                                                                           | Funding is explicit; invalid reference, amount, or units cannot persist a purchase.                                        | Yes     |
 
-| Test assertion | Maps to | Keep |
-| --- | --- | --- |
-| `record-investment-purchase.test.ts:89-103` state and no-journal assertions | INV-29, INV-35, INV-45, INV-128 | Yes |
-| `:118-133` exact combined postings and non-capitalized cost | INV-30, INV-44, INV-125, INV-126 | Yes |
-| `:144-250` error, CAS, retry, warning and date assertions | INV-32, INV-34, INV-36, INV-74, INV-76, INV-77, INV-78, INV-118, INV-145 | Yes |
-| `:252-264` persisted before-state/deltas assertion | operation audit snapshot | Yes |
+| Test assertion                                                              | Maps to                                                                  | Keep |
+| --------------------------------------------------------------------------- | ------------------------------------------------------------------------ | ---- |
+| `record-investment-purchase.test.ts:89-103` state and no-journal assertions | INV-29, INV-35, INV-45, INV-128                                          | Yes  |
+| `:118-133` exact combined postings and non-capitalized cost                 | INV-30, INV-44, INV-125, INV-126                                         | Yes  |
+| `:144-250` error, CAS, retry, warning and date assertions                   | INV-32, INV-34, INV-36, INV-74, INV-76, INV-77, INV-78, INV-118, INV-145 | Yes  |
+| `:252-264` persisted before-state/deltas assertion                          | operation audit snapshot                                                 | Yes  |
 
 **Adequacy verdict**: PASS. Sixteen Memory command scenarios assert operation, position, journal postings, warnings and stable failures; no scenario relies on mock calls or exceeds the T51 contract.
 
@@ -1972,21 +1972,21 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: baseline Memory: 43 files, 442 tests; T52: 44 files, 467 tests. Full Memory passed: Domain/Application builds, Memory 467/467 tests and Memory typecheck.
 
-| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
-| --- | --- | --- | --- |
-| INV-35, INV-37, INV-39, INV-44, INV-126 | `packages/infrastructure-memory/src/use-cases/record-investment-sale.test.ts:149` `expect(...).toMatchObject({ quantity: "6", bookCostMinor: "600", status: "OPEN" })`; `:180` `expect(...postings).toEqual(...)`; `:188` `expect(...).toMatchObject({ feesMinor: "20", taxesMinor: "30", netCashFlowMinor: "450" })` | A partial exit uses the supplied cost/quantity and separates gross gain from fee/tax. | Yes |
-| INV-38, INV-40, INV-53 | `record-investment-sale.test.ts:230` `expect(...postings).toEqual(...)`; `:241` `expect(...).toMatchObject({ quantity: "0", bookCostMinor: "0", status: "CLOSED", closedOn: "2026-08-04" })`; `:270` amount-mode close assertion | Direct redemption creates one combined external journal and a zero-cost final state closes on occurredOn. | Yes |
-| INV-35, INV-36, INV-39, INV-40, INV-41 | `record-investment-sale.test.ts:285` `expect(...).toMatchObject({ quantity: "6", bookCostMinor: "0", status: "OPEN" })`; `:301`, `:312`, `:323`, `:334` exact `INVALID_INVESTMENT_OPERATION` assertions | Zero known cost retains units; omitted, excessive, or incoherent reductions cannot derive FIFO/average cost or persist state. | Yes |
-| INV-45, INV-139 | `record-investment-sale.test.ts:252` `expect(...).toMatchObject({ ok: true, value: { journalEntryIds: [] } })`; `:259` `expect(...).toEqual([])` | An internal exit at cost without expenses creates no JournalEntry; full explicit cost/quantity closes. UI prefill is T80. | Yes |
-| INV-74, INV-75, INV-76, INV-78 | `record-investment-sale.test.ts:422` exact negative-net failure; `:434` unchanged position; `:443` exact stale-CAS error; `:460`, `:464`, `:465` replay result and one effect; `:506` `BOOK_MISMATCH` | Invalid work leaves state unchanged, stale/cross-book writes fail, and matching retries retain original effects. | Yes |
-| INV-51, INV-128 | `record-investment-sale.test.ts:139` `expect(...value).toMatchObject({ allocationRevision: 2 })`; `:479` `expect(...operation).toMatchObject({ positionBefore: ..., bookCostDeltaMinor: "-400" })` | An economic reduction advances allocation revision once and records its prior allocation state. Valuation read fallback is T62. | Yes |
+| Done-when / requirement                 | Evidence                                                                                                                                                                                                                                                                                                              | Spec-defined outcome                                                                                                            | Covered |
+| --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| INV-35, INV-37, INV-39, INV-44, INV-126 | `packages/infrastructure-memory/src/use-cases/record-investment-sale.test.ts:149` `expect(...).toMatchObject({ quantity: "6", bookCostMinor: "600", status: "OPEN" })`; `:180` `expect(...postings).toEqual(...)`; `:188` `expect(...).toMatchObject({ feesMinor: "20", taxesMinor: "30", netCashFlowMinor: "450" })` | A partial exit uses the supplied cost/quantity and separates gross gain from fee/tax.                                           | Yes     |
+| INV-38, INV-40, INV-53                  | `record-investment-sale.test.ts:230` `expect(...postings).toEqual(...)`; `:241` `expect(...).toMatchObject({ quantity: "0", bookCostMinor: "0", status: "CLOSED", closedOn: "2026-08-04" })`; `:270` amount-mode close assertion                                                                                      | Direct redemption creates one combined external journal and a zero-cost final state closes on occurredOn.                       | Yes     |
+| INV-35, INV-36, INV-39, INV-40, INV-41  | `record-investment-sale.test.ts:285` `expect(...).toMatchObject({ quantity: "6", bookCostMinor: "0", status: "OPEN" })`; `:301`, `:312`, `:323`, `:334` exact `INVALID_INVESTMENT_OPERATION` assertions                                                                                                               | Zero known cost retains units; omitted, excessive, or incoherent reductions cannot derive FIFO/average cost or persist state.   | Yes     |
+| INV-45, INV-139                         | `record-investment-sale.test.ts:252` `expect(...).toMatchObject({ ok: true, value: { journalEntryIds: [] } })`; `:259` `expect(...).toEqual([])`                                                                                                                                                                      | An internal exit at cost without expenses creates no JournalEntry; full explicit cost/quantity closes. UI prefill is T80.       | Yes     |
+| INV-74, INV-75, INV-76, INV-78          | `record-investment-sale.test.ts:422` exact negative-net failure; `:434` unchanged position; `:443` exact stale-CAS error; `:460`, `:464`, `:465` replay result and one effect; `:506` `BOOK_MISMATCH`                                                                                                                 | Invalid work leaves state unchanged, stale/cross-book writes fail, and matching retries retain original effects.                | Yes     |
+| INV-51, INV-128                         | `record-investment-sale.test.ts:139` `expect(...value).toMatchObject({ allocationRevision: 2 })`; `:479` `expect(...operation).toMatchObject({ positionBefore: ..., bookCostDeltaMinor: "-400" })`                                                                                                                    | An economic reduction advances allocation revision once and records its prior allocation state. Valuation read fallback is T62. | Yes     |
 
-| Test assertion | Maps to | Keep? |
-| --- | --- | --- |
-| `record-investment-sale.test.ts:149`, `:154`, `:180` partial state and posting assertions | INV-35, INV-37, INV-39, INV-44, INV-126 | Yes |
-| `:230`, `:241`, `:252` direct redemption, closed state, no-journal assertions | INV-38, INV-40, INV-45, INV-53, INV-139 | Yes |
-| `:285`, `:301/:312/:323/:334`, `:422/:434` zero-cost and invalid-reduction state/errors | INV-35, INV-36, INV-41, INV-75 | Yes |
-| `:443`, `:460/:464/:465`, `:506`, `:479` CAS, retry, book isolation, audit snapshot | INV-74, INV-76, INV-78, INV-128 | Yes |
+| Test assertion                                                                            | Maps to                                 | Keep? |
+| ----------------------------------------------------------------------------------------- | --------------------------------------- | ----- |
+| `record-investment-sale.test.ts:149`, `:154`, `:180` partial state and posting assertions | INV-35, INV-37, INV-39, INV-44, INV-126 | Yes   |
+| `:230`, `:241`, `:252` direct redemption, closed state, no-journal assertions             | INV-38, INV-40, INV-45, INV-53, INV-139 | Yes   |
+| `:285`, `:301/:312/:323/:334`, `:422/:434` zero-cost and invalid-reduction state/errors   | INV-35, INV-36, INV-41, INV-75          | Yes   |
+| `:443`, `:460/:464/:465`, `:506`, `:479` CAS, retry, book isolation, audit snapshot       | INV-74, INV-76, INV-78, INV-128         | Yes   |
 
 **Adequacy verdict**: PASS. Twenty-five Memory command scenarios assert position state, complete posting values, close dates, error codes, receipt replay, and audit snapshots. No test relies on mock calls or introduces an implicit FIFO/average-cost policy. INV-46 is AMORTIZATION behavior owned by T54, not a SALE/REDEMPTION behavior.
 
@@ -2011,21 +2011,21 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: baseline Memory: 44 files, 467 tests; T53: 45 files, 479 tests. The 12 integration scenarios in `record-investment-income.test.ts` cover the normative retained-income fixture, position closure, category validation, invalid amount/route rollback, CAS, replay, idempotency conflict and book isolation. `validate_tasks.py` passed with 0 errors/0 warnings. Full Memory passed: Domain/Application builds, Memory 45/45 files and 479/479 tests, plus Memory typecheck; `git diff --check` passed.
 
-| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
-| --- | --- | --- | --- |
-| INV-42, INV-44, INV-126 | `packages/infrastructure-memory/src/use-cases/record-investment-income.test.ts:167-170` `expect.objectContaining({ accountId: f.broker.id, amountMinor: 88n })`, `...income.id, amountMinor: -100n`, `...fee.id, amountMinor: 2n`, `...tax.id, amountMinor: 10n`; `:200-205` `toHaveLength(2)` and `toEqual(["OPENING_ALLOCATION", "INCOME"])` | R=100, f=2, t=10 posts I=88, income -100 and expenses +12 in one INCOME without FEE/TAX operations. | Yes |
-| INV-129 | `record-investment-income.test.ts:178-184` `expect(...).toMatchObject({ quantity: "10", bookCostMinor: "1000", allocationRevision: 1, version: 1 })`; `:185-193` operation fields including `bookCostDeltaMinor: "0"` | Income advances position version while preserving allocation, units and cost. | Yes |
-| INV-119 | `record-investment-income.test.ts:212-223` `expect(...positionVersion: 2, allocationRevision: 2...)` and `expect(...).toMatchObject({ status: "CLOSED", closedOn: "2026-08-04", allocationRevision: 2 })` | An active CLOSED position accepts income and remains closed without reopening or allocating. | Yes |
-| INV-43 boundary, INV-75 | `record-investment-income.test.ts:229-231`, `:237-245`, `:251-260`, `:266-271` exact category/operation errors plus unchanged operations/journal | Invalid categories, gross/net values or non-internal route leave no partial operation or journal. | Yes |
-| INV-74, INV-76, INV-78 | `record-investment-income.test.ts:277-283` exact stale-CAS error and unchanged version; `:289-294` replay IDs plus one effect; `:301-302` conflict; `:314-318` BOOK_MISMATCH and absent receipt | Stale or cross-book commands cannot write; equivalent retry returns the saved result without duplicates; reused request with changed content conflicts. | Yes |
+| Done-when / requirement | Evidence                                                                                                                                                                                                                                                                                                                                       | Spec-defined outcome                                                                                                                                    | Covered |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| INV-42, INV-44, INV-126 | `packages/infrastructure-memory/src/use-cases/record-investment-income.test.ts:167-170` `expect.objectContaining({ accountId: f.broker.id, amountMinor: 88n })`, `...income.id, amountMinor: -100n`, `...fee.id, amountMinor: 2n`, `...tax.id, amountMinor: 10n`; `:200-205` `toHaveLength(2)` and `toEqual(["OPENING_ALLOCATION", "INCOME"])` | R=100, f=2, t=10 posts I=88, income -100 and expenses +12 in one INCOME without FEE/TAX operations.                                                     | Yes     |
+| INV-129                 | `record-investment-income.test.ts:178-184` `expect(...).toMatchObject({ quantity: "10", bookCostMinor: "1000", allocationRevision: 1, version: 1 })`; `:185-193` operation fields including `bookCostDeltaMinor: "0"`                                                                                                                          | Income advances position version while preserving allocation, units and cost.                                                                           | Yes     |
+| INV-119                 | `record-investment-income.test.ts:212-223` `expect(...positionVersion: 2, allocationRevision: 2...)` and `expect(...).toMatchObject({ status: "CLOSED", closedOn: "2026-08-04", allocationRevision: 2 })`                                                                                                                                      | An active CLOSED position accepts income and remains closed without reopening or allocating.                                                            | Yes     |
+| INV-43 boundary, INV-75 | `record-investment-income.test.ts:229-231`, `:237-245`, `:251-260`, `:266-271` exact category/operation errors plus unchanged operations/journal                                                                                                                                                                                               | Invalid categories, gross/net values or non-internal route leave no partial operation or journal.                                                       | Yes     |
+| INV-74, INV-76, INV-78  | `record-investment-income.test.ts:277-283` exact stale-CAS error and unchanged version; `:289-294` replay IDs plus one effect; `:301-302` conflict; `:314-318` BOOK_MISMATCH and absent receipt                                                                                                                                                | Stale or cross-book commands cannot write; equivalent retry returns the saved result without duplicates; reused request with changed content conflicts. | Yes     |
 
-| Test assertion | Maps to | Keep? |
-| --- | --- | --- |
-| `record-investment-income.test.ts:153-172` exact result and all four posting amounts | INV-42, INV-44, INV-126 | Yes |
-| `:178-205` position/operation snapshot and one-operation assertions | INV-42, INV-126, INV-129 | Yes |
-| `:212-223` closed-position result and persisted CLOSED state | INV-119 | Yes |
-| `:229-283` category, invalid amount/route, rollback and CAS assertions | INV-75, INV-76 and operation validation | Yes |
-| `:289-318` replay/conflict and cross-book assertions | INV-74, INV-78 | Yes |
+| Test assertion                                                                       | Maps to                                 | Keep? |
+| ------------------------------------------------------------------------------------ | --------------------------------------- | ----- |
+| `record-investment-income.test.ts:153-172` exact result and all four posting amounts | INV-42, INV-44, INV-126                 | Yes   |
+| `:178-205` position/operation snapshot and one-operation assertions                  | INV-42, INV-126, INV-129                | Yes   |
+| `:212-223` closed-position result and persisted CLOSED state                         | INV-119                                 | Yes   |
+| `:229-283` category, invalid amount/route, rollback and CAS assertions               | INV-75, INV-76 and operation validation | Yes   |
+| `:289-318` replay/conflict and cross-book assertions                                 | INV-74, INV-78                          | Yes   |
 
 **Adequacy verdict**: PASS. The 12 spec-scoped Memory command scenarios assert result values, persisted operation/position state, complete postings and stable errors. They neither rely on mock calls nor add a separate FEE/TAX operation.
 
@@ -2050,19 +2050,19 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: baseline Memory: 45 files, 479 tests; T54: 46 files, 489 tests. The 10 integration scenarios in `record-investment-amortization.test.ts` cover the normative fixture, retained expenses, loss, category validation, invalid reduction/route rollback, CAS, replay, idempotency conflict and book isolation. Full Memory passed: Domain/Application builds, Memory 46/46 files and 489/489 tests, plus Memory typecheck; `git diff --check` passed.
 
-| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
-| --- | --- | --- | --- |
-| INV-42, INV-46 | `packages/infrastructure-memory/src/use-cases/record-investment-amortization.test.ts:55-64` `expect(...).toMatchObject({ quantity: "10", bookCostMinor: "800", allocationRevision: 2 })`, `expect.objectContaining({ accountId: f.broker.id, amountMinor: 20n })`, and `netCashFlowMinor: "220"` | C=1000 reduced by 200 leaves cost 800 and units unchanged; R=220 produces income 20 and cash receipt 220. | Yes |
-| INV-44, INV-126 | `record-investment-amortization.test.ts:70-76` exact I=8, gain=-20, F=2 and T=10 postings plus `toEqual(["OPENING_ALLOCATION", "AMORTIZATION"])` | Retentions are distinct postings in the one amortization operation, never auxiliary FEE/TAX operations. | Yes |
-| INV-35, INV-43, INV-75 | `record-investment-amortization.test.ts:90-100` exact category/operation errors and unchanged position; `:103-106` external-route failure and empty journal | Cost reduction is explicit and valid; invalid category, amount or route leaves no partial state. | Yes |
-| INV-74, INV-76, INV-78, INV-128 | `record-investment-amortization.test.ts:111-112` stale-CAS error and unchanged revision; `:118-120` replay one effect; `:126` conflict; `:133-134` BOOK_MISMATCH and absent receipt | Stale/cross-book commands cannot write; retry returns stored IDs without duplicates; economic reduction advances allocation revision once. | Yes |
+| Done-when / requirement         | Evidence                                                                                                                                                                                                                                                                                         | Spec-defined outcome                                                                                                                       | Covered |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ | ------- |
+| INV-42, INV-46                  | `packages/infrastructure-memory/src/use-cases/record-investment-amortization.test.ts:55-64` `expect(...).toMatchObject({ quantity: "10", bookCostMinor: "800", allocationRevision: 2 })`, `expect.objectContaining({ accountId: f.broker.id, amountMinor: 20n })`, and `netCashFlowMinor: "220"` | C=1000 reduced by 200 leaves cost 800 and units unchanged; R=220 produces income 20 and cash receipt 220.                                  | Yes     |
+| INV-44, INV-126                 | `record-investment-amortization.test.ts:70-76` exact I=8, gain=-20, F=2 and T=10 postings plus `toEqual(["OPENING_ALLOCATION", "AMORTIZATION"])`                                                                                                                                                 | Retentions are distinct postings in the one amortization operation, never auxiliary FEE/TAX operations.                                    | Yes     |
+| INV-35, INV-43, INV-75          | `record-investment-amortization.test.ts:90-100` exact category/operation errors and unchanged position; `:103-106` external-route failure and empty journal                                                                                                                                      | Cost reduction is explicit and valid; invalid category, amount or route leaves no partial state.                                           | Yes     |
+| INV-74, INV-76, INV-78, INV-128 | `record-investment-amortization.test.ts:111-112` stale-CAS error and unchanged revision; `:118-120` replay one effect; `:126` conflict; `:133-134` BOOK_MISMATCH and absent receipt                                                                                                              | Stale/cross-book commands cannot write; retry returns stored IDs without duplicates; economic reduction advances allocation revision once. | Yes     |
 
-| Test assertion | Maps to | Keep? |
-| --- | --- | --- |
-| `record-investment-amortization.test.ts:55-64` exact result, position, posting and net-flow assertions | INV-42, INV-46 | Yes |
-| `:70-85` fee/tax and loss posting assertions | INV-42, INV-44, INV-126 | Yes |
-| `:90-112` category, invalid-reduction/route and CAS assertions | INV-35, INV-43, INV-75, INV-76 | Yes |
-| `:118-134` replay/conflict/book-isolation assertions | INV-74, INV-78, INV-128 | Yes |
+| Test assertion                                                                                         | Maps to                        | Keep? |
+| ------------------------------------------------------------------------------------------------------ | ------------------------------ | ----- |
+| `record-investment-amortization.test.ts:55-64` exact result, position, posting and net-flow assertions | INV-42, INV-46                 | Yes   |
+| `:70-85` fee/tax and loss posting assertions                                                           | INV-42, INV-44, INV-126        | Yes   |
+| `:90-112` category, invalid-reduction/route and CAS assertions                                         | INV-35, INV-43, INV-75, INV-76 | Yes   |
+| `:118-134` replay/conflict/book-isolation assertions                                                   | INV-74, INV-78, INV-128        | Yes   |
 
 **Adequacy verdict**: PASS. Ten spec-scoped Memory command scenarios assert explicit cost, preserved units, complete posting values and stable failure/receipt behavior without mock-call assertions.
 
@@ -2087,19 +2087,19 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: baseline Memory: 46 files, 489 tests; T55: 47 files, 499 tests. The 10 integration scenarios in `record-investment-expense.test.ts` cover FEE, TAX, post-closure flow, negative-cash warning, category/route/amount validation, CAS, replay, idempotency conflict, book isolation and a distinct later request. Full Memory + Build passed: Domain/Application/Memory lint, typecheck and build all passed; Memory 47/47 files and 499/499 tests passed; `git diff --check` passed.
 
-| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
-| --- | --- | --- | --- |
-| INV-43, INV-44, INV-126 | `packages/infrastructure-memory/src/use-cases/record-investment-expense.test.ts:116-148` exact result, FEE journal `I=-10/F=+10`, and persisted FEE amounts; `:150-164` TAX category and operation list | A discriminated FEE or TAX records its expense once in an internal-cash journal without auxiliary operations. | Yes |
-| INV-119, INV-129 | `record-investment-expense.test.ts:169-180` accepted result and `expect(...).toMatchObject({ status: "CLOSED", allocationRevision: 2 })` | An active CLOSED position accepts later expense and remains CLOSED with unchanged allocation revision. | Yes |
-| INV-32, INV-145 | `record-investment-expense.test.ts:125-133` `warnings: [{ code: "INVESTMENT_CASH_NEGATIVE", cashMinor: "-1010"... }]` | A valid expense confirms while returning the derived negative-cash warning. | Yes |
-| INV-74, INV-75, INV-76, INV-78 | `record-investment-expense.test.ts:184-210` invalid category/route/amount state assertions; `:215-224` stale-CAS; `:229-241` replay/conflict; `:255-260` cross-book absent receipt | Invalid, stale or cross-book requests cannot partially persist; matching retry preserves one effect and changed content conflicts. | Yes |
+| Done-when / requirement        | Evidence                                                                                                                                                                                                | Spec-defined outcome                                                                                                               | Covered |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| INV-43, INV-44, INV-126        | `packages/infrastructure-memory/src/use-cases/record-investment-expense.test.ts:116-148` exact result, FEE journal `I=-10/F=+10`, and persisted FEE amounts; `:150-164` TAX category and operation list | A discriminated FEE or TAX records its expense once in an internal-cash journal without auxiliary operations.                      | Yes     |
+| INV-119, INV-129               | `record-investment-expense.test.ts:169-180` accepted result and `expect(...).toMatchObject({ status: "CLOSED", allocationRevision: 2 })`                                                                | An active CLOSED position accepts later expense and remains CLOSED with unchanged allocation revision.                             | Yes     |
+| INV-32, INV-145                | `record-investment-expense.test.ts:125-133` `warnings: [{ code: "INVESTMENT_CASH_NEGATIVE", cashMinor: "-1010"... }]`                                                                                   | A valid expense confirms while returning the derived negative-cash warning.                                                        | Yes     |
+| INV-74, INV-75, INV-76, INV-78 | `record-investment-expense.test.ts:184-210` invalid category/route/amount state assertions; `:215-224` stale-CAS; `:229-241` replay/conflict; `:255-260` cross-book absent receipt                      | Invalid, stale or cross-book requests cannot partially persist; matching retry preserves one effect and changed content conflicts. | Yes     |
 
-| Test assertion | Maps to | Keep? |
-| --- | --- | --- |
-| `record-investment-expense.test.ts:116-148` exact result, warning, postings and FEE operation | INV-32, INV-43, INV-44, INV-126, INV-145 | Yes |
-| `:150-180` TAX and closed-position assertions | INV-119, INV-126, INV-129 | Yes |
-| `:184-224` validation, rollback and CAS assertions | INV-43, INV-75, INV-76 | Yes |
-| `:229-275` replay/conflict/book and distinct-request assertions | INV-74, INV-78 | Yes |
+| Test assertion                                                                                | Maps to                                  | Keep? |
+| --------------------------------------------------------------------------------------------- | ---------------------------------------- | ----- |
+| `record-investment-expense.test.ts:116-148` exact result, warning, postings and FEE operation | INV-32, INV-43, INV-44, INV-126, INV-145 | Yes   |
+| `:150-180` TAX and closed-position assertions                                                 | INV-119, INV-126, INV-129                | Yes   |
+| `:184-224` validation, rollback and CAS assertions                                            | INV-43, INV-75, INV-76                   | Yes   |
+| `:229-275` replay/conflict/book and distinct-request assertions                               | INV-74, INV-78                           | Yes   |
 
 **Adequacy verdict**: PASS. Ten spec-scoped Memory command scenarios assert complete resulting state, postings, warning payload and stable error/receipt behavior. They do not rely on mock calls and do not alter allocation for FEE/TAX.
 
@@ -2126,22 +2126,22 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: before T56: 48 files, 499 tests; after: 49 files, 520 tests. Full Memory passed: Domain/Application builds, 520/520 Memory tests and Memory typecheck. The 21 new Memory command scenarios are in `packages/infrastructure-memory/src/use-cases/reverse-investment-operation.test.ts`.
 
-| Done-when criterion / spec AC / listed edge case | `file:line` + assertion expression | Spec-defined outcome | Covered? |
-| --- | --- | --- | --- |
-| INV-61/62/132/133, append-only reversal and inverse persisted effects | `reverse-investment-operation.test.ts:124-154` - `expect(...).toMatchObject({ ... reversalOperationId: "operation-3" ... quantityDelta: "4", bookCostDeltaMinor: "400", netCashFlowMinor: "-500" })` | original is retained, one reversal restores its effect | Yes |
-| INV-63/72, only last effective target | `reverse-investment-operation.test.ts:256-275` - `expect(...).toMatchObject({ error: { code: "INVESTMENT_OPERATION_NOT_CORRECTABLE" } })` | corrected/replaced/non-last target is rejected | Yes |
-| INV-64/71/128, reopening and allocation revision | `reverse-investment-operation.test.ts:158-193, 360-377` - `expect(...).toMatchObject({ quantity: "10", bookCostMinor: "1000", status: "OPEN", closedOn: undefined })` | total-sale cancellation reopens; opening cancellation stays historical CLOSED zero; changed economics increments revision | Yes |
-| archived reopening edge | `reverse-investment-operation.test.ts:174-193` - `expect(...).toMatchObject({ error: { code: "INVESTMENT_ENTITY_NOT_ACTIVE" } })` | archived account cannot reopen a position | Yes |
-| INV-65/69/73/134, journal reversal | `reverse-investment-operation.test.ts:196-219, 330-334` - `expect(reversal?.postings).toEqual(... amountMinor: -posting.amountMinor)` | reversal postings persist in ledger with original occurredOn and correction recordedAt | Yes |
-| no-journal edge | `reverse-investment-operation.test.ts:222-234` - `expect(...).toMatchObject({ value: { journalEntryIds: [] } })` | no empty journal is invented | Yes |
-| INV-70/74/75/76/78/145, warning, isolation, CAS, atomic retry | `reverse-investment-operation.test.ts:236-323, 336-352` - `expect(second).toEqual(first)` and `expect(...).toMatchObject({ error: { code: "OPTIMISTIC_CONCURRENCY_FAILURE" } })` | warning is successful and additive; same request replays; conflicting/book-mismatched attempts persist no effects | Yes |
+| Done-when criterion / spec AC / listed edge case                      | `file:line` + assertion expression                                                                                                                                                                   | Spec-defined outcome                                                                                                      | Covered? |
+| --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | -------- |
+| INV-61/62/132/133, append-only reversal and inverse persisted effects | `reverse-investment-operation.test.ts:124-154` - `expect(...).toMatchObject({ ... reversalOperationId: "operation-3" ... quantityDelta: "4", bookCostDeltaMinor: "400", netCashFlowMinor: "-500" })` | original is retained, one reversal restores its effect                                                                    | Yes      |
+| INV-63/72, only last effective target                                 | `reverse-investment-operation.test.ts:256-275` - `expect(...).toMatchObject({ error: { code: "INVESTMENT_OPERATION_NOT_CORRECTABLE" } })`                                                            | corrected/replaced/non-last target is rejected                                                                            | Yes      |
+| INV-64/71/128, reopening and allocation revision                      | `reverse-investment-operation.test.ts:158-193, 360-377` - `expect(...).toMatchObject({ quantity: "10", bookCostMinor: "1000", status: "OPEN", closedOn: undefined })`                                | total-sale cancellation reopens; opening cancellation stays historical CLOSED zero; changed economics increments revision | Yes      |
+| archived reopening edge                                               | `reverse-investment-operation.test.ts:174-193` - `expect(...).toMatchObject({ error: { code: "INVESTMENT_ENTITY_NOT_ACTIVE" } })`                                                                    | archived account cannot reopen a position                                                                                 | Yes      |
+| INV-65/69/73/134, journal reversal                                    | `reverse-investment-operation.test.ts:196-219, 330-334` - `expect(reversal?.postings).toEqual(... amountMinor: -posting.amountMinor)`                                                                | reversal postings persist in ledger with original occurredOn and correction recordedAt                                    | Yes      |
+| no-journal edge                                                       | `reverse-investment-operation.test.ts:222-234` - `expect(...).toMatchObject({ value: { journalEntryIds: [] } })`                                                                                     | no empty journal is invented                                                                                              | Yes      |
+| INV-70/74/75/76/78/145, warning, isolation, CAS, atomic retry         | `reverse-investment-operation.test.ts:236-323, 336-352` - `expect(second).toEqual(first)` and `expect(...).toMatchObject({ error: { code: "OPTIMISTIC_CONCURRENCY_FAILURE" } })`                     | warning is successful and additive; same request replays; conflicting/book-mismatched attempts persist no effects         | Yes      |
 
-| `file:line` + assertion expression | Maps to (AC / edge case / Done-when criterion) | Keep? |
-| --- | --- | --- |
-| `reverse-investment-operation.test.ts:124-154` - `expect(...reversalOperationId...).toMatchObject(...)` | INV-61, INV-62, INV-128, INV-132, INV-133 | Yes |
-| `reverse-investment-operation.test.ts:158-219` - `expect(...status: "OPEN"...)`, `expect(...amountMinor: -posting.amountMinor...)` | INV-64, INV-65, INV-69, INV-73, INV-134 | Yes |
-| `reverse-investment-operation.test.ts:222-323` - `expect(...journalEntryIds: []).toMatchObject(...)`, `expect(...error.code...).toMatchObject(...)` | INV-63, INV-74, INV-76, INV-78 | Yes |
-| `reverse-investment-operation.test.ts:330-377` - `expect(...warnings...).toMatchObject(...)`, `expect(...status: "CLOSED"...).toMatchObject(...)` | INV-70, INV-71, INV-145 | Yes |
+| `file:line` + assertion expression                                                                                                                  | Maps to (AC / edge case / Done-when criterion) | Keep? |
+| --------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- | ----- |
+| `reverse-investment-operation.test.ts:124-154` - `expect(...reversalOperationId...).toMatchObject(...)`                                             | INV-61, INV-62, INV-128, INV-132, INV-133      | Yes   |
+| `reverse-investment-operation.test.ts:158-219` - `expect(...status: "OPEN"...)`, `expect(...amountMinor: -posting.amountMinor...)`                  | INV-64, INV-65, INV-69, INV-73, INV-134        | Yes   |
+| `reverse-investment-operation.test.ts:222-323` - `expect(...journalEntryIds: []).toMatchObject(...)`, `expect(...error.code...).toMatchObject(...)` | INV-63, INV-74, INV-76, INV-78                 | Yes   |
+| `reverse-investment-operation.test.ts:330-377` - `expect(...warnings...).toMatchObject(...)`, `expect(...status: "CLOSED"...).toMatchObject(...)`   | INV-70, INV-71, INV-145                        | Yes   |
 
 **Adequacy verdict**: PASS. The 21 command scenarios assert public result envelopes and resulting persisted state, not mock calls. They cover the task-owned cancellation paths, correct exact errors and warning payload, follow the Memory Command convention from the Test Coverage Matrix, and add no speculative behavior. INV-66/67 are explicitly delivered by T59/T70/T85; amendment-only INV-135/136 remain T57.
 
@@ -2166,13 +2166,13 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: before T57: 49 Memory files, 520 tests; after: 49 files, 552 tests. `amend-investment-operation.test.ts` adds 32 integration scenarios: four original/replacement journal combinations, PURCHASE/SALE/INCOME/AMORTIZATION/FEE, validation/idempotency/concurrency branches, and eight injected persistence failures. Full Memory passed: Domain and Application build, Memory 49/49 files and 552/552 tests, Memory check-types; changed-package lint and `git diff --check` passed. Amendment reuses the domain `planInvestmentAccounting` planner; no registrars were refactored.
 
-| Done-when criterion / requirement | Evidence | Spec-defined outcome | Covered |
-| --- | --- | --- | --- |
-| INV-61, INV-132, INV-133, INV-144: append-only original, inverse reversal and replacement; final state once | `amend-investment-operation.test.ts:142-179` `expect(...replacementOperationId...).toMatchObject(...)`, `expect(...Positions()[0]).toMatchObject({ quantity: "5", bookCostMinor: "500", version: 2, allocationRevision: 3 })` | Original persists, inverse effects are appended, replacement applies once. | Yes |
-| INV-65, INV-135, INV-136: all four journal combinations | `amend-investment-operation.test.ts:182-231` `expect(...journalEntryIds...).toMatchObject(...)`, `expect(...JournalEntries()).toEqual([])` | Create only journals justified by original/replacement effects. | Yes |
-| INV-63, INV-72, INV-73: correctable target, version and date boundaries | `amend-investment-operation.test.ts:234-315` `expect(...error.code).toBe(...)`, `expect(...Operations()).toHaveLength(2)` | Invalid target, stale version and invalid date do not change state. | Yes |
-| INV-128, INV-129: all economic types retain lineage and no duplicate auxiliary effect | `amend-investment-operation.test.ts:365-515` `expect(...replacementOperationId).toMatchObject(...)`, `expect(...Operations()).toHaveLength(4)` | PURCHASE, SALE, INCOME, AMORTIZATION and FEE use the new fact only once. | Yes |
-| INV-74, INV-75, INV-76, INV-78, INV-145: atomic request and persistence rollback | `amend-investment-operation.test.ts:538-552` `expect(...Operations()).toHaveLength(2)`, `expect(...Positions()[0]).toMatchObject(...)` | Each intermediate write failure rolls back position, journals and lineage. | Yes |
+| Done-when criterion / requirement                                                                           | Evidence                                                                                                                                                                                                                      | Spec-defined outcome                                                       | Covered |
+| ----------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- | ------- |
+| INV-61, INV-132, INV-133, INV-144: append-only original, inverse reversal and replacement; final state once | `amend-investment-operation.test.ts:142-179` `expect(...replacementOperationId...).toMatchObject(...)`, `expect(...Positions()[0]).toMatchObject({ quantity: "5", bookCostMinor: "500", version: 2, allocationRevision: 3 })` | Original persists, inverse effects are appended, replacement applies once. | Yes     |
+| INV-65, INV-135, INV-136: all four journal combinations                                                     | `amend-investment-operation.test.ts:182-231` `expect(...journalEntryIds...).toMatchObject(...)`, `expect(...JournalEntries()).toEqual([])`                                                                                    | Create only journals justified by original/replacement effects.            | Yes     |
+| INV-63, INV-72, INV-73: correctable target, version and date boundaries                                     | `amend-investment-operation.test.ts:234-315` `expect(...error.code).toBe(...)`, `expect(...Operations()).toHaveLength(2)`                                                                                                     | Invalid target, stale version and invalid date do not change state.        | Yes     |
+| INV-128, INV-129: all economic types retain lineage and no duplicate auxiliary effect                       | `amend-investment-operation.test.ts:365-515` `expect(...replacementOperationId).toMatchObject(...)`, `expect(...Operations()).toHaveLength(4)`                                                                                | PURCHASE, SALE, INCOME, AMORTIZATION and FEE use the new fact only once.   | Yes     |
+| INV-74, INV-75, INV-76, INV-78, INV-145: atomic request and persistence rollback                            | `amend-investment-operation.test.ts:538-552` `expect(...Operations()).toHaveLength(2)`, `expect(...Positions()[0]).toMatchObject(...)`                                                                                        | Each intermediate write failure rolls back position, journals and lineage. | Yes     |
 
 **Adequacy review**: PASS. Check A maps every task-owned criterion to result/state assertions. Check B rejects call-count-only proof; all payload, lineage and persisted-state assertions survive independent write-failure injection. Check C maps the 32 scenarios to T57 requirements and its four journal/rollback fixtures. Check D follows the package-local Vitest integration convention in `packages/infrastructure-memory/src/use-cases/`.
 
@@ -2197,21 +2197,21 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: before T58: 49 Memory files, 552 tests; after: 50 files, 567 tests. `record-investment-valuation.test.ts` adds 15 integration tests covering 18 AC scenarios, including both serialized orders of an operation and a valuation. Full Memory passed: Domain and Application builds, Memory 50/50 files and 567/567 tests, and Memory typecheck. Changed-file lint and `git diff --check` passed.
 
-| Done-when criterion / requirement | Evidence | Spec-defined outcome | Covered |
-| --- | --- | --- | --- |
-| INV-47/49/59/127: append-only MANUAL observation with optional values unknown | `record-investment-valuation.test.ts:92-124` - `expect(...).toEqual([expect.objectContaining({ source: "MANUAL", grossValueMinor: "1200" })])`; `:137-149` - `expect(...).toMatchObject([{ id: "valuation-1" }, { id: "valuation-2" }])`; `:130-134` - `expect(...netValueMinor).toBeUndefined()` | observation is appended, no ledger/position mutation, and omitted optional values remain unknown | Yes |
-| INV-48/84/142: invalid values, quantity and UTC instant | `record-investment-valuation.test.ts:179-229` - `expect(...error.code).toBe("INVALID_INVESTMENT_DATE")` and `expect(...error.code).toBe("INVALID_INVESTMENT_VALUATION")` | invalid/future instant, negative values, or divergent position quantity are rejected without a valuation | Yes |
-| INV-74/75/78: book scope, no partial receipt and idempotent retry | `record-investment-valuation.test.ts:239-288` - `expect(...error.code).toBe("ENTITY_NOT_FOUND")`, `expect(...error.code).toBe("BOOK_MISMATCH")`, and `expect(second).toEqual(first)` | missing/wrong-book calls persist nothing; same request returns its original result once | Yes |
-| INV-50/51/130/131: allocation revision and operation race | `record-investment-valuation.test.ts:152-177` - `expect(...error.code).toBe("INVESTMENT_ALLOCATION_CHANGED")` and `expect(...allocationRevision).toBe(1)` | evaluation after economic change is rejected; evaluation confirmed first remains historical at its revision | Yes |
-| currency basis | `record-investment-valuation.test.ts:233-237` - `expect(...currency).toBe("BRL")` | command has no caller-supplied currency; stored position currency is the sole valuation basis | Yes |
+| Done-when criterion / requirement                                             | Evidence                                                                                                                                                                                                                                                                                          | Spec-defined outcome                                                                                        | Covered |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ------- |
+| INV-47/49/59/127: append-only MANUAL observation with optional values unknown | `record-investment-valuation.test.ts:92-124` - `expect(...).toEqual([expect.objectContaining({ source: "MANUAL", grossValueMinor: "1200" })])`; `:137-149` - `expect(...).toMatchObject([{ id: "valuation-1" }, { id: "valuation-2" }])`; `:130-134` - `expect(...netValueMinor).toBeUndefined()` | observation is appended, no ledger/position mutation, and omitted optional values remain unknown            | Yes     |
+| INV-48/84/142: invalid values, quantity and UTC instant                       | `record-investment-valuation.test.ts:179-229` - `expect(...error.code).toBe("INVALID_INVESTMENT_DATE")` and `expect(...error.code).toBe("INVALID_INVESTMENT_VALUATION")`                                                                                                                          | invalid/future instant, negative values, or divergent position quantity are rejected without a valuation    | Yes     |
+| INV-74/75/78: book scope, no partial receipt and idempotent retry             | `record-investment-valuation.test.ts:239-288` - `expect(...error.code).toBe("ENTITY_NOT_FOUND")`, `expect(...error.code).toBe("BOOK_MISMATCH")`, and `expect(second).toEqual(first)`                                                                                                              | missing/wrong-book calls persist nothing; same request returns its original result once                     | Yes     |
+| INV-50/51/130/131: allocation revision and operation race                     | `record-investment-valuation.test.ts:152-177` - `expect(...error.code).toBe("INVESTMENT_ALLOCATION_CHANGED")` and `expect(...allocationRevision).toBe(1)`                                                                                                                                         | evaluation after economic change is rejected; evaluation confirmed first remains historical at its revision | Yes     |
+| currency basis                                                                | `record-investment-valuation.test.ts:233-237` - `expect(...currency).toBe("BRL")`                                                                                                                                                                                                                 | command has no caller-supplied currency; stored position currency is the sole valuation basis               | Yes     |
 
-| `file:line` + assertion expression | Maps to | Keep |
-| --- | --- | --- |
-| `record-investment-valuation.test.ts:92-124` - `expect(...).toEqual([expect.objectContaining(...)])` | INV-47, INV-127 and T58 append/no-position-or-ledger mutation | Yes |
-| `record-investment-valuation.test.ts:137-149` - `expect(...).toMatchObject([{ id: ... }, { id: ... }])` | INV-49 append-only correction | Yes |
-| `record-investment-valuation.test.ts:152-229` - `expect(...error.code).toBe(...)` | INV-48, INV-84, INV-131, INV-142 | Yes |
-| `record-investment-valuation.test.ts:239-288` - `expect(...).toBeUndefined()` and `expect(second).toEqual(first)` | INV-74, INV-75, INV-78 | Yes |
-| `record-investment-valuation.test.ts:164-176` - `expect(...allocationRevision).toBe(1)` | INV-50, INV-51, INV-130 serialized operation/valuation ordering | Yes |
+| `file:line` + assertion expression                                                                                | Maps to                                                         | Keep |
+| ----------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | ---- |
+| `record-investment-valuation.test.ts:92-124` - `expect(...).toEqual([expect.objectContaining(...)])`              | INV-47, INV-127 and T58 append/no-position-or-ledger mutation   | Yes  |
+| `record-investment-valuation.test.ts:137-149` - `expect(...).toMatchObject([{ id: ... }, { id: ... }])`           | INV-49 append-only correction                                   | Yes  |
+| `record-investment-valuation.test.ts:152-229` - `expect(...error.code).toBe(...)`                                 | INV-48, INV-84, INV-131, INV-142                                | Yes  |
+| `record-investment-valuation.test.ts:239-288` - `expect(...).toBeUndefined()` and `expect(second).toEqual(first)` | INV-74, INV-75, INV-78                                          | Yes  |
+| `record-investment-valuation.test.ts:164-176` - `expect(...allocationRevision).toBe(1)`                           | INV-50, INV-51, INV-130 serialized operation/valuation ordering | Yes  |
 
 **Adequacy verdict**: PASS. The assertions inspect public envelopes and persisted valuation, position, sequence and receipt state rather than calls. The command deliberately derives currency from the persisted position because its approved DTO has no currency input; the test proves this invariant without inventing an unrepresentable mismatch case. The tests follow the Memory command convention in the Test Coverage Matrix and add no behavior outside T58.
 
@@ -2236,17 +2236,17 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: before T59: 50 Memory files, 567 tests; after: 51 files, 579 tests. `investment-journal-ownership.test.ts` adds 12 integration scenarios for original, reversal and replacement journals across generic Reverse/Amend. Full Memory passed: Domain and Application builds, Memory 51/51 files and 579/579 tests, and Memory typecheck. Changed-file lint and `git diff --check` passed. An extra SQLite `check-types` confirmation remains blocked by pre-existing `tests/support/financial-query-scenario.ts:154` passing obsolete `kind` to `CreateFinancialAccountCommand`; it is outside this task and was not changed.
 
-| Done-when criterion / requirement | Evidence | Spec-defined outcome | Covered |
-| --- | --- | --- | --- |
-| INV-63/64/67/68/69/102/117: generic Reverse protects original and reversal ownership | `investment-journal-ownership.test.ts:198-221` - `expect(...error).toMatchObject({ code: "INVESTMENT_OPERATION_REQUIRED" })` and `expect(...snapshot()).toEqual(before)` | original, reversal and replacement journals of investment operations require the specialized flow and leave all state intact | Yes |
-| INV-135/136: generic Amend protects the full amendment journal matrix | `investment-journal-ownership.test.ts:224-246` - `expect(...error).toMatchObject({ code: "INVESTMENT_OPERATION_REQUIRED" })` and `expect(...publisher.events).toEqual([])` | neither original/reversal nor replacement journal can receive a generic amendment | Yes |
-| INV-74: ownership is scoped by book and only real investment links are guarded | `investment-journal-ownership.test.ts:249-276` - `expect(...map((owner) => owner?.id)).toEqual(["operation-2", "operation-4", "operation-3"])` and `expect(owner.value).toBeNull()` | each persisted investment journal resolves to its owner; journal-less allocation resolves no owner | Yes |
+| Done-when criterion / requirement                                                    | Evidence                                                                                                                                                                            | Spec-defined outcome                                                                                                         | Covered |
+| ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ------- |
+| INV-63/64/67/68/69/102/117: generic Reverse protects original and reversal ownership | `investment-journal-ownership.test.ts:198-221` - `expect(...error).toMatchObject({ code: "INVESTMENT_OPERATION_REQUIRED" })` and `expect(...snapshot()).toEqual(before)`            | original, reversal and replacement journals of investment operations require the specialized flow and leave all state intact | Yes     |
+| INV-135/136: generic Amend protects the full amendment journal matrix                | `investment-journal-ownership.test.ts:224-246` - `expect(...error).toMatchObject({ code: "INVESTMENT_OPERATION_REQUIRED" })` and `expect(...publisher.events).toEqual([])`          | neither original/reversal nor replacement journal can receive a generic amendment                                            | Yes     |
+| INV-74: ownership is scoped by book and only real investment links are guarded       | `investment-journal-ownership.test.ts:249-276` - `expect(...map((owner) => owner?.id)).toEqual(["operation-2", "operation-4", "operation-3"])` and `expect(owner.value).toBeNull()` | each persisted investment journal resolves to its owner; journal-less allocation resolves no owner                           | Yes     |
 
-| `file:line` + assertion expression | Maps to | Keep |
-| --- | --- | --- |
-| `investment-journal-ownership.test.ts:198-221` - `expectBlocked(...); expect(f.h.store.snapshot()).toEqual(before)` | INV-63, INV-64, INV-67, INV-68, INV-69, INV-117 generic Reverse guard | Yes |
-| `investment-journal-ownership.test.ts:224-246` - `expectBlocked(...); expect(f.h.publisher.events).toEqual([])` | INV-135, INV-136 generic Amend guard | Yes |
-| `investment-journal-ownership.test.ts:249-276` - `expect(owners.value.map(...)).toEqual(...)` | INV-74 and T59 `findOwnerOfJournal` ownership contract | Yes |
+| `file:line` + assertion expression                                                                                  | Maps to                                                               | Keep |
+| ------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- | ---- |
+| `investment-journal-ownership.test.ts:198-221` - `expectBlocked(...); expect(f.h.store.snapshot()).toEqual(before)` | INV-63, INV-64, INV-67, INV-68, INV-69, INV-117 generic Reverse guard | Yes  |
+| `investment-journal-ownership.test.ts:224-246` - `expectBlocked(...); expect(f.h.publisher.events).toEqual([])`     | INV-135, INV-136 generic Amend guard                                  | Yes  |
+| `investment-journal-ownership.test.ts:249-276` - `expect(owners.value.map(...)).toEqual(...)`                       | INV-74 and T59 `findOwnerOfJournal` ownership contract                | Yes  |
 
 **Adequacy verdict**: PASS. All twelve scenarios assert the public error plus persisted snapshot and published-fact absence, so a guard placed after any mutation fails. The ownership assertions cover all three journal roles and the journal-less negative case; existing generic journal suites remain the proof that non-investment maintenance behavior is unchanged. Tests use the Memory command convention and add no UI/query scope.
 
@@ -2271,17 +2271,17 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: before T60: 51 Memory files, 579 tests; after: 52 files, 590 tests. `investment-cash-warnings.test.ts` adds 11 integration tests covering 15 distinct AC outcomes across generic Income, Expense, Transfer, OpeningBalance, Reverse and Amend, including recovery to nonnegative cash, a non-investment account, both sides of a transfer and no hidden investment operation. Full Memory passed: Domain and Application builds, Memory 52/52 files and 590/590 tests, and Memory typecheck. Changed-file lint and `git diff --check` passed.
 
-| Done-when criterion / requirement | Evidence | Spec-defined outcome | Covered |
-| --- | --- | --- | --- |
-| INV-28/31/32/60/145/147: common Income, Expense and OpeningBalance warnings are additive | `investment-cash-warnings.test.ts:112-203` - `expect(...value.warnings).toMatchObject(warning(...))` and `expect(...warnings).toBeUndefined()` | valid posting succeeds; every negative affected portfolio receives exact ID/cash/currency/asOf, and recovery removes warning | Yes |
-| INV-70/77/145: transfer includes every affected investment account | `investment-cash-warnings.test.ts:205-284` - `expect(...warnings).toMatchObject([warning(broker, "-1100"), warning(second, "-900")])` | both portfolios are returned when both transfer postings affect them; negative cash does not block transfer | Yes |
-| INV-75/145: generic corrections calculate post-write warnings without inventing investment work | `investment-cash-warnings.test.ts:286-355` - `expect(...warnings).toMatchObject(warning(...))` and `expect(...listInvestmentOperations()).toHaveLength(1)` | Reverse/Amend append their normal journal effects and only attach warning metadata | Yes |
+| Done-when criterion / requirement                                                               | Evidence                                                                                                                                                   | Spec-defined outcome                                                                                                         | Covered |
+| ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ------- |
+| INV-28/31/32/60/145/147: common Income, Expense and OpeningBalance warnings are additive        | `investment-cash-warnings.test.ts:112-203` - `expect(...value.warnings).toMatchObject(warning(...))` and `expect(...warnings).toBeUndefined()`             | valid posting succeeds; every negative affected portfolio receives exact ID/cash/currency/asOf, and recovery removes warning | Yes     |
+| INV-70/77/145: transfer includes every affected investment account                              | `investment-cash-warnings.test.ts:205-284` - `expect(...warnings).toMatchObject([warning(broker, "-1100"), warning(second, "-900")])`                      | both portfolios are returned when both transfer postings affect them; negative cash does not block transfer                  | Yes     |
+| INV-75/145: generic corrections calculate post-write warnings without inventing investment work | `investment-cash-warnings.test.ts:286-355` - `expect(...warnings).toMatchObject(warning(...))` and `expect(...listInvestmentOperations()).toHaveLength(1)` | Reverse/Amend append their normal journal effects and only attach warning metadata                                           | Yes     |
 
-| `file:line` + assertion expression | Maps to | Keep |
-| --- | --- | --- |
-| `investment-cash-warnings.test.ts:112-203` - `expect(result).toMatchObject({ ok: true, value: { warnings: ... } })` | INV-28, INV-31, INV-32, INV-60, INV-145, INV-147 | Yes |
-| `investment-cash-warnings.test.ts:205-284` - `expect(result).toMatchObject({ ... warnings: [ ... ] })` | INV-70, INV-77, INV-145 all transfer accounts | Yes |
-| `investment-cash-warnings.test.ts:286-355` - `expect(...listInvestmentOperations()).toHaveLength(1)` | INV-75 and T60 no investment operation side effect | Yes |
+| `file:line` + assertion expression                                                                                  | Maps to                                            | Keep |
+| ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- | ---- |
+| `investment-cash-warnings.test.ts:112-203` - `expect(result).toMatchObject({ ok: true, value: { warnings: ... } })` | INV-28, INV-31, INV-32, INV-60, INV-145, INV-147   | Yes  |
+| `investment-cash-warnings.test.ts:205-284` - `expect(result).toMatchObject({ ... warnings: [ ... ] })`              | INV-70, INV-77, INV-145 all transfer accounts      | Yes  |
+| `investment-cash-warnings.test.ts:286-355` - `expect(...listInvestmentOperations()).toHaveLength(1)`                | INV-75 and T60 no investment operation side effect | Yes  |
 
 **Adequacy verdict**: PASS. Assertions prove returned warning payload fields and persisted journal/investment-operation state, not helper calls. The portfolio warning scenarios are scoped to the named common commands and corrections; no query/UI behavior is asserted ahead of its task.
 
@@ -2306,21 +2306,21 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: before T61: 52 Memory files, 590 tests; after: 53 files, 604 tests. `preview-investment-operation.test.ts` adds 14 integration scenarios for PURCHASE/APPLICATION, SALE, INCOME, AMORTIZATION, FEE and TAX. Full Memory + Build passed: Domain 20 files/404 tests, Application 21 files/241 tests, Memory 53 files/604 tests; lint, check-types and build passed for Domain, Application and Memory; `git diff --check` passed.
 
-| Done-when criterion / requirement | Evidence | Spec-defined outcome | Covered |
-| --- | --- | --- | --- |
-| INV-100: prévia mostra custo, fluxo líquido e efeito em contas/categorias antes de salvar | `preview-investment-operation.test.ts:137-148` - `expect(...).toEqual({ value: { bookCostDeltaMinor: "200", netCashFlowMinor: "-200", postings: [], categories: {}, ... } })`; `:169-180` - `expect(result).toMatchObject({ value: { postings: expect.arrayContaining([...]) } })`; `:191-201` - `expect(result).toMatchObject({ value: { categories: { gainCategoryId: ... } } })` | cada modo devolve os deltas e contas/categorias normalizados pelo planner | Yes |
-| INV-13, INV-74: rota externa explícita e isolamento de livro | `preview-investment-operation.test.ts:160-180` - `expect(result).toMatchObject({ value: { postings: expect.arrayContaining([{ accountId: f.bank.id, amountMinor: "-215" }]) } })`; `:367-372` - `expect(...).toMatchObject({ ok: false, error: { code: "BOOK_MISMATCH" } })` | a conta externa escolhida é a enviada; draft de outro livro falha sem expor ou gravar posição | Yes |
-| INV-36, INV-76, INV-139: estado atual, custo/unidades explícitos e CAS | `preview-investment-operation.test.ts:348-360` - `expect(...).toMatchObject({ error: { code: "OPTIMISTIC_CONCURRENCY_FAILURE" } })`; `:375-394` - `expect(...).toMatchObject({ error: { code: "INVALID_INVESTMENT_OPERATION" } })` | versão obsoleta, custo acima do atual ou unidades acima da posição não recebem prévia válida | Yes |
-| INV-145, INV-148: caixa negativo é sucesso com aviso, sem bloquear | `preview-investment-operation.test.ts:141-150` - `expect(...).toEqual({ value: { projectedCashMinor: "-1200", warnings: [{ code: "INVESTMENT_CASH_NEGATIVE", cashMinor: "-1200" }] } })`; `:292-298` - `expect(...).toMatchObject({ ok: true, value: { projectedCashMinor: "-1010" } })` | caixa projetado negativo retorna sucesso e aviso completo, inclusive para taxa | Yes |
-| read-only e confirmação revalida | `preview-investment-operation.test.ts:327-345` - `expect(f.h.store.snapshot()).toEqual(before)` and `expect(...operationId).toMatchObject({ operationId: "operation-2" })`; `:410-434` - `expect(...).toMatchObject({ error: { code: "OPTIMISTIC_CONCURRENCY_FAILURE" } })` | prévia não grava receipt/ID/sequence/facts; confirmação posterior repete CAS e rejeita versão consumida | Yes |
+| Done-when criterion / requirement                                                         | Evidence                                                                                                                                                                                                                                                                                                                                                                            | Spec-defined outcome                                                                                    | Covered |
+| ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | ------- |
+| INV-100: prévia mostra custo, fluxo líquido e efeito em contas/categorias antes de salvar | `preview-investment-operation.test.ts:137-148` - `expect(...).toEqual({ value: { bookCostDeltaMinor: "200", netCashFlowMinor: "-200", postings: [], categories: {}, ... } })`; `:169-180` - `expect(result).toMatchObject({ value: { postings: expect.arrayContaining([...]) } })`; `:191-201` - `expect(result).toMatchObject({ value: { categories: { gainCategoryId: ... } } })` | cada modo devolve os deltas e contas/categorias normalizados pelo planner                               | Yes     |
+| INV-13, INV-74: rota externa explícita e isolamento de livro                              | `preview-investment-operation.test.ts:160-180` - `expect(result).toMatchObject({ value: { postings: expect.arrayContaining([{ accountId: f.bank.id, amountMinor: "-215" }]) } })`; `:367-372` - `expect(...).toMatchObject({ ok: false, error: { code: "BOOK_MISMATCH" } })`                                                                                                        | a conta externa escolhida é a enviada; draft de outro livro falha sem expor ou gravar posição           | Yes     |
+| INV-36, INV-76, INV-139: estado atual, custo/unidades explícitos e CAS                    | `preview-investment-operation.test.ts:348-360` - `expect(...).toMatchObject({ error: { code: "OPTIMISTIC_CONCURRENCY_FAILURE" } })`; `:375-394` - `expect(...).toMatchObject({ error: { code: "INVALID_INVESTMENT_OPERATION" } })`                                                                                                                                                  | versão obsoleta, custo acima do atual ou unidades acima da posição não recebem prévia válida            | Yes     |
+| INV-145, INV-148: caixa negativo é sucesso com aviso, sem bloquear                        | `preview-investment-operation.test.ts:141-150` - `expect(...).toEqual({ value: { projectedCashMinor: "-1200", warnings: [{ code: "INVESTMENT_CASH_NEGATIVE", cashMinor: "-1200" }] } })`; `:292-298` - `expect(...).toMatchObject({ ok: true, value: { projectedCashMinor: "-1010" } })`                                                                                            | caixa projetado negativo retorna sucesso e aviso completo, inclusive para taxa                          | Yes     |
+| read-only e confirmação revalida                                                          | `preview-investment-operation.test.ts:327-345` - `expect(f.h.store.snapshot()).toEqual(before)` and `expect(...operationId).toMatchObject({ operationId: "operation-2" })`; `:410-434` - `expect(...).toMatchObject({ error: { code: "OPTIMISTIC_CONCURRENCY_FAILURE" } })`                                                                                                         | prévia não grava receipt/ID/sequence/facts; confirmação posterior repete CAS e rejeita versão consumida | Yes     |
 
-| `file:line` + assertion expression | Maps to | Keep |
-| --- | --- | --- |
-| `preview-investment-operation.test.ts:129-152` - `expect(await preview(...)).toEqual({ ok: true, value: { ... } })` | INV-100, INV-145, INV-148: compra interna exibe custo/fluxo/versões/caixa/warning | Yes |
-| `preview-investment-operation.test.ts:155-324` - `expect(result).toMatchObject({ ok: true, value: { ... } })` | INV-13, INV-100: rotas e categorias de APPLICATION/SALE/INCOME/AMORTIZATION/FEE/TAX | Yes |
-| `preview-investment-operation.test.ts:327-346` - `expect(f.h.store.snapshot()).toEqual(before)`; `expect(...operationId).toMatchObject({ operationId: "operation-2" })` | T61 read-only: ausência de writes, IDs e sequência reservados | Yes |
-| `preview-investment-operation.test.ts:348-407` - `expect(...error.code).toBe(...)` via `toMatchObject` | INV-36, INV-74, INV-76: CAS, livro e limites de saída | Yes |
-| `preview-investment-operation.test.ts:410-434` - `expect(...).toMatchObject({ error: { code: "OPTIMISTIC_CONCURRENCY_FAILURE" } })` | INV-76: confirmar revalida a versão visualizada | Yes |
+| `file:line` + assertion expression                                                                                                                                      | Maps to                                                                             | Keep |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ---- |
+| `preview-investment-operation.test.ts:129-152` - `expect(await preview(...)).toEqual({ ok: true, value: { ... } })`                                                     | INV-100, INV-145, INV-148: compra interna exibe custo/fluxo/versões/caixa/warning   | Yes  |
+| `preview-investment-operation.test.ts:155-324` - `expect(result).toMatchObject({ ok: true, value: { ... } })`                                                           | INV-13, INV-100: rotas e categorias de APPLICATION/SALE/INCOME/AMORTIZATION/FEE/TAX | Yes  |
+| `preview-investment-operation.test.ts:327-346` - `expect(f.h.store.snapshot()).toEqual(before)`; `expect(...operationId).toMatchObject({ operationId: "operation-2" })` | T61 read-only: ausência de writes, IDs e sequência reservados                       | Yes  |
+| `preview-investment-operation.test.ts:348-407` - `expect(...error.code).toBe(...)` via `toMatchObject`                                                                  | INV-36, INV-74, INV-76: CAS, livro e limites de saída                               | Yes  |
+| `preview-investment-operation.test.ts:410-434` - `expect(...).toMatchObject({ error: { code: "OPTIMISTIC_CONCURRENCY_FAILURE" } })`                                     | INV-76: confirmar revalida a versão visualizada                                     | Yes  |
 
 **Adequacy review**: PASS. Check A mapeia todos os critérios da T61 e seus ramos aos valores públicos da prévia ou ao estado persistido. Check B verifica payloads, caixa e warnings, não contagem de chamadas. Check C limita os 14 cenários aos seis drafts, isolamento, CAS e read-only desta tarefa. Check D segue a convenção Vitest de integração em `packages/infrastructure-memory/src/use-cases/`.
 
@@ -2347,20 +2347,20 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Execution evidence**: before T62: 856 SQLite tests; after: 871 SQLite tests. The T62 suites add 20 scenarios (15 SQLite + 5 application). Full SQLite passed: Domain/Application/Memory builds, 871/871 SQLite tests, migration manifest check, SQLite typecheck and `git diff --check`.
 
-| Done-when / requirement | Evidence | Spec-defined outcome | Covered |
-| --- | --- | --- | --- |
-| INV-55, INV-56, INV-93, INV-140, INV-141 | `sqlite-investment-portfolio-summary.test.ts:33-52` `expect(summary()).resolves.toEqual({ ..., asOf: "2026-08-04", ... })`; `:88-93` `expect(...availableMinor).toMatchObject({ availableMinor: "100" })` | Empty book retains its currency and zeroes; the accounting and investment totals use one inclusive reference date. | Yes |
-| INV-50, INV-51, INV-52, INV-53, INV-54, INV-58, INV-59, INV-130 | `sqlite-investment-portfolio-summary.test.ts:106-117` `expect(...investmentMarketValueMinor: "1200")`; `:121-150` `expect(...investmentMarketValueMinor: "1000")`; `:154-172` exact tuple winner | Gross current-revision valuation wins by tuple; stale/future values fall back to cost; closed positions contribute zero; coverage dates expose only valuations used. | Yes |
-| INV-57, INV-60, INV-82, INV-145, INV-146, INV-147 | `sqlite-investment-portfolio-summary.test.ts:55-102` exact active/archived and bigint assertions; `:175-217` `expect(...investmentCashMinor: "-1000")` and warning payload | Financial profile boundaries, signed cash and totals remain exact; negative cash remains visible with an account warning and archived investment balances still compose. | Yes |
-| Handler / book scope and currency | `get-investment-portfolio-summary.test.ts:55-64` `expect(clock.localDate).toHaveBeenCalledTimes(1)`; `:77-82` USD input assertion; `:88-108` stable query/not-found failures | The handler resolves the active book's timezone and currency once, passes D explicitly, and does not expose absent books. | Yes |
+| Done-when / requirement                                         | Evidence                                                                                                                                                                                                  | Spec-defined outcome                                                                                                                                                     | Covered |
+| --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- |
+| INV-55, INV-56, INV-93, INV-140, INV-141                        | `sqlite-investment-portfolio-summary.test.ts:33-52` `expect(summary()).resolves.toEqual({ ..., asOf: "2026-08-04", ... })`; `:88-93` `expect(...availableMinor).toMatchObject({ availableMinor: "100" })` | Empty book retains its currency and zeroes; the accounting and investment totals use one inclusive reference date.                                                       | Yes     |
+| INV-50, INV-51, INV-52, INV-53, INV-54, INV-58, INV-59, INV-130 | `sqlite-investment-portfolio-summary.test.ts:106-117` `expect(...investmentMarketValueMinor: "1200")`; `:121-150` `expect(...investmentMarketValueMinor: "1000")`; `:154-172` exact tuple winner          | Gross current-revision valuation wins by tuple; stale/future values fall back to cost; closed positions contribute zero; coverage dates expose only valuations used.     | Yes     |
+| INV-57, INV-60, INV-82, INV-145, INV-146, INV-147               | `sqlite-investment-portfolio-summary.test.ts:55-102` exact active/archived and bigint assertions; `:175-217` `expect(...investmentCashMinor: "-1000")` and warning payload                                | Financial profile boundaries, signed cash and totals remain exact; negative cash remains visible with an account warning and archived investment balances still compose. | Yes     |
+| Handler / book scope and currency                               | `get-investment-portfolio-summary.test.ts:55-64` `expect(clock.localDate).toHaveBeenCalledTimes(1)`; `:77-82` USD input assertion; `:88-108` stable query/not-found failures                              | The handler resolves the active book's timezone and currency once, passes D explicitly, and does not expose absent books.                                                | Yes     |
 
-| Test assertion | Maps to | Keep |
-| --- | --- | --- |
-| `sqlite-investment-portfolio-summary.test.ts:61-65` `expect(...availableMinor: "100", ...archivedDailyAccountBalanceMinor: "40")` | INV-55, INV-57, INV-93 | Yes |
-| `sqlite-investment-portfolio-summary.test.ts:101-103` `expect(...availableMinor: "9007199254741000")` | INV-82 | Yes |
-| `sqlite-investment-portfolio-summary.test.ts:111-118` `expect(...unrealizedResultMinor: "200")` | INV-54, INV-56, INV-58 | Yes |
-| `sqlite-investment-portfolio-summary.test.ts:179-189` exact warning object | INV-60, INV-145, INV-146 | Yes |
-| `get-investment-portfolio-summary.test.ts:58-64` one Clock call and `{ currency: "BRL", asOf: "2026-09-15" }` | INV-140, INV-141 | Yes |
+| Test assertion                                                                                                                    | Maps to                  | Keep |
+| --------------------------------------------------------------------------------------------------------------------------------- | ------------------------ | ---- |
+| `sqlite-investment-portfolio-summary.test.ts:61-65` `expect(...availableMinor: "100", ...archivedDailyAccountBalanceMinor: "40")` | INV-55, INV-57, INV-93   | Yes  |
+| `sqlite-investment-portfolio-summary.test.ts:101-103` `expect(...availableMinor: "9007199254741000")`                             | INV-82                   | Yes  |
+| `sqlite-investment-portfolio-summary.test.ts:111-118` `expect(...unrealizedResultMinor: "200")`                                   | INV-54, INV-56, INV-58   | Yes  |
+| `sqlite-investment-portfolio-summary.test.ts:179-189` exact warning object                                                        | INV-60, INV-145, INV-146 | Yes  |
+| `get-investment-portfolio-summary.test.ts:58-64` one Clock call and `{ currency: "BRL", asOf: "2026-09-15" }`                     | INV-140, INV-141         | Yes  |
 
 **Adequacy verdict**: PASS. Check A maps the applicable summary outcomes to exact values and warning payload fields. Check B asserts outputs, not only calls, except the single-call Clock contract specified by D7. Check C keeps all 20 scenarios within T62. Check D follows the SQLite integration placement and Vitest conventions in the coverage matrix.
 
@@ -2524,13 +2524,32 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Classificar pelo ownership, expor operação/posição e canEditWithGenericFlow, amount=abs(netCashFlow); resumo por postings/kind, count/largest/lifecycle preservados e nenhuma linha artificial sem journal.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 16 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Classificar pelo ownership, expor operação/posição e canEditWithGenericFlow, amount=abs(netCashFlow); resumo por postings/kind, count/largest/lifecycle preservados e nenhuma linha artificial sem journal.
+- [x] Escrever/atualizar no mesmo commit pelo menos 16 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full SQLite` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (SQLite); testes acompanham o componente nesta tarefa.
 **Gate**: Full SQLite
 **Commit**: `feat(investments-sqlite): read model investment em transações`
+
+**Evidência T70 (2026-09-15):** 16 cenários SQLite novos elevam a suíte de 927 para 943 testes. O read model prioriza `investment_operations.journal_entry_id`, retorna o vínculo exato, usa `abs(netCashFlowMinor)` inclusive zero, bloqueia o fluxo genérico e não gera cadeia sem journal. O resumo lê cadeias e postings em lotes limitados, agrega INCOME/EXPENSE por kind com bigint, preserva contagem/lifecycle e calcula maior valor sem `SUM` vulnerável. Full SQLite: 53 arquivos, 943 testes; builds de domain/application/memory, manifest e typecheck verdes.
+
+| Done-when / requisito                            | Evidência                                                                                                                                                                                           | Resultado da spec                                                                  | Coberto |
+| ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | ------- |
+| ownership, INV-67, INV-102                       | `packages/infrastructure-sqlite/tests/queries/sqlite-journal-view-queries.test.ts:1116-1128` `expect(...).toMatchObject({ type: "INVESTMENT" })`; `:1151-1158` `expect(...investment).toEqual(...)` | ownership prevalece sobre INCOME/EXPENSE e expõe operação/posição                  | Sim     |
+| filtros, edição e INV-98                         | `:1140` `expect(...).toEqual([incomeId])`; `:1188` `expect(...).toBe(false)`; `:1194` `expect(...).toBe(true)`                                                                                      | filtro reconhece INVESTMENT; vínculos não usam fluxo genérico                      | Sim     |
+| INV-45, INV-63, INV-64, INV-68, INV-135, INV-136 | `:1217` `expect(...some(...)).toBe(false)`; `:1295-1299` `expect(result).toMatchObject(...)`; `:505-511` `expect(result).toEqual(...)`                                                              | nenhuma linha sem journal; lifecycle cancelado conserva cadeia e zera contribuição | Sim     |
+| INV-69, INV-103                                  | `:1254` `expect(result.incomeMinor).toBe("1000")`; `:1271` `expect(result.expenseMinor).toBe("1200")`                                                                                               | operação mista soma cada posting por kind uma vez                                  | Sim     |
+| INV-31, INV-82                                   | `:1169` `expect(...amountMinor).toBe("2500")`; `:1180` `expect(...amountMinor).toBe("0")`; `:1282` `expect(...largestTransactionMinor).toBe("9007199254740993")`                                    | valor é abs(netCashFlow), mantém zero e exatidão além de int64 JS                  | Sim     |
+
+| Assert                                      | Mapeia para                    | Manter |
+| ------------------------------------------- | ------------------------------ | ------ |
+| `:1116-1128` classificação INVESTMENT       | ownership, INV-67, INV-102     | Sim    |
+| `:1151-1158` payload do vínculo             | operação/posição, INV-63/64/68 | Sim    |
+| `:1217`, `:1295-1299` ausência/lifecycle    | INV-45, INV-135, INV-136       | Sim    |
+| `:1254`, `:1271`, `:1282` postings e bigint | INV-69, INV-82, INV-103        | Sim    |
+
+**Adequacy verdict**: PASS. Os 16 cenários observam resultado público e estado de consulta, não chamadas de mock; seguem Vitest e a suíte SQLite existente.
 
 ### T71: Composição MyFinServices
 
@@ -3000,497 +3019,497 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 Um componente/caso de uso por tarefa, com testes e integrações mecânicas do mesmo contrato. Não usar o ponto principal como permissão para agregar funcionalidades adjacentes.
 
-| Task | Scope | Status |
-| --- | --- | --- |
-| T1 | Decimal exato | ✅ Um componente/contrato coeso |
-| T2 | Validação dos valores de investimento | ✅ Um componente/contrato coeso |
-| T3 | Perfis financeiros | ✅ Um componente/contrato coeso |
-| T4 | Perfil no aggregate LedgerAccount | ✅ Um componente/contrato coeso |
-| T5 | Identidades de investimentos | ✅ Um componente/contrato coeso |
-| T6 | Aggregate InvestmentInstrument | ✅ Um componente/contrato coeso |
-| T7 | Termos de renda fixa | ✅ Um componente/contrato coeso |
-| T8 | Aggregate InvestmentPosition | ✅ Um componente/contrato coeso |
-| T9 | Aggregate InvestmentOperation | ✅ Um componente/contrato coeso |
-| T10 | Observação InvestmentValuation | ✅ Um componente/contrato coeso |
-| T11 | Planner contábil de investimentos | ✅ Um componente/contrato coeso |
-| T12 | Contratos de comandos e resultados | ✅ Um componente/contrato coeso |
-| T13 | Ports de persistência de investimento | ✅ Um componente/contrato coeso |
-| T14 | Contratos das consultas de investimento | ✅ Um componente/contrato coeso |
-| T15 | Registro dos facts no dispatcher | ✅ Um componente/contrato coeso |
-| T16 | Resultado preservado após commit | ✅ Um componente/contrato coeso |
-| T17 | Migração de perfis financeiros | ✅ Um componente/contrato coeso |
-| T18 | Migração de instrumentos | ✅ Um componente/contrato coeso |
-| T19 | Migração de posições e termos | ✅ Um componente/contrato coeso |
-| T20 | Migração de operações e sequência | ✅ Um componente/contrato coeso |
-| T21 | Migração de avaliações | ✅ Um componente/contrato coeso |
-| T22 | Migração de recibos | ✅ Um componente/contrato coeso |
-| T23 | Persistência do perfil no LedgerAccount | ✅ Um componente/contrato coeso |
-| T24 | Repository SQLite de instrumentos | ✅ Um componente/contrato coeso |
-| T25 | Repository SQLite de posições | ✅ Um componente/contrato coeso |
-| T26 | Repository SQLite de operações | ✅ Um componente/contrato coeso |
-| T27 | Store SQLite de avaliações | ✅ Um componente/contrato coeso |
-| T28 | Store SQLite de recibos | ✅ Um componente/contrato coeso |
-| T29 | Store SQLite de sequência | ✅ Um componente/contrato coeso |
-| T30 | Snapshot de investimentos em memória | ✅ Um componente/contrato coeso |
-| T31 | Repository em memória de instrumentos | ✅ Um componente/contrato coeso |
-| T32 | Repository em memória de posições | ✅ Um componente/contrato coeso |
-| T33 | Repository em memória de operações | ✅ Um componente/contrato coeso |
-| T34 | Store em memória de avaliações | ✅ Um componente/contrato coeso |
-| T35 | Store em memória de recibos | ✅ Um componente/contrato coeso |
-| T36 | Store em memória de sequência | ✅ Um componente/contrato coeso |
-| T37 | Agregador exato de postings | ✅ Um componente/contrato coeso |
-| T38 | Leituras transacionais SQLite | ✅ Um componente/contrato coeso |
-| T39 | Leituras transacionais em memória | ✅ Um componente/contrato coeso |
-| T40 | Contexto transacional com investimentos | ✅ Um componente/contrato coeso |
-| T41 | Criação de conta pelo tipo financeiro | ✅ Um componente/contrato coeso |
-| T42 | Configuração financeira e liquidação | ✅ Um componente/contrato coeso |
-| T43 | Política de lifecycle de contas | ✅ Um componente/contrato coeso |
-| T44 | Criar instrumento | ✅ Um componente/contrato coeso |
-| T45 | Atualizar instrumento | ✅ Um componente/contrato coeso |
-| T46 | Lifecycle de instrumento | ✅ Um componente/contrato coeso |
-| T47 | Metadata da posição | ✅ Um componente/contrato coeso |
-| T48 | Execução idempotente de investimento | ✅ Um componente/contrato coeso |
-| T49 | Saldo inicial explícito idempotente | ✅ Um componente/contrato coeso |
-| T50 | Abrir posição | ✅ Um componente/contrato coeso |
-| T51 | Registrar compra ou aplicação | ✅ Um componente/contrato coeso |
-| T52 | Registrar venda ou resgate | ✅ Um componente/contrato coeso |
-| T53 | Registrar rendimento | ✅ Um componente/contrato coeso |
-| T54 | Registrar amortização | ✅ Um componente/contrato coeso |
-| T55 | Registrar taxa ou imposto independente | ✅ Um componente/contrato coeso |
-| T56 | Cancelar operação | ✅ Um componente/contrato coeso |
-| T57 | Substituir operação | ✅ Um componente/contrato coeso |
-| T58 | Registrar avaliação manual | ✅ Um componente/contrato coeso |
-| T59 | Guard de manutenção genérica do journal | ✅ Um componente/contrato coeso |
-| T60 | Avisos em comandos financeiros comuns | ✅ Um componente/contrato coeso |
-| T61 | Prévia da operação | ✅ Um componente/contrato coeso |
-| T62 | Resumo patrimonial | ✅ Um componente/contrato coeso |
-| T63 | Consulta de carteiras | ✅ Um componente/contrato coeso |
-| T64 | Consulta de instrumentos | ✅ Um componente/contrato coeso |
-| T65 | Consulta de posições | ✅ Um componente/contrato coeso |
-| T66 | Histórico de operações | ✅ Um componente/contrato coeso |
-| T67 | Histórico de avaliações | ✅ Um componente/contrato coeso |
-| T68 | Saldos e extrato exatos existentes | ✅ Um componente/contrato coeso |
-| T69 | Insights exatos existentes | ✅ Um componente/contrato coeso |
-| T70 | Read model INVESTMENT em Transações | ✅ Um componente/contrato coeso |
-| T71 | Composição MyFinServices | ✅ Um componente/contrato coeso |
-| T72 | Consultas e cache de investimentos na UI | ✅ Um componente/contrato coeso |
-| T73 | Submissão de investimentos na UI | ✅ Um componente/contrato coeso |
-| T74 | Classificação no formulário de conta | ✅ Um componente/contrato coeso |
-| T75 | Resumo contábil em Contas | ✅ Um componente/contrato coeso |
-| T76 | Formulário de instrumento | ✅ Um componente/contrato coeso |
-| T77 | Formulário de metadata da posição | ✅ Um componente/contrato coeso |
-| T78 | Formulário de abertura | ✅ Um componente/contrato coeso |
-| T79 | Formulário de compra/aplicação | ✅ Um componente/contrato coeso |
-| T80 | Formulário de venda/resgate | ✅ Um componente/contrato coeso |
-| T81 | Formulário de rendimento | ✅ Um componente/contrato coeso |
-| T82 | Formulário de amortização | ✅ Um componente/contrato coeso |
-| T83 | Formulário de despesa de investimento | ✅ Um componente/contrato coeso |
-| T84 | Formulário de avaliação | ✅ Um componente/contrato coeso |
-| T85 | Formulário de correção | ✅ Um componente/contrato coeso |
-| T86 | Cards patrimoniais | ✅ Um componente/contrato coeso |
-| T87 | Lista de carteiras | ✅ Um componente/contrato coeso |
-| T88 | Tabela de posições | ✅ Um componente/contrato coeso |
-| T89 | Histórico visual de operações | ✅ Um componente/contrato coeso |
-| T90 | Histórico visual de avaliações | ✅ Um componente/contrato coeso |
-| T91 | Detalhe da posição | ✅ Um componente/contrato coeso |
-| T92 | Página Investimentos | ✅ Um componente/contrato coeso |
-| T93 | Rotas e navegação de investimentos | ✅ Um componente/contrato coeso |
-| T94 | Integração visual com Transações | ✅ Um componente/contrato coeso |
+| Task | Scope                                    | Status                          |
+| ---- | ---------------------------------------- | ------------------------------- |
+| T1   | Decimal exato                            | ✅ Um componente/contrato coeso |
+| T2   | Validação dos valores de investimento    | ✅ Um componente/contrato coeso |
+| T3   | Perfis financeiros                       | ✅ Um componente/contrato coeso |
+| T4   | Perfil no aggregate LedgerAccount        | ✅ Um componente/contrato coeso |
+| T5   | Identidades de investimentos             | ✅ Um componente/contrato coeso |
+| T6   | Aggregate InvestmentInstrument           | ✅ Um componente/contrato coeso |
+| T7   | Termos de renda fixa                     | ✅ Um componente/contrato coeso |
+| T8   | Aggregate InvestmentPosition             | ✅ Um componente/contrato coeso |
+| T9   | Aggregate InvestmentOperation            | ✅ Um componente/contrato coeso |
+| T10  | Observação InvestmentValuation           | ✅ Um componente/contrato coeso |
+| T11  | Planner contábil de investimentos        | ✅ Um componente/contrato coeso |
+| T12  | Contratos de comandos e resultados       | ✅ Um componente/contrato coeso |
+| T13  | Ports de persistência de investimento    | ✅ Um componente/contrato coeso |
+| T14  | Contratos das consultas de investimento  | ✅ Um componente/contrato coeso |
+| T15  | Registro dos facts no dispatcher         | ✅ Um componente/contrato coeso |
+| T16  | Resultado preservado após commit         | ✅ Um componente/contrato coeso |
+| T17  | Migração de perfis financeiros           | ✅ Um componente/contrato coeso |
+| T18  | Migração de instrumentos                 | ✅ Um componente/contrato coeso |
+| T19  | Migração de posições e termos            | ✅ Um componente/contrato coeso |
+| T20  | Migração de operações e sequência        | ✅ Um componente/contrato coeso |
+| T21  | Migração de avaliações                   | ✅ Um componente/contrato coeso |
+| T22  | Migração de recibos                      | ✅ Um componente/contrato coeso |
+| T23  | Persistência do perfil no LedgerAccount  | ✅ Um componente/contrato coeso |
+| T24  | Repository SQLite de instrumentos        | ✅ Um componente/contrato coeso |
+| T25  | Repository SQLite de posições            | ✅ Um componente/contrato coeso |
+| T26  | Repository SQLite de operações           | ✅ Um componente/contrato coeso |
+| T27  | Store SQLite de avaliações               | ✅ Um componente/contrato coeso |
+| T28  | Store SQLite de recibos                  | ✅ Um componente/contrato coeso |
+| T29  | Store SQLite de sequência                | ✅ Um componente/contrato coeso |
+| T30  | Snapshot de investimentos em memória     | ✅ Um componente/contrato coeso |
+| T31  | Repository em memória de instrumentos    | ✅ Um componente/contrato coeso |
+| T32  | Repository em memória de posições        | ✅ Um componente/contrato coeso |
+| T33  | Repository em memória de operações       | ✅ Um componente/contrato coeso |
+| T34  | Store em memória de avaliações           | ✅ Um componente/contrato coeso |
+| T35  | Store em memória de recibos              | ✅ Um componente/contrato coeso |
+| T36  | Store em memória de sequência            | ✅ Um componente/contrato coeso |
+| T37  | Agregador exato de postings              | ✅ Um componente/contrato coeso |
+| T38  | Leituras transacionais SQLite            | ✅ Um componente/contrato coeso |
+| T39  | Leituras transacionais em memória        | ✅ Um componente/contrato coeso |
+| T40  | Contexto transacional com investimentos  | ✅ Um componente/contrato coeso |
+| T41  | Criação de conta pelo tipo financeiro    | ✅ Um componente/contrato coeso |
+| T42  | Configuração financeira e liquidação     | ✅ Um componente/contrato coeso |
+| T43  | Política de lifecycle de contas          | ✅ Um componente/contrato coeso |
+| T44  | Criar instrumento                        | ✅ Um componente/contrato coeso |
+| T45  | Atualizar instrumento                    | ✅ Um componente/contrato coeso |
+| T46  | Lifecycle de instrumento                 | ✅ Um componente/contrato coeso |
+| T47  | Metadata da posição                      | ✅ Um componente/contrato coeso |
+| T48  | Execução idempotente de investimento     | ✅ Um componente/contrato coeso |
+| T49  | Saldo inicial explícito idempotente      | ✅ Um componente/contrato coeso |
+| T50  | Abrir posição                            | ✅ Um componente/contrato coeso |
+| T51  | Registrar compra ou aplicação            | ✅ Um componente/contrato coeso |
+| T52  | Registrar venda ou resgate               | ✅ Um componente/contrato coeso |
+| T53  | Registrar rendimento                     | ✅ Um componente/contrato coeso |
+| T54  | Registrar amortização                    | ✅ Um componente/contrato coeso |
+| T55  | Registrar taxa ou imposto independente   | ✅ Um componente/contrato coeso |
+| T56  | Cancelar operação                        | ✅ Um componente/contrato coeso |
+| T57  | Substituir operação                      | ✅ Um componente/contrato coeso |
+| T58  | Registrar avaliação manual               | ✅ Um componente/contrato coeso |
+| T59  | Guard de manutenção genérica do journal  | ✅ Um componente/contrato coeso |
+| T60  | Avisos em comandos financeiros comuns    | ✅ Um componente/contrato coeso |
+| T61  | Prévia da operação                       | ✅ Um componente/contrato coeso |
+| T62  | Resumo patrimonial                       | ✅ Um componente/contrato coeso |
+| T63  | Consulta de carteiras                    | ✅ Um componente/contrato coeso |
+| T64  | Consulta de instrumentos                 | ✅ Um componente/contrato coeso |
+| T65  | Consulta de posições                     | ✅ Um componente/contrato coeso |
+| T66  | Histórico de operações                   | ✅ Um componente/contrato coeso |
+| T67  | Histórico de avaliações                  | ✅ Um componente/contrato coeso |
+| T68  | Saldos e extrato exatos existentes       | ✅ Um componente/contrato coeso |
+| T69  | Insights exatos existentes               | ✅ Um componente/contrato coeso |
+| T70  | Read model INVESTMENT em Transações      | ✅ Um componente/contrato coeso |
+| T71  | Composição MyFinServices                 | ✅ Um componente/contrato coeso |
+| T72  | Consultas e cache de investimentos na UI | ✅ Um componente/contrato coeso |
+| T73  | Submissão de investimentos na UI         | ✅ Um componente/contrato coeso |
+| T74  | Classificação no formulário de conta     | ✅ Um componente/contrato coeso |
+| T75  | Resumo contábil em Contas                | ✅ Um componente/contrato coeso |
+| T76  | Formulário de instrumento                | ✅ Um componente/contrato coeso |
+| T77  | Formulário de metadata da posição        | ✅ Um componente/contrato coeso |
+| T78  | Formulário de abertura                   | ✅ Um componente/contrato coeso |
+| T79  | Formulário de compra/aplicação           | ✅ Um componente/contrato coeso |
+| T80  | Formulário de venda/resgate              | ✅ Um componente/contrato coeso |
+| T81  | Formulário de rendimento                 | ✅ Um componente/contrato coeso |
+| T82  | Formulário de amortização                | ✅ Um componente/contrato coeso |
+| T83  | Formulário de despesa de investimento    | ✅ Um componente/contrato coeso |
+| T84  | Formulário de avaliação                  | ✅ Um componente/contrato coeso |
+| T85  | Formulário de correção                   | ✅ Um componente/contrato coeso |
+| T86  | Cards patrimoniais                       | ✅ Um componente/contrato coeso |
+| T87  | Lista de carteiras                       | ✅ Um componente/contrato coeso |
+| T88  | Tabela de posições                       | ✅ Um componente/contrato coeso |
+| T89  | Histórico visual de operações            | ✅ Um componente/contrato coeso |
+| T90  | Histórico visual de avaliações           | ✅ Um componente/contrato coeso |
+| T91  | Detalhe da posição                       | ✅ Um componente/contrato coeso |
+| T92  | Página Investimentos                     | ✅ Um componente/contrato coeso |
+| T93  | Rotas e navegação de investimentos       | ✅ Um componente/contrato coeso |
+| T94  | Integração visual com Transações         | ✅ Um componente/contrato coeso |
 
 ## Diagram-Definition Cross-Check
 
-| Task | Depends On (task body) | Diagram Shows | Status |
-| --- | --- | --- | --- |
-| T1 | None | None | ✅ Match |
-| T2 | T1 | T1 | ✅ Match |
-| T3 | T2 | T2 | ✅ Match |
-| T4 | T3 | T3 | ✅ Match |
-| T5 | T4 | T4 | ✅ Match |
-| T6 | T5 | T5 | ✅ Match |
-| T7 | T6 | T6 | ✅ Match |
-| T8 | T7 | T7 | ✅ Match |
-| T9 | T8 | T8 | ✅ Match |
-| T10 | T9 | T9 | ✅ Match |
-| T11 | T10 | T10 | ✅ Match |
-| T12 | T11 | T11 | ✅ Match |
-| T13 | T12 | T12 | ✅ Match |
-| T14 | T13 | T13 | ✅ Match |
-| T15 | T14 | T14 | ✅ Match |
-| T16 | T15 | T15 | ✅ Match |
-| T17 | T16 | T16 | ✅ Match |
-| T18 | T17 | T17 | ✅ Match |
-| T19 | T18 | T18 | ✅ Match |
-| T20 | T19 | T19 | ✅ Match |
-| T21 | T20 | T20 | ✅ Match |
-| T22 | T21 | T21 | ✅ Match |
-| T23 | T22 | T22 | ✅ Match |
-| T24 | T23 | T23 | ✅ Match |
-| T25 | T24 | T24 | ✅ Match |
-| T26 | T25 | T25 | ✅ Match |
-| T27 | T26 | T26 | ✅ Match |
-| T28 | T27 | T27 | ✅ Match |
-| T29 | T28 | T28 | ✅ Match |
-| T30 | T29 | T29 | ✅ Match |
-| T31 | T30 | T30 | ✅ Match |
-| T32 | T31 | T31 | ✅ Match |
-| T33 | T32 | T32 | ✅ Match |
-| T34 | T33 | T33 | ✅ Match |
-| T35 | T34 | T34 | ✅ Match |
-| T36 | T35 | T35 | ✅ Match |
-| T37 | T36 | T36 | ✅ Match |
-| T38 | T37 | T37 | ✅ Match |
-| T39 | T38 | T38 | ✅ Match |
-| T40 | T39 | T39 | ✅ Match |
-| T41 | T40 | T40 | ✅ Match |
-| T42 | T41 | T41 | ✅ Match |
-| T43 | T42 | T42 | ✅ Match |
-| T44 | T43 | T43 | ✅ Match |
-| T45 | T44 | T44 | ✅ Match |
-| T46 | T45 | T45 | ✅ Match |
-| T47 | T46 | T46 | ✅ Match |
-| T48 | T47 | T47 | ✅ Match |
-| T49 | T48 | T48 | ✅ Match |
-| T50 | T49 | T49 | ✅ Match |
-| T51 | T50 | T50 | ✅ Match |
-| T52 | T51 | T51 | ✅ Match |
-| T53 | T52 | T52 | ✅ Match |
-| T54 | T53 | T53 | ✅ Match |
-| T55 | T54 | T54 | ✅ Match |
-| T56 | T55 | T55 | ✅ Match |
-| T57 | T56 | T56 | ✅ Match |
-| T58 | T57 | T57 | ✅ Match |
-| T59 | T58 | T58 | ✅ Match |
-| T60 | T59 | T59 | ✅ Match |
-| T61 | T60 | T60 | ✅ Match |
-| T62 | T61 | T61 | ✅ Match |
-| T63 | T62 | T62 | ✅ Match |
-| T64 | T63 | T63 | ✅ Match |
-| T65 | T64 | T64 | ✅ Match |
-| T66 | T65 | T65 | ✅ Match |
-| T67 | T66 | T66 | ✅ Match |
-| T68 | T67 | T67 | ✅ Match |
-| T69 | T68 | T68 | ✅ Match |
-| T70 | T69 | T69 | ✅ Match |
-| T71 | T70 | T70 | ✅ Match |
-| T72 | T71 | T71 | ✅ Match |
-| T73 | T72 | T72 | ✅ Match |
-| T74 | T73 | T73 | ✅ Match |
-| T75 | T74 | T74 | ✅ Match |
-| T76 | T75 | T75 | ✅ Match |
-| T77 | T76 | T76 | ✅ Match |
-| T78 | T77 | T77 | ✅ Match |
-| T79 | T78 | T78 | ✅ Match |
-| T80 | T79 | T79 | ✅ Match |
-| T81 | T80 | T80 | ✅ Match |
-| T82 | T81 | T81 | ✅ Match |
-| T83 | T82 | T82 | ✅ Match |
-| T84 | T83 | T83 | ✅ Match |
-| T85 | T84 | T84 | ✅ Match |
-| T86 | T85 | T85 | ✅ Match |
-| T87 | T86 | T86 | ✅ Match |
-| T88 | T87 | T87 | ✅ Match |
-| T89 | T88 | T88 | ✅ Match |
-| T90 | T89 | T89 | ✅ Match |
-| T91 | T90 | T90 | ✅ Match |
-| T92 | T91 | T91 | ✅ Match |
-| T93 | T92 | T92 | ✅ Match |
-| T94 | T93 | T93 | ✅ Match |
+| Task | Depends On (task body) | Diagram Shows | Status   |
+| ---- | ---------------------- | ------------- | -------- |
+| T1   | None                   | None          | ✅ Match |
+| T2   | T1                     | T1            | ✅ Match |
+| T3   | T2                     | T2            | ✅ Match |
+| T4   | T3                     | T3            | ✅ Match |
+| T5   | T4                     | T4            | ✅ Match |
+| T6   | T5                     | T5            | ✅ Match |
+| T7   | T6                     | T6            | ✅ Match |
+| T8   | T7                     | T7            | ✅ Match |
+| T9   | T8                     | T8            | ✅ Match |
+| T10  | T9                     | T9            | ✅ Match |
+| T11  | T10                    | T10           | ✅ Match |
+| T12  | T11                    | T11           | ✅ Match |
+| T13  | T12                    | T12           | ✅ Match |
+| T14  | T13                    | T13           | ✅ Match |
+| T15  | T14                    | T14           | ✅ Match |
+| T16  | T15                    | T15           | ✅ Match |
+| T17  | T16                    | T16           | ✅ Match |
+| T18  | T17                    | T17           | ✅ Match |
+| T19  | T18                    | T18           | ✅ Match |
+| T20  | T19                    | T19           | ✅ Match |
+| T21  | T20                    | T20           | ✅ Match |
+| T22  | T21                    | T21           | ✅ Match |
+| T23  | T22                    | T22           | ✅ Match |
+| T24  | T23                    | T23           | ✅ Match |
+| T25  | T24                    | T24           | ✅ Match |
+| T26  | T25                    | T25           | ✅ Match |
+| T27  | T26                    | T26           | ✅ Match |
+| T28  | T27                    | T27           | ✅ Match |
+| T29  | T28                    | T28           | ✅ Match |
+| T30  | T29                    | T29           | ✅ Match |
+| T31  | T30                    | T30           | ✅ Match |
+| T32  | T31                    | T31           | ✅ Match |
+| T33  | T32                    | T32           | ✅ Match |
+| T34  | T33                    | T33           | ✅ Match |
+| T35  | T34                    | T34           | ✅ Match |
+| T36  | T35                    | T35           | ✅ Match |
+| T37  | T36                    | T36           | ✅ Match |
+| T38  | T37                    | T37           | ✅ Match |
+| T39  | T38                    | T38           | ✅ Match |
+| T40  | T39                    | T39           | ✅ Match |
+| T41  | T40                    | T40           | ✅ Match |
+| T42  | T41                    | T41           | ✅ Match |
+| T43  | T42                    | T42           | ✅ Match |
+| T44  | T43                    | T43           | ✅ Match |
+| T45  | T44                    | T44           | ✅ Match |
+| T46  | T45                    | T45           | ✅ Match |
+| T47  | T46                    | T46           | ✅ Match |
+| T48  | T47                    | T47           | ✅ Match |
+| T49  | T48                    | T48           | ✅ Match |
+| T50  | T49                    | T49           | ✅ Match |
+| T51  | T50                    | T50           | ✅ Match |
+| T52  | T51                    | T51           | ✅ Match |
+| T53  | T52                    | T52           | ✅ Match |
+| T54  | T53                    | T53           | ✅ Match |
+| T55  | T54                    | T54           | ✅ Match |
+| T56  | T55                    | T55           | ✅ Match |
+| T57  | T56                    | T56           | ✅ Match |
+| T58  | T57                    | T57           | ✅ Match |
+| T59  | T58                    | T58           | ✅ Match |
+| T60  | T59                    | T59           | ✅ Match |
+| T61  | T60                    | T60           | ✅ Match |
+| T62  | T61                    | T61           | ✅ Match |
+| T63  | T62                    | T62           | ✅ Match |
+| T64  | T63                    | T63           | ✅ Match |
+| T65  | T64                    | T64           | ✅ Match |
+| T66  | T65                    | T65           | ✅ Match |
+| T67  | T66                    | T66           | ✅ Match |
+| T68  | T67                    | T67           | ✅ Match |
+| T69  | T68                    | T68           | ✅ Match |
+| T70  | T69                    | T69           | ✅ Match |
+| T71  | T70                    | T70           | ✅ Match |
+| T72  | T71                    | T71           | ✅ Match |
+| T73  | T72                    | T72           | ✅ Match |
+| T74  | T73                    | T73           | ✅ Match |
+| T75  | T74                    | T74           | ✅ Match |
+| T76  | T75                    | T75           | ✅ Match |
+| T77  | T76                    | T76           | ✅ Match |
+| T78  | T77                    | T77           | ✅ Match |
+| T79  | T78                    | T78           | ✅ Match |
+| T80  | T79                    | T79           | ✅ Match |
+| T81  | T80                    | T80           | ✅ Match |
+| T82  | T81                    | T81           | ✅ Match |
+| T83  | T82                    | T82           | ✅ Match |
+| T84  | T83                    | T83           | ✅ Match |
+| T85  | T84                    | T84           | ✅ Match |
+| T86  | T85                    | T85           | ✅ Match |
+| T87  | T86                    | T86           | ✅ Match |
+| T88  | T87                    | T87           | ✅ Match |
+| T89  | T88                    | T88           | ✅ Match |
+| T90  | T89                    | T89           | ✅ Match |
+| T91  | T90                    | T90           | ✅ Match |
+| T92  | T91                    | T91           | ✅ Match |
+| T93  | T92                    | T92           | ✅ Match |
+| T94  | T93                    | T93           | ✅ Match |
 
 ## Test Co-location Validation
 
-| Task | Code Layer Created/Modified | Matrix Requires | Task Says | Status |
-| --- | --- | --- | --- | --- |
-| T1 | Domain | unit | unit | ✅ Mesmo commit |
-| T2 | Domain | unit | unit | ✅ Mesmo commit |
-| T3 | Domain | unit | unit | ✅ Mesmo commit |
-| T4 | Domain | unit | unit | ✅ Mesmo commit |
-| T5 | Domain | unit | unit | ✅ Mesmo commit |
-| T6 | Domain | unit | unit | ✅ Mesmo commit |
-| T7 | Domain | unit | unit | ✅ Mesmo commit |
-| T8 | Domain | unit | unit | ✅ Mesmo commit |
-| T9 | Domain | unit | unit | ✅ Mesmo commit |
-| T10 | Domain | unit | unit | ✅ Mesmo commit |
-| T11 | Domain | unit | unit | ✅ Mesmo commit |
-| T12 | Application | unit | unit | ✅ Mesmo commit |
-| T13 | Application | unit | unit | ✅ Mesmo commit |
-| T14 | Application | unit | unit | ✅ Mesmo commit |
-| T15 | Application | unit | unit | ✅ Mesmo commit |
-| T16 | Application | unit | unit | ✅ Mesmo commit |
-| T17 | SQLite | integration | integration | ✅ Mesmo commit |
-| T18 | SQLite | integration | integration | ✅ Mesmo commit |
-| T19 | SQLite | integration | integration | ✅ Mesmo commit |
-| T20 | SQLite | integration | integration | ✅ Mesmo commit |
-| T21 | SQLite | integration | integration | ✅ Mesmo commit |
-| T22 | SQLite | integration | integration | ✅ Mesmo commit |
-| T23 | SQLite | integration | integration | ✅ Mesmo commit |
-| T24 | SQLite | integration | integration | ✅ Mesmo commit |
-| T25 | SQLite | integration | integration | ✅ Mesmo commit |
-| T26 | SQLite | integration | integration | ✅ Mesmo commit |
-| T27 | SQLite | integration | integration | ✅ Mesmo commit |
-| T28 | SQLite | integration | integration | ✅ Mesmo commit |
-| T29 | SQLite | integration | integration | ✅ Mesmo commit |
-| T30 | Memory | integration | integration | ✅ Mesmo commit |
-| T31 | Memory | integration | integration | ✅ Mesmo commit |
-| T32 | Memory | integration | integration | ✅ Mesmo commit |
-| T33 | Memory | integration | integration | ✅ Mesmo commit |
-| T34 | Memory | integration | integration | ✅ Mesmo commit |
-| T35 | Memory | integration | integration | ✅ Mesmo commit |
-| T36 | Memory | integration | integration | ✅ Mesmo commit |
-| T37 | SQLite | integration | integration | ✅ Mesmo commit |
-| T38 | SQLite | integration | integration | ✅ Mesmo commit |
-| T39 | Memory | integration | integration | ✅ Mesmo commit |
-| T40 | Integration | integration | integration | ✅ Mesmo commit |
-| T41 | Command | integration | integration | ✅ Mesmo commit |
-| T42 | Command | integration | integration | ✅ Mesmo commit |
-| T43 | Command | integration | integration | ✅ Mesmo commit |
-| T44 | Command | integration | integration | ✅ Mesmo commit |
-| T45 | Command | integration | integration | ✅ Mesmo commit |
-| T46 | Command | integration | integration | ✅ Mesmo commit |
-| T47 | Command | integration | integration | ✅ Mesmo commit |
-| T48 | Command | integration | integration | ✅ Mesmo commit |
-| T49 | Command | integration | integration | ✅ Mesmo commit |
-| T50 | Command | integration | integration | ✅ Mesmo commit |
-| T51 | Command | integration | integration | ✅ Mesmo commit |
-| T52 | Command | integration | integration | ✅ Mesmo commit |
-| T53 | Command | integration | integration | ✅ Mesmo commit |
-| T54 | Command | integration | integration | ✅ Mesmo commit |
-| T55 | Command | integration | integration | ✅ Mesmo commit |
-| T56 | Command | integration | integration | ✅ Mesmo commit |
-| T57 | Command | integration | integration | ✅ Mesmo commit |
-| T58 | Command | integration | integration | ✅ Mesmo commit |
-| T59 | Command | integration | integration | ✅ Mesmo commit |
-| T60 | Command | integration | integration | ✅ Mesmo commit |
-| T61 | Command | integration | integration | ✅ Mesmo commit |
-| T62 | SQLite | integration | integration | ✅ Mesmo commit |
-| T63 | SQLite | integration | integration | ✅ Mesmo commit |
-| T64 | SQLite | integration | integration | ✅ Mesmo commit |
-| T65 | SQLite | integration | integration | ✅ Mesmo commit |
-| T66 | SQLite | integration | integration | ✅ Mesmo commit |
-| T67 | SQLite | integration | integration | ✅ Mesmo commit |
-| T68 | SQLite | integration | integration | ✅ Mesmo commit |
-| T69 | SQLite | integration | integration | ✅ Mesmo commit |
-| T70 | SQLite | integration | integration | ✅ Mesmo commit |
-| T71 | React | integration | integration | ✅ Mesmo commit |
-| T72 | React | integration | integration | ✅ Mesmo commit |
-| T73 | React | integration | integration | ✅ Mesmo commit |
-| T74 | React | integration | integration | ✅ Mesmo commit |
-| T75 | React | integration | integration | ✅ Mesmo commit |
-| T76 | React | integration | integration | ✅ Mesmo commit |
-| T77 | React | integration | integration | ✅ Mesmo commit |
-| T78 | React | integration | integration | ✅ Mesmo commit |
-| T79 | React | integration | integration | ✅ Mesmo commit |
-| T80 | React | integration | integration | ✅ Mesmo commit |
-| T81 | React | integration | integration | ✅ Mesmo commit |
-| T82 | React | integration | integration | ✅ Mesmo commit |
-| T83 | React | integration | integration | ✅ Mesmo commit |
-| T84 | React | integration | integration | ✅ Mesmo commit |
-| T85 | React | integration | integration | ✅ Mesmo commit |
-| T86 | React | integration | integration | ✅ Mesmo commit |
-| T87 | React | integration | integration | ✅ Mesmo commit |
-| T88 | React | integration | integration | ✅ Mesmo commit |
-| T89 | React | integration | integration | ✅ Mesmo commit |
-| T90 | React | integration | integration | ✅ Mesmo commit |
-| T91 | React | integration | integration | ✅ Mesmo commit |
-| T92 | React | integration | integration | ✅ Mesmo commit |
-| T93 | React | integration | integration | ✅ Mesmo commit |
-| T94 | React | integration | integration | ✅ Mesmo commit |
+| Task | Code Layer Created/Modified | Matrix Requires | Task Says   | Status          |
+| ---- | --------------------------- | --------------- | ----------- | --------------- |
+| T1   | Domain                      | unit            | unit        | ✅ Mesmo commit |
+| T2   | Domain                      | unit            | unit        | ✅ Mesmo commit |
+| T3   | Domain                      | unit            | unit        | ✅ Mesmo commit |
+| T4   | Domain                      | unit            | unit        | ✅ Mesmo commit |
+| T5   | Domain                      | unit            | unit        | ✅ Mesmo commit |
+| T6   | Domain                      | unit            | unit        | ✅ Mesmo commit |
+| T7   | Domain                      | unit            | unit        | ✅ Mesmo commit |
+| T8   | Domain                      | unit            | unit        | ✅ Mesmo commit |
+| T9   | Domain                      | unit            | unit        | ✅ Mesmo commit |
+| T10  | Domain                      | unit            | unit        | ✅ Mesmo commit |
+| T11  | Domain                      | unit            | unit        | ✅ Mesmo commit |
+| T12  | Application                 | unit            | unit        | ✅ Mesmo commit |
+| T13  | Application                 | unit            | unit        | ✅ Mesmo commit |
+| T14  | Application                 | unit            | unit        | ✅ Mesmo commit |
+| T15  | Application                 | unit            | unit        | ✅ Mesmo commit |
+| T16  | Application                 | unit            | unit        | ✅ Mesmo commit |
+| T17  | SQLite                      | integration     | integration | ✅ Mesmo commit |
+| T18  | SQLite                      | integration     | integration | ✅ Mesmo commit |
+| T19  | SQLite                      | integration     | integration | ✅ Mesmo commit |
+| T20  | SQLite                      | integration     | integration | ✅ Mesmo commit |
+| T21  | SQLite                      | integration     | integration | ✅ Mesmo commit |
+| T22  | SQLite                      | integration     | integration | ✅ Mesmo commit |
+| T23  | SQLite                      | integration     | integration | ✅ Mesmo commit |
+| T24  | SQLite                      | integration     | integration | ✅ Mesmo commit |
+| T25  | SQLite                      | integration     | integration | ✅ Mesmo commit |
+| T26  | SQLite                      | integration     | integration | ✅ Mesmo commit |
+| T27  | SQLite                      | integration     | integration | ✅ Mesmo commit |
+| T28  | SQLite                      | integration     | integration | ✅ Mesmo commit |
+| T29  | SQLite                      | integration     | integration | ✅ Mesmo commit |
+| T30  | Memory                      | integration     | integration | ✅ Mesmo commit |
+| T31  | Memory                      | integration     | integration | ✅ Mesmo commit |
+| T32  | Memory                      | integration     | integration | ✅ Mesmo commit |
+| T33  | Memory                      | integration     | integration | ✅ Mesmo commit |
+| T34  | Memory                      | integration     | integration | ✅ Mesmo commit |
+| T35  | Memory                      | integration     | integration | ✅ Mesmo commit |
+| T36  | Memory                      | integration     | integration | ✅ Mesmo commit |
+| T37  | SQLite                      | integration     | integration | ✅ Mesmo commit |
+| T38  | SQLite                      | integration     | integration | ✅ Mesmo commit |
+| T39  | Memory                      | integration     | integration | ✅ Mesmo commit |
+| T40  | Integration                 | integration     | integration | ✅ Mesmo commit |
+| T41  | Command                     | integration     | integration | ✅ Mesmo commit |
+| T42  | Command                     | integration     | integration | ✅ Mesmo commit |
+| T43  | Command                     | integration     | integration | ✅ Mesmo commit |
+| T44  | Command                     | integration     | integration | ✅ Mesmo commit |
+| T45  | Command                     | integration     | integration | ✅ Mesmo commit |
+| T46  | Command                     | integration     | integration | ✅ Mesmo commit |
+| T47  | Command                     | integration     | integration | ✅ Mesmo commit |
+| T48  | Command                     | integration     | integration | ✅ Mesmo commit |
+| T49  | Command                     | integration     | integration | ✅ Mesmo commit |
+| T50  | Command                     | integration     | integration | ✅ Mesmo commit |
+| T51  | Command                     | integration     | integration | ✅ Mesmo commit |
+| T52  | Command                     | integration     | integration | ✅ Mesmo commit |
+| T53  | Command                     | integration     | integration | ✅ Mesmo commit |
+| T54  | Command                     | integration     | integration | ✅ Mesmo commit |
+| T55  | Command                     | integration     | integration | ✅ Mesmo commit |
+| T56  | Command                     | integration     | integration | ✅ Mesmo commit |
+| T57  | Command                     | integration     | integration | ✅ Mesmo commit |
+| T58  | Command                     | integration     | integration | ✅ Mesmo commit |
+| T59  | Command                     | integration     | integration | ✅ Mesmo commit |
+| T60  | Command                     | integration     | integration | ✅ Mesmo commit |
+| T61  | Command                     | integration     | integration | ✅ Mesmo commit |
+| T62  | SQLite                      | integration     | integration | ✅ Mesmo commit |
+| T63  | SQLite                      | integration     | integration | ✅ Mesmo commit |
+| T64  | SQLite                      | integration     | integration | ✅ Mesmo commit |
+| T65  | SQLite                      | integration     | integration | ✅ Mesmo commit |
+| T66  | SQLite                      | integration     | integration | ✅ Mesmo commit |
+| T67  | SQLite                      | integration     | integration | ✅ Mesmo commit |
+| T68  | SQLite                      | integration     | integration | ✅ Mesmo commit |
+| T69  | SQLite                      | integration     | integration | ✅ Mesmo commit |
+| T70  | SQLite                      | integration     | integration | ✅ Mesmo commit |
+| T71  | React                       | integration     | integration | ✅ Mesmo commit |
+| T72  | React                       | integration     | integration | ✅ Mesmo commit |
+| T73  | React                       | integration     | integration | ✅ Mesmo commit |
+| T74  | React                       | integration     | integration | ✅ Mesmo commit |
+| T75  | React                       | integration     | integration | ✅ Mesmo commit |
+| T76  | React                       | integration     | integration | ✅ Mesmo commit |
+| T77  | React                       | integration     | integration | ✅ Mesmo commit |
+| T78  | React                       | integration     | integration | ✅ Mesmo commit |
+| T79  | React                       | integration     | integration | ✅ Mesmo commit |
+| T80  | React                       | integration     | integration | ✅ Mesmo commit |
+| T81  | React                       | integration     | integration | ✅ Mesmo commit |
+| T82  | React                       | integration     | integration | ✅ Mesmo commit |
+| T83  | React                       | integration     | integration | ✅ Mesmo commit |
+| T84  | React                       | integration     | integration | ✅ Mesmo commit |
+| T85  | React                       | integration     | integration | ✅ Mesmo commit |
+| T86  | React                       | integration     | integration | ✅ Mesmo commit |
+| T87  | React                       | integration     | integration | ✅ Mesmo commit |
+| T88  | React                       | integration     | integration | ✅ Mesmo commit |
+| T89  | React                       | integration     | integration | ✅ Mesmo commit |
+| T90  | React                       | integration     | integration | ✅ Mesmo commit |
+| T91  | React                       | integration     | integration | ✅ Mesmo commit |
+| T92  | React                       | integration     | integration | ✅ Mesmo commit |
+| T93  | React                       | integration     | integration | ✅ Mesmo commit |
+| T94  | React                       | integration     | integration | ✅ Mesmo commit |
 
 ## Requirement Traceability
 
 Mapeamento de planejamento, não evidência de implementação. Cada ID também conserva sua seção responsável em design.md. Durante Execute, acrescentar assertions e file:line à evidência da tarefa e do Verifier.
 
-| Requirement ID | Tasks | Status |
-| --- | --- | --- |
-| INV-01 | T3, T17, T23, T41, T74 | Planned |
-| INV-02 | T3, T4, T41 | Planned |
-| INV-03 | T3, T4, T17, T23, T41 | Planned |
-| INV-04 | T4, T15, T23, T30, T41, T42 | Planned |
-| INV-05 | T17, T23, T68 | Planned |
-| INV-06 | T17, T23, T68 | Planned |
-| INV-07 | T4, T23, T42, T68, T74 | Planned |
-| INV-08 | T42, T43, T74 | Planned |
-| INV-09 | T14, T62, T63, T75, T86 | Planned |
-| INV-10 | T14, T62, T63, T75, T86 | Planned |
-| INV-138 | T42, T74, T75, T78, T92 | Planned |
-| INV-11 | T3, T4, T23, T41, T42, T63, T74, T87 | Planned |
-| INV-12 | T3, T38, T39, T42, T43, T74 | Planned |
-| INV-13 | T42, T61, T74, T79, T80 | Planned |
-| INV-14 | T6, T18, T24, T31, T44, T64, T76 | Planned |
-| INV-15 | T6, T44, T64, T76 | Planned |
-| INV-16 | T6, T24, T44, T45, T76 | Planned |
-| INV-17 | T6, T18, T24, T31, T44, T45, T64, T76 | Planned |
-| INV-18 | T6, T18, T24, T31, T44, T45, T64, T76 | Planned |
-| INV-19 | T5, T8, T19, T25, T32, T50, T65, T78, T88 | Planned |
-| INV-20 | T8, T12, T19, T25, T32, T47, T50, T65, T77, T91 | Planned |
-| INV-21 | T2, T8, T19, T25, T50, T78 | Planned |
-| INV-22 | T7, T19, T25, T65, T78, T91 | Planned |
-| INV-23 | T7, T19, T25, T78 | Planned |
-| INV-24 | T2, T7 | Planned |
-| INV-25 | T7, T8, T65, T88, T91 | Planned |
-| INV-26 | T6, T7, T8, T24, T25, T31, T45, T47, T64, T65, T76, T77, T88, T91 | Planned |
-| INV-27 | T11, T50, T78 | Planned |
-| INV-28 | T38, T39, T50, T60, T78 | Planned |
-| INV-29 | T11, T50, T51, T79 | Planned |
-| INV-30 | T11, T50, T51, T79 | Planned |
-| INV-31 | T60, T68, T70, T94 | Planned |
-| INV-32 | T38, T39, T50, T51, T55, T60, T79, T83 | Planned |
-| INV-33 | T50, T78 | Planned |
-| INV-34 | T9, T50, T51 | Planned |
-| INV-120 | T49, T50, T78 | Planned |
-| INV-121 | T49, T50, T78 | Planned |
-| INV-122 | T49, T78 | Planned |
-| INV-123 | T2, T49, T50, T78 | Planned |
-| INV-124 | T49, T78 | Planned |
-| INV-137 | T49, T50, T78 | Planned |
-| INV-35 | T8, T11, T51, T52, T54, T80 | Planned |
-| INV-36 | T2, T11, T12, T51, T52, T61, T79, T80 | Planned |
-| INV-37 | T11, T52, T69, T80 | Planned |
-| INV-38 | T11, T52, T69, T80 | Planned |
-| INV-39 | T8, T11, T52, T80 | Planned |
-| INV-40 | T8, T11, T52, T80 | Planned |
-| INV-41 | T11, T52, T80 | Planned |
-| INV-42 | T11, T53, T54, T69, T81, T82 | Planned |
-| INV-43 | T11, T55, T69, T83 | Planned |
-| INV-44 | T11, T51, T52, T53, T54, T55, T69, T81, T82, T83 | Planned |
-| INV-45 | T11, T51, T52, T70, T94 | Planned |
-| INV-46 | T8, T11, T52, T54, T82 | Planned |
-| INV-125 | T11, T51, T79 | Planned |
-| INV-126 | T11, T51, T52, T53, T54, T55, T79, T80, T81, T82, T83 | Planned |
-| INV-139 | T52, T61, T80 | Planned |
-| INV-47 | T10, T21, T27, T34, T58, T67, T84, T90 | Planned |
-| INV-48 | T2, T10, T27, T58, T84 | Planned |
-| INV-49 | T10, T21, T27, T34, T58, T67, T84, T90 | Planned |
-| INV-50 | T14, T21, T27, T29, T34, T36, T58, T62, T65, T67, T72, T90 | Planned |
-| INV-51 | T8, T52, T58, T62, T65, T67, T90 | Planned |
-| INV-52 | T14, T62, T65, T86, T88, T91 | Planned |
-| INV-53 | T8, T52, T62, T65, T67, T86, T88, T90, T91 | Planned |
-| INV-54 | T14, T62, T86 | Planned |
-| INV-55 | T14, T37, T38, T39, T62, T63, T68, T69, T87 | Planned |
-| INV-56 | T14, T37, T62, T69, T86 | Planned |
-| INV-57 | T14, T37, T62, T68, T69, T75 | Planned |
-| INV-58 | T14, T62, T65, T72, T84, T86, T88, T90 | Planned |
-| INV-59 | T10, T14, T58, T62, T65, T67, T84, T86, T88, T90, T91 | Planned |
-| INV-60 | T14, T38, T39, T60, T62, T63, T86, T87 | Planned |
-| INV-127 | T8, T19, T21, T25, T27, T30, T32, T47, T50, T58, T67, T90 | Planned |
-| INV-128 | T8, T25, T51, T52, T54, T56, T57, T85 | Planned |
-| INV-129 | T8, T47, T53, T55, T57, T77, T85 | Planned |
-| INV-130 | T58, T62, T65, T67, T84, T90 | Planned |
-| INV-131 | T12, T58, T73, T84 | Planned |
-| INV-140 | T14, T37, T38, T39, T62, T68, T69, T72, T86 | Planned |
-| INV-141 | T14, T37, T38, T39, T62, T68, T69, T72, T86 | Planned |
-| INV-142 | T10, T58, T84 | Planned |
-| INV-146 | T62, T63, T86, T87, T92 | Planned |
-| INV-147 | T49, T60, T62, T86, T87, T92 | Planned |
-| INV-61 | T9, T26, T33, T56, T57, T66, T85, T89, T91 | Planned |
-| INV-62 | T8, T56, T85 | Planned |
-| INV-63 | T9, T20, T26, T33, T56, T57, T59, T66, T70, T89, T94 | Planned |
-| INV-64 | T9, T20, T26, T33, T56, T57, T59, T66, T70, T89, T94 | Planned |
-| INV-65 | T9, T26, T33, T56, T57, T66, T85, T89 | Planned |
-| INV-66 | T9, T56, T57 | Planned |
-| INV-67 | T56, T57, T59, T70, T85, T94 | Planned |
-| INV-68 | T9, T20, T26, T57, T59, T66, T70, T85, T89, T94 | Planned |
-| INV-69 | T9, T20, T26, T33, T56, T57, T59, T66, T70, T85, T89, T94 | Planned |
-| INV-70 | T56, T57, T60, T85 | Planned |
-| INV-71 | T8, T56 | Planned |
-| INV-72 | T9, T20, T26, T29, T33, T36, T56, T57, T66, T85, T89 | Planned |
-| INV-73 | T9, T56, T57, T85, T89 | Planned |
-| INV-132 | T9, T11, T13, T20, T26, T30, T33, T56, T57, T66, T89 | Planned |
-| INV-133 | T9, T20, T26, T56, T57, T66, T89 | Planned |
-| INV-134 | T9, T20, T26, T56, T57, T66, T85, T89 | Planned |
-| INV-135 | T26, T57, T59, T66, T70, T85, T89, T94 | Planned |
-| INV-136 | T26, T57, T59, T66, T70, T85, T89, T94 | Planned |
-| INV-74 | T12, T13, T18, T19, T20, T21, T23, T24, T25, T26, T27, T28, T31, T32, T33, T34, T35, T40, T41, T42, T43, T44, T45, T46, T47, T48, T51, T52, T53, T54, T55, T56, T57, T58, T59, T61, T63, T64, T65, T66, T67, T71, T72, T73, T91, T93 | Planned |
-| INV-75 | T13, T16, T22, T28, T29, T30, T35, T36, T40, T48, T50, T51, T52, T53, T54, T55, T56, T57, T58, T60 | Planned |
-| INV-76 | T4, T12, T13, T23, T24, T25, T26, T31, T32, T33, T40, T42, T45, T46, T47, T48, T51, T52, T53, T54, T55, T56, T57, T61, T73 | Planned |
-| INV-77 | T38, T39, T40, T48, T51, T60 | Planned |
-| INV-78 | T5, T12, T13, T16, T22, T28, T35, T40, T48, T49, T50, T51, T52, T53, T54, T55, T56, T57, T58, T71, T73 | Planned |
-| INV-79 | T12, T22, T28, T35, T48, T73 | Planned |
-| INV-80 | T16, T22, T28, T35, T40, T48, T71, T73 | Planned |
-| INV-81 | T9, T15, T16, T40, T44, T45, T46, T48 | Planned |
-| INV-82 | T1, T2, T10, T12, T29, T36, T37, T62, T68, T69, T70 | Planned |
-| INV-83 | T1, T2, T6, T10, T12, T44, T45, T47 | Planned |
-| INV-84 | T2, T10, T12, T48, T58 | Planned |
-| INV-85 | T17, T18, T19, T20, T21, T22 | Planned |
-| INV-86 | T17, T18, T19, T20, T21, T22 | Planned |
-| INV-87 | T17, T18, T22 | Planned |
-| INV-88 | T13, T17, T21, T23, T24, T25, T26, T27, T28, T29, T30, T34, T40 | Planned |
-| INV-89 | T5, T6, T12, T13, T40, T44, T71 | Planned |
-| INV-90 | T12, T15, T16, T48, T73 | Planned |
-| INV-145 | T12, T38, T39, T48, T49, T50, T51, T55, T56, T57, T60, T61, T62, T63, T73, T78, T79, T83, T87 | Planned |
-| INV-91 | T71, T92, T93 | Planned |
-| INV-92 | T71, T92, T93 | Planned |
-| INV-93 | T14, T62, T72, T75, T86, T92 | Planned |
-| INV-94 | T14, T63, T72, T87, T92 | Planned |
-| INV-95 | T14, T65, T72, T88, T91, T92 | Planned |
-| INV-96 | T14, T65, T66, T67, T72, T89, T90, T91, T93 | Planned |
-| INV-97 | T14, T62, T65, T72, T88, T92 | Planned |
-| INV-98 | T14, T65, T66, T67, T70, T72, T88, T89, T90, T94 | Planned |
-| INV-99 | T64, T74, T76, T78, T92, T93 | Planned |
-| INV-100 | T61, T78, T79, T80, T81, T82, T83, T84, T85 | Planned |
-| INV-101 | T71, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T91, T92, T93 | Planned |
-| INV-102 | T59, T70, T94 | Planned |
-| INV-103 | T37, T69, T70, T94 | Planned |
-| INV-104 | T71, T72, T73, T92, T94 | Planned |
-| INV-105 | T72, T73, T91, T92, T93 | Planned |
-| INV-106 | T72, T86, T87, T88, T89, T90, T91, T92 | Planned |
-| INV-107 | T63, T72, T75, T86, T87, T88, T92 | Planned |
-| INV-108 | T72, T86, T87, T88, T89, T90, T91, T92 | Planned |
-| INV-109 | T73, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T94 | Planned |
-| INV-110 | T74, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T88, T89, T91, T92, T93, T94 | Planned |
-| INV-111 | T73, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T92 | Planned |
-| INV-112 | T86, T87, T88, T89, T90, T91, T92, T93, T94 | Planned |
-| INV-143 | T75 | Planned |
-| INV-148 | T61, T73, T78, T79, T80, T81, T82, T83, T85, T92 | Planned |
-| INV-113 | T25, T32, T38, T39, T43, T63, T87 | Planned |
-| INV-114 | T6, T24, T25, T31, T32, T46, T64, T76 | Planned |
-| INV-115 | T38, T39, T42, T43, T74, T87 | Planned |
-| INV-116 | T6, T24, T31, T43, T46, T64, T76, T87 | Planned |
-| INV-117 | T46, T59, T66, T67, T89, T90 | Planned |
-| INV-118 | T8, T51, T79, T88 | Planned |
-| INV-119 | T8, T53, T55, T81, T83, T91 | Planned |
-| INV-144 | T8, T43, T46, T56, T57, T85, T91 | Planned |
+| Requirement ID | Tasks                                                                                                                                                                                                                                | Status  |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- |
+| INV-01         | T3, T17, T23, T41, T74                                                                                                                                                                                                               | Planned |
+| INV-02         | T3, T4, T41                                                                                                                                                                                                                          | Planned |
+| INV-03         | T3, T4, T17, T23, T41                                                                                                                                                                                                                | Planned |
+| INV-04         | T4, T15, T23, T30, T41, T42                                                                                                                                                                                                          | Planned |
+| INV-05         | T17, T23, T68                                                                                                                                                                                                                        | Planned |
+| INV-06         | T17, T23, T68                                                                                                                                                                                                                        | Planned |
+| INV-07         | T4, T23, T42, T68, T74                                                                                                                                                                                                               | Planned |
+| INV-08         | T42, T43, T74                                                                                                                                                                                                                        | Planned |
+| INV-09         | T14, T62, T63, T75, T86                                                                                                                                                                                                              | Planned |
+| INV-10         | T14, T62, T63, T75, T86                                                                                                                                                                                                              | Planned |
+| INV-138        | T42, T74, T75, T78, T92                                                                                                                                                                                                              | Planned |
+| INV-11         | T3, T4, T23, T41, T42, T63, T74, T87                                                                                                                                                                                                 | Planned |
+| INV-12         | T3, T38, T39, T42, T43, T74                                                                                                                                                                                                          | Planned |
+| INV-13         | T42, T61, T74, T79, T80                                                                                                                                                                                                              | Planned |
+| INV-14         | T6, T18, T24, T31, T44, T64, T76                                                                                                                                                                                                     | Planned |
+| INV-15         | T6, T44, T64, T76                                                                                                                                                                                                                    | Planned |
+| INV-16         | T6, T24, T44, T45, T76                                                                                                                                                                                                               | Planned |
+| INV-17         | T6, T18, T24, T31, T44, T45, T64, T76                                                                                                                                                                                                | Planned |
+| INV-18         | T6, T18, T24, T31, T44, T45, T64, T76                                                                                                                                                                                                | Planned |
+| INV-19         | T5, T8, T19, T25, T32, T50, T65, T78, T88                                                                                                                                                                                            | Planned |
+| INV-20         | T8, T12, T19, T25, T32, T47, T50, T65, T77, T91                                                                                                                                                                                      | Planned |
+| INV-21         | T2, T8, T19, T25, T50, T78                                                                                                                                                                                                           | Planned |
+| INV-22         | T7, T19, T25, T65, T78, T91                                                                                                                                                                                                          | Planned |
+| INV-23         | T7, T19, T25, T78                                                                                                                                                                                                                    | Planned |
+| INV-24         | T2, T7                                                                                                                                                                                                                               | Planned |
+| INV-25         | T7, T8, T65, T88, T91                                                                                                                                                                                                                | Planned |
+| INV-26         | T6, T7, T8, T24, T25, T31, T45, T47, T64, T65, T76, T77, T88, T91                                                                                                                                                                    | Planned |
+| INV-27         | T11, T50, T78                                                                                                                                                                                                                        | Planned |
+| INV-28         | T38, T39, T50, T60, T78                                                                                                                                                                                                              | Planned |
+| INV-29         | T11, T50, T51, T79                                                                                                                                                                                                                   | Planned |
+| INV-30         | T11, T50, T51, T79                                                                                                                                                                                                                   | Planned |
+| INV-31         | T60, T68, T70, T94                                                                                                                                                                                                                   | Planned |
+| INV-32         | T38, T39, T50, T51, T55, T60, T79, T83                                                                                                                                                                                               | Planned |
+| INV-33         | T50, T78                                                                                                                                                                                                                             | Planned |
+| INV-34         | T9, T50, T51                                                                                                                                                                                                                         | Planned |
+| INV-120        | T49, T50, T78                                                                                                                                                                                                                        | Planned |
+| INV-121        | T49, T50, T78                                                                                                                                                                                                                        | Planned |
+| INV-122        | T49, T78                                                                                                                                                                                                                             | Planned |
+| INV-123        | T2, T49, T50, T78                                                                                                                                                                                                                    | Planned |
+| INV-124        | T49, T78                                                                                                                                                                                                                             | Planned |
+| INV-137        | T49, T50, T78                                                                                                                                                                                                                        | Planned |
+| INV-35         | T8, T11, T51, T52, T54, T80                                                                                                                                                                                                          | Planned |
+| INV-36         | T2, T11, T12, T51, T52, T61, T79, T80                                                                                                                                                                                                | Planned |
+| INV-37         | T11, T52, T69, T80                                                                                                                                                                                                                   | Planned |
+| INV-38         | T11, T52, T69, T80                                                                                                                                                                                                                   | Planned |
+| INV-39         | T8, T11, T52, T80                                                                                                                                                                                                                    | Planned |
+| INV-40         | T8, T11, T52, T80                                                                                                                                                                                                                    | Planned |
+| INV-41         | T11, T52, T80                                                                                                                                                                                                                        | Planned |
+| INV-42         | T11, T53, T54, T69, T81, T82                                                                                                                                                                                                         | Planned |
+| INV-43         | T11, T55, T69, T83                                                                                                                                                                                                                   | Planned |
+| INV-44         | T11, T51, T52, T53, T54, T55, T69, T81, T82, T83                                                                                                                                                                                     | Planned |
+| INV-45         | T11, T51, T52, T70, T94                                                                                                                                                                                                              | Planned |
+| INV-46         | T8, T11, T52, T54, T82                                                                                                                                                                                                               | Planned |
+| INV-125        | T11, T51, T79                                                                                                                                                                                                                        | Planned |
+| INV-126        | T11, T51, T52, T53, T54, T55, T79, T80, T81, T82, T83                                                                                                                                                                                | Planned |
+| INV-139        | T52, T61, T80                                                                                                                                                                                                                        | Planned |
+| INV-47         | T10, T21, T27, T34, T58, T67, T84, T90                                                                                                                                                                                               | Planned |
+| INV-48         | T2, T10, T27, T58, T84                                                                                                                                                                                                               | Planned |
+| INV-49         | T10, T21, T27, T34, T58, T67, T84, T90                                                                                                                                                                                               | Planned |
+| INV-50         | T14, T21, T27, T29, T34, T36, T58, T62, T65, T67, T72, T90                                                                                                                                                                           | Planned |
+| INV-51         | T8, T52, T58, T62, T65, T67, T90                                                                                                                                                                                                     | Planned |
+| INV-52         | T14, T62, T65, T86, T88, T91                                                                                                                                                                                                         | Planned |
+| INV-53         | T8, T52, T62, T65, T67, T86, T88, T90, T91                                                                                                                                                                                           | Planned |
+| INV-54         | T14, T62, T86                                                                                                                                                                                                                        | Planned |
+| INV-55         | T14, T37, T38, T39, T62, T63, T68, T69, T87                                                                                                                                                                                          | Planned |
+| INV-56         | T14, T37, T62, T69, T86                                                                                                                                                                                                              | Planned |
+| INV-57         | T14, T37, T62, T68, T69, T75                                                                                                                                                                                                         | Planned |
+| INV-58         | T14, T62, T65, T72, T84, T86, T88, T90                                                                                                                                                                                               | Planned |
+| INV-59         | T10, T14, T58, T62, T65, T67, T84, T86, T88, T90, T91                                                                                                                                                                                | Planned |
+| INV-60         | T14, T38, T39, T60, T62, T63, T86, T87                                                                                                                                                                                               | Planned |
+| INV-127        | T8, T19, T21, T25, T27, T30, T32, T47, T50, T58, T67, T90                                                                                                                                                                            | Planned |
+| INV-128        | T8, T25, T51, T52, T54, T56, T57, T85                                                                                                                                                                                                | Planned |
+| INV-129        | T8, T47, T53, T55, T57, T77, T85                                                                                                                                                                                                     | Planned |
+| INV-130        | T58, T62, T65, T67, T84, T90                                                                                                                                                                                                         | Planned |
+| INV-131        | T12, T58, T73, T84                                                                                                                                                                                                                   | Planned |
+| INV-140        | T14, T37, T38, T39, T62, T68, T69, T72, T86                                                                                                                                                                                          | Planned |
+| INV-141        | T14, T37, T38, T39, T62, T68, T69, T72, T86                                                                                                                                                                                          | Planned |
+| INV-142        | T10, T58, T84                                                                                                                                                                                                                        | Planned |
+| INV-146        | T62, T63, T86, T87, T92                                                                                                                                                                                                              | Planned |
+| INV-147        | T49, T60, T62, T86, T87, T92                                                                                                                                                                                                         | Planned |
+| INV-61         | T9, T26, T33, T56, T57, T66, T85, T89, T91                                                                                                                                                                                           | Planned |
+| INV-62         | T8, T56, T85                                                                                                                                                                                                                         | Planned |
+| INV-63         | T9, T20, T26, T33, T56, T57, T59, T66, T70, T89, T94                                                                                                                                                                                 | Planned |
+| INV-64         | T9, T20, T26, T33, T56, T57, T59, T66, T70, T89, T94                                                                                                                                                                                 | Planned |
+| INV-65         | T9, T26, T33, T56, T57, T66, T85, T89                                                                                                                                                                                                | Planned |
+| INV-66         | T9, T56, T57                                                                                                                                                                                                                         | Planned |
+| INV-67         | T56, T57, T59, T70, T85, T94                                                                                                                                                                                                         | Planned |
+| INV-68         | T9, T20, T26, T57, T59, T66, T70, T85, T89, T94                                                                                                                                                                                      | Planned |
+| INV-69         | T9, T20, T26, T33, T56, T57, T59, T66, T70, T85, T89, T94                                                                                                                                                                            | Planned |
+| INV-70         | T56, T57, T60, T85                                                                                                                                                                                                                   | Planned |
+| INV-71         | T8, T56                                                                                                                                                                                                                              | Planned |
+| INV-72         | T9, T20, T26, T29, T33, T36, T56, T57, T66, T85, T89                                                                                                                                                                                 | Planned |
+| INV-73         | T9, T56, T57, T85, T89                                                                                                                                                                                                               | Planned |
+| INV-132        | T9, T11, T13, T20, T26, T30, T33, T56, T57, T66, T89                                                                                                                                                                                 | Planned |
+| INV-133        | T9, T20, T26, T56, T57, T66, T89                                                                                                                                                                                                     | Planned |
+| INV-134        | T9, T20, T26, T56, T57, T66, T85, T89                                                                                                                                                                                                | Planned |
+| INV-135        | T26, T57, T59, T66, T70, T85, T89, T94                                                                                                                                                                                               | Planned |
+| INV-136        | T26, T57, T59, T66, T70, T85, T89, T94                                                                                                                                                                                               | Planned |
+| INV-74         | T12, T13, T18, T19, T20, T21, T23, T24, T25, T26, T27, T28, T31, T32, T33, T34, T35, T40, T41, T42, T43, T44, T45, T46, T47, T48, T51, T52, T53, T54, T55, T56, T57, T58, T59, T61, T63, T64, T65, T66, T67, T71, T72, T73, T91, T93 | Planned |
+| INV-75         | T13, T16, T22, T28, T29, T30, T35, T36, T40, T48, T50, T51, T52, T53, T54, T55, T56, T57, T58, T60                                                                                                                                   | Planned |
+| INV-76         | T4, T12, T13, T23, T24, T25, T26, T31, T32, T33, T40, T42, T45, T46, T47, T48, T51, T52, T53, T54, T55, T56, T57, T61, T73                                                                                                           | Planned |
+| INV-77         | T38, T39, T40, T48, T51, T60                                                                                                                                                                                                         | Planned |
+| INV-78         | T5, T12, T13, T16, T22, T28, T35, T40, T48, T49, T50, T51, T52, T53, T54, T55, T56, T57, T58, T71, T73                                                                                                                               | Planned |
+| INV-79         | T12, T22, T28, T35, T48, T73                                                                                                                                                                                                         | Planned |
+| INV-80         | T16, T22, T28, T35, T40, T48, T71, T73                                                                                                                                                                                               | Planned |
+| INV-81         | T9, T15, T16, T40, T44, T45, T46, T48                                                                                                                                                                                                | Planned |
+| INV-82         | T1, T2, T10, T12, T29, T36, T37, T62, T68, T69, T70                                                                                                                                                                                  | Planned |
+| INV-83         | T1, T2, T6, T10, T12, T44, T45, T47                                                                                                                                                                                                  | Planned |
+| INV-84         | T2, T10, T12, T48, T58                                                                                                                                                                                                               | Planned |
+| INV-85         | T17, T18, T19, T20, T21, T22                                                                                                                                                                                                         | Planned |
+| INV-86         | T17, T18, T19, T20, T21, T22                                                                                                                                                                                                         | Planned |
+| INV-87         | T17, T18, T22                                                                                                                                                                                                                        | Planned |
+| INV-88         | T13, T17, T21, T23, T24, T25, T26, T27, T28, T29, T30, T34, T40                                                                                                                                                                      | Planned |
+| INV-89         | T5, T6, T12, T13, T40, T44, T71                                                                                                                                                                                                      | Planned |
+| INV-90         | T12, T15, T16, T48, T73                                                                                                                                                                                                              | Planned |
+| INV-145        | T12, T38, T39, T48, T49, T50, T51, T55, T56, T57, T60, T61, T62, T63, T73, T78, T79, T83, T87                                                                                                                                        | Planned |
+| INV-91         | T71, T92, T93                                                                                                                                                                                                                        | Planned |
+| INV-92         | T71, T92, T93                                                                                                                                                                                                                        | Planned |
+| INV-93         | T14, T62, T72, T75, T86, T92                                                                                                                                                                                                         | Planned |
+| INV-94         | T14, T63, T72, T87, T92                                                                                                                                                                                                              | Planned |
+| INV-95         | T14, T65, T72, T88, T91, T92                                                                                                                                                                                                         | Planned |
+| INV-96         | T14, T65, T66, T67, T72, T89, T90, T91, T93                                                                                                                                                                                          | Planned |
+| INV-97         | T14, T62, T65, T72, T88, T92                                                                                                                                                                                                         | Planned |
+| INV-98         | T14, T65, T66, T67, T70, T72, T88, T89, T90, T94                                                                                                                                                                                     | Planned |
+| INV-99         | T64, T74, T76, T78, T92, T93                                                                                                                                                                                                         | Planned |
+| INV-100        | T61, T78, T79, T80, T81, T82, T83, T84, T85                                                                                                                                                                                          | Planned |
+| INV-101        | T71, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T91, T92, T93                                                                                                                                                                 | Planned |
+| INV-102        | T59, T70, T94                                                                                                                                                                                                                        | Planned |
+| INV-103        | T37, T69, T70, T94                                                                                                                                                                                                                   | Planned |
+| INV-104        | T71, T72, T73, T92, T94                                                                                                                                                                                                              | Planned |
+| INV-105        | T72, T73, T91, T92, T93                                                                                                                                                                                                              | Planned |
+| INV-106        | T72, T86, T87, T88, T89, T90, T91, T92                                                                                                                                                                                               | Planned |
+| INV-107        | T63, T72, T75, T86, T87, T88, T92                                                                                                                                                                                                    | Planned |
+| INV-108        | T72, T86, T87, T88, T89, T90, T91, T92                                                                                                                                                                                               | Planned |
+| INV-109        | T73, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T94                                                                                                                                                                           | Planned |
+| INV-110        | T74, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T88, T89, T91, T92, T93, T94                                                                                                                                                  | Planned |
+| INV-111        | T73, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T92                                                                                                                                                                           | Planned |
+| INV-112        | T86, T87, T88, T89, T90, T91, T92, T93, T94                                                                                                                                                                                          | Planned |
+| INV-143        | T75                                                                                                                                                                                                                                  | Planned |
+| INV-148        | T61, T73, T78, T79, T80, T81, T82, T83, T85, T92                                                                                                                                                                                     | Planned |
+| INV-113        | T25, T32, T38, T39, T43, T63, T87                                                                                                                                                                                                    | Planned |
+| INV-114        | T6, T24, T25, T31, T32, T46, T64, T76                                                                                                                                                                                                | Planned |
+| INV-115        | T38, T39, T42, T43, T74, T87                                                                                                                                                                                                         | Planned |
+| INV-116        | T6, T24, T31, T43, T46, T64, T76, T87                                                                                                                                                                                                | Planned |
+| INV-117        | T46, T59, T66, T67, T89, T90                                                                                                                                                                                                         | Planned |
+| INV-118        | T8, T51, T79, T88                                                                                                                                                                                                                    | Planned |
+| INV-119        | T8, T53, T55, T81, T83, T91                                                                                                                                                                                                          | Planned |
+| INV-144        | T8, T43, T46, T56, T57, T85, T91                                                                                                                                                                                                     | Planned |
 
 ## Edge Case Coverage
 
 Os 35 fixtures de Edge Cases da spec têm responsáveis explícitos. A entrada e o resultado obrigatório permanecem na spec como oráculo; os testes não os calculam pelo planner da implementação.
 
-| Cenário da spec | Tasks responsáveis |
-| --- | --- |
-| Compra interna sem despesas | T11, T51, T62 |
-| Compra externa com despesas | T11, T51, T70 |
-| Venda com ganho | T11, T52 |
-| Venda com perda | T11, T52 |
-| Ganho menor que despesas | T11, T52, T70 |
-| Sem resultado, mas com despesas | T11, T52 |
-| Resgate direto | T11, T52 |
-| Venda parcial | T8, T52 |
-| Avaliação antes de venda parcial | T52, T58, T62 |
-| Custo zero com unidades | T8, T52 |
-| Amortização | T11, T54 |
-| Empate de avaliação | T58, T62, T67 |
-| Dado antigo inserido depois | T58, T62 |
-| Moedas distintas | T6, T44 |
-| Precisão | T1, T2 |
-| Caixa negativo legado | T38, T62, T87 |
-| Resumo independente de filtro | T62, T65, T92 |
-| Retry após resposta perdida | T48, T50, T73 |
-| Cancelamento inicial | T8, T56 |
-| Venda com despesas no caixa interno | T11, T52 |
-| Venda com despesas direto ao banco | T11, T52 |
-| Rendimento com retenção no evento | T11, T53 |
-| Caixa já reconhecido na carteira | T50, T78 |
-| Patrimônio inicialmente ausente | T49, T50, T62 |
-| Patrimônio ausente com caixa real | T49, T50, T62 |
-| Cancelamento não recupera valuation anterior | T8, T56, T62 |
-| Amendment sem mudança de alocação | T8, T57, T62 |
-| Avaliação aberta antes de venda | T58, T84 |
-| Amendment passa a ter journal | T57, T66, T70 |
-| Amendment deixa de ter journal | T57, T66, T70 |
-| Abertura antes de completar ledger | T50, T62, T86 |
-| Recuperação do caixa | T49, T60, T62, T86 |
-| Compra com caixa insuficiente | T51, T79 |
-| Lançamento futuro no ledger | T37, T62, T69 |
-| Avaliação de quantidade divergente | T10, T58, T84 |
+| Cenário da spec                              | Tasks responsáveis |
+| -------------------------------------------- | ------------------ |
+| Compra interna sem despesas                  | T11, T51, T62      |
+| Compra externa com despesas                  | T11, T51, T70      |
+| Venda com ganho                              | T11, T52           |
+| Venda com perda                              | T11, T52           |
+| Ganho menor que despesas                     | T11, T52, T70      |
+| Sem resultado, mas com despesas              | T11, T52           |
+| Resgate direto                               | T11, T52           |
+| Venda parcial                                | T8, T52            |
+| Avaliação antes de venda parcial             | T52, T58, T62      |
+| Custo zero com unidades                      | T8, T52            |
+| Amortização                                  | T11, T54           |
+| Empate de avaliação                          | T58, T62, T67      |
+| Dado antigo inserido depois                  | T58, T62           |
+| Moedas distintas                             | T6, T44            |
+| Precisão                                     | T1, T2             |
+| Caixa negativo legado                        | T38, T62, T87      |
+| Resumo independente de filtro                | T62, T65, T92      |
+| Retry após resposta perdida                  | T48, T50, T73      |
+| Cancelamento inicial                         | T8, T56            |
+| Venda com despesas no caixa interno          | T11, T52           |
+| Venda com despesas direto ao banco           | T11, T52           |
+| Rendimento com retenção no evento            | T11, T53           |
+| Caixa já reconhecido na carteira             | T50, T78           |
+| Patrimônio inicialmente ausente              | T49, T50, T62      |
+| Patrimônio ausente com caixa real            | T49, T50, T62      |
+| Cancelamento não recupera valuation anterior | T8, T56, T62       |
+| Amendment sem mudança de alocação            | T8, T57, T62       |
+| Avaliação aberta antes de venda              | T58, T84           |
+| Amendment passa a ter journal                | T57, T66, T70      |
+| Amendment deixa de ter journal               | T57, T66, T70      |
+| Abertura antes de completar ledger           | T50, T62, T86      |
+| Recuperação do caixa                         | T49, T60, T62, T86 |
+| Compra com caixa insuficiente                | T51, T79           |
+| Lançamento futuro no ledger                  | T37, T62, T69      |
+| Avaliação de quantidade divergente           | T10, T58, T84      |
 
 ## Ferramentas propostas e fechamento futuro
 

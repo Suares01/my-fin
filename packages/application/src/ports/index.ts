@@ -83,6 +83,7 @@ export type {
   JournalChainStatus,
   JournalHistoryItem,
   JournalHistoryRole,
+  InvestmentJournalLink,
   JournalPostingView,
   JournalViewQueries,
   ListJournalChainsInput,

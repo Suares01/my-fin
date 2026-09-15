@@ -27,6 +27,7 @@ const detail = {
   sequence: "12",
   description: "Groceries corrected",
   origin: "MANUAL" as const,
+  canEditWithGenericFlow: true,
   amountMinor: "-1250",
   currency: "BRL",
   financialAccounts: [

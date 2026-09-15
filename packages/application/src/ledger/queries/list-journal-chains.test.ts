@@ -32,6 +32,7 @@ const chain = {
   sequence: "9007199254740993",
   description: "Groceries",
   origin: "MANUAL" as const,
+  canEditWithGenericFlow: true,
   amountMinor: "-1000",
   currency: "BRL",
   financialAccounts: [],

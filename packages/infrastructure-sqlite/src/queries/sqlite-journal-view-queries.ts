@@ -8,6 +8,7 @@ import type {
   JournalChainSummary,
   JournalHistoryItem,
   JournalHistoryRole,
+  InvestmentJournalLink,
   JournalPostingView,
   JournalViewQueries,
   ListJournalChainsInput,
@@ -26,6 +27,10 @@ import {
 
 const JOURNAL_TYPE_SQL =
   "CASE " +
+  "WHEN EXISTS (SELECT 1 FROM investment_operations type_investment " +
+  "WHERE type_investment.book_id = presented.book_id " +
+  "AND type_investment.journal_entry_id = presented.presented_entry_id) " +
+  "THEN 'INVESTMENT' " +
   "WHEN EXISTS (SELECT 1 FROM postings type_posting " +
   "JOIN ledger_accounts type_account ON type_account.id = type_posting.account_id " +
   "AND type_account.book_id = type_posting.book_id " +
@@ -141,53 +146,53 @@ export class SqliteJournalViewQueries implements Pick<
   ): Promise<JournalChainSummary> {
     return this.executor.readTransaction(async (reader) => {
       const filtered = buildFilteredPresentedQuery(input)
-      const rows = await reader.query<JournalChainSummaryRow>(
-        "WITH filtered AS (" +
-          filtered.sql +
-          "), chain_amounts AS (" +
-          "SELECT filtered.chain_id, filtered.business_type, " +
-          "CASE WHEN filtered.business_type = 'INCOME' THEN " +
-          "COALESCE(SUM(CASE WHEN amount_account.kind = 'INCOME' " +
-          "THEN -amount_posting.amount_minor ELSE 0 END), 0) " +
-          "WHEN filtered.business_type = 'EXPENSE' THEN " +
-          "COALESCE(SUM(CASE WHEN amount_account.kind = 'EXPENSE' " +
-          "THEN amount_posting.amount_minor ELSE 0 END), 0) " +
-          "ELSE COALESCE(MAX(CASE WHEN amount_account.kind IN ('ASSET', 'LIABILITY') " +
-          "THEN ABS(amount_posting.amount_minor) ELSE 0 END), 0) END AS amount_minor " +
-          "FROM filtered LEFT JOIN postings amount_posting " +
-          "ON amount_posting.book_id = filtered.book_id " +
-          "AND amount_posting.journal_entry_id = filtered.presented_entry_id " +
-          "LEFT JOIN ledger_accounts amount_account " +
-          "ON amount_account.book_id = amount_posting.book_id " +
-          "AND amount_account.id = amount_posting.account_id " +
-          "GROUP BY filtered.chain_id, filtered.business_type" +
-          "), totals AS (" +
-          "SELECT CAST(COALESCE(SUM(CASE WHEN business_type = 'INCOME' " +
-          "THEN amount_minor ELSE 0 END), 0) AS TEXT) AS income_minor, " +
-          "CAST(COALESCE(SUM(CASE WHEN business_type = 'EXPENSE' " +
-          "THEN amount_minor ELSE 0 END), 0) AS TEXT) AS expense_minor, " +
-          "CAST(COALESCE(MAX(amount_minor), 0) AS TEXT) AS largest_transaction_minor, " +
-          "COUNT(*) AS transaction_count FROM chain_amounts" +
-          ") SELECT books.base_currency, totals.income_minor, totals.expense_minor, " +
-          "totals.largest_transaction_minor, totals.transaction_count " +
-          "FROM financial_books books CROSS JOIN totals WHERE books.id = ?",
-        [...filtered.parameters, input.bookId]
+      const rows = await reader.query<JournalChainPageRow>(
+        filtered.sql,
+        filtered.parameters
       )
-      const row = rows[0]
+      const postings = await this.readPostings(
+        reader,
+        input.bookId,
+        rows.map((row) =>
+          readString(row.presented_entry_id, "presented_entry_id")
+        )
+      )
+      const bookRows = await reader.query<{ readonly base_currency: unknown }>(
+        "SELECT base_currency FROM financial_books WHERE id = ?",
+        [input.bookId]
+      )
+      const row = bookRows[0]
       if (row === undefined) {
         throw new TypeError("Missing journal chain summary book")
       }
+      let incomeMinor = 0n
+      let expenseMinor = 0n
+      let largestTransactionMinor = 0n
+      for (const chain of rows) {
+        if (readStatus(chain.status) === "CANCELLED") continue
+        const entryId = readString(
+          chain.presented_entry_id,
+          "presented_entry_id"
+        )
+        const chainPostings = postings.get(entryId) ?? []
+        for (const posting of chainPostings) {
+          const kind = readAccountKind(posting.account_kind)
+          const amount = BigInt(
+            readString(posting.amount_minor, "amount_minor")
+          )
+          if (kind === "INCOME")
+            incomeMinor += BigInt(toDisplayMinor(amount, kind))
+          if (kind === "EXPENSE")
+            expenseMinor += BigInt(toDisplayMinor(amount, kind))
+        }
+        const amount = BigInt(amountFor(chain, chainPostings))
+        if (amount > largestTransactionMinor) largestTransactionMinor = amount
+      }
       return {
-        incomeMinor: readString(row.income_minor, "income_minor"),
-        expenseMinor: readString(row.expense_minor, "expense_minor"),
-        largestTransactionMinor: readString(
-          row.largest_transaction_minor,
-          "largest_transaction_minor"
-        ),
-        transactionCount: readInteger(
-          row.transaction_count,
-          "transaction_count"
-        ),
+        incomeMinor: incomeMinor.toString(),
+        expenseMinor: expenseMinor.toString(),
+        largestTransactionMinor: largestTransactionMinor.toString(),
+        transactionCount: rows.length,
         currency: readString(row.base_currency, "base_currency"),
       }
     })
@@ -303,12 +308,18 @@ export class SqliteJournalViewQueries implements Pick<
         "entry.currency, history.role, entry.replacement_of_id, entry.replaced_by_id, " +
         "entry.reversed_by_id, CASE WHEN entry.reversed_by_id IS NOT NULL THEN 'CANCELLED' " +
         "WHEN entry.replacement_of_id IS NOT NULL THEN 'EDITED' ELSE 'ACTIVE' END AS status, " +
+        "investment.id AS investment_operation_id, investment.position_id AS investment_position_id, " +
+        "investment.type AS investment_operation_type, CAST(investment.net_cash_flow_minor AS TEXT) AS investment_net_cash_flow_minor, " +
+        "CAST(investment.gross_amount_minor AS TEXT) AS investment_gross_amount_minor, " +
+        "CAST(investment.book_cost_delta_minor AS TEXT) AS investment_book_cost_delta_minor, " +
         `${JOURNAL_TYPE_SQL.replaceAll(
           "presented.presented_entry_id",
           "entry.id"
         ).replaceAll("presented.", "entry.")} AS business_type ` +
         "FROM history JOIN journal_entries entry ON entry.id = history.entry_id " +
         "AND entry.book_id = history.book_id " +
+        "LEFT JOIN investment_operations investment ON investment.book_id = entry.book_id " +
+        "AND investment.journal_entry_id = entry.id " +
         "ORDER BY entry.recorded_at ASC, length(CAST(entry.sequence AS TEXT)) ASC, " +
         "CAST(entry.sequence AS TEXT) ASC, entry.id ASC",
       [input.bookId, input.entryId, input.bookId, input.bookId, input.bookId]
@@ -345,10 +356,16 @@ function buildFilteredPresentedQuery(input: FilteredPresentedInput): {
     ") SELECT presented.chain_id, presented.presented_entry_id, presented.book_id, " +
     "presented.presented_version, presented.occurred_on, presented.recorded_at, " +
     "presented.sequence, presented.description, presented.origin, presented.currency, " +
+    "investment.id AS investment_operation_id, investment.position_id AS investment_position_id, " +
+    "investment.type AS investment_operation_type, CAST(investment.net_cash_flow_minor AS TEXT) AS investment_net_cash_flow_minor, " +
+    "CAST(investment.gross_amount_minor AS TEXT) AS investment_gross_amount_minor, " +
+    "CAST(investment.book_cost_delta_minor AS TEXT) AS investment_book_cost_delta_minor, " +
     `${JOURNAL_STATUS_SQL} AS status, ${JOURNAL_TYPE_SQL} AS business_type ` +
     "FROM presented JOIN journal_entries presented_search " +
     "ON presented_search.id = presented.presented_entry_id " +
-    "AND presented_search.book_id = presented.book_id WHERE 1 = 1"
+    "AND presented_search.book_id = presented.book_id " +
+    "LEFT JOIN investment_operations investment ON investment.book_id = presented.book_id " +
+    "AND investment.journal_entry_id = presented.presented_entry_id WHERE 1 = 1"
 
   if (input.from !== undefined) {
     sql += " AND presented.occurred_on >= ?"
@@ -416,6 +433,12 @@ type JournalChainPageRow = {
   readonly currency: unknown
   readonly status: unknown
   readonly business_type: unknown
+  readonly investment_operation_id: unknown
+  readonly investment_position_id: unknown
+  readonly investment_operation_type: unknown
+  readonly investment_net_cash_flow_minor: unknown
+  readonly investment_gross_amount_minor: unknown
+  readonly investment_book_cost_delta_minor: unknown
 }
 
 type JournalChainSummaryRow = {
@@ -457,6 +480,7 @@ function toChainItem(
       isCategoryKind(readAccountKind(posting.account_kind))
     )
   )
+  const investment = investmentFor(row)
   const type = readBusinessType(row.business_type)
   const transfer =
     type === "TRANSFER" && financialAccounts.length === 2
@@ -481,10 +505,12 @@ function toChainItem(
     sequence: readString(row.sequence, "sequence"),
     description: readString(row.description, "description"),
     origin: readJournalOrigin(row.origin),
-    amountMinor: amountFor(type, rows),
+    canEditWithGenericFlow: investment === undefined,
+    amountMinor: amountFor(row, rows),
     currency: readString(row.currency, "currency"),
     financialAccounts,
     categories,
+    ...(investment === undefined ? {} : { investment }),
     ...(transfer === undefined ? {} : { transfer }),
   }
 }
@@ -558,9 +584,19 @@ function readHistoryRole(value: unknown): JournalHistoryRole {
 }
 
 function amountFor(
-  type: JournalBusinessType,
+  row: JournalChainPageRow,
   rows: readonly JournalChainPostingRow[]
 ): string {
+  const type = readBusinessType(row.business_type)
+  if (type === "INVESTMENT") {
+    const amount = BigInt(
+      readString(
+        row.investment_net_cash_flow_minor,
+        "investment_net_cash_flow_minor"
+      )
+    )
+    return (amount < 0n ? -amount : amount).toString()
+  }
   if (type === "INCOME" || type === "EXPENSE") {
     const categoryKind = type
     return rows
@@ -607,11 +643,44 @@ function readBusinessType(value: unknown): JournalBusinessType {
     value === "OPENING_BALANCE" ||
     value === "INCOME" ||
     value === "EXPENSE" ||
+    value === "INVESTMENT" ||
     value === "TRANSFER"
   ) {
     return value
   }
   throw new TypeError("Invalid journal business type")
+}
+
+function investmentFor(
+  row: JournalChainPageRow
+): InvestmentJournalLink | undefined {
+  if (row.investment_operation_id === null) return undefined
+  return {
+    operationId: readString(
+      row.investment_operation_id,
+      "investment_operation_id"
+    ),
+    positionId: readString(
+      row.investment_position_id,
+      "investment_position_id"
+    ),
+    operationType: readString(
+      row.investment_operation_type,
+      "investment_operation_type"
+    ),
+    netCashFlowMinor: readString(
+      row.investment_net_cash_flow_minor,
+      "investment_net_cash_flow_minor"
+    ),
+    grossAmountMinor: readString(
+      row.investment_gross_amount_minor,
+      "investment_gross_amount_minor"
+    ),
+    bookCostDeltaMinor: readString(
+      row.investment_book_cost_delta_minor,
+      "investment_book_cost_delta_minor"
+    ),
+  }
 }
 
 function readStatus(value: unknown): JournalChainStatus {
