@@ -121,7 +121,11 @@ async function createFinancialAccount(
     adapter.transactionManager,
     adapter.dispatcher,
     adapter.ids
-  ).execute({ bookId: "book-1", name, kind })
+  ).execute({
+    bookId: "book-1",
+    name,
+    type: kind === "ASSET" ? "BANK_ACCOUNT" : "CREDIT_CARD",
+  })
   expect(result).toMatchObject({ ok: true, value: { bookId: "book-1", kind } })
   adapter.publisher.clear()
 }

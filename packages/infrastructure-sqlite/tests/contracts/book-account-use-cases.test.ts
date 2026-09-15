@@ -389,7 +389,7 @@ function defineBookAccountContracts(
           createAccountUseCase(adapter).execute({
             bookId: "book-1",
             name: "  Checking  ",
-            kind: "ASSET",
+            type: "BANK_ACCOUNT",
           })
         ).resolves.toEqual({
           ok: true,
@@ -400,6 +400,7 @@ function defineBookAccountContracts(
             kind: "ASSET",
             status: "ACTIVE",
             version: 0,
+            financialAccount: { type: "BANK_ACCOUNT" },
           },
         })
       }))
@@ -410,7 +411,7 @@ function defineBookAccountContracts(
         const result = await createAccountUseCase(adapter).execute({
           bookId: "book-1",
           name: "Credit card",
-          kind: "LIABILITY",
+          type: "CREDIT_CARD",
         })
         expect(result.ok).toBe(true)
         expect(adapter.publisher.events.at(-1)).toMatchObject({
@@ -426,7 +427,7 @@ function defineBookAccountContracts(
         const result = await createAccountUseCase(adapter).execute({
           bookId: "book-1",
           name: "Food",
-          kind: "EXPENSE",
+          type: "EXPENSE",
         })
         expect(result).toMatchObject({
           ok: false,
@@ -443,7 +444,7 @@ function defineBookAccountContracts(
         const result = await createAccountUseCase(adapter).execute({
           bookId: "book-missing",
           name: "Checking",
-          kind: "ASSET",
+          type: "BANK_ACCOUNT",
         })
         expect(result).toMatchObject({
           ok: false,
@@ -460,13 +461,13 @@ function defineBookAccountContracts(
         await createAccountUseCase(adapter).execute({
           bookId: "book-1",
           name: "Checking",
-          kind: "ASSET",
+          type: "BANK_ACCOUNT",
         })
         adapter.publisher.clear()
         const result = await createAccountUseCase(adapter).execute({
           bookId: "book-1",
           name: "  CHECKING  ",
-          kind: "ASSET",
+          type: "BANK_ACCOUNT",
         })
         expect(result).toMatchObject({
           ok: false,
@@ -481,13 +482,13 @@ function defineBookAccountContracts(
         await createAccountUseCase(adapter).execute({
           bookId: "book-1",
           name: "Card",
-          kind: "ASSET",
+          type: "BANK_ACCOUNT",
         })
         await expect(
           createAccountUseCase(adapter).execute({
             bookId: "book-1",
             name: " card ",
-            kind: "LIABILITY",
+            type: "CREDIT_CARD",
           })
         ).resolves.toMatchObject({
           ok: true,
@@ -501,7 +502,7 @@ function defineBookAccountContracts(
         const result = await createAccountUseCase(adapter).execute({
           bookId: "book-1",
           name: "   ",
-          kind: "ASSET",
+          type: "BANK_ACCOUNT",
         })
         expect(result).toMatchObject({
           ok: false,

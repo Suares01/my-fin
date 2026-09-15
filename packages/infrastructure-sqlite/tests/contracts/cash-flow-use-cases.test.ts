@@ -155,7 +155,11 @@ async function createFinancialAccount(
     adapter.transactionManager,
     adapter.dispatcher,
     adapter.ids
-  ).execute({ bookId: "book-1", name, kind })
+  ).execute({
+    bookId: "book-1",
+    name,
+    type: kind === "ASSET" ? "BANK_ACCOUNT" : "CREDIT_CARD",
+  })
   expect(result).toMatchObject({ ok: true, value: { bookId: "book-1", kind } })
   adapter.publisher.clear()
 }
@@ -594,7 +598,11 @@ function defineCashFlowContracts(name: string, factory: AdapterFactory): void {
           adapter.transactionManager,
           adapter.dispatcher,
           adapter.ids
-        ).execute({ bookId: "book-2", name: "Other cash", kind: "ASSET" })
+        ).execute({
+          bookId: "book-2",
+          name: "Other cash",
+          type: "BANK_ACCOUNT",
+        })
         await expect(
           opening(adapter).execute({
             ...openingCommand,

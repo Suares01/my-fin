@@ -134,7 +134,11 @@ async function createAccount(
     adapter.transactionManager,
     adapter.dispatcher,
     adapter.ids
-  ).execute({ bookId, name, kind })
+  ).execute({
+    bookId,
+    name,
+    type: kind === "ASSET" ? "BANK_ACCOUNT" : "CREDIT_CARD",
+  })
   expect(result).toMatchObject({ ok: true })
   adapter.publisher.clear()
   return result.ok ? result.value.id : "missing"

@@ -139,7 +139,11 @@ async function createAccount(
     adapter.transactionManager,
     adapter.dispatcher,
     adapter.ids
-  ).execute({ bookId: "book-1", name, kind })
+  ).execute({
+    bookId: "book-1",
+    name,
+    type: kind === "ASSET" ? "BANK_ACCOUNT" : "CREDIT_CARD",
+  })
   if (!result.ok) throw new Error(result.error.code)
   adapter.publisher.clear()
   return result.value
@@ -763,7 +767,11 @@ function defineContracts(name: string, factory: AdapterFactory): void {
               adapter.transactionManager,
               adapter.dispatcher,
               adapter.ids
-            ).execute({ bookId: "book-2", name: "Foreign", kind: "ASSET" })
+            ).execute({
+              bookId: "book-2",
+              name: "Foreign",
+              type: "BANK_ACCOUNT",
+            })
             expect(foreign.ok).toBe(true)
             adapter.publisher.clear()
             replacement = { ...replacement, accountId: "account-10" }
