@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import type {
   InvestmentMutationResult,
@@ -30,7 +30,9 @@ function defaultRequestId(): string {
   return globalThis.crypto.randomUUID()
 }
 
-function receiptResult(receipt: InvestmentRequestReceipt): InvestmentMutationResult {
+function receiptResult(
+  receipt: InvestmentRequestReceipt
+): InvestmentMutationResult {
   return receipt.result
 }
 
@@ -43,20 +45,20 @@ export function useInvestmentSubmission<TDraft>(input: {
   }) => Promise<ApplicationResult<InvestmentMutationResult>>
   readonly createRequestId?: () => string
 }) {
+  const { intentKey, execute, createRequestId: providedCreateRequestId } = input
   const services = useMyFin()
   const queryClient = useQueryClient()
   const { session } = useActiveBook()
   const activeBookId = session.status === "ACTIVE" ? session.bookId : null
-  const createRequestId = input.createRequestId ?? defaultRequestId
-  const intent = useRef<{ key: string; requestId: string } | null>(null)
+  const createRequestId = providedCreateRequestId ?? defaultRequestId
+  const intent = useMemo(
+    () => ({ key: intentKey, requestId: createRequestId() }),
+    [createRequestId, intentKey]
+  )
   const inFlight = useRef(false)
   const currentBookId = useRef(activeBookId)
   const [isPending, setIsPending] = useState(false)
   const [error, setError] = useState<unknown>(undefined)
-
-  if (intent.current === null || intent.current.key !== input.intentKey)
-    intent.current = { key: input.intentKey, requestId: createRequestId() }
-  const currentIntent = intent.current
 
   useEffect(() => {
     currentBookId.current = activeBookId
@@ -68,12 +70,12 @@ export function useInvestmentSubmission<TDraft>(input: {
       if (activeBookId === null) throw new InvestmentSubmissionBookError()
 
       const bookId = activeBookId
-      const requestId = currentIntent.requestId
+      const requestId = intent.requestId
       inFlight.current = true
       setIsPending(true)
       setError(undefined)
       try {
-        const result = await input.execute({ bookId, requestId, draft })
+        const result = await execute({ bookId, requestId, draft })
         const value = result.ok
           ? result.value
           : await services.investments.requests
@@ -99,14 +101,19 @@ export function useInvestmentSubmission<TDraft>(input: {
         if (currentBookId.current === bookId) setIsPending(false)
       }
     },
-    [activeBookId, currentIntent, input.execute, queryClient, services.investments.requests]
+    [
+      activeBookId,
+      execute,
+      intent.requestId,
+      queryClient,
+      services.investments.requests,
+    ]
   )
 
   return {
     submit,
-    requestId: currentIntent.requestId,
+    requestId: intent.requestId,
     isPending,
     error,
-    isBookCurrent: activeBookId !== null && currentBookId.current === activeBookId,
   }
 }
