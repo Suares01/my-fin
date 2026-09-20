@@ -10,3 +10,8 @@ export {
   useInvestmentPositions,
   useInvestmentValuations,
 } from "./investment-queries.js"
+export {
+  InvestmentSubmissionBookError,
+  InvestmentSubmissionInFlightError,
+  useInvestmentSubmission,
+} from "./use-investment-submission.js"

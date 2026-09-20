@@ -2631,13 +2631,31 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Manter requestId/draft no retry, gerar nova intenção só ao editar, recuperar resposta indeterminada e invalidar livro original; impedir duplo envio e preservar campos em erro/conflito, warning é sucesso.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 16 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full React` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Manter requestId/draft no retry, gerar nova intenção só ao editar, recuperar resposta indeterminada e invalidar livro original; impedir duplo envio e preservar campos em erro/conflito, warning é sucesso.
+- [x] Escrever/atualizar no mesmo commit pelo menos 16 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full React` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (React); testes acompanham o componente nesta tarefa.
 **Gate**: Full React
 **Commit**: `feat(investments-ui): submissão de investimentos na ui`
+
+**Execution evidence**: before T73: 68 Tauri files, 660 tests; after: 69 files, 676 tests. `use-investment-submission.test.tsx` adds 16 React integration scenarios for request identity, retries, draft edits, book capture, negative-cash success, synchronous duplicate guard, receipt recovery, conflict/error retention, pending state and original-book invalidation. Full React passed: Domain, Application, Memory, SQLite and Tauri infrastructure builds; Tauri 69/69 files and 676/676 tests; and Tauri `tsc --noEmit`. `git diff --check` passed. Native UAT remains pending because the hook tests do not prove live Tauri IPC, drawer focus, form draft rendering or SQLite restart behavior.
+
+| Done-when criterion / requirement | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| INV-78, INV-79, INV-80, INV-90, INV-109: unchanged content retains requestId, edited content creates one new intent, and receipt recovery preserves confirmed work | `use-investment-submission.test.tsx:101-116` - `expect(execute).toHaveBeenNthCalledWith(...requestId: "request-1"...)` and `expect(...requestId).toBe("request-2")`; `:143-162` - `expect(...).rejects.toMatchObject({ code: ... })`; `:150-156` - `expect(...).resolves.toEqual(mutationResult)` | retry repeats the original request; changed semantic content receives a new request; a persisted receipt turns an indeterminate response into its saved result; unconfirmed errors retain the draft path | Yes |
+| INV-74, INV-104, INV-105: mutation and refresh are scoped to the submitted book even when active context changes | `use-investment-submission.test.tsx:119-122` - `expect(execute).toHaveBeenCalledWith({ bookId: "book-1", ... })`; `:181-204` - `expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["investments", "book-1"], exact: false })` | book ownership is explicit; investments, transactions, balances and insights refresh only for the original book | Yes |
+| INV-76, INV-111: conflict/error keeps fields available and an in-flight form cannot submit twice | `use-investment-submission.test.tsx:132-140` - `expect(...submit(...)).rejects.toBeInstanceOf(InvestmentSubmissionInFlightError)` and `expect(execute).toHaveBeenCalledOnce()`; `:159-178` - `expect(...error).toMatchObject(...)` and `expect(...isPending).toBe(true/false)` | a second submission is blocked while pending; error is retained for conscious retry and pending ends only after the command settles | Yes |
+| INV-131, INV-145, INV-148: specialized version/cash outcomes remain public command outcomes | `use-investment-submission.test.tsx:125-129` - `expect(...).resolves.toMatchObject({ warnings: [warning] })` and `expect(...error).toBeUndefined()`; `:159-162` - `expect(...error).toMatchObject({ code: "IDEMPOTENCY_CONFLICT" })` | negative cash is a successful warning; application errors remain actionable rather than being converted to a false success | Yes |
+
+| `file:line` + assertion expression | Maps to | Keep |
+| --- | --- | --- |
+| `use-investment-submission.test.tsx:96-116` - `expect(...requestId).toBe(...)`; `expect(execute).toHaveBeenCalledWith(...)` | INV-78, INV-79 request identity and changed content | Yes |
+| `use-investment-submission.test.tsx:125-178` - `expect(...warnings...).toMatchObject(...)`; `expect(...).rejects.toBeInstanceOf(...)`; `expect(...isPending).toBe(...)` | INV-76, INV-80, INV-109, INV-111, INV-145, INV-148 | Yes |
+| `use-investment-submission.test.tsx:181-204` - `expect(invalidateQueries).toHaveBeenCalledWith(...)` | INV-74, INV-104, INV-105 original-book invalidation | Yes |
+| `use-investment-submission.test.tsx:207-220` - `expect(...error).toBeUndefined()`; `expect(...requests.get).not.toHaveBeenCalled()` | INV-90 error lifecycle and confirmed success path | Yes |
+
+**Adequacy verdict**: PASS. The 16 scenarios assert request IDs, command payloads, returned warning/error state and exact invalidation keys, rather than hook call counts alone. They cover every task-owned retry, recovery, book-switch and pending branch, and do not introduce an operation form before its assigned task. The tests follow the React integration convention in the Test Coverage Matrix; no project-specific testing guideline exists.
 
 ### T74: Classificação no formulário de conta
 
