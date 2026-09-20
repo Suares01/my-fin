@@ -43,6 +43,7 @@ function services(): MyFinServices {
       },
     } as never,
     insights: {} as never,
+    investments: {} as never,
   }
 }
 

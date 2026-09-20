@@ -2562,13 +2562,24 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Conectar comandos e queries completos à facade investments e adaptadores reais, sem imports SQLite na UI; fakes públicos refletem a interface e retry consulta recibo.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full React + Build` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Conectar comandos e queries completos à facade investments e adaptadores reais, sem imports SQLite na UI; fakes públicos refletem a interface e retry consulta recibo.
+- [x] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full React + Build` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (React); testes acompanham o componente nesta tarefa.
 **Gate**: Full React + Build
 **Commit**: `feat(investments-ui): composição myfinservices`
+
+**Evidência T71 (2026-09-20):** A fachada `investments` compõe contas, instrumentos, posições, operações, avaliações, portfolio e recibos com casos de uso da aplicação e adapters SQLite no bootstrap. Os fakes tipados de contas, categorias e transações receberam o grupo público obrigatório. Doze cenários novos elevaram `create-services.test.ts` de 11 para 23 testes: estrutura pública, contas, instrumentos, posições, preview, compra/venda, rendimento/amortização, despesa especializada, correção/cancelamento, avaliações, portfolio e leitura de recibo idempotente. Full React + Build: dependências reconstruídas, Tauri 67 arquivos/644 testes, eslint, tsc, Vite build e `git diff --check` verdes.
+
+| Done-when / requisito | Evidência | Resultado da spec | Coberto |
+| --- | --- | --- | --- |
+| Fachada e fakes públicos, INV-91, INV-92, INV-101 | `apps/tauri/src/bootstrap/create-services.test.ts:94-102` `expect(Object.keys(services.investments)).toEqual([...])`; `apps/tauri/src/features/accounts/hooks/accounts-hooks.test.tsx:76` `investments: {} as never` | A UI recebe todos os grupos de investimento pela fachada e seus consumidores tipados continuam completos | Sim |
+| Comandos e queries especializados, INV-74, INV-101, INV-104 | `apps/tauri/src/bootstrap/create-services.test.ts:108-218` `expect(services.investments.operations.purchase).toBeInstanceOf(RecordInvestmentPurchase)` e assertions equivalentes | A composição expõe comandos especializados e queries para conta, instrumento, posição, operação, avaliação e portfolio | Sim |
+| Idempotência pós-commit, INV-78, INV-80 | `apps/tauri/src/bootstrap/create-services.test.ts:248-269` `await expect(services.investments.requests.get(...)).resolves.toEqual({...})` | Retry consulta o recibo persistido com IDs, resultado e warnings originais, sem recriar operação | Sim |
+| Sem provedor externo, INV-89 | `apps/tauri/src/bootstrap/create-services.ts:1-75` imports restritos a `@workspace/application`, `@workspace/infrastructure-sqlite` e `@workspace/infrastructure-tauri` | A composição local não introduz provider, credencial ou ID externo | Sim |
+
+**Adequacy verdict**: PASS. Os 12 cenários observam a superfície pública e o recibo resultante, não contagem de chamadas; cada grupo da fachada e cada comando especializado tem âncora em requisito da T71. Os testes seguem Vitest junto ao bootstrap, conforme a matriz de cobertura.
 
 ### Phase 13: Estado de UI e cadastros
 

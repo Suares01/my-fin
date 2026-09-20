@@ -73,6 +73,7 @@ function services(): MyFinServices {
     transfers: {} as never,
     journal: {} as never,
     insights: {} as never,
+    investments: {} as never,
   }
 }
 
