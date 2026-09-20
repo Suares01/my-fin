@@ -45,11 +45,21 @@ function services(): MyFinServices {
     journal: {} as never,
     insights: {} as never,
     investments: {
-      accounts: { list: { execute: vi.fn().mockResolvedValue({ ok: true, value: [] }) } },
-      instruments: { list: { execute: vi.fn().mockResolvedValue({ ok: true, value: [] }) } },
-      positions: { list: { execute: vi.fn().mockResolvedValue({ ok: true, value: page }) } },
-      operations: { list: { execute: vi.fn().mockResolvedValue({ ok: true, value: page }) } },
-      valuations: { list: { execute: vi.fn().mockResolvedValue({ ok: true, value: page }) } },
+      accounts: {
+        list: { execute: vi.fn().mockResolvedValue({ ok: true, value: [] }) },
+      },
+      instruments: {
+        list: { execute: vi.fn().mockResolvedValue({ ok: true, value: [] }) },
+      },
+      positions: {
+        list: { execute: vi.fn().mockResolvedValue({ ok: true, value: page }) },
+      },
+      operations: {
+        list: { execute: vi.fn().mockResolvedValue({ ok: true, value: page }) },
+      },
+      valuations: {
+        list: { execute: vi.fn().mockResolvedValue({ ok: true, value: page }) },
+      },
       portfolio: {
         summary: {
           execute: vi.fn().mockResolvedValue({
@@ -72,7 +82,11 @@ function wrapperFor(
       <MyFinQueryProvider client={queryClient}>
         <MyFinProvider services={serviceFacade}>
           <ActiveBookProvider
-            initial={bookId === null ? { status: "UNRESOLVED" } : { status: "ACTIVE", bookId }}
+            initial={
+              bookId === null
+                ? { status: "UNRESOLVED" }
+                : { status: "ACTIVE", bookId }
+            }
           >
             {children}
           </ActiveBookProvider>
@@ -85,7 +99,10 @@ function wrapperFor(
 describe("investment query hooks", () => {
   it("keeps every investment query key scoped to its book and resource", () => {
     expect(investmentKeys.portfolio("book-1", "2026-09-20")).toEqual([
-      "investments", "book-1", "portfolio", "2026-09-20",
+      "investments",
+      "book-1",
+      "portfolio",
+      "2026-09-20",
     ])
     expect(investmentKeys.accounts("book-1", "2026-09-20")).not.toEqual(
       investmentKeys.accounts("book-2", "2026-09-20")
@@ -96,7 +113,9 @@ describe("investment query hooks", () => {
   })
 
   it("uses the normalized server filters as the positions cache identity", () => {
-    expect(normalizeInvestmentPositionFilters({ search: "  CDB  ", status: "OPEN" })).toEqual({
+    expect(
+      normalizeInvestmentPositionFilters({ search: "  CDB  ", status: "OPEN" })
+    ).toEqual({
       search: "CDB",
       status: "OPEN",
     })
@@ -111,12 +130,16 @@ describe("investment query hooks", () => {
       wrapper: wrapperFor(serviceFacade, new QueryClient(), null),
     })
     expect(result.current.fetchStatus).toBe("idle")
-    expect(serviceFacade.investments.instruments.list.execute).not.toHaveBeenCalled()
+    expect(
+      serviceFacade.investments.instruments.list.execute
+    ).not.toHaveBeenCalled()
   })
 
   it("uses the book timezone date in the portfolio cache instead of a fixed 24-hour key", async () => {
     const serviceFacade = services()
-    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    })
     const { result } = renderHook(() => useInvestmentPortfolio(), {
       wrapper: wrapperFor(serviceFacade, queryClient),
     })
@@ -128,19 +151,36 @@ describe("investment query hooks", () => {
       day: "2-digit",
     })
       .formatToParts()
-      .reduce<Record<string, string>>((parts, part) => ({ ...parts, [part.type]: part.value }), {})
-    expect(queryClient.getQueryData(investmentKeys.portfolio("book-1", `${referenceDate.year}-${referenceDate.month}-${referenceDate.day}`))).toBeDefined()
-    expect(serviceFacade.investments.portfolio.summary.execute).toHaveBeenCalledWith({ bookId: "book-1" })
+      .reduce<Record<string, string>>(
+        (parts, part) => ({ ...parts, [part.type]: part.value }),
+        {}
+      )
+    expect(
+      queryClient.getQueryData(
+        investmentKeys.portfolio(
+          "book-1",
+          `${referenceDate.year}-${referenceDate.month}-${referenceDate.day}`
+        )
+      )
+    ).toBeDefined()
+    expect(
+      serviceFacade.investments.portfolio.summary.execute
+    ).toHaveBeenCalledWith({ bookId: "book-1" })
   })
 
   it("keeps a portfolio failure as an error without fabricating a zero balance", async () => {
     const serviceFacade = services()
-    vi.mocked(serviceFacade.investments.portfolio.summary.execute).mockResolvedValue({
+    vi.mocked(
+      serviceFacade.investments.portfolio.summary.execute
+    ).mockResolvedValue({
       ok: false,
       error: { code: "ENTITY_NOT_FOUND" },
     } as never)
     const { result } = renderHook(() => useInvestmentPortfolio(), {
-      wrapper: wrapperFor(serviceFacade, new QueryClient({ defaultOptions: { queries: { retry: false } } })),
+      wrapper: wrapperFor(
+        serviceFacade,
+        new QueryClient({ defaultOptions: { queries: { retry: false } } })
+      ),
     })
     await waitFor(() => expect(result.current.isError).toBe(true))
     expect(result.current.data).toBeUndefined()
@@ -153,21 +193,31 @@ describe("investment query hooks", () => {
     })
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     await act(async () => result.current.refetch())
-    expect(serviceFacade.investments.portfolio.summary.execute).toHaveBeenCalledTimes(2)
-    expect(serviceFacade.investments.portfolio.summary.execute).toHaveBeenLastCalledWith({ bookId: "book-1" })
+    expect(
+      serviceFacade.investments.portfolio.summary.execute
+    ).toHaveBeenCalledTimes(2)
+    expect(
+      serviceFacade.investments.portfolio.summary.execute
+    ).toHaveBeenLastCalledWith({ bookId: "book-1" })
   })
 
   it("loads investment accounts independently from portfolio totals", async () => {
     const serviceFacade = services()
-    vi.mocked(serviceFacade.investments.accounts.list.execute).mockResolvedValue({
+    vi.mocked(
+      serviceFacade.investments.accounts.list.execute
+    ).mockResolvedValue({
       ok: true,
       value: [{ id: "account-1", cashMinor: "-100" }],
     } as never)
     const { result } = renderHook(() => useInvestmentAccounts(), {
       wrapper: wrapperFor(serviceFacade, new QueryClient()),
     })
-    await waitFor(() => expect(result.current.data?.[0]?.cashMinor).toBe("-100"))
-    expect(serviceFacade.investments.accounts.list.execute).toHaveBeenCalledWith({ bookId: "book-1" })
+    await waitFor(() =>
+      expect(result.current.data?.[0]?.cashMinor).toBe("-100")
+    )
+    expect(
+      serviceFacade.investments.accounts.list.execute
+    ).toHaveBeenCalledWith({ bookId: "book-1" })
   })
 
   it("loads active instruments without silently including archived entries", async () => {
@@ -176,7 +226,9 @@ describe("investment query hooks", () => {
       wrapper: wrapperFor(serviceFacade, new QueryClient()),
     })
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(serviceFacade.investments.instruments.list.execute).toHaveBeenCalledWith({
+    expect(
+      serviceFacade.investments.instruments.list.execute
+    ).toHaveBeenCalledWith({
       bookId: "book-1",
       status: "ACTIVE",
     })
@@ -185,56 +237,111 @@ describe("investment query hooks", () => {
   it("keeps active and archived instrument catalogues in separate caches", async () => {
     const serviceFacade = services()
     const queryClient = new QueryClient()
-    const { result, rerender } = renderHook(({ status }: { status: "ACTIVE" | "ARCHIVED" }) => useInvestmentInstruments(status), {
-      initialProps: { status: "ACTIVE" as "ACTIVE" | "ARCHIVED" },
-      wrapper: wrapperFor(serviceFacade, queryClient),
-    })
+    const { result, rerender } = renderHook(
+      ({ status }: { status: "ACTIVE" | "ARCHIVED" }) =>
+        useInvestmentInstruments(status),
+      {
+        initialProps: { status: "ACTIVE" as "ACTIVE" | "ARCHIVED" },
+        wrapper: wrapperFor(serviceFacade, queryClient),
+      }
+    )
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     rerender({ status: "ARCHIVED" })
-    await waitFor(() => expect(serviceFacade.investments.instruments.list.execute).toHaveBeenCalledTimes(2))
-    expect(queryClient.getQueryData(investmentKeys.instruments("book-1", "ACTIVE"))).toBeDefined()
-    expect(queryClient.getQueryData(investmentKeys.instruments("book-1", "ARCHIVED"))).toBeDefined()
+    await waitFor(() =>
+      expect(
+        serviceFacade.investments.instruments.list.execute
+      ).toHaveBeenCalledTimes(2)
+    )
+    expect(
+      queryClient.getQueryData(investmentKeys.instruments("book-1", "ACTIVE"))
+    ).toBeDefined()
+    expect(
+      queryClient.getQueryData(investmentKeys.instruments("book-1", "ARCHIVED"))
+    ).toBeDefined()
   })
 
   it("uses the required initial limit and selected filters for position pages", async () => {
     const serviceFacade = services()
     const { result } = renderHook(
-      () => useInvestmentPositions({ accountId: "account-1", assetClass: "FIXED_INCOME", status: "OPEN", search: "CDB" }),
+      () =>
+        useInvestmentPositions({
+          accountId: "account-1",
+          assetClass: "FIXED_INCOME",
+          status: "OPEN",
+          search: "CDB",
+        }),
       { wrapper: wrapperFor(serviceFacade, new QueryClient()) }
     )
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(serviceFacade.investments.positions.list.execute).toHaveBeenCalledWith({
-      bookId: "book-1", accountId: "account-1", assetClass: "FIXED_INCOME", status: "OPEN", search: "CDB", limit: 25,
+    expect(
+      serviceFacade.investments.positions.list.execute
+    ).toHaveBeenCalledWith({
+      bookId: "book-1",
+      accountId: "account-1",
+      assetClass: "FIXED_INCOME",
+      status: "OPEN",
+      search: "CDB",
+      limit: 25,
     })
   })
 
   it("passes the server cursor only to the next position page", async () => {
     const serviceFacade = services()
     vi.mocked(serviceFacade.investments.positions.list.execute)
-      .mockResolvedValueOnce({ ok: true, value: { items: [{ id: "position-1" }], nextCursor: "cursor-2" } } as never)
-      .mockResolvedValueOnce({ ok: true, value: { items: [{ id: "position-2" }], nextCursor: null } } as never)
+      .mockResolvedValueOnce({
+        ok: true,
+        value: { items: [{ id: "position-1" }], nextCursor: "cursor-2" },
+      } as never)
+      .mockResolvedValueOnce({
+        ok: true,
+        value: { items: [{ id: "position-2" }], nextCursor: null },
+      } as never)
     const { result } = renderHook(() => useInvestmentPositions(), {
       wrapper: wrapperFor(serviceFacade, new QueryClient()),
     })
     await waitFor(() => expect(result.current.data?.items).toHaveLength(1))
     await act(async () => result.current.fetchNextPage())
     await waitFor(() => expect(result.current.data?.items).toHaveLength(2))
-    expect(result.current.data?.items.map((item) => item.id)).toEqual(["position-1", "position-2"])
-    expect(serviceFacade.investments.positions.list.execute).toHaveBeenLastCalledWith({ bookId: "book-1", limit: 25, cursor: "cursor-2" })
+    expect(result.current.data?.items.map((item) => item.id)).toEqual([
+      "position-1",
+      "position-2",
+    ])
+    expect(
+      serviceFacade.investments.positions.list.execute
+    ).toHaveBeenLastCalledWith({
+      bookId: "book-1",
+      limit: 25,
+      cursor: "cursor-2",
+    })
   })
 
   it("resets the positions cache when the deferred search changes", async () => {
     const serviceFacade = services()
     const queryClient = new QueryClient()
-    const { result, rerender } = renderHook(({ search }) => useInvestmentPositions({ search }), {
-      initialProps: { search: "CDB" },
-      wrapper: wrapperFor(serviceFacade, queryClient),
-    })
+    const { result, rerender } = renderHook(
+      ({ search }) => useInvestmentPositions({ search }),
+      {
+        initialProps: { search: "CDB" },
+        wrapper: wrapperFor(serviceFacade, queryClient),
+      }
+    )
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     rerender({ search: "Tesouro" })
-    await waitFor(() => expect(serviceFacade.investments.positions.list.execute).toHaveBeenCalledTimes(2))
-    expect(queryClient.getQueryData(investmentKeys.positions("book-1", { search: "CDB" }))).toBeDefined()
-    expect(queryClient.getQueryData(investmentKeys.positions("book-1", { search: "Tesouro" }))).toBeDefined()
+    await waitFor(() =>
+      expect(
+        serviceFacade.investments.positions.list.execute
+      ).toHaveBeenCalledTimes(2)
+    )
+    expect(
+      queryClient.getQueryData(
+        investmentKeys.positions("book-1", { search: "CDB" })
+      )
+    ).toBeDefined()
+    expect(
+      queryClient.getQueryData(
+        investmentKeys.positions("book-1", { search: "Tesouro" })
+      )
+    ).toBeDefined()
   })
 
   it("does not query position history until both the book and position are present", () => {
@@ -243,7 +350,9 @@ describe("investment query hooks", () => {
       wrapper: wrapperFor(serviceFacade, new QueryClient()),
     })
     expect(result.current.fetchStatus).toBe("idle")
-    expect(serviceFacade.investments.operations.list.execute).not.toHaveBeenCalled()
+    expect(
+      serviceFacade.investments.operations.list.execute
+    ).not.toHaveBeenCalled()
   })
 
   it("loads operations with their own cursor and default page limit", async () => {
@@ -252,7 +361,13 @@ describe("investment query hooks", () => {
       wrapper: wrapperFor(serviceFacade, new QueryClient()),
     })
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(serviceFacade.investments.operations.list.execute).toHaveBeenCalledWith({ bookId: "book-1", positionId: "position-1", limit: 25 })
+    expect(
+      serviceFacade.investments.operations.list.execute
+    ).toHaveBeenCalledWith({
+      bookId: "book-1",
+      positionId: "position-1",
+      limit: 25,
+    })
   })
 
   it("loads valuations with a cursor cache independent from operations", async () => {
@@ -261,18 +376,31 @@ describe("investment query hooks", () => {
       wrapper: wrapperFor(serviceFacade, new QueryClient()),
     })
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(serviceFacade.investments.valuations.list.execute).toHaveBeenCalledWith({ bookId: "book-1", positionId: "position-1", limit: 25 })
-    expect(investmentKeys.valuations("book-1", "position-1")).not.toEqual(investmentKeys.operations("book-1", "position-1"))
+    expect(
+      serviceFacade.investments.valuations.list.execute
+    ).toHaveBeenCalledWith({
+      bookId: "book-1",
+      positionId: "position-1",
+      limit: 25,
+    })
+    expect(investmentKeys.valuations("book-1", "position-1")).not.toEqual(
+      investmentKeys.operations("book-1", "position-1")
+    )
   })
 
   it("surfaces a history failure without returning a previous position value", async () => {
     const serviceFacade = services()
-    vi.mocked(serviceFacade.investments.valuations.list.execute).mockResolvedValue({
+    vi.mocked(
+      serviceFacade.investments.valuations.list.execute
+    ).mockResolvedValue({
       ok: false,
       error: { code: "INVALID_QUERY" },
     } as never)
     const { result } = renderHook(() => useInvestmentValuations("position-1"), {
-      wrapper: wrapperFor(serviceFacade, new QueryClient({ defaultOptions: { queries: { retry: false } } })),
+      wrapper: wrapperFor(
+        serviceFacade,
+        new QueryClient({ defaultOptions: { queries: { retry: false } } })
+      ),
     })
     await waitFor(() => expect(result.current.isError).toBe(true))
     expect(result.current.data).toBeUndefined()

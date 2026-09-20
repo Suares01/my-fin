@@ -10,7 +10,9 @@ export function normalizeInvestmentPositionFilters(
 ): InvestmentPositionFilters {
   const search = filters.search?.trim()
   return {
-    ...(filters.accountId === undefined ? {} : { accountId: filters.accountId }),
+    ...(filters.accountId === undefined
+      ? {}
+      : { accountId: filters.accountId }),
     ...(filters.assetClass === undefined
       ? {}
       : { assetClass: filters.assetClass }),
