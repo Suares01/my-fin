@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest"
 import {
   CreateExpenseCategory,
   CreateFinancialAccount,
+  ConfigureFinancialAccount,
   CreateFinancialBook,
   CreateIncomeCategory,
   ArchiveCategory,
@@ -287,6 +288,7 @@ describe("createMyFinServices", () => {
     expect(Object.keys(services.accounts)).toEqual([
       "listBalances",
       "create",
+      "configure",
       "setOpeningBalance",
       "listStatement",
       "rename",
@@ -335,6 +337,9 @@ describe("createMyFinServices", () => {
 
     expect(services.accounts.listBalances).toBeInstanceOf(ListAccountBalances)
     expect(services.accounts.create).toBeInstanceOf(CreateFinancialAccount)
+    expect(services.accounts.configure).toBeInstanceOf(
+      ConfigureFinancialAccount
+    )
     expect(services.accounts.setOpeningBalance).toBeInstanceOf(
       SetOpeningBalance
     )

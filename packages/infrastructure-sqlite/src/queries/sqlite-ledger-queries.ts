@@ -36,6 +36,10 @@ type AccountRow = {
   readonly base_currency: unknown
   readonly status: unknown
   readonly version: unknown
+  readonly financial_type: unknown
+  readonly institution_name: unknown
+  readonly display_reference: unknown
+  readonly default_settlement_account_id: unknown
 }
 
 type PostingRow = {
@@ -114,9 +118,13 @@ export class SqliteLedgerQueries implements LedgerQueries, LedgerReadQueries {
       let sql =
         "SELECT a.id AS account_id, a.name AS account_name, a.kind, a.status, a.version, " +
         "b.base_currency, " +
+        "fa.type AS financial_type, fa.institution_name, fa.display_reference, " +
+        "ia.default_settlement_account_id, " +
         "'0' AS raw_balance_minor " +
         "FROM ledger_accounts a JOIN financial_books b " +
-        "ON b.id = a.book_id "
+        "ON b.id = a.book_id LEFT JOIN financial_accounts fa " +
+        "ON fa.ledger_account_id = a.id AND fa.book_id = a.book_id " +
+        "LEFT JOIN investment_accounts ia ON ia.ledger_account_id = a.id AND ia.book_id = a.book_id "
 
       sql += " WHERE a.book_id = ?"
       parameters.push(input.bookId)
@@ -182,6 +190,28 @@ export class SqliteLedgerQueries implements LedgerQueries, LedgerReadQueries {
             asOf: input.asOf?.value ?? null,
             archived: status === "ARCHIVED",
             version: readInteger(row.version, "account_version"),
+            ...(typeof row.financial_type !== "string"
+              ? {}
+              : {
+                  financialAccount: {
+                    type:
+                      row.financial_type === "BANK"
+                        ? "BANK_ACCOUNT"
+                        : row.financial_type,
+                    ...(typeof row.institution_name !== "string"
+                      ? {}
+                      : { institutionName: row.institution_name }),
+                    ...(typeof row.display_reference !== "string"
+                      ? {}
+                      : { displayReference: row.display_reference }),
+                    ...(typeof row.default_settlement_account_id !== "string"
+                      ? {}
+                      : {
+                          defaultSettlementAccountId:
+                            row.default_settlement_account_id,
+                        }),
+                  },
+                }),
           } satisfies AccountBalanceItemView,
         ]
       })
@@ -500,6 +530,10 @@ type AccountBalanceRow = {
   readonly version: unknown
   readonly base_currency: unknown
   readonly raw_balance_minor: unknown
+  readonly financial_type: unknown
+  readonly institution_name: unknown
+  readonly display_reference: unknown
+  readonly default_settlement_account_id: unknown
 }
 
 type StatementRow = {

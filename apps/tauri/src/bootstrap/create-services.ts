@@ -2,6 +2,7 @@ import {
   CreateExpenseCategory,
   ArchiveCategory,
   CreateFinancialAccount,
+  ConfigureFinancialAccount,
   CreateFinancialBook,
   CreateIncomeCategory,
   GetCategoryDetail,
@@ -85,6 +86,7 @@ export interface MyFinServices {
   readonly accounts: {
     readonly listBalances: ListAccountBalances
     readonly create: CreateFinancialAccount
+    readonly configure: ConfigureFinancialAccount
     readonly setOpeningBalance: SetOpeningBalance
     readonly listStatement: ListAccountStatement
     readonly rename: RenameLedgerAccount
@@ -236,6 +238,10 @@ export function createMyFinServices(
         transactionManager,
         eventDispatcher,
         options.ids
+      ),
+      configure: new ConfigureFinancialAccount(
+        transactionManager,
+        eventDispatcher
       ),
       setOpeningBalance: new SetOpeningBalance(
         transactionManager,

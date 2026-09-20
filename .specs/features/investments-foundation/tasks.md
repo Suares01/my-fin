@@ -2581,6 +2581,8 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Adequacy verdict**: PASS. Os 12 cenários observam a superfície pública e o recibo resultante, não contagem de chamadas; cada grupo da fachada e cada comando especializado tem âncora em requisito da T71. Os testes seguem Vitest junto ao bootstrap, conforme a matriz de cobertura.
 
+**Correção T71 (2026-09-20):** o commit corretivo `fix(investments-ui): expose financial account configuration` expõe `accounts.configure` com `ConfigureFinancialAccount`, que inclui configuração, reclassificação e os comandos explícitos de settlement da mesma unidade. `ListAccountBalances` agora devolve perfil financeiro e version da conta, incluindo tipo, instituição, referência e settlement quando aplicável. `create-services.test.ts` prova a superfície `ConfigureFinancialAccount`; `sqlite-account-balances.test.ts` prova o payload de perfil/settlement. Gates focais: SQLite 13/13 e Tauri bootstrap 23/23, com `tsc --noEmit` verde. Esta correção fecha a ponte requerida por T74 sem alterar o status concluído de T71.
+
 ### Phase 13: Estado de UI e cadastros
 
 ### T72: Consultas e cache de investimentos na UI

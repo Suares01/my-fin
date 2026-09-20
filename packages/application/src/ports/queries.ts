@@ -16,6 +16,12 @@ export interface AccountBalanceView {
 export interface AccountBalanceItemView extends AccountBalanceView {
   readonly archived: boolean
   readonly version?: number
+  readonly financialAccount?: {
+    readonly type: string
+    readonly institutionName?: string
+    readonly displayReference?: string
+    readonly defaultSettlementAccountId?: string
+  }
 }
 
 export interface LedgerQueries {

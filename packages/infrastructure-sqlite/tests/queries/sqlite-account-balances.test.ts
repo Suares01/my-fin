@@ -2,6 +2,7 @@ import {
   FinancialBook,
   JournalEntry,
   LedgerAccount,
+  type FinancialAccountProfileSnapshot,
   type LedgerAccountKind,
 } from "@workspace/domain"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
@@ -28,7 +29,8 @@ function makeAccount(
   id: string,
   kind: LedgerAccountKind,
   bookId = mainBook,
-  name = id
+  name = id,
+  financialAccount?: FinancialAccountProfileSnapshot
 ): LedgerAccount {
   return LedgerAccount.restore({
     id: id as never,
@@ -42,13 +44,14 @@ function makeAccount(
       : kind === "EXPENSE"
         ? { iconKey: "label-dollar", colorHex: "f43f5e" }
         : {}),
-    ...(kind === "ASSET" || kind === "LIABILITY"
+    ...(financialAccount === undefined && (kind === "ASSET" || kind === "LIABILITY")
       ? {
           financialAccount: {
             type: kind === "ASSET" ? "OTHER_ASSET" : "OTHER_LIABILITY",
           },
         }
       : {}),
+    ...(financialAccount === undefined ? {} : { financialAccount }),
     version: 0,
   })
 }
@@ -134,6 +137,41 @@ describe("SqliteLedgerQueries.listAccountBalances", () => {
     ])
   })
 
+  it("includes the financial profile and settlement reference needed to reclassify an account", async () => {
+    const settlement = makeAccount(
+      "settlement",
+      "ASSET",
+      mainBook,
+      "settlement",
+      { type: "BANK_ACCOUNT" }
+    )
+    const investment = makeAccount("investment", "ASSET", mainBook, "investment", {
+      type: "INVESTMENT_ACCOUNT",
+      institutionName: "Corretora",
+      displayReference: "Conta 123",
+      investment: { defaultSettlementAccountId: "settlement" as never },
+    })
+    await accounts.add(settlement)
+    await accounts.add(investment)
+
+    const result = await queries.listAccountBalances({
+      bookId: mainBook,
+      accountKinds: ["ASSET"],
+      includeArchived: false,
+      includeZeroBalance: true,
+    })
+
+    expect(result.find((account) => account.accountId === "investment")).toMatchObject({
+      version: 0,
+      financialAccount: {
+        type: "INVESTMENT_ACCOUNT",
+        institutionName: "Corretora",
+        displayReference: "Conta 123",
+        defaultSettlementAccountId: "settlement",
+      },
+    })
+  })
+
   it("applies archived, zero, kind and inclusive asOf filters", async () => {
     await accounts.add(makeAccount("active", "ASSET"))
     await accounts.add(makeAccount("archived", "ASSET"))
@@ -199,6 +237,7 @@ describe("SqliteLedgerQueries.listAccountBalances", () => {
       asOf: null,
       archived: true,
       version: 1,
+      financialAccount: { type: "OTHER_ASSET" },
     })
   })
 
