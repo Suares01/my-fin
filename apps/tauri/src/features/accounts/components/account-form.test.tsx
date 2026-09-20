@@ -97,7 +97,7 @@ describe("AccountForm", () => {
     expect(state.mutateAsync).toHaveBeenCalledWith({
       bookId: "book-1",
       name: "Carteira",
-      kind: "ASSET",
+      type: "OTHER_ASSET",
     })
   })
 
@@ -115,7 +115,7 @@ describe("AccountForm", () => {
       expect(state.mutateAsync).toHaveBeenCalledWith({
         bookId: "book-1",
         name: "Cartão",
-        kind: "LIABILITY",
+        type: "OTHER_LIABILITY",
       })
     )
   })

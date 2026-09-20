@@ -61,9 +61,7 @@ describe("TransactionTable", () => {
     const { props } = renderTable({ transactions: [edited] })
 
     fireEvent.click(screen.getByRole("button", { name: "Ações para Aluguel" }))
-    fireEvent.click(
-      screen.getByRole("menuitem", { name: "Cancelar lançamento" })
-    )
+    fireEvent.click(screen.getByRole("menuitem", { name: "Cancelar" }))
 
     expect(props.onCancel).toHaveBeenCalledWith(edited)
   })
@@ -78,7 +76,7 @@ describe("TransactionTable", () => {
     expect(screen.getByRole("menuitem", { name: "Editar" })).toBeTruthy()
     expect(
       screen
-        .getByRole("menuitem", { name: "Cancelar lançamento" })
+        .getByRole("menuitem", { name: "Cancelar" })
         .getAttribute("data-variant")
     ).toBe("destructive")
   })

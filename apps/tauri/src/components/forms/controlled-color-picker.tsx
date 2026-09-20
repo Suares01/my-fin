@@ -2,7 +2,7 @@ import { useId, useRef, useState } from "react"
 import { Controller, type FieldValues } from "react-hook-form"
 import {
   ColorPicker,
-  ColorPickerFormat,
+  ColorPickerEyeDropper,
   ColorPickerHue,
   ColorPickerSelection,
 } from "@workspace/ui/components/color-picker"
@@ -72,13 +72,12 @@ export function ControlledColorPicker<
                 <PopoverTrigger
                   render={
                     <Button
-                      ref={field.ref}
                       name={field.name}
                       onBlur={field.onBlur}
-                      id={id}
                       type="button"
                       variant="outline"
                       disabled={disabled}
+                      aria-label="Selecionar cor"
                       aria-invalid={fieldState.invalid}
                       aria-describedby={
                         [
@@ -125,7 +124,10 @@ export function ControlledColorPicker<
                     />
 
                     <div className="flex items-center gap-2">
-                      <ColorPickerFormat />
+                      <ColorPickerEyeDropper
+                        aria-label="Escolher cor com conta-gotas"
+                        disabled={disabled}
+                      />
                     </div>
                   </ColorPicker>
                 </PopoverContent>
@@ -134,7 +136,7 @@ export function ControlledColorPicker<
 
             <Input
               {...field}
-              className="hidden"
+              className="w-1/2"
               id={id}
               value={value}
               disabled={disabled}

@@ -1,18 +1,12 @@
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@workspace/ui/components/select"
+import { Button } from "@workspace/ui/components/button"
 import { SearchIcon } from "lucide-react"
 import type { TransactionFormOption } from "../hooks/use-transaction-form-options.js"
 import type {
   TransactionFilters as TransactionFiltersState,
+  TransactionStatusFilter,
   TransactionType,
 } from "../transaction-list-model.js"
 import { Input } from "@workspace/ui/components/input"
-import { useMemo } from "react"
 import { cn } from "@workspace/ui/lib/utils"
 
 const ALL_TRANSACTION_TYPES = [
@@ -38,6 +32,16 @@ const typeLabels: ReadonlyArray<{ value: TransactionType; label: string }> = [
   { value: "TRANSFER", label: "Transferência" },
 ]
 
+const statusLabels: ReadonlyArray<{
+  value: TransactionStatusFilter
+  label: string
+}> = [
+  { value: "ALL", label: "Todos os status" },
+  { value: "ACTIVE", label: "Ativa" },
+  { value: "EDITED", label: "Editada" },
+  { value: "CANCELLED", label: "Cancelada" },
+]
+
 type TransactionFiltersProps = {
   readonly filters: TransactionFiltersState
   readonly accounts: readonly TransactionFormOption[]
@@ -48,8 +52,10 @@ type TransactionFiltersProps = {
 
 export function TransactionFilters({
   filters,
+  accounts,
   categories,
   onChange,
+  onReset,
 }: TransactionFiltersProps) {
   const update = (patch: Partial<TransactionFiltersState>) =>
     onChange({ ...filters, ...patch })
@@ -58,18 +64,6 @@ export function TransactionFilters({
     update({ search: event.currentTarget.value })
   }
 
-  function onChangeCategories(value: string[]) {
-    update({ categoryIds: value })
-  }
-
-  const categoryOptions = useMemo(
-    () =>
-      categories.map((category) => ({
-        value: category.id,
-        label: category.name,
-      })),
-    [categories]
-  )
   const selectedType = ALL_TRANSACTION_TYPES.every((type) =>
     filters.types.includes(type)
   )
@@ -84,31 +78,67 @@ export function TransactionFilters({
       <div className="relative w-full sm:min-w-[200px] sm:flex-1">
         <SearchIcon className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
-          placeholder="Search transactions..."
+          aria-label="Buscar"
+          type="search"
+          placeholder="Buscar transações..."
           value={filters.search}
           onChange={onChangeSearch}
           className="pl-8"
         />
       </div>
 
-      {/* Category */}
-      <Select
-        items={categoryOptions}
-        value={filters.categoryIds as string[]}
-        onValueChange={onChangeCategories}
-        multiple
+      <Input
+        aria-label="De"
+        type="date"
+        value={filters.from}
+        onChange={(event) => update({ from: event.currentTarget.value })}
+      />
+
+      <Input
+        aria-label="Até"
+        type="date"
+        value={filters.to}
+        onChange={(event) => update({ to: event.currentTarget.value })}
+      />
+
+      <select
+        aria-label="Conta"
+        value={filters.accountIds[0] ?? ""}
+        onChange={(event) =>
+          update({
+            accountIds: event.currentTarget.value
+              ? [event.currentTarget.value]
+              : [],
+          })
+        }
       >
-        <SelectTrigger>
-          <SelectValue placeholder="Todas" />
-        </SelectTrigger>
-        <SelectContent>
-          {categories.map((cat) => (
-            <SelectItem key={cat.id} value={cat.id}>
-              {cat.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+        <option value="">Todas as contas</option>
+        {accounts.map((account) => (
+          <option key={account.id} value={account.id}>
+            {account.name}
+          </option>
+        ))}
+      </select>
+
+      {/* Category */}
+      <select
+        aria-label="Categoria"
+        value={filters.categoryIds[0] ?? ""}
+        onChange={(event) =>
+          update({
+            categoryIds: event.currentTarget.value
+              ? [event.currentTarget.value]
+              : [],
+          })
+        }
+      >
+        <option value="">Todas as categorias</option>
+        {categories.map((category) => (
+          <option key={category.id} value={category.id}>
+            {category.name}
+          </option>
+        ))}
+      </select>
 
       {/* Type Toggle */}
       <div className="flex items-center rounded-lg border border-border p-0.5">
@@ -142,6 +172,35 @@ export function TransactionFilters({
           </button>
         ))}
       </div>
+
+      <select
+        aria-label="Status"
+        value={filters.status}
+        onChange={(event) =>
+          update({
+            status: event.currentTarget.value as TransactionStatusFilter,
+          })
+        }
+      >
+        {statusLabels.map(({ value, label }) => (
+          <option key={value} value={value}>
+            {label}
+          </option>
+        ))}
+      </select>
+
+      <p role="status" className="text-sm text-muted-foreground">
+        O status filtra somente os resultados carregados.
+      </p>
+
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full sm:w-auto"
+        onClick={onReset}
+      >
+        Limpar filtros
+      </Button>
     </section>
   )
 }

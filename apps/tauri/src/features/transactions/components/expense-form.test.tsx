@@ -206,7 +206,7 @@ describe("ExpenseForm", () => {
     fireEvent.click(screen.getByRole("button", { name: "Salvar despesa" }))
     expect(await screen.findByText("Informe uma descrição.")).toBeTruthy()
     await waitFor(() =>
-      expect(document.activeElement).toBe(screen.getByLabelText("Conta"))
+      expect(document.activeElement).toBe(screen.getByLabelText("Valor"))
     )
     fireEvent.change(screen.getByLabelText("Descrição"), {
       target: { value: "Corrigido" },

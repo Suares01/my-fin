@@ -79,6 +79,7 @@ describe("ControlledColorPicker", () => {
 
   it("renders an opaque picker without alpha, percentage or format controls", () => {
     render(<ColorForm />)
+    fireEvent.click(screen.getByRole("button", { name: "Selecionar cor" }))
 
     expect(screen.queryByRole("combobox")).toBeNull()
     expect(screen.queryByText("%")).toBeNull()
@@ -119,6 +120,7 @@ describe("ControlledColorPicker", () => {
     const onSubmit = vi.fn()
     render(<ColorForm onSubmit={onSubmit} />)
 
+    fireEvent.click(screen.getByRole("button", { name: "Selecionar cor" }))
     fireEvent.click(
       screen.getByRole("button", { name: "Escolher cor com conta-gotas" })
     )
@@ -161,10 +163,12 @@ describe("ControlledColorPicker", () => {
     const input = screen.getByLabelText("Cor da categoria") as HTMLInputElement
 
     expect(input).toHaveProperty("disabled", true)
-    expect(screen.getByRole("slider").hasAttribute("data-disabled")).toBe(true)
     expect(
-      screen.getByRole("button", { name: "Escolher cor com conta-gotas" })
+      screen.getByRole("button", { name: "Selecionar cor" })
     ).toHaveProperty("disabled", true)
+    expect(
+      screen.queryByRole("button", { name: "Escolher cor com conta-gotas" })
+    ).toBeNull()
     fireEvent.change(input, { target: { value: "abcdef" } })
     expect(input.value).toBe("112233")
   })
