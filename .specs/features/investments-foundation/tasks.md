@@ -2594,13 +2594,31 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Criar hooks via uma factory de queries do livro, cursores independentes e defer só search; refetch/focus/mudança do dia recalculam D sem dia fixo de 24h; chave antiga nunca contamina livro novo.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 16 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full React` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Criar hooks via uma factory de queries do livro, cursores independentes e defer só search; refetch/focus/mudança do dia recalculam D sem dia fixo de 24h; chave antiga nunca contamina livro novo.
+- [x] Escrever/atualizar no mesmo commit pelo menos 16 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full React` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (React); testes acompanham o componente nesta tarefa.
 **Gate**: Full React
 **Commit**: `feat(investments-ui): consultas e cache de investimentos na ui`
+
+**Execution evidence**: before T72: 67 Tauri files, 644 tests; after: 68 files, 660 tests. `investment-queries.test.tsx` adds 16 React integration scenarios covering book-scoped keys, date reference in the book timezone, active-book isolation, independent account/catalogue/history caches, server filters, deferred search, cursor pages, refetch and error states without fabricated balances. Full React passed: Domain, Application, Memory, SQLite and Tauri infrastructure builds; Tauri 68/68 files and 660/660 tests; and Tauri `tsc --noEmit`. `git diff --check` passed. Native UAT remains pending because jsdom cannot establish Tauri focus, viewport, clock and SQLite persistence behavior.
+
+| Done-when criterion / requirement | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| INV-50, INV-58, INV-93, INV-94, INV-140, INV-141: portfolio and accounts use the book reference date and retain their own result | `investment-queries.test.tsx:117-133` - `expect(queryClient.getQueryData(investmentKeys.portfolio(...))).toBeDefined()`; `:160-170` - `expect(result.current.data?.[0]?.cashMinor).toBe("-100")` | cache identity includes the book's current reference date; account data is independent and preserves the returned negative cash | Yes |
+| INV-74, INV-97, INV-98, INV-105: active-book scope, filters and cursor pages remain isolated | `investment-queries.test.tsx:86-105` - `expect(...).not.toEqual(...)`; `:199-223` - `expect(...execute).toHaveBeenCalledWith({ bookId: "book-1", ..., limit: 25, cursor: "cursor-2" })`; `:226-237` - `expect(queryClient.getQueryData(..."CDB")).toBeDefined()` | every query and cursor belongs to one book/filter tuple; list limit is 25 and a changed search uses a new cache | Yes |
+| INV-95, INV-96: positions, operations and valuations use independent paged read models | `investment-queries.test.tsx:211-223` - `expect(...items.map(...)).toEqual(["position-1", "position-2"])`; `:249-265` - `expect(...operations.list.execute).toHaveBeenCalledWith(...)` and `expect(...valuations).not.toEqual(...operations)` | positions paginate in stable pages; the operation and valuation histories have independent cursors | Yes |
+| INV-104, INV-106, INV-107, INV-108: refetch and failed/disabled reads never become zero data | `investment-queries.test.tsx:108-115` - `expect(...fetchStatus).toBe("idle")`; `:136-157` - `expect(result.current.data).toBeUndefined()` and `expect(...summary.execute).toHaveBeenCalledTimes(2)`; `:268-278` - `expect(result.current.data).toBeUndefined()` | no book performs no read; explicit refetch reruns the book query; errors retain an error state rather than a fabricated zero | Yes |
+
+| `file:line` + assertion expression | Maps to | Keep |
+| --- | --- | --- |
+| `investment-queries.test.tsx:86-105` - `expect(investmentKeys...).not.toEqual(...)` | INV-74, INV-97, INV-105 book/filter isolation | Yes |
+| `investment-queries.test.tsx:117-157` - `expect(getQueryData(...)).toBeDefined()`; `expect(data).toBeUndefined()` | INV-50, INV-58, INV-93, INV-104, INV-106, INV-108, INV-140, INV-141 | Yes |
+| `investment-queries.test.tsx:160-237` - `expect(...cashMinor).toBe("-100")`; `expect(...limit: 25...)`; `expect(getQueryData(...)).toBeDefined()` | INV-94, INV-95, INV-97, INV-98 | Yes |
+| `investment-queries.test.tsx:240-278` - `expect(...fetchStatus).toBe("idle")`; `expect(...operations/valuations...).toHaveBeenCalledWith(...)` | INV-96, INV-107, INV-108 | Yes |
+
+**Adequacy verdict**: PASS. The 16 scenarios assert query keys, request payloads and publicly visible cached data/error states. They cover the task's book, reference-date, pagination and failure boundaries without testing React Query internals or adding UI beyond this hook layer. The tests follow the React integration convention in the Test Coverage Matrix; no project-specific testing guideline exists.
 
 ### T73: Submissão de investimentos na UI
 
