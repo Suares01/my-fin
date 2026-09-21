@@ -2783,13 +2783,31 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Editar rótulo via caso dedicado, termos imutáveis no detalhe, conflito preserva draft; payload não permite custo/quantidade/revisão.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 6 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full React + Build` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Editar rótulo via caso dedicado, termos imutáveis no detalhe, conflito preserva draft; payload não permite custo/quantidade/revisão.
+- [x] Escrever/atualizar no mesmo commit pelo menos 6 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full React + Build` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (React); testes acompanham o componente nesta tarefa.
 **Gate**: Full React + Build
 **Commit**: `feat(investments-ui): formulário de metadata da posição`
+
+**Execution evidence**: before T77: 70 Tauri files, 712 tests; after: 71 files, 719 tests. Full React + Build passed: Domain, Application, Memory, SQLite and Tauri infrastructure builds; Tauri 71/71 files and 719/719 tests; Tauri `tsc --noEmit`; full Tauri ESLint with zero warnings; Vite build; and `git diff --check`. Native UAT remains pending: jsdom/build does not prove Tauri IPC, Drawer focus behavior or restart persistence.
+
+| Done-when criterion / requirement | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| INV-20, INV-101, INV-129: dedicated metadata command has no economic fields | `investment-position-metadata-form.test.tsx:71-96` - exact `bookId`, `positionId`, `expectedVersion`, `label` payload and absent `bookCostMinor`, `quantity`, `allocationRevision` | Editing metadata cannot change preserved cost, quantity or allocation revision. | Yes |
+| INV-20, INV-26: terms remain visible and immutable | `investment-position-metadata-form.test.tsx:58-69` - rendered term and immutable-terms explanation | Position terms are detail context, not editable metadata fields. | Yes |
+| INV-109: conflict keeps the draft actionable | `investment-position-metadata-form.test.tsx:111-132` - stable concurrency message and `getByDisplayValue("Rascunho")` | A failed save does not discard the user's label. | Yes |
+| INV-111: submission lock | `investment-position-metadata-form.test.tsx:134-154` - pending `Salvando rótulo` button is disabled and repeated click produces one command | A pending form cannot create duplicate metadata writes. | Yes |
+| INV-110: controlled form cancellation | `investment-position-metadata-form.test.tsx:156-164` - cancel callback without update | The form follows the transactional controlled-form pattern. | Yes |
+
+| `file:line` + assertion expression | Maps to | Keep |
+| --- | --- | --- |
+| `investment-position-metadata-form.test.tsx:58-96` - terms visibility and exact narrow command payload | INV-20, INV-26, INV-101, INV-129 | Yes |
+| `investment-position-metadata-form.test.tsx:98-154` - blank label, retained conflict draft and pending lock | INV-109, INV-111 | Yes |
+| `investment-position-metadata-form.test.tsx:156-164` - cancel with no update | INV-110 | Yes |
+
+**Adequacy verdict**: PASS. Seven React scenarios assert immutable detail context, the exact public metadata command and absence of economic command fields, retained error state and pending protection. No scenario changes allocation state or introduces operation behavior outside T77.
 
 ### Phase 14: Formulários de abertura e operações
 
