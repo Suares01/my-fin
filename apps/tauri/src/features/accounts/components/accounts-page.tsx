@@ -14,6 +14,7 @@ import {
 } from "@workspace/ui/components/drawer"
 import { Skeleton } from "@workspace/ui/components/skeleton"
 import { useMemo, useState } from "react"
+import { useInvestmentPortfolio } from "../../investments/hooks"
 import { AddAccountCard } from "./add-account-card"
 import { AccountCard, type FinancialAccountBalance } from "./account-card"
 import { AccountForm } from "./account-form"
@@ -105,6 +106,7 @@ function EmptyAccountFilter({ filter }: { readonly filter: AccountFilter }) {
 
 export function AccountsPage() {
   const query = useAccountBalances(false)
+  const portfolioQuery = useInvestmentPortfolio()
   const [selectedFilter, setSelectedFilter] = useState<AccountFilter>("ALL")
   const [isCreateDrawerOpen, setIsCreateDrawerOpen] = useState(false)
   const [editingAccount, setEditingAccount] =
@@ -184,7 +186,12 @@ export function AccountsPage() {
   return (
     <section className="motion-reveal flex w-full flex-col gap-6">
       <PageIntro />
-      <AccountSummary accounts={financialAccounts} />
+      <AccountSummary
+        summary={portfolioQuery.data}
+        isPending={portfolioQuery.isPending}
+        isError={portfolioQuery.isError}
+        onRetry={() => void portfolioQuery.refetch()}
+      />
       <AccountFilters
         selectedFilter={selectedFilter}
         onChange={setSelectedFilter}

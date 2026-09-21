@@ -2708,13 +2708,32 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Exibir Patrimônio contábil com moeda do livro, inclusive vazio não-BRL; separar disponível/outros ativos conforme query e orientar classificação pós-migração.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 8 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full React` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Exibir Patrimônio contábil com moeda do livro, inclusive vazio não-BRL; separar disponível/outros ativos conforme query e orientar classificação pós-migração.
+- [x] Escrever/atualizar no mesmo commit pelo menos 8 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full React` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (React); testes acompanham o componente nesta tarefa.
 **Gate**: Full React
 **Commit**: `feat(investments-ui): resumo contábil em contas`
+
+**Execution evidence**: before T75: 69 Tauri files, 690 tests; after: 69 files, 697 tests. Full React passed: Domain, Application, Memory, SQLite and Tauri infrastructure builds; Tauri 69/69 files and 697/697 tests; Tauri `tsc --noEmit`; and `git diff --check`. Changed-file ESLint passed with zero warnings. Native UAT remains pending: jsdom does not prove live Tauri IPC, focus behavior or SQLite persistence after restart.
+
+| Done-when criterion / requirement | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| INV-143, INV-57: label and total accounting net worth | `accounts-page.test.tsx:130-138` - `getByText("Patrimônio contábil")`, exact `R$ 900,00`, and absence of `Saldo consolidado` | Accounts shows assets minus liabilities as accounting net worth, never as available money. | Yes |
+| INV-93, INV-107: base currency for an empty non-BRL book | `accounts-page.test.tsx:140-152` - `getByText("Moeda-base: USD")` and two exact `US$ 0,00` summary values | Empty books retain the book currency instead of a BRL fallback. | Yes |
+| INV-09: available money comes from the dedicated query | `accounts-page.test.tsx:154-165` - portfolio `availableMinor: "30000"` renders `Dinheiro disponível` and exact `R$ 300,00` | Only the query-defined active daily money is labelled available. | Yes |
+| INV-10, INV-138: other assets and archived daily balances stay outside available | `accounts-page.test.tsx:167-190` - `Outros ativos`, explanatory alert, and `Saldo fora do disponível` assertions | OTHER_ASSET and archived daily values are visible apart from available money. | Yes |
+| INV-93, INV-107: loading/error do not become fictitious zero totals | `accounts-page.test.tsx:192-221` - loading label/no net-worth card; error retry calls `refetch` | The UI communicates query state and supplies recovery instead of replacing unknown totals with zero. | Yes |
+| INV-57: filters do not change book totals | `accounts-page.test.tsx:224-235` - changing to `Passivos` retains the `R$ 900,00` accounting summary | Account list selection cannot alter the book summary. | Yes |
+
+| `file:line` + assertion expression | Maps to | Keep |
+| --- | --- | --- |
+| `accounts-page.test.tsx:130-152` - exact label, amount and USD currency assertions | INV-57, INV-93, INV-107, INV-143 | Yes |
+| `accounts-page.test.tsx:154-190` - exact portfolio field amounts and separated labels | INV-09, INV-10, INV-138 | Yes |
+| `accounts-page.test.tsx:192-235` - loading/error recovery and unchanged total after filter | INV-57, INV-93, INV-107 | Yes |
+
+**Adequacy verdict**: PASS. Eight distinct React scenarios assert rendered labels, currency and exact query-derived monetary values, plus observable loading/retry and filter invariance. The portfolio hook is mocked only at the application boundary; outcomes are asserted in the rendered UI rather than through implementation call counts. The work does not introduce forms or operation behavior assigned to later tasks.
 
 ### T76: Formulário de instrumento
 

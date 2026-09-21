@@ -1,12 +1,21 @@
 /* @vitest-environment jsdom */
 
-import type { AccountBalanceItemView } from "@workspace/application"
-import { fireEvent, render, screen, waitFor } from "@testing-library/react"
-import { describe, expect, it, vi } from "vitest"
+import type {
+  AccountBalanceItemView,
+  InvestmentPortfolioSummary,
+} from "@workspace/application"
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react"
+import { afterEach, describe, expect, it, vi } from "vitest"
 import { AccountsPage } from "./accounts-page"
 import type { FinancialAccountBalance } from "./account-card"
 import { filterAccounts } from "./account-list-model"
-import { summarizeAccounts } from "./account-summary-model"
 
 const state = vi.hoisted(() => ({
   session: { status: "ACTIVE", bookId: "book-1" } as const,
@@ -28,6 +37,10 @@ const hooks = vi.hoisted(() => ({
   })),
 }))
 
+const investments = vi.hoisted(() => ({
+  useInvestmentPortfolio: vi.fn(),
+}))
+
 vi.mock("../../../providers", () => ({
   useActiveBook: () => ({ session: state.session }),
 }))
@@ -37,6 +50,30 @@ vi.mock("../hooks", () => ({
   useCreateAccount: hooks.useCreateAccount,
   useConfigureAccount: hooks.useConfigureAccount,
 }))
+
+vi.mock("../../investments/hooks", () => ({
+  useInvestmentPortfolio: investments.useInvestmentPortfolio,
+}))
+
+const portfolio: InvestmentPortfolioSummary = {
+  bookId: "book-1",
+  currency: "BRL",
+  asOf: "2026-09-21",
+  availableMinor: "120000",
+  otherAssetsMinor: "0",
+  archivedDailyAccountBalanceMinor: "0",
+  bookNetWorthMinor: "90000",
+  marketNetWorthMinor: "90000",
+  investmentLedgerMinor: "0",
+  positionCostMinor: "0",
+  investmentCashMinor: "0",
+  investmentMarketValueMinor: "0",
+  unrealizedResultMinor: "0",
+  openPositionCount: 0,
+  valuedPositionCount: 0,
+  valuationDateRange: null,
+  warnings: [],
+}
 
 const accounts: readonly FinancialAccountBalance[] = [
   {
@@ -64,13 +101,137 @@ const accounts: readonly FinancialAccountBalance[] = [
 ]
 
 describe("AccountsPage", () => {
-  it("derives its summary from asset and liability balances", () => {
-    expect(summarizeAccounts(accounts)).toEqual({
-      assetsMinor: "120000",
-      liabilitiesMinor: "30000",
-      netWorthMinor: "90000",
-      currency: "BRL",
+  afterEach(() => {
+    cleanup()
+    vi.clearAllMocks()
+  })
+
+  function renderWithQueries(input?: {
+    readonly accounts?: readonly FinancialAccountBalance[]
+    readonly portfolio?: InvestmentPortfolioSummary
+    readonly portfolioPending?: boolean
+    readonly portfolioError?: boolean
+  }) {
+    hooks.useAccountBalances.mockReturnValue({
+      isPending: false,
+      isError: false,
+      data: input?.accounts ?? accounts,
+      refetch: vi.fn(),
     })
+    investments.useInvestmentPortfolio.mockReturnValue({
+      isPending: input?.portfolioPending ?? false,
+      isError: input?.portfolioError ?? false,
+      data: input?.portfolio ?? portfolio,
+      refetch: vi.fn(),
+    })
+    return render(<AccountsPage />)
+  }
+
+  it("uses the portfolio query for the accounting net worth", () => {
+    renderWithQueries()
+
+    expect(screen.getByText("Patrimônio contábil")).toBeTruthy()
+    expect(
+      screen.getByText((_, element) => element?.textContent === "R$ 900,00")
+    ).toBeTruthy()
+    expect(screen.queryByText("Saldo consolidado")).toBeNull()
+  })
+
+  it("keeps the book base currency for an empty non-BRL book", () => {
+    renderWithQueries({
+      accounts: [],
+      portfolio: { ...portfolio, currency: "USD", bookNetWorthMinor: "0" },
+    })
+
+    expect(screen.getByText("Moeda-base: USD")).toBeTruthy()
+    expect(
+      within(screen.getByLabelText("Resumo contábil")).getAllByText(
+        (_, element) => element?.textContent === "US$ 0,00"
+      )
+    ).toHaveLength(2)
+  })
+
+  it("shows available money from the portfolio query", () => {
+    renderWithQueries({
+      portfolio: { ...portfolio, availableMinor: "30000" },
+    })
+
+    expect(screen.getByText("Dinheiro disponível")).toBeTruthy()
+    expect(
+      within(screen.getByLabelText("Resumo contábil")).getByText(
+        (_, element) => element?.textContent === "R$ 300,00"
+      )
+    ).toBeTruthy()
+  })
+
+  it("keeps other assets outside available money", () => {
+    renderWithQueries({
+      portfolio: { ...portfolio, otherAssetsMinor: "4500" },
+    })
+
+    expect(screen.getByText("Outros ativos")).toBeTruthy()
+    expect(
+      screen.getByText((_, element) => element?.textContent === "R$ 45,00")
+    ).toBeTruthy()
+    expect(
+      screen.getByText("Outros ativos não são dinheiro disponível")
+    ).toBeTruthy()
+  })
+
+  it("shows archived daily-account money outside available money", () => {
+    renderWithQueries({
+      portfolio: { ...portfolio, archivedDailyAccountBalanceMinor: "8000" },
+    })
+
+    expect(screen.getByText("Saldo fora do disponível")).toBeTruthy()
+    expect(
+      screen.getByText((_, element) => element?.textContent === "R$ 80,00")
+    ).toBeTruthy()
+  })
+
+  it("renders a loading state instead of a fictitious zero summary", () => {
+    renderWithQueries({ portfolioPending: true, portfolio: undefined })
+
+    expect(screen.getByLabelText("Carregando resumo contábil")).toBeTruthy()
+    expect(screen.queryByText("Patrimônio contábil")).toBeNull()
+  })
+
+  it("keeps an actionable retry when the portfolio query fails", () => {
+    const refetch = vi.fn()
+    hooks.useAccountBalances.mockReturnValue({
+      isPending: false,
+      isError: false,
+      data: accounts,
+      refetch: vi.fn(),
+    })
+    investments.useInvestmentPortfolio.mockReturnValue({
+      isPending: false,
+      isError: true,
+      data: undefined,
+      refetch,
+    })
+    render(<AccountsPage />)
+
+    expect(
+      screen.getByText("Não foi possível carregar o resumo contábil")
+    ).toBeTruthy()
+    fireEvent.click(
+      screen.getByRole("button", { name: "Tentar carregar resumo novamente" })
+    )
+    expect(refetch).toHaveBeenCalledTimes(1)
+  })
+
+  it("does not change book totals when the account list filter changes", () => {
+    renderWithQueries()
+
+    fireEvent.click(screen.getByRole("button", { name: "Passivos" }))
+
+    expect(screen.getByText("Patrimônio contábil")).toBeTruthy()
+    expect(
+      within(screen.getByLabelText("Resumo contábil")).getByText(
+        (_, element) => element?.textContent === "R$ 900,00"
+      )
+    ).toBeTruthy()
   })
 
   it("filters financial accounts by type", () => {
@@ -92,6 +253,12 @@ describe("AccountsPage", () => {
       isPending: false,
       isError: false,
       data: [accounts[0]],
+      refetch: vi.fn(),
+    })
+    investments.useInvestmentPortfolio.mockReturnValue({
+      isPending: false,
+      isError: false,
+      data: portfolio,
       refetch: vi.fn(),
     })
 
@@ -129,6 +296,12 @@ describe("AccountsPage", () => {
       isPending: false,
       isError: false,
       data: [accounts[0]],
+      refetch: vi.fn(),
+    })
+    investments.useInvestmentPortfolio.mockReturnValue({
+      isPending: false,
+      isError: false,
+      data: portfolio,
       refetch: vi.fn(),
     })
 
