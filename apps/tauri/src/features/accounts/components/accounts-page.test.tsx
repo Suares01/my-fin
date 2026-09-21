@@ -11,6 +11,7 @@ import { summarizeAccounts } from "./account-summary-model"
 const state = vi.hoisted(() => ({
   session: { status: "ACTIVE", bookId: "book-1" } as const,
   mutateAsync: vi.fn(),
+  configureAsync: vi.fn(),
 }))
 
 const hooks = vi.hoisted(() => ({
@@ -21,6 +22,10 @@ const hooks = vi.hoisted(() => ({
     isError: false,
     error: null,
   })),
+  useConfigureAccount: vi.fn(() => ({
+    mutateAsync: state.configureAsync,
+    isPending: false,
+  })),
 }))
 
 vi.mock("../../../providers", () => ({
@@ -30,6 +35,7 @@ vi.mock("../../../providers", () => ({
 vi.mock("../hooks", () => ({
   useAccountBalances: hooks.useAccountBalances,
   useCreateAccount: hooks.useCreateAccount,
+  useConfigureAccount: hooks.useConfigureAccount,
 }))
 
 const accounts: readonly FinancialAccountBalance[] = [
@@ -86,6 +92,7 @@ describe("AccountsPage", () => {
       isPending: false,
       isError: false,
       data: [accounts[0]],
+      refetch: vi.fn(),
     })
 
     render(<AccountsPage />)
@@ -115,5 +122,27 @@ describe("AccountsPage", () => {
     fireEvent.click(screen.getByRole("button", { name: /Adicionar conta/i }))
     fireEvent.keyDown(document, { key: "Escape" })
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
+  })
+
+  it("opens the account classification drawer from a card", () => {
+    hooks.useAccountBalances.mockReturnValue({
+      isPending: false,
+      isError: false,
+      data: [accounts[0]],
+      refetch: vi.fn(),
+    })
+
+    render(<AccountsPage />)
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Classificar Carteira" })
+    )
+
+    expect(screen.getByRole("dialog").textContent).toContain(
+      "Classificar conta"
+    )
+    expect(
+      screen.getByRole("button", { name: "Salvar classificação" })
+    ).toBeTruthy()
   })
 })

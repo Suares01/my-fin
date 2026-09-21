@@ -10,6 +10,7 @@ import {
   useAccountBalances,
   useAccountStatement,
   useCreateAccount,
+  useConfigureAccount,
   useSetOpeningBalance,
 } from "./index.js"
 import { MyFinServices } from "../../../bootstrap/create-services.js"
@@ -53,6 +54,9 @@ function services(): MyFinServices {
         }),
       },
       create: {
+        execute: vi.fn().mockResolvedValue({ ok: true, value: account }),
+      },
+      configure: {
         execute: vi.fn().mockResolvedValue({ ok: true, value: account }),
       },
       setOpeningBalance: {
@@ -108,6 +112,40 @@ describe("account data hooks", () => {
     expect(accountKeys.balances("book-1")).not.toEqual(
       accountKeys.balances("book-2")
     )
+  })
+
+  it("reclassifies through the dedicated command and invalidates account and investment views", async () => {
+    const serviceFacade = services()
+    const execute = vi.mocked(serviceFacade.accounts.configure.execute)
+    const queryClient = new QueryClient()
+    const invalidate = vi.spyOn(queryClient, "invalidateQueries")
+    const { result } = renderHook(() => useConfigureAccount(), {
+      wrapper: wrapperFor(serviceFacade, queryClient),
+    })
+
+    await act(async () => {
+      await result.current.mutateAsync({
+        bookId: "book-1",
+        accountId: "account-1",
+        expectedVersion: 1,
+        profile: { type: "BANK_ACCOUNT" },
+      })
+    })
+
+    expect(execute).toHaveBeenCalledWith({
+      bookId: "book-1",
+      accountId: "account-1",
+      expectedVersion: 1,
+      profile: { type: "BANK_ACCOUNT" },
+    })
+    expect(invalidate).toHaveBeenCalledWith({
+      queryKey: accountKeys.balances("book-1"),
+      exact: true,
+    })
+    expect(invalidate).toHaveBeenCalledWith({
+      queryKey: ["investments", "book-1"],
+      exact: false,
+    })
   })
 
   it("loads only asset/liability balances including zero and excluding archived", async () => {

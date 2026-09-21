@@ -1,6 +1,7 @@
 import type { AccountBalanceItemView } from "@workspace/application"
+import { Button } from "@workspace/ui/components/button"
 import { formatMinorAmount } from "@workspace/ui/money"
-import { Landmark, WalletCards } from "lucide-react"
+import { Landmark, Pencil, WalletCards } from "lucide-react"
 
 export type FinancialAccountBalance = AccountBalanceItemView & {
   readonly accountKind: "ASSET" | "LIABILITY"
@@ -25,9 +26,10 @@ const accountAppearance = {
 
 interface AccountCardProps {
   readonly account: FinancialAccountBalance
+  readonly onEdit?: (account: FinancialAccountBalance) => void
 }
 
-export function AccountCard({ account }: AccountCardProps) {
+export function AccountCard({ account, onEdit }: AccountCardProps) {
   const appearance = accountAppearance[account.accountKind]
   const Icon = appearance.icon
 
@@ -35,13 +37,25 @@ export function AccountCard({ account }: AccountCardProps) {
     <article className="group relative overflow-hidden rounded-xl bg-card ring-1 ring-foreground/10 transition-shadow hover:shadow-md">
       <div className={`absolute inset-y-0 left-0 w-1 ${appearance.accent}`} />
       <div className="p-4 pl-5">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between gap-2">
           <div className="flex size-8 items-center justify-center rounded-full bg-muted">
             <Icon className="size-4 text-muted-foreground" aria-hidden="true" />
           </div>
           <span className="text-xs text-muted-foreground">
             {appearance.description}
           </span>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="touch-target size-9 text-muted-foreground"
+            aria-label={`Classificar ${account.accountName}`}
+            title="Classificar conta"
+            disabled={account.archived}
+            onClick={() => onEdit?.(account)}
+          >
+            <Pencil aria-hidden="true" />
+          </Button>
         </div>
 
         <div className="mt-4">

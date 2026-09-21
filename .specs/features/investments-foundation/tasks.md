@@ -2670,13 +2670,32 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Adicionar tipo/instituição/referência e configuração explícita de settlement/reclassificação; explicar OTHER sem inventar postings, bloquear incompatibilidades pelo erro do comando e preservar foco/validação.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 14 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full React` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Adicionar tipo/instituição/referência e configuração explícita de settlement/reclassificação; explicar OTHER sem inventar postings, bloquear incompatibilidades pelo erro do comando e preservar foco/validação.
+- [x] Escrever/atualizar no mesmo commit pelo menos 14 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full React` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (React); testes acompanham o componente nesta tarefa.
 **Gate**: Full React
 **Commit**: `feat(investments-ui): classificação no formulário de conta`
+
+**Execution evidence**: before T74: 69 Tauri files, 676 tests; after: 69 files, 690 tests. `account-form.test.tsx` adds 12 React integration scenarios and the account page/hook suites add two more. Full React passed: Domain, Application, Memory, SQLite and Tauri infrastructure builds; Tauri 69/69 files and 690/690 tests; Tauri `tsc --noEmit`; and `git diff --check`. Changed-file ESLint passed with zero warnings. Native UAT remains pending: jsdom does not prove live Tauri IPC, focus return or SQLite persistence after restart.
+
+| Done-when criterion / requirement | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| INV-01, INV-11, INV-12, INV-13: create with financial type, optional institution/reference and explicit optional settlement | `account-form.test.tsx:205-243` - `expect(state.mutateAsync).toHaveBeenCalledWith({ ... type: "INVESTMENT_ACCOUNT", institutionName: "XP", displayReference: "123", defaultSettlementAccountId: "bank-1" })`; `:266-282` - `expect(...).toHaveBeenCalledWith({ ... type: "INVESTMENT_ACCOUNT" })` | investment account accepts absent institution/default settlement; a selected default is sent explicitly | Yes |
+| INV-07, INV-08: reclassification preserves account identity and surfaces the domain refusal | `account-form.test.tsx:420-454` - `expect(state.configureAsync).toHaveBeenCalledWith({ accountId: "account-1", expectedVersion: 4, profile: { type: "BANK_ACCOUNT" } })`; `:579-616` - `expect(state.toastAdd).toHaveBeenCalledWith({ ... FINANCIAL_ACCOUNT_TYPE_CHANGE_NOT_ALLOWED message })` | no local posting/identity mutation; forbidden type change remains actionable and keeps draft | Yes |
+| INV-12, INV-115: configure, clear and reject incompatible settlement through the command | `account-form.test.tsx:457-500` - `expect(...profile.defaultSettlementAccountId).toBe("bank-1")`; `:503-555` - `expect(...profile).toEqual({ type: "INVESTMENT_ACCOUNT" })`; `:341-380` - `expect(state.toastAdd).toHaveBeenCalledWith({ ... INVALID_SETTLEMENT_ACCOUNT message })` | settlement is explicit, can be removed, and invalid selection is not silently accepted | Yes |
+| INV-138, INV-109, INV-110, INV-111: OTHER explanation, Drawer action, retained fields and pending controls | `account-form.test.tsx:195-202` - `expect(screen.getByText(/Outro ativo fica fora do dinheiro disponível/i)).toBeTruthy()`; `:383-417` - `expect(..."Salvando classificação").hasAttribute("disabled")`; `accounts-page.test.tsx:127-146` - `expect(screen.getByRole("dialog").textContent).toContain("Classificar conta")` | OTHER remains outside available money without posting; accessible Drawer preserves input/error and prevents duplicate submit | Yes |
+| INV-09, INV-10, INV-104: reclassification invalidates both account and investment read models | `accounts-hooks.test.tsx:135-148` - `expect(invalidate).toHaveBeenCalledWith({ queryKey: accountKeys.balances("book-1"), exact: true })` and `expect(invalidate).toHaveBeenCalledWith({ queryKey: ["investments", "book-1"], exact: false })` | profile changes refresh available-money and investment views for the same book | Yes |
+
+| `file:line` + assertion expression | Maps to | Keep |
+| --- | --- | --- |
+| `account-form.test.tsx:205-282` - `expect(state.mutateAsync).toHaveBeenCalledWith(...)` | INV-01, INV-11, INV-12, INV-13 | Yes |
+| `account-form.test.tsx:341-616` - `expect(state.configureAsync).toHaveBeenCalledWith(...)`; `expect(state.toastAdd).toHaveBeenCalledWith(...)` | INV-07, INV-08, INV-12, INV-115, INV-109, INV-111 | Yes |
+| `accounts-page.test.tsx:127-146` - `expect(screen.getByRole("dialog").textContent).toContain("Classificar conta")` | INV-110 | Yes |
+| `accounts-hooks.test.tsx:135-148` - `expect(invalidate).toHaveBeenCalledWith(...)` | INV-09, INV-10, INV-104 | Yes |
+
+**Adequacy verdict**: PASS. The 14 new scenarios assert public command payloads, selected profile state, field retention and cache keys instead of only invocation counts. Each maps to a T74 requirement; no scenario introduces investment operation behavior assigned to later tasks.
 
 ### T75: Resumo contábil em Contas
 

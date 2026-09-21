@@ -5,6 +5,7 @@ export {
   dedupeStatementItems,
 } from "./use-account-statement.js"
 export { useCreateAccount } from "./use-create-account.js"
+export { useConfigureAccount } from "./use-configure-account.js"
 export { useSetOpeningBalance } from "./use-set-opening-balance.js"
 export {
   useArchiveAccount,

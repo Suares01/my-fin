@@ -5,16 +5,17 @@ import {
 } from "@workspace/ui/components/alert"
 import { Button } from "@workspace/ui/components/button"
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@workspace/ui/components/sheet"
+  Drawer,
+  DrawerBackdrop,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+} from "@workspace/ui/components/drawer"
 import { Skeleton } from "@workspace/ui/components/skeleton"
 import { useMemo, useState } from "react"
 import { AddAccountCard } from "./add-account-card"
-import { AccountCard } from "./account-card"
+import { AccountCard, type FinancialAccountBalance } from "./account-card"
 import { AccountForm } from "./account-form"
 import { AccountSummary } from "./account-summary"
 import { filterAccounts, type AccountFilter } from "./account-list-model"
@@ -106,6 +107,8 @@ export function AccountsPage() {
   const query = useAccountBalances(false)
   const [selectedFilter, setSelectedFilter] = useState<AccountFilter>("ALL")
   const [isCreateDrawerOpen, setIsCreateDrawerOpen] = useState(false)
+  const [editingAccount, setEditingAccount] =
+    useState<FinancialAccountBalance | null>(null)
   const accounts = useMemo(() => query.data ?? [], [query.data])
   const financialAccounts = useMemo(
     () => filterAccounts(accounts, "ALL"),
@@ -117,7 +120,19 @@ export function AccountsPage() {
   )
 
   function openCreateDrawer(): void {
+    setEditingAccount(null)
     setIsCreateDrawerOpen(true)
+  }
+
+  function openEditDrawer(account: FinancialAccountBalance): void {
+    setIsCreateDrawerOpen(false)
+    setEditingAccount(account)
+  }
+
+  function handleSuccess(): void {
+    setIsCreateDrawerOpen(false)
+    setEditingAccount(null)
+    void query.refetch()
   }
 
   if (query.isPending) {
@@ -160,6 +175,7 @@ export function AccountsPage() {
         <CreateAccountDrawer
           open={isCreateDrawerOpen}
           onOpenChange={setIsCreateDrawerOpen}
+          onSuccess={handleSuccess}
         />
       </section>
     )
@@ -175,7 +191,11 @@ export function AccountsPage() {
       />
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {filteredAccounts.map((account) => (
-          <AccountCard key={account.accountId} account={account} />
+          <AccountCard
+            key={account.accountId}
+            account={account}
+            onEdit={openEditDrawer}
+          />
         ))}
         {filteredAccounts.length === 0 && (
           <EmptyAccountFilter filter={selectedFilter} />
@@ -185,6 +205,15 @@ export function AccountsPage() {
       <CreateAccountDrawer
         open={isCreateDrawerOpen}
         onOpenChange={setIsCreateDrawerOpen}
+        onSuccess={handleSuccess}
+      />
+      <AccountEditDrawer
+        account={editingAccount}
+        accounts={financialAccounts}
+        onOpenChange={(open) => {
+          if (!open) setEditingAccount(null)
+        }}
+        onSuccess={handleSuccess}
       />
     </section>
   )
@@ -193,27 +222,90 @@ export function AccountsPage() {
 function CreateAccountDrawer({
   open,
   onOpenChange,
+  onSuccess,
 }: {
   readonly open: boolean
   readonly onOpenChange: (open: boolean) => void
+  readonly onSuccess: () => void
 }) {
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right">
-        <SheetHeader>
-          <SheetTitle>Adicionar conta</SheetTitle>
-          <SheetDescription>
-            Registre uma conta financeira para acompanhar seu saldo no livro
-            ativo.
-          </SheetDescription>
-        </SheetHeader>
+    <Drawer
+      direction="right"
+      modal={false}
+      open={open}
+      onOpenChange={onOpenChange}
+    >
+      {open && (
+        <>
+          <DrawerBackdrop />
+          <DrawerContent className="data-[vaul-drawer-direction=right]:sm:max-w-xl">
+            <DrawerHeader>
+              <DrawerTitle>Adicionar conta</DrawerTitle>
+              <DrawerDescription>
+                Registre uma conta financeira para acompanhar seu saldo no livro
+                ativo.
+              </DrawerDescription>
+            </DrawerHeader>
+            <div className="flex-1 overflow-y-auto px-6 pb-6">
+              <AccountForm
+                onSuccess={onSuccess}
+                onCancel={() => onOpenChange(false)}
+              />
+            </div>
+          </DrawerContent>
+        </>
+      )}
+    </Drawer>
+  )
+}
+
+function AccountEditDrawer({
+  account,
+  accounts,
+  onOpenChange,
+  onSuccess,
+}: {
+  readonly account: FinancialAccountBalance | null
+  readonly accounts: readonly FinancialAccountBalance[]
+  readonly onOpenChange: (open: boolean) => void
+  readonly onSuccess: () => void
+}) {
+  if (account === null) return null
+
+  const settlementAccounts = accounts
+    .filter(
+      (candidate) =>
+        candidate.accountId !== account.accountId &&
+        !candidate.archived &&
+        (candidate.financialAccount?.type === "BANK_ACCOUNT" ||
+          candidate.financialAccount?.type === "PAYMENT_ACCOUNT")
+    )
+    .map((candidate) => ({
+      id: candidate.accountId,
+      name: candidate.accountName,
+    }))
+
+  return (
+    <Drawer direction="right" modal={false} open onOpenChange={onOpenChange}>
+      <DrawerBackdrop />
+      <DrawerContent className="data-[vaul-drawer-direction=right]:sm:max-w-xl">
+        <DrawerHeader>
+          <DrawerTitle>Classificar conta</DrawerTitle>
+          <DrawerDescription>
+            Atualize a finalidade e, para carteiras, a conta padrão de
+            liquidação.
+          </DrawerDescription>
+        </DrawerHeader>
         <div className="flex-1 overflow-y-auto px-6 pb-6">
           <AccountForm
-            onSuccess={() => onOpenChange(false)}
+            mode="edit"
+            initialAccount={account}
+            settlementAccounts={settlementAccounts}
+            onSuccess={onSuccess}
             onCancel={() => onOpenChange(false)}
           />
         </div>
-      </SheetContent>
-    </Sheet>
+      </DrawerContent>
+    </Drawer>
   )
 }

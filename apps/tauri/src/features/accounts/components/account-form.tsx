@@ -1,4 +1,7 @@
-import type { CreateFinancialAccountCommand } from "@workspace/application"
+import type {
+  ConfigureFinancialAccountCommand,
+  CreateFinancialAccountCommand,
+} from "@workspace/application"
 import { zodResolver } from "@hookform/resolvers/zod"
 import {
   Alert,
@@ -9,25 +12,80 @@ import { Button } from "@workspace/ui/components/button"
 import { FieldGroup } from "@workspace/ui/components/field"
 import { Spinner } from "@workspace/ui/components/spinner"
 import { toast } from "@workspace/ui/components/toast"
-import { useForm } from "react-hook-form"
+import { useForm, useWatch } from "react-hook-form"
 import type { z } from "zod"
 import { ControlledInput } from "../../../components/forms/controlled-input"
+import { ControlledSelect } from "../../../components/forms/controlled-select"
 import { ControlledToggleGroup } from "../../../components/forms/controlled-toggle-group"
 import { useActiveBook } from "../../../providers"
-import { useCreateAccount } from "../hooks"
+import { useConfigureAccount, useCreateAccount } from "../hooks"
+import type { FinancialAccountBalance } from "./account-card"
 import { accountErrorMessage, createAccountSchema } from "./account-form-model"
 
 type CreateAccountFormInput = z.input<typeof createAccountSchema>
 type CreateAccountFormOutput = z.output<typeof createAccountSchema>
 
 type AccountFormProps = {
+  readonly mode?: "create" | "edit"
+  readonly initialAccount?: FinancialAccountBalance
+  readonly settlementAccounts?: readonly {
+    readonly id: string
+    readonly name: string
+  }[]
   readonly onSuccess?: (accountId: string) => void
   readonly onCancel?: () => void
 }
 
-export function AccountForm({ onSuccess, onCancel }: AccountFormProps) {
+const accountTypes = [
+  { value: "BANK_ACCOUNT", label: "Banco" },
+  { value: "PAYMENT_ACCOUNT", label: "Conta de pagamento" },
+  { value: "INVESTMENT_ACCOUNT", label: "Investimento" },
+  { value: "CASH", label: "Dinheiro" },
+  { value: "OTHER_ASSET", label: "Ativo" },
+  { value: "CREDIT_CARD", label: "Cartão de crédito" },
+  { value: "OTHER_LIABILITY", label: "Passivo" },
+] as const
+
+function formValues(
+  mode: "create" | "edit",
+  initialAccount?: FinancialAccountBalance
+): CreateAccountFormInput {
+  if (mode === "edit" && initialAccount !== undefined) {
+    return {
+      name: initialAccount.accountName,
+      type: (initialAccount.financialAccount?.type ??
+        "OTHER_ASSET") as CreateAccountFormInput["type"],
+      institutionName: initialAccount.financialAccount?.institutionName ?? "",
+      displayReference: initialAccount.financialAccount?.displayReference ?? "",
+      defaultSettlementAccountId:
+        initialAccount.financialAccount?.defaultSettlementAccountId ?? "",
+    }
+  }
+
+  return {
+    name: "",
+    type: "OTHER_ASSET",
+    institutionName: "",
+    displayReference: "",
+    defaultSettlementAccountId: "",
+  }
+}
+
+function optionalValue(value: string | undefined): string | undefined {
+  const trimmed = value?.trim()
+  return trimmed ? trimmed : undefined
+}
+
+export function AccountForm({
+  mode = "create",
+  initialAccount,
+  settlementAccounts = [],
+  onSuccess,
+  onCancel,
+}: AccountFormProps) {
   const { session } = useActiveBook()
-  const mutation = useCreateAccount()
+  const create = useCreateAccount()
+  const configure = useConfigureAccount()
   const form = useForm<
     CreateAccountFormInput,
     unknown,
@@ -36,27 +94,51 @@ export function AccountForm({ onSuccess, onCancel }: AccountFormProps) {
     resolver: zodResolver(createAccountSchema),
     mode: "onSubmit",
     reValidateMode: "onChange",
-    defaultValues: { name: "", type: "OTHER_ASSET" },
+    defaultValues: formValues(mode, initialAccount),
   })
 
   const activeBookId = session.status === "ACTIVE" ? session.bookId : null
-  const pending = form.formState.isSubmitting || mutation.isPending
+  const type = useWatch({ control: form.control, name: "type" })
+  const isEdit = mode === "edit"
+  const pending =
+    form.formState.isSubmitting || create.isPending || configure.isPending
+  const action = isEdit ? "salvar a classificação" : "criar a conta"
   const onSubmit = form.handleSubmit(async (values) => {
-    if (activeBookId === null) return
+    if (activeBookId === null || (isEdit && initialAccount === undefined))
+      return
 
-    const command: CreateFinancialAccountCommand = {
-      bookId: activeBookId,
-      name: values.name,
+    const profile = {
       type: values.type,
+      ...(optionalValue(values.institutionName) === undefined
+        ? {}
+        : { institutionName: optionalValue(values.institutionName) }),
+      ...(optionalValue(values.displayReference) === undefined
+        ? {}
+        : { displayReference: optionalValue(values.displayReference) }),
+      ...(values.type !== "INVESTMENT_ACCOUNT" ||
+      !values.defaultSettlementAccountId
+        ? {}
+        : { defaultSettlementAccountId: values.defaultSettlementAccountId }),
     }
 
     try {
-      const account = await mutation.mutateAsync(command)
+      const account = isEdit
+        ? await configure.mutateAsync({
+            bookId: activeBookId,
+            accountId: initialAccount!.accountId,
+            expectedVersion: initialAccount!.version ?? 0,
+            profile,
+          } satisfies ConfigureFinancialAccountCommand)
+        : await create.mutateAsync({
+            bookId: activeBookId,
+            name: values.name,
+            ...profile,
+          } satisfies CreateFinancialAccountCommand)
       onSuccess?.(account.id)
     } catch (error) {
       toast.add({
         type: "error",
-        title: "Não foi possível criar a conta",
+        title: `Não foi possível ${action}`,
         description: accountErrorMessage(error),
       })
     }
@@ -65,7 +147,7 @@ export function AccountForm({ onSuccess, onCancel }: AccountFormProps) {
   if (activeBookId === null) {
     return (
       <Alert>
-        <AlertTitle>Selecione um livro antes de criar a conta</AlertTitle>
+        <AlertTitle>Selecione um livro antes de {action}</AlertTitle>
         <AlertDescription>
           O formulário será liberado quando houver um livro ativo.
         </AlertDescription>
@@ -81,26 +163,57 @@ export function AccountForm({ onSuccess, onCancel }: AccountFormProps) {
       aria-busy={pending}
     >
       <FieldGroup>
-        <ControlledInput
-          control={form.control}
-          name="name"
-          label="Nome da conta"
-          description="Escolha um nome reconhecível para encontrar esta conta no extrato."
-          placeholder="Carteira, banco ou cartão"
-          autoComplete="off"
-          disabled={pending}
-        />
+        {!isEdit && (
+          <ControlledInput
+            control={form.control}
+            name="name"
+            label="Nome da conta"
+            description="Escolha um nome reconhecível para encontrar esta conta no extrato."
+            placeholder="Carteira, banco ou cartão"
+            autoComplete="off"
+            disabled={pending}
+          />
+        )}
         <ControlledToggleGroup
           control={form.control}
           name="type"
           label="Tipo da conta"
-          description="Use Ativo para recursos e Passivo para valores que você deve."
+          description="Defina a finalidade da conta. Outro ativo fica fora do dinheiro disponível e não cria lançamentos."
           disabled={pending}
-          options={[
-            { value: "OTHER_ASSET", label: "Ativo" },
-            { value: "OTHER_LIABILITY", label: "Passivo" },
-          ]}
+          options={accountTypes}
         />
+        <ControlledInput
+          control={form.control}
+          name="institutionName"
+          label="Instituição"
+          description="Opcional. Informe o banco, corretora ou emissor quando ajudar a reconhecer a conta."
+          placeholder="Banco ou corretora"
+          autoComplete="organization"
+          disabled={pending}
+        />
+        <ControlledInput
+          control={form.control}
+          name="displayReference"
+          label="Referência"
+          description="Opcional. Use um apelido, agência ou final da conta sem registrar credenciais."
+          placeholder="Final 1234"
+          autoComplete="off"
+          disabled={pending}
+        />
+        {type === "INVESTMENT_ACCOUNT" && (
+          <ControlledSelect
+            control={form.control}
+            name="defaultSettlementAccountId"
+            label="Conta padrão de liquidação"
+            description="Opcional. Apenas antecipa a conta em operações externas; cada operação continua exigindo escolha explícita."
+            placeholder="Sem conta padrão"
+            disabled={pending}
+            options={settlementAccounts.map((account) => ({
+              value: account.id,
+              label: account.name,
+            }))}
+          />
+        )}
       </FieldGroup>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
@@ -121,7 +234,13 @@ export function AccountForm({ onSuccess, onCancel }: AccountFormProps) {
           disabled={pending}
         >
           {pending && <Spinner data-icon="inline-start" aria-hidden="true" />}
-          {pending ? "Criando conta" : "Criar conta"}
+          {pending
+            ? isEdit
+              ? "Salvando classificação"
+              : "Criando conta"
+            : isEdit
+              ? "Salvar classificação"
+              : "Criar conta"}
         </Button>
       </div>
     </form>
