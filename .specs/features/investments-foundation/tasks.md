@@ -2746,13 +2746,31 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Cadastrar/editar/arquivar/reativar instrumento com identificadores e erros estáveis; não alterar tipo após uso nem criar catálogo como efeito oculto da operação.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 14 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full React` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Cadastrar/editar/arquivar/reativar instrumento com identificadores e erros estáveis; não alterar tipo após uso nem criar catálogo como efeito oculto da operação.
+- [x] Escrever/atualizar no mesmo commit pelo menos 14 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full React` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (React); testes acompanham o componente nesta tarefa.
 **Gate**: Full React
 **Commit**: `feat(investments-ui): formulário de instrumento`
+
+**Execution evidence**: before T76: 69 Tauri files, 697 tests; after: 70 files, 712 tests. Full React passed: Domain, Application, Memory, SQLite and Tauri infrastructure builds; Tauri 70/70 files and 712/712 tests; Tauri `tsc --noEmit`; and `git diff --check`. Changed-file ESLint passed with zero warnings. Native UAT remains pending: jsdom does not prove the live Tauri IPC, DropdownMenu focus return, or persistence after restart.
+
+| Done-when criterion / requirement | Evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| INV-14, INV-15, INV-16, INV-17, INV-18: book-scoped instrument create and identifiers | `investment-instrument-form.test.tsx:117-153` - active-book/currency states; create payload has `bookId`, `CDB` and `BRL`; blank optional fields are absent | Instrument creation uses the book currency and admits optional issuer/identifier data without creating a catalogue as an operation side effect. | Yes |
+| INV-15, INV-17: identifier editing and actionable incomplete input | `investment-instrument-form.test.tsx:155-182` - add/remove identifier controls; incomplete value reports field-level error and retains `ABC` | Identifiers can be maintained and a malformed entry remains editable. | Yes |
+| INV-26, INV-109, INV-111: versioned edit, immutable-type refusal, retained draft and pending submission lock | `investment-instrument-form.test.tsx:184-278` - update includes `expectedVersion: 3`; stable immutable error toast; draft `Rascunho` remains; pending button stays disabled after a repeated click | Type/currency changes after use are rejected by the dedicated command without losing the edit state or allowing duplicate saves. | Yes |
+| INV-114, INV-116: archive and reactivate through dedicated status command | `investment-instrument-form.test.tsx:205-230` - archive menu item/status payload and archived reactivation item | Archive/re-enable is explicit and cannot be confused with deletion. | Yes |
+| INV-99, INV-101, INV-110: standalone controlled registration flow and keyboard-capable action menu | `investment-instrument-form.tsx:255-355` - controlled fields and `DropdownMenu` action; `investment-instrument-form.test.tsx:247-259` cancel path | Registration stays separate from investment operations and exposes accessible action controls. | Yes |
+
+| `file:line` + assertion expression | Maps to | Keep |
+| --- | --- | --- |
+| `investment-instrument-form.test.tsx:117-182` - rendered book states, create payload, identifier/error assertions | INV-14, INV-15, INV-16, INV-17, INV-18 | Yes |
+| `investment-instrument-form.test.tsx:184-278` - versioned update, pending lock, archive/reactivate status and retained draft | INV-26, INV-109, INV-111, INV-114, INV-116 | Yes |
+| `investment-instrument-form.test.tsx:247-259` - cancel handler without create call | INV-99, INV-101, INV-110 | Yes |
+
+**Adequacy verdict**: PASS. Fifteen React scenarios assert rendered recovery states, public command payloads, retained field values, pending lock and menu outcomes; the only mock calls verified are service-boundary commands or retry outcomes. The form registers instruments independently and introduces no investment operation flow assigned to later tasks.
 
 ### T77: Formulário de metadata da posição
 
