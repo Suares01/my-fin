@@ -12,7 +12,6 @@ import {
   readAccountKind,
   readAccountStatus,
   readBigInt,
-  readInteger,
   readString,
   toDisplayMinor,
 } from "./sqlite-query-values.js"
@@ -302,12 +301,6 @@ type CategorySpendingRow = {
   readonly transaction_count: unknown
   readonly entry_id: unknown
   readonly reversal_of_id: unknown
-}
-
-type NetWorthRow = {
-  readonly base_currency: unknown
-  readonly account_kind: unknown
-  readonly raw_balance_minor: unknown
 }
 
 function monthAfter(month: string): string {

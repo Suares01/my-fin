@@ -5,7 +5,7 @@ import {
   type FinancialAccountProfileSnapshot,
   type LedgerAccountKind,
 } from "@workspace/domain"
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import { initializeSqliteDatabase } from "../../src/database/initialize-sqlite-database.js"
 import { SqliteFinancialBookRepository } from "../../src/repositories/sqlite-financial-book-repository.js"
 import { SqliteJournalEntryRepository } from "../../src/repositories/sqlite-journal-entry-repository.js"
@@ -44,7 +44,8 @@ function makeAccount(
       : kind === "EXPENSE"
         ? { iconKey: "label-dollar", colorHex: "f43f5e" }
         : {}),
-    ...(financialAccount === undefined && (kind === "ASSET" || kind === "LIABILITY")
+    ...(financialAccount === undefined &&
+    (kind === "ASSET" || kind === "LIABILITY")
       ? {
           financialAccount: {
             type: kind === "ASSET" ? "OTHER_ASSET" : "OTHER_LIABILITY",
@@ -145,12 +146,18 @@ describe("SqliteLedgerQueries.listAccountBalances", () => {
       "settlement",
       { type: "BANK_ACCOUNT" }
     )
-    const investment = makeAccount("investment", "ASSET", mainBook, "investment", {
-      type: "INVESTMENT_ACCOUNT",
-      institutionName: "Corretora",
-      displayReference: "Conta 123",
-      investment: { defaultSettlementAccountId: "settlement" as never },
-    })
+    const investment = makeAccount(
+      "investment",
+      "ASSET",
+      mainBook,
+      "investment",
+      {
+        type: "INVESTMENT_ACCOUNT",
+        institutionName: "Corretora",
+        displayReference: "Conta 123",
+        investment: { defaultSettlementAccountId: "settlement" as never },
+      }
+    )
     await accounts.add(settlement)
     await accounts.add(investment)
 
@@ -161,7 +168,9 @@ describe("SqliteLedgerQueries.listAccountBalances", () => {
       includeZeroBalance: true,
     })
 
-    expect(result.find((account) => account.accountId === "investment")).toMatchObject({
+    expect(
+      result.find((account) => account.accountId === "investment")
+    ).toMatchObject({
       version: 0,
       financialAccount: {
         type: "INVESTMENT_ACCOUNT",

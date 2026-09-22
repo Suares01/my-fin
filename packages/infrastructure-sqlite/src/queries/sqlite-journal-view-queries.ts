@@ -441,14 +441,6 @@ type JournalChainPageRow = {
   readonly investment_book_cost_delta_minor: unknown
 }
 
-type JournalChainSummaryRow = {
-  readonly income_minor: unknown
-  readonly expense_minor: unknown
-  readonly largest_transaction_minor: unknown
-  readonly transaction_count: unknown
-  readonly base_currency: unknown
-}
-
 type JournalDetailHistoryRow = JournalChainPageRow & {
   readonly role: unknown
   readonly replaced_by_id: unknown

@@ -178,7 +178,9 @@ describe("SqliteInsightQueries.getNetWorth", () => {
     await scenario.setOpeningBalance({ accountId: assetId, amountMinor: "10" })
     const querySpy = vi.spyOn(scenario.database, "queryOnConnection")
 
-    await expect(queries.getNetWorth({ bookId: "book-1" as never })).resolves.toMatchObject({ assetMinor: "10", netWorthMinor: "10" })
+    await expect(
+      queries.getNetWorth({ bookId: "book-1" as never })
+    ).resolves.toMatchObject({ assetMinor: "10", netWorthMinor: "10" })
 
     expect(querySpy).toHaveBeenCalledTimes(2)
   })
