@@ -554,7 +554,7 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-30 | S3 | Tasks | Planned | T11, T50, T51, T79, T95, T96 |
 | INV-31 | S3 | Tasks | Planned | T60, T68, T70, T94 |
 | INV-32 | S3 | Tasks | Planned | T38, T39, T50, T51, T55, T60, T79, T83, T95 |
-| INV-33 | S3 | Tasks | In progress: T95 atomic command and T96 preview; T78 UI pending | T50, T95, T96, T78 |
+| INV-33 | S3 | Tasks | T95 atomic command, T96 preview and T78 opening UI complete | T50, T95, T96, T78 |
 | INV-34 | S3 | Tasks | In progress: T9 operation | T9, T50, T51, T95 |
 | INV-35 | S4 | Tasks | In progress: T8 position | T8, T11, T51, T52, T54, T80 |
 | INV-36 | S4 | Tasks | In progress: T2 values | T2, T11, T12, T51, T52, T61, T79, T80 |
@@ -671,7 +671,7 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-147 | S5 | Tasks | Planned | T49, T60, T62, T86, T87, T92 |
 | INV-148 | S8 | Tasks | Planned | T61, T73, T78, T79, T80, T81, T82, T83, T85, T92, T96 |
 
-**Coverage:** 148 requisitos mapeados para seções e evidência futura em [design.md](./design.md) e para as 96 tarefas de [tasks.md](./tasks.md). Design aprovado; Execute em andamento; T1–T77 e T95–T96 concluídas. IDs anteriores preservados. INV-28/32/70/77/121 revisados pela decisão explícita A11; INV-120–148 detalham os refinamentos desta discussão.
+**Coverage:** 148 requisitos mapeados para seções e evidência em [design.md](./design.md) e para as 96 tarefas de [tasks.md](./tasks.md). Design aprovado; Execute em andamento; T1–T78 e T95–T96 concluídas. IDs anteriores preservados. INV-28/32/70/77/121 revisados pela decisão explícita A11; INV-120–148 detalham os refinamentos desta discussão.
 
 ## Success Criteria
 

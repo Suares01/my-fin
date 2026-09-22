@@ -6,8 +6,8 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 
 **Design:** [design.md](./design.md), aprovado pelo usuário com “Aprovo design, siga para tasks.md”.
 **Spec:** [spec.md](./spec.md), 148 requisitos aprovados.
-**Status:** Execute em andamento: T1–T77 e T95–T96 concluídas em commits atômicos; próxima tarefa T78.
-**Total:** 96 tarefas em 16 fases sequenciais. T1–T77 e T95–T96 concluídas; T78 depende da prévia read-only.
+**Status:** Execute em andamento: T1–T78 e T95–T96 concluídas em commits atômicos; próxima tarefa T79.
+**Total:** 96 tarefas em 16 fases sequenciais. T1–T78 e T95–T96 concluídas; T79 depende do formulário de abertura.
 
 Cada tarefa entrega um componente ou um caso de uso. `Where` indica seu ponto principal; testes, exports, mapper privado e ajustes mecânicos de consumidores do mesmo contrato pertencem ao mesmo commit. Isso não autoriza implementar outro componente antecipadamente. Wrapper fino de um mesmo comando discriminado pode compartilhar tarefa; comportamento econômico distinto tem tarefa própria.
 
@@ -2921,13 +2921,37 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Oferecer Já possuo/Comprar e três origens contábeis, quantidade obrigatória nos produtos definidos e termos parciais; saldo inicial confirma separadamente e falha de alocação não o repete.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 20 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full React` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Oferecer Já possuo/Comprar e três origens contábeis, quantidade obrigatória nos produtos definidos e termos parciais; saldo inicial confirma separadamente e falha de alocação não o repete.
+- [x] Escrever/atualizar no mesmo commit pelo menos 20 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full React` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (React); testes acompanham o componente nesta tarefa.
 **Gate**: Full React
 **Commit**: `feat(investments-ui): formulário de abertura`
+
+**Execution evidence**: antes da T78, Tauri tinha 71 arquivos/719 testes; depois, 72 arquivos/754 testes (35 novos cenários React). Full React passou: builds de Domain, Application, Memory, SQLite e infraestrutura Tauri; Vitest Tauri 72/72 arquivos e 754/754 testes; Tauri `tsc --noEmit`; `git diff --check`. ESLint dos três arquivos novos passou. UAT nativo continua pendente: jsdom não comprova IPC, foco de Drawer, layout em 360px ou persistência após reinício.
+
+| Critério / requisito | Assertion `file:line` | Resultado definido pela spec | Coberto |
+| --- | --- | --- | --- |
+| INV-99/120: modos, origens e catálogos separados | `open-investment-position-form.test.tsx:356-364` `expect(screen.getByText("Comprar/Aplicar")).toBeTruthy()` e três origens; `:386-402` `expect(...).toHaveProperty("value", "wallet-2"/"instrument-2")` | Já possuo/Comprar e Na carteira/Em outra conta/Não consta são escolhas explícitas; cadastro é separado | Sim |
+| INV-27/121: alocação sem journal/transferência implícita | `open-investment-position-form.test.tsx:411-421` `expect(state.open).toHaveBeenCalledWith(expect.objectContaining({ bookCostMinor: "10000", quantityMode: "AMOUNT" }))`; `expect(state.purchase).not.toHaveBeenCalled()` e `expect(state.openingBalance).not.toHaveBeenCalled()` | Abrir posse já reconhecida usa alocação sem criar outra origem de caixa | Sim |
+| INV-30/33/120: outra conta e compra atômica | `open-investment-position-form.test.tsx:431-439` `funding: { mode: "EXTERNAL_ACCOUNT", accountId: "bank-1" }`, `type: "APPLICATION"`; `:665-670` `type: "PURCHASE", capitalMinor: "10000", funding: { mode: "INTERNAL_CASH" }` | Rota externa é explícita; compra inicial usa comando atômico | Sim |
+| INV-122/123/124/137: patrimônio ausente e falha parcial | `open-investment-position-form.test.tsx:463-469` saldo 10000 antes da alocação; `:481-482` `amountMinor: "10500"`; `:503-506` alocação duas vezes/saldo uma vez; `:519-523` correção de saldo e nenhuma abertura; `:533-535` custo ausente bloqueia | Custo mais caixa real, sem avaliação; saldo confirmado não se repete e conflito orienta correção | Sim |
+| INV-21: tipos por unidades, custo zero e ausência de quantidade | `open-investment-position-form.test.tsx:555-560` `quantityMode: "UNITS", quantity: "10", bookCostMinor: "0"`; `:564-598` seis tipos sem opção Por valor, exigem quantidade na prévia e comando; `:615-616` `not.toHaveProperty("quantity")` | Matriz A13 exige unidades para STOCK/BDR/ETF/REAL_ESTATE_FUND/MUTUAL_FUND/CRYPTO_ASSET; AMOUNT não inventa zero | Sim |
+| INV-22/23: termos parciais e taxa/data inválidas | `open-investment-position-form.test.tsx:625-629` `fixedIncomeTerms: { maturityDate: "2028-09-01" }`; `:639-641` índice incompleto bloqueia; `:651-653` data invertida bloqueia | Termos parciais válidos, componentes de taxa e datas em ordem | Sim |
+| INV-100/148: prévia planner-backed e aviso de caixa | `open-investment-position-form.test.tsx:683-695` prévia `PURCHASE` com 10000 e render de R$ 123,45/R$ 876,55; `:717-730` saldo proposto 10500 sem valuation; `:764-779` postings externos exibidos; `:807-812` aviso com Salvar habilitado | Mostra custo, fluxo, contas e caixa atual sem usar avaliação como custo; caixa negativo não bloqueia | Sim |
+| INV-109/111: retry e envio único | `open-investment-position-form.test.tsx:825-839` botão disabled e uma chamada pendente; `:855-873` campo preservado e mesmo requestId na segunda tentativa | Sem duplo envio; falha preserva draft e intenção idempotente | Sim |
+
+| Assertions | Mapeia para | Manter |
+| --- | --- | --- |
+| `open-investment-position-form.test.tsx:353-454` modos, livro, catálogos e rotas | INV-99/120 e estados de livro T78 | Sim |
+| `open-investment-position-form.test.tsx:456-535` saldo inicial, conflito, retry e custo conhecido | INV-122/123/124/137 | Sim |
+| `open-investment-position-form.test.tsx:537-653` seis tipos obrigatórios, custo/quantidade/termos | INV-21/22/23 e matriz A13 | Sim |
+| `open-investment-position-form.test.tsx:655-813` compra atômica, prévia, postings e aviso | INV-33/100/120/145/148 | Sim |
+| `open-investment-position-form.test.tsx:814-878` envio único, retry e resultado | INV-109/111 | Sim |
+
+**Adequacy verdict**: PASS. Os 35 cenários verificam payload financeiro, efeitos visíveis e bloqueios; os seis tipos obrigatórios foram cobertos individualmente. INV-138 é responsabilidade da reclassificação de conta (T75/T92), e despesas/categorias de operações posteriores pertencem à T79. O padrão de teste React da matriz foi seguido. Nenhum teste foi removido, pulado ou enfraquecido.
+
 
 ### T79: Formulário de compra/aplicação
 
