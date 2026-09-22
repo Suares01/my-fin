@@ -52,6 +52,7 @@ export interface InvestmentPositionView {
   readonly bookCostMinor: string
   readonly currency: string
   readonly status: "OPEN" | "CLOSED"
+  readonly version: number
   readonly allocationRevision: number
   readonly valuation: PositionValuationView
 }

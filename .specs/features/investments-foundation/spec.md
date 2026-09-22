@@ -621,7 +621,7 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-97 | S8 | Tasks | Planned | T14, T62, T65, T72, T88, T92 |
 | INV-98 | S8 | Tasks | Planned | T14, T65, T66, T67, T70, T72, T88, T89, T90, T94 |
 | INV-99 | S8 | Tasks | Planned | T64, T74, T76, T78, T92, T93 |
-| INV-100 | S8 | Tasks | Planned | T61, T78, T79, T80, T81, T82, T83, T84, T85, T96 |
+| INV-100 | S8 | Tasks | In progress: T78 form and T97 CAS view complete; operation forms pending | T61, T78, T97, T79, T80, T81, T82, T83, T84, T85, T96 |
 | INV-101 | S8 | Tasks | Planned | T71, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T91, T92, T93 |
 | INV-102 | S8 | Tasks | Planned | T59, T70, T94 |
 | INV-103 | S8 | Tasks | Planned | T37, T69, T70, T94 |
@@ -671,7 +671,7 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-147 | S5 | Tasks | Planned | T49, T60, T62, T86, T87, T92 |
 | INV-148 | S8 | Tasks | Planned | T61, T73, T78, T79, T80, T81, T82, T83, T85, T92, T96 |
 
-**Coverage:** 148 requisitos mapeados para seções e evidência em [design.md](./design.md) e para as 96 tarefas de [tasks.md](./tasks.md). Design aprovado; Execute em andamento; T1–T78 e T95–T96 concluídas. IDs anteriores preservados. INV-28/32/70/77/121 revisados pela decisão explícita A11; INV-120–148 detalham os refinamentos desta discussão.
+**Coverage:** 148 requisitos mapeados para seções e evidência em [design.md](./design.md) e para as 97 tarefas de [tasks.md](./tasks.md). Design aprovado; Execute em andamento; T1–T78 e T95–T97 concluídas. IDs anteriores preservados. INV-28/32/70/77/121 revisados pela decisão explícita A11; INV-120–148 detalham os refinamentos desta discussão.
 
 ## Success Criteria
 

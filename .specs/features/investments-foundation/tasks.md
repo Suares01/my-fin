@@ -6,8 +6,8 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 
 **Design:** [design.md](./design.md), aprovado pelo usuário com “Aprovo design, siga para tasks.md”.
 **Spec:** [spec.md](./spec.md), 148 requisitos aprovados.
-**Status:** Execute em andamento: T1–T78 e T95–T96 concluídas em commits atômicos; próxima tarefa T79.
-**Total:** 96 tarefas em 16 fases sequenciais. T1–T78 e T95–T96 concluídas; T79 depende do formulário de abertura.
+**Status:** Execute em andamento: T1–T78 e T95–T97 concluídas em commits atômicos; próxima tarefa T79.
+**Total:** 97 tarefas em 16 fases sequenciais. T1–T78 e T95–T97 concluídas; T79 usa a versão CAS da consulta.
 
 Cada tarefa entrega um componente ou um caso de uso. `Where` indica seu ponto principal; testes, exports, mapper privado e ajustes mecânicos de consumidores do mesmo contrato pertencem ao mesmo commit. Isso não autoriza implementar outro componente antecipadamente. Wrapper fino de um mesmo comando discriminado pode compartilhar tarefa; comportamento econômico distinto tem tarefa própria.
 
@@ -166,7 +166,7 @@ T72 -> T73 -> T74 -> T75 -> T76 -> T77
 ### Phase 14: Formulários de abertura e operações
 
 ```text
-T95 -> T96 -> T78 -> T79 -> T80 -> T81 -> T82 -> T83
+T95 -> T96 -> T78 -> T97 -> T79 -> T80 -> T81 -> T82 -> T83
 ```
 
 ### Phase 15: Avaliação, correção e listas
@@ -198,7 +198,7 @@ T55 -> T56
 T61 -> T62
 T67 -> T68
 T71 -> T72
-T77 -> T95 -> T96 -> T78
+T77 -> T95 -> T96 -> T78 -> T97
 T83 -> T84
 T88 -> T89
 ```
@@ -2953,11 +2953,47 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 **Adequacy verdict**: PASS. Os 35 cenários verificam payload financeiro, efeitos visíveis e bloqueios; os seis tipos obrigatórios foram cobertos individualmente. INV-138 é responsabilidade da reclassificação de conta (T75/T92), e despesas/categorias de operações posteriores pertencem à T79. O padrão de teste React da matriz foi seguido. Nenhum teste foi removido, pulado ou enfraquecido.
 
 
+### T97: Versão CAS na consulta de posições
+
+**What**: Expor a versão persistida da posição no read model usado por prévia e comandos de operações; não inferi-la da revisão de alocação nem do histórico.
+**Where**: `packages/infrastructure-sqlite/src/queries/investments/sqlite-investment-position-queries.ts`
+**Depends on**: T78
+**Reuses**: Query paginada T65, coluna `investment_positions.version` e contrato `InvestmentPositionView`.
+**Requirement**: INV-100 e regra de concorrência de operações da spec.
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [x] `InvestmentPositionView.version` obrigatório reflete o CAS persistido, inclusive após operação, sem confundí-lo com `allocationRevision`.
+- [x] Testes SQLite e de contrato cobrem versão inicial e versão avançada distinta da revisão; adequação e rastreabilidade registradas.
+- [x] Gate `Full SQLite + Build` passa antes do commit.
+
+**Tests**: integration (SQLite) e contrato (Application).
+**Gate**: Full SQLite + Build
+**Commit**: `feat(investments-sqlite): versão cas na consulta de posições`
+
+**Execution evidence**: antes da T97, Application 257 testes e SQLite 944 testes; depois, Application 258/258 e SQLite 946/946. O primeiro gate foi interrompido por 13 erros preexistentes de lint SQLite. A manutenção autorizada foi isolada no commit `874dbd1`; o gate Full SQLite + Build então passou: Domain/Application/SQLite/Tauri-infrastructure builds, Application e SQLite Vitest, lint e typechecks de Application/SQLite, `check:migrations`, Tauri `tsc --noEmit` e `git diff --check`. UAT nativo permanece pendente.
+
+| Critério / requisito | Assertion `file:line` | Resultado definido pela spec | Coberto |
+| --- | --- | --- | --- |
+| Versão inicial de abertura | `sqlite-investment-position-queries.test.ts:65` `expect((await list()).items[0]?.version).toBe(0)` | A posição recém-aberta disponibiliza CAS 0 | Sim |
+| Versão persistida independente da revisão | `sqlite-investment-position-queries.test.ts:70-73` `expect((await list()).items[0]).toMatchObject({ version: 7, allocationRevision: 3 })`; `investment-queries.test.ts:79` `expect(position).toMatchObject({ version: 7, allocationRevision: 2 })` | A UI recebe o CAS real, não a revisão de avaliação | Sim |
+| Avanço de CAS por operação (contrato existente) | `record-investment-purchase.test.ts:89-97` `expect(await useCase(h).execute(internal)).toMatchObject({ ok: true, value: { positionVersion: 1, allocationRevision: 2, operationId: "operation-2" } })` | Compra confirmada avança versão sem inferi-la da revisão | Sim |
+
+| Assertion | Mapeia para | Manter |
+| --- | --- | --- |
+| `sqlite-investment-position-queries.test.ts:65` `expect((await list()).items[0]?.version).toBe(0)` | T97 versão inicial | Sim |
+| `sqlite-investment-position-queries.test.ts:70-73` `expect((await list()).items[0]).toMatchObject({ version: 7, allocationRevision: 3 })` | T97 versão avançada distinta da revisão | Sim |
+| `investment-queries.test.ts:79` `expect(position).toMatchObject({ version: 7, allocationRevision: 2 })` | T97 contrato público obrigatório | Sim |
+
+**Adequacy verdict**: PASS. Os três cenários novos verificam valor público, estado persistido e distinção entre CAS e revisão; não apenas chamada de mock. Os testes existentes de comando confirmam avanço por operação. Nenhuma assertion foi removida ou enfraquecida; seguem as convenções da matriz SQLite/Application.
+
+
 ### T79: Formulário de compra/aplicação
 
 **What**: Entregar formulário de compra/aplicação conforme os requisitos abaixo.
 **Where**: `apps/tauri/src/features/investments/forms/investment-purchase-form.tsx`
-**Depends on**: T78
+**Depends on**: T97
 **Reuses**: Preview e submissão de investimentos.
 **Requirement**: INV-13, INV-29, INV-30, INV-32, INV-36, INV-100, INV-101, INV-109, INV-110, INV-111, INV-118, INV-125, INV-126, INV-145, INV-148
 **Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven. Usar shadcn ao compor componentes da biblioteca; playwright quando aplicável à evidência em navegador.
@@ -3348,6 +3384,7 @@ Um componente/caso de uso por tarefa, com testes e integrações mecânicas do m
 | T95  | Abertura por compra/aplicação atômica    | ✅ Um componente/contrato coeso |
 | T78  | Formulário de abertura                   | ✅ Um componente/contrato coeso |
 | T79  | Formulário de compra/aplicação           | ✅ Um componente/contrato coeso |
+| T97  | Versão CAS na consulta de posições      | ✅ Um componente/contrato coeso |
 | T80  | Formulário de venda/resgate              | ✅ Um componente/contrato coeso |
 | T81  | Formulário de rendimento                 | ✅ Um componente/contrato coeso |
 | T82  | Formulário de amortização                | ✅ Um componente/contrato coeso |
@@ -3448,7 +3485,8 @@ Um componente/caso de uso por tarefa, com testes e integrações mecânicas do m
 | T77  | T76                    | T76           | ✅ Match |
 | T95  | T77                    | T77           | ✅ Match |
 | T78  | T96                    | T96           | ✅ Match |
-| T79  | T78                    | T78           | ✅ Match |
+| T97  | T78                    | T78           | ✅ Match |
+| T79  | T97                    | T97           | ✅ Match |
 | T80  | T79                    | T79           | ✅ Match |
 | T81  | T80                    | T80           | ✅ Match |
 | T82  | T81                    | T81           | ✅ Match |
@@ -3548,6 +3586,7 @@ Um componente/caso de uso por tarefa, com testes e integrações mecânicas do m
 | T76  | React                       | integration     | integration | ✅ Mesmo commit |
 | T77  | React                       | integration     | integration | ✅ Mesmo commit |
 | T95  | Command/React               | integration     | integration | ✅ Mesmo commit |
+| T97  | SQLite/Application         | integration     | integration | ✅ Mesmo commit |
 | T78  | React                       | integration     | integration | ✅ Mesmo commit |
 | T79  | React                       | integration     | integration | ✅ Mesmo commit |
 | T80  | React                       | integration     | integration | ✅ Mesmo commit |

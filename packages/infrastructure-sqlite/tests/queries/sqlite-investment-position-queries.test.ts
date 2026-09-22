@@ -61,6 +61,17 @@ describe("SqliteInvestmentPositionQueries", () => {
     expect((await list()).items[0]?.quantity).toBe("1"))
   it("includes currency", async () =>
     expect((await list()).items[0]?.currency).toBe("BRL"))
+  it("returns the initial CAS version", async () =>
+    expect((await list()).items[0]?.version).toBe(0))
+  it("returns persisted CAS version independently of allocation revision", async () => {
+    await db.execute(
+      "UPDATE investment_positions SET version=7,allocation_revision=3 WHERE id='p1'"
+    )
+    expect((await list()).items[0]).toMatchObject({
+      version: 7,
+      allocationRevision: 3,
+    })
+  })
   it("includes labels when present", async () =>
     expect((await list()).items[0]?.label).toBe("label"))
   it("returns empty page", async () =>

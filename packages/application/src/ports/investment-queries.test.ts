@@ -23,6 +23,7 @@ describe("investment query contracts", () => {
     currency: "BRL",
     status: "OPEN",
     allocationRevision: 2,
+    version: 7,
     valuation,
   }
   it("keeps all portfolio monetary values as exact strings", () => {
@@ -74,6 +75,8 @@ describe("investment query contracts", () => {
     }))
   it("keeps optional quantity unknown", () =>
     expect(position.quantity).toBeUndefined())
+  it("keeps the CAS version distinct from allocation revision", () =>
+    expect(position).toMatchObject({ version: 7, allocationRevision: 2 }))
   it("scopes positions to a book", () => {
     const query: ListInvestmentPositionsQuery = { bookId: "book-1", limit: 25 }
     expect(query).toEqual({ bookId: "book-1", limit: 25 })

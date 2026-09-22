@@ -22,6 +22,7 @@ type Row = {
   book_cost_minor: string
   currency: string
   status: "OPEN" | "CLOSED"
+  version: number
   allocation_revision: number
   valuation_id: string | null
   valued_at: string | null
@@ -78,7 +79,7 @@ export class SqliteInvestmentPositionQueries implements Pick<
       }
       params.push(String(query.limit + 1))
       const rows = await reader.query<Row>(
-        `SELECT p.id,p.investment_account_id,p.instrument_id,i.name instrument_name,i.normalized_name,i.type,p.label,p.normalized_label,CAST(p.quantity AS TEXT) quantity,CAST(p.book_cost_minor AS TEXT) book_cost_minor,p.currency,p.status,p.allocation_revision,v.id valuation_id,v.valued_at,CAST(v.gross_value_minor AS TEXT) gross_value_minor FROM investment_positions p JOIN investment_instruments i ON i.id=p.instrument_id AND i.book_id=p.book_id LEFT JOIN investment_valuations v ON v.id=(SELECT x.id FROM investment_valuations x WHERE x.book_id=p.book_id AND x.position_id=p.id AND x.allocation_revision=p.allocation_revision ORDER BY x.valued_at DESC,x.recorded_at DESC,x.record_sequence DESC,x.id DESC LIMIT 1) WHERE ${where} ORDER BY i.normalized_name,p.normalized_label,p.id LIMIT ?`,
+        `SELECT p.id,p.investment_account_id,p.instrument_id,i.name instrument_name,i.normalized_name,i.type,p.label,p.normalized_label,CAST(p.quantity AS TEXT) quantity,CAST(p.book_cost_minor AS TEXT) book_cost_minor,p.currency,p.status,p.version,p.allocation_revision,v.id valuation_id,v.valued_at,CAST(v.gross_value_minor AS TEXT) gross_value_minor FROM investment_positions p JOIN investment_instruments i ON i.id=p.instrument_id AND i.book_id=p.book_id LEFT JOIN investment_valuations v ON v.id=(SELECT x.id FROM investment_valuations x WHERE x.book_id=p.book_id AND x.position_id=p.id AND x.allocation_revision=p.allocation_revision ORDER BY x.valued_at DESC,x.recorded_at DESC,x.record_sequence DESC,x.id DESC LIMIT 1) WHERE ${where} ORDER BY i.normalized_name,p.normalized_label,p.id LIMIT ?`,
         params
       )
       const items: InvestmentPositionView[] = rows
@@ -95,6 +96,7 @@ export class SqliteInvestmentPositionQueries implements Pick<
           currency: row.currency,
           status: row.status,
           allocationRevision: row.allocation_revision,
+          version: row.version,
           valuation:
             row.status === "CLOSED"
               ? { basis: "CLOSED", currentValueMinor: "0" }
