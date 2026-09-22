@@ -36,6 +36,7 @@ function item(
     sequence: "1",
     description: "Receita",
     origin: "MANUAL",
+    canEditWithGenericFlow: true,
     amountMinor: "100",
     currency: "BRL",
     financialAccounts: [],

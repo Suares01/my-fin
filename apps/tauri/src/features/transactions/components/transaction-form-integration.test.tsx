@@ -180,6 +180,7 @@ describe.each(cases)("$type form integration", ({ type, kind, label }) => {
       sequence: "1",
       description: "Antes",
       origin: "MANUAL",
+      canEditWithGenericFlow: true,
       amountMinor: "1000",
       currency: "BRL",
       financialAccounts: [{ id: "a1", name: "Carteira", kind: "ASSET" }],

@@ -143,6 +143,7 @@ export type {
   InvestmentRequestReceipt,
   InvestmentWarning,
   OpenInvestmentPositionCommand,
+  OpenInvestmentPositionWithPurchaseCommand,
   PurchaseOrApplicationDraft,
   PreviewInvestmentOperationCommand,
   InvestmentOperationPreview,

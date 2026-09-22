@@ -39,6 +39,7 @@ import {
   ListInvestmentPositions,
   ListInvestmentValuations,
   OpenInvestmentPosition,
+  OpenInvestmentPositionWithPurchase,
   PreviewInvestmentOperation,
   RecordInvestmentAmortization,
   RecordInvestmentExpense,
@@ -139,6 +140,9 @@ describe("createMyFinServices", () => {
     )
     expect(services.investments.positions.open).toBeInstanceOf(
       OpenInvestmentPosition
+    )
+    expect(services.investments.positions.openWithPurchase).toBeInstanceOf(
+      OpenInvestmentPositionWithPurchase
     )
     expect(services.investments.positions.updateMetadata).toBeInstanceOf(
       UpdateInvestmentPositionMetadata

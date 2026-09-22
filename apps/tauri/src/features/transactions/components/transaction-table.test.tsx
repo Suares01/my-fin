@@ -19,6 +19,7 @@ function transaction(
     sequence: "1",
     description: "Mercado",
     origin: "MANUAL",
+    canEditWithGenericFlow: true,
     amountMinor: "1000",
     currency: "BRL",
     financialAccounts: [],

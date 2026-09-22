@@ -20,6 +20,7 @@ function chain(
     sequence: "1",
     description: "Salário",
     origin: "MANUAL",
+    canEditWithGenericFlow: true,
     amountMinor: "10000",
     currency: "BRL",
     financialAccounts: [],

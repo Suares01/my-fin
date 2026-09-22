@@ -26,6 +26,7 @@ function detail(
     sequence: "1",
     description: "Salário",
     origin: "MANUAL",
+    canEditWithGenericFlow: true,
     amountMinor: "100",
     currency: "BRL",
     financialAccounts: [{ id: "account-1", name: "Carteira", kind: "ASSET" }],

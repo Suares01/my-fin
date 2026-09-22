@@ -6,8 +6,8 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 
 **Design:** [design.md](./design.md), aprovado pelo usuário com “Aprovo design, siga para tasks.md”.
 **Spec:** [spec.md](./spec.md), 148 requisitos aprovados.
-**Status:** Draft, para revisão das tarefas. A autorização atual cobre a criação deste plano; Execute não começou.
-**Total:** 94 tarefas em 16 fases sequenciais. Todas pendentes.
+**Status:** Execute em andamento: T1–T77 e T95 concluídas em commits atômicos; próxima tarefa T78.
+**Total:** 95 tarefas em 16 fases sequenciais. T1–T77 e T95 concluídas; T78 depende da abertura atômica.
 
 Cada tarefa entrega um componente ou um caso de uso. `Where` indica seu ponto principal; testes, exports, mapper privado e ajustes mecânicos de consumidores do mesmo contrato pertencem ao mesmo commit. Isso não autoriza implementar outro componente antecipadamente. Wrapper fino de um mesmo comando discriminado pode compartilhar tarefa; comportamento econômico distinto tem tarefa própria.
 
@@ -166,7 +166,7 @@ T72 -> T73 -> T74 -> T75 -> T76 -> T77
 ### Phase 14: Formulários de abertura e operações
 
 ```text
-T78 -> T79 -> T80 -> T81 -> T82 -> T83
+T95 -> T78 -> T79 -> T80 -> T81 -> T82 -> T83
 ```
 
 ### Phase 15: Avaliação, correção e listas
@@ -198,7 +198,7 @@ T55 -> T56
 T61 -> T62
 T67 -> T68
 T71 -> T72
-T77 -> T78
+T77 -> T95 -> T78
 T83 -> T84
 T88 -> T89
 ```
@@ -2811,12 +2811,71 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 ### Phase 14: Formulários de abertura e operações
 
+### T95: Abertura por compra/aplicação atômica
+
+**What**: Entregar abertura por compra/aplicação atômica conforme os requisitos abaixo.
+**Where**: `packages/application/src/investments/positions/open-investment-position-with-purchase.ts`
+**Depends on**: T77
+**Reuses**: contratos e executor idempotente T48, abertura T50, compra/aplicação T51, planner contábil T11 e composição T71.
+**Requirement**: INV-27, INV-30, INV-32, INV-33, INV-34, INV-75, INV-78
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [x] Expor um comando e caso de uso que, para PURCHASE/APPLICATION inicial, confirme posição, operação e journal da própria operação em uma única transação idempotente; não criar OPENING_ALLOCATION, posição intermediária, saldo inicial ou transferência implícita.
+- [x] Reutilizar validações de moeda, conta, instrumento, rota explícita, quantidade, despesas/categorias e planner; retry equivalente devolve o recibo sem outro efeito e qualquer falha preserva zero posição/operação/journal/recibo parcial.
+- [x] Compor o caso de uso em MyFinServices para consumo posterior de T78, sem implementar formulário nesta tarefa.
+- [x] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full Memory + Full React + Build` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+
+**Tests**: integration (Memory e React para a composição); testes acompanham o caso de uso e o facade nesta tarefa.
+**Gate**: Full Memory + Full React + Build
+**Commit**: `feat(investments): abertura por compra atômica`
+**T95 gate and adequacy evidence (2026-09-22)**
+
+- Scenario count: opening 18→18; purchase 16→16; facade 23→23 with one added assertion; atomic opening 0→16. Seven existing Transações fixtures gained the required `canEditWithGenericFlow: true` field; no assertion was changed.
+- Gate: Application 257/257, Full Memory 620/620, Full React 719/719; lint, type checks, dependency builds, app production build and `git diff --check` passed.
+- Check B: assertions inspect persisted positions, operations, postings, journal and receipt state; the injected late write failure proves rollback. Check D: Memory integration and React facade test locations follow the Test Coverage Matrix. No SPEC_DEVIATION.
+
+| AC / criterion | Assertion evidence | Expected outcome |
+| --- | --- | --- |
+| INV-27/33, atomic initial PURCHASE without allocation | `open-investment-position-with-purchase.test.ts:90` `expect(h.store.listInvestmentOperations()).toMatchObject([{ type: "PURCHASE", positionBefore: { kind: "UNOPENED" }, ... }])`; `:98` `expect(h.store.listJournalEntries()).toEqual([])` | One persisted position and purchase, no OPENING_ALLOCATION or implicit journal |
+| INV-30, external APPLICATION with expenses | `open-investment-position-with-purchase.test.ts:129` `expect(h.store.listJournalEntries()[0]?.postings).toEqual(expect.arrayContaining([...]))` | One journal with bank -1015, investment +1000, fee +10, tax +5 |
+| INV-32, negative cash | `open-investment-position-with-purchase.test.ts:161` `expect(await useCase(h).execute(command)).toMatchObject({ ok: true, value: { warnings: [...] } })` | Success with INVESTMENT_CASH_NEGATIVE and cash -1000 |
+| INV-34, explicit route | `open-investment-position-with-purchase.test.ts:198` `expect(await useCase(h).execute(...)).toMatchObject({ error: { code: "INVALID_INVESTMENT_OPERATION" } })` | Missing route rejected without position or receipt |
+| INV-75, atomic rollback | `open-investment-position-with-purchase.test.ts:322` `expect(h.store.listInvestmentPositions()).toEqual([])`; `:324` `expect(h.store.listJournalEntries()).toEqual([])`; `:327` `toBeUndefined()` | No partial position, operation, journal or receipt after late failure |
+| INV-78, idempotent replay | `open-investment-position-with-purchase.test.ts:181` `expect(await useCase(h).execute(command)).toEqual(first)`; `:182-184` length assertions | Same result and IDs, one persisted effect |
+| Currency, amount, quantity, categories, account and instrument validation | `open-investment-position-with-purchase.test.ts:214` CURRENCY_MISMATCH; `:225` INVALID_INVESTMENT_OPERATION; `:242` INVALID_INVESTMENT_OPERATION; `:268` INVALID_INVESTMENT_CATEGORY; `:296` and `:307` ENTITY_NOT_FOUND | Invalid input rejected without economic writes |
+| MyFinServices composition | `apps/tauri/src/bootstrap/create-services.test.ts:144` `expect(services.investments.positions.openWithPurchase).toBeInstanceOf(OpenInvestmentPositionWithPurchase)` | Dedicated initial-purchase command available to T78 |
+
+| Test assertion (Check C) | Requirement / done-when |
+| --- | --- |
+| `open-investment-position-with-purchase.test.ts:76` `toMatchObject({ ok: true, value: ... })` | INV-33 atomic initial purchase |
+| `:112` `expect(result).toMatchObject({ ok: true, value: ... })` | INV-30 external application |
+| `:151` `expect(...postings).toEqual(expect.arrayContaining(...))` | INV-30 expenses in one operation |
+| `:161` `expect(...).toMatchObject({ ok: true, value: { warnings: [...] } })` | INV-32 |
+| `:181` `expect(...).toEqual(first)` | INV-78 replay |
+| `:190` `expect(...).toMatchObject({ error: { code: "IDEMPOTENCY_CONFLICT" } })` | INV-78 conflicting retry |
+| `:198` `expect(...).toMatchObject({ error: { code: "INVALID_INVESTMENT_OPERATION" } })` | INV-34 route |
+| `:212` `expect(...).toMatchObject({ error: { code: "CURRENCY_MISMATCH" } })` | T95 currency validation |
+| `:223` `expect(...).toMatchObject({ error: { code: "INVALID_INVESTMENT_OPERATION" } })` | T95 amount validation |
+| `:237` `expect(...).toMatchObject({ error: { code: "INVALID_INVESTMENT_OPERATION" } })` | T95 quantity validation |
+| `:251` `expect(...).toMatchObject({ ok: true, value: { positionVersion: 0 } })` | T95 amount mode |
+| `:266` `expect(...).toMatchObject({ error: { code: "INVALID_INVESTMENT_CATEGORY" } })` | T95 expense category |
+| `:277` `expect(...).toMatchObject({ error: { code: "INVALID_INVESTMENT_OPERATION" } })` | T95 explicit external account |
+| `:291` `expect(...).toMatchObject({ error: { code: "ENTITY_NOT_FOUND" } })` | T95 account validation |
+| `:302` `expect(...).toMatchObject({ error: { code: "ENTITY_NOT_FOUND" } })` | T95 instrument validation |
+| `:321` `expect(...).toMatchObject({ ok: false })`, `:322-327` zero-state assertions | INV-75 |
+
+**Adequacy verdict:** PASS. All T95 outcomes are asserted on public results or persisted state, with no speculative tests.
+
+
 ### T78: Formulário de abertura
 
 **What**: Entregar formulário de abertura conforme os requisitos abaixo.
 **Where**: `apps/tauri/src/features/investments/forms/open-investment-position-form.tsx`
-**Depends on**: T77
-**Reuses**: Catálogos existentes, forms T74/T76 e preview T61.
+**Depends on**: T95
+**Reuses**: Catálogos existentes, forms T74/T76, preview T61 e abertura atômica T95.
 **Requirement**: INV-19, INV-21, INV-22, INV-23, INV-27, INV-28, INV-33, INV-99, INV-100, INV-101, INV-109, INV-110, INV-111, INV-120, INV-121, INV-122, INV-123, INV-124, INV-137, INV-138, INV-145, INV-148
 **Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven. Usar shadcn ao compor componentes da biblioteca; playwright quando aplicável à evidência em navegador.
 
@@ -3221,6 +3280,7 @@ Um componente/caso de uso por tarefa, com testes e integrações mecânicas do m
 | T75  | Resumo contábil em Contas                | ✅ Um componente/contrato coeso |
 | T76  | Formulário de instrumento                | ✅ Um componente/contrato coeso |
 | T77  | Formulário de metadata da posição        | ✅ Um componente/contrato coeso |
+| T95  | Abertura por compra/aplicação atômica    | ✅ Um componente/contrato coeso |
 | T78  | Formulário de abertura                   | ✅ Um componente/contrato coeso |
 | T79  | Formulário de compra/aplicação           | ✅ Um componente/contrato coeso |
 | T80  | Formulário de venda/resgate              | ✅ Um componente/contrato coeso |
@@ -3320,7 +3380,8 @@ Um componente/caso de uso por tarefa, com testes e integrações mecânicas do m
 | T75  | T74                    | T74           | ✅ Match |
 | T76  | T75                    | T75           | ✅ Match |
 | T77  | T76                    | T76           | ✅ Match |
-| T78  | T77                    | T77           | ✅ Match |
+| T95  | T77                    | T77           | ✅ Match |
+| T78  | T95                    | T95           | ✅ Match |
 | T79  | T78                    | T78           | ✅ Match |
 | T80  | T79                    | T79           | ✅ Match |
 | T81  | T80                    | T80           | ✅ Match |
@@ -3419,6 +3480,7 @@ Um componente/caso de uso por tarefa, com testes e integrações mecânicas do m
 | T75  | React                       | integration     | integration | ✅ Mesmo commit |
 | T76  | React                       | integration     | integration | ✅ Mesmo commit |
 | T77  | React                       | integration     | integration | ✅ Mesmo commit |
+| T95  | Command/React               | integration     | integration | ✅ Mesmo commit |
 | T78  | React                       | integration     | integration | ✅ Mesmo commit |
 | T79  | React                       | integration     | integration | ✅ Mesmo commit |
 | T80  | React                       | integration     | integration | ✅ Mesmo commit |
@@ -3470,14 +3532,14 @@ Mapeamento de planejamento, não evidência de implementação. Cada ID também 
 | INV-24         | T2, T7                                                                                                                                                                                                                               | Planned |
 | INV-25         | T7, T8, T65, T88, T91                                                                                                                                                                                                                | Planned |
 | INV-26         | T6, T7, T8, T24, T25, T31, T45, T47, T64, T65, T76, T77, T88, T91                                                                                                                                                                    | Planned |
-| INV-27         | T11, T50, T78                                                                                                                                                                                                                        | Planned |
+| INV-27 | T11, T50, T78, T95 | Planned |
 | INV-28         | T38, T39, T50, T60, T78                                                                                                                                                                                                              | Planned |
 | INV-29         | T11, T50, T51, T79                                                                                                                                                                                                                   | Planned |
-| INV-30         | T11, T50, T51, T79                                                                                                                                                                                                                   | Planned |
+| INV-30 | T11, T50, T51, T79, T95 | Planned |
 | INV-31         | T60, T68, T70, T94                                                                                                                                                                                                                   | Planned |
-| INV-32         | T38, T39, T50, T51, T55, T60, T79, T83                                                                                                                                                                                               | Planned |
-| INV-33         | T50, T78                                                                                                                                                                                                                             | Planned |
-| INV-34         | T9, T50, T51                                                                                                                                                                                                                         | Planned |
+| INV-32 | T38, T39, T50, T51, T55, T60, T79, T83, T95 | Planned |
+| INV-33         | T50, T95, T78                                                                                                                                                                                                                        | Planned |
+| INV-34 | T9, T50, T51, T95 | Planned |
 | INV-120        | T49, T50, T78                                                                                                                                                                                                                        | Planned |
 | INV-121        | T49, T50, T78                                                                                                                                                                                                                        | Planned |
 | INV-122        | T49, T78                                                                                                                                                                                                                             | Planned |
@@ -3542,10 +3604,10 @@ Mapeamento de planejamento, não evidência de implementação. Cada ID também 
 | INV-135        | T26, T57, T59, T66, T70, T85, T89, T94                                                                                                                                                                                               | Planned |
 | INV-136        | T26, T57, T59, T66, T70, T85, T89, T94                                                                                                                                                                                               | Planned |
 | INV-74         | T12, T13, T18, T19, T20, T21, T23, T24, T25, T26, T27, T28, T31, T32, T33, T34, T35, T40, T41, T42, T43, T44, T45, T46, T47, T48, T51, T52, T53, T54, T55, T56, T57, T58, T59, T61, T63, T64, T65, T66, T67, T71, T72, T73, T91, T93 | Planned |
-| INV-75         | T13, T16, T22, T28, T29, T30, T35, T36, T40, T48, T50, T51, T52, T53, T54, T55, T56, T57, T58, T60                                                                                                                                   | Planned |
+| INV-75 | T13, T16, T22, T28, T29, T30, T35, T36, T40, T48, T50, T51, T52, T53, T54, T55, T56, T57, T58, T60, T95 | Planned |
 | INV-76         | T4, T12, T13, T23, T24, T25, T26, T31, T32, T33, T40, T42, T45, T46, T47, T48, T51, T52, T53, T54, T55, T56, T57, T61, T73                                                                                                           | Planned |
 | INV-77         | T38, T39, T40, T48, T51, T60                                                                                                                                                                                                         | Planned |
-| INV-78         | T5, T12, T13, T16, T22, T28, T35, T40, T48, T49, T50, T51, T52, T53, T54, T55, T56, T57, T58, T71, T73                                                                                                                               | Planned |
+| INV-78 | T5, T12, T13, T16, T22, T28, T35, T40, T48, T49, T50, T51, T52, T53, T54, T55, T56, T57, T58, T71, T73, T95 | Planned |
 | INV-79         | T12, T22, T28, T35, T48, T73                                                                                                                                                                                                         | Planned |
 | INV-80         | T16, T22, T28, T35, T40, T48, T71, T73                                                                                                                                                                                               | Planned |
 | INV-81         | T9, T15, T16, T40, T44, T45, T46, T48                                                                                                                                                                                                | Planned |

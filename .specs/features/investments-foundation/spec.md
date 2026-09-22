@@ -548,14 +548,14 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-24 | S2 | Tasks | In progress: T2 values; T7 fixed-income terms | T2, T7 |
 | INV-25 | S2 | Tasks | In progress: T7 fixed-income terms; T8 position | T7, T8, T65, T88, T91 |
 | INV-26 | S2 | Tasks | In progress: T6 instrument; T7 fixed-income terms; T8 position | T6, T7, T8, T24, T25, T31, T45, T47, T64, T65, T76, T77, T88, T91 |
-| INV-27 | S3 | Tasks | Planned | T11, T50, T78 |
+| INV-27 | S3 | Tasks | Planned | T11, T50, T78, T95 |
 | INV-28 | S3 | Tasks | Planned | T38, T39, T50, T60, T78 |
 | INV-29 | S3 | Tasks | Planned | T11, T50, T51, T79 |
-| INV-30 | S3 | Tasks | Planned | T11, T50, T51, T79 |
+| INV-30 | S3 | Tasks | Planned | T11, T50, T51, T79, T95 |
 | INV-31 | S3 | Tasks | Planned | T60, T68, T70, T94 |
-| INV-32 | S3 | Tasks | Planned | T38, T39, T50, T51, T55, T60, T79, T83 |
-| INV-33 | S3 | Tasks | Planned | T50, T78 |
-| INV-34 | S3 | Tasks | In progress: T9 operation | T9, T50, T51 |
+| INV-32 | S3 | Tasks | Planned | T38, T39, T50, T51, T55, T60, T79, T83, T95 |
+| INV-33 | S3 | Tasks | In progress: T95 atomic command; T78 UI pending | T50, T95, T78 |
+| INV-34 | S3 | Tasks | In progress: T9 operation | T9, T50, T51, T95 |
 | INV-35 | S4 | Tasks | In progress: T8 position | T8, T11, T51, T52, T54, T80 |
 | INV-36 | S4 | Tasks | In progress: T2 values | T2, T11, T12, T51, T52, T61, T79, T80 |
 | INV-37 | S4 | Tasks | Planned | T11, T52, T69, T80 |
@@ -596,10 +596,10 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-72 | S6 | Tasks | In progress: T9 operation | T9, T20, T26, T29, T33, T36, T56, T57, T66, T85, T89 |
 | INV-73 | S6 | Tasks | In progress: T9 operation | T9, T56, T57, T85, T89 |
 | INV-74 | S7 | Tasks | Planned | T12, T13, T18, T19, T20, T21, T23, T24, T25, T26, T27, T28, T31, T32, T33, T34, T35, T40, T41, T42, T43, T44, T45, T46, T47, T48, T51, T52, T53, T54, T55, T56, T57, T58, T59, T61, T63, T64, T65, T66, T67, T71, T72, T73, T91, T93 |
-| INV-75 | S7 | Tasks | Planned | T13, T16, T22, T28, T29, T30, T35, T36, T40, T48, T50, T51, T52, T53, T54, T55, T56, T57, T58, T60 |
+| INV-75 | S7 | Tasks | Planned | T13, T16, T22, T28, T29, T30, T35, T36, T40, T48, T50, T51, T52, T53, T54, T55, T56, T57, T58, T60, T95 |
 | INV-76 | S7 | Tasks | In progress: T4 aggregate | T4, T12, T13, T23, T24, T25, T26, T31, T32, T33, T40, T42, T45, T46, T47, T48, T51, T52, T53, T54, T55, T56, T57, T61, T73 |
 | INV-77 | S7 | Tasks | Planned | T38, T39, T40, T48, T51, T60 |
-| INV-78 | S7 | Tasks | In progress: T5 identities | T5, T12, T13, T16, T22, T28, T35, T40, T48, T49, T50, T51, T52, T53, T54, T55, T56, T57, T58, T71, T73 |
+| INV-78 | S7 | Tasks | In progress: T5 identities | T5, T12, T13, T16, T22, T28, T35, T40, T48, T49, T50, T51, T52, T53, T54, T55, T56, T57, T58, T71, T73, T95 |
 | INV-79 | S7 | Tasks | Planned | T12, T22, T28, T35, T48, T73 |
 | INV-80 | S7 | Tasks | Planned | T16, T22, T28, T35, T40, T48, T71, T73 |
 | INV-81 | S7 | Tasks | In progress: T9 operation | T9, T15, T16, T40, T44, T45, T46, T48 |

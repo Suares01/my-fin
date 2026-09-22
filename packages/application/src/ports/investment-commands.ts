@@ -69,6 +69,19 @@ export interface PurchaseOrApplicationDraft extends InvestmentOperationBase {
   readonly taxCategoryId?: string
 }
 
+export type OpenInvestmentPositionWithPurchaseCommand = Omit<
+  PurchaseOrApplicationDraft,
+  "positionId" | "expectedPositionVersion"
+> &
+  Pick<
+    OpenInvestmentPositionCommand,
+    | "investmentAccountId"
+    | "instrumentId"
+    | "label"
+    | "quantityMode"
+    | "fixedIncomeTerms"
+  >
+
 export interface SaleOrRedemptionDraft extends InvestmentOperationBase {
   readonly type: "SALE" | "REDEMPTION"
   readonly quantityDelta?: string

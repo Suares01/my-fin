@@ -44,6 +44,7 @@ function overlayStateFor(
     case "TRANSFER":
       return { kind: "transfer", detail }
     case "OPENING_BALANCE":
+    case "INVESTMENT":
       return { kind: "closed" }
   }
 }

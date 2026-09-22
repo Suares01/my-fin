@@ -8,6 +8,7 @@ export { UpdateInvestmentInstrument } from "./investments/instruments/update-inv
 export { SetInvestmentInstrumentStatus } from "./investments/instruments/set-investment-instrument-status.js"
 export { UpdateInvestmentPositionMetadata } from "./investments/positions/update-investment-position-metadata.js"
 export { OpenInvestmentPosition } from "./investments/positions/open-investment-position.js"
+export { OpenInvestmentPositionWithPurchase } from "./investments/positions/open-investment-position-with-purchase.js"
 export { RecordInvestmentPurchase } from "./investments/operations/record-investment-purchase.js"
 export { RecordInvestmentSale } from "./investments/operations/record-investment-sale.js"
 export { RecordInvestmentIncome } from "./investments/operations/record-investment-income.js"
