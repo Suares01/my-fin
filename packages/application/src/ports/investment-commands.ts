@@ -82,6 +82,29 @@ export type OpenInvestmentPositionWithPurchaseCommand = Omit<
     | "fixedIncomeTerms"
   >
 
+export type PreviewInvestmentPositionOpeningCommand =
+  | (Omit<OpenInvestmentPositionCommand, "requestId"> & {
+      readonly kind: "ALLOCATION"
+      /** Explicit proposed ledger opening balance, never inferred from valuation. */
+      readonly proposedOpeningBalanceMinor?: string
+    })
+  | (Omit<OpenInvestmentPositionWithPurchaseCommand, "requestId"> & {
+      readonly kind: "PURCHASE"
+    })
+
+export interface InvestmentOpeningPreview {
+  readonly bookCostDeltaMinor: string
+  readonly netCashFlowMinor: string
+  readonly postings: readonly {
+    readonly accountId: string
+    readonly amountMinor: string
+  }[]
+  readonly categories: Readonly<Record<string, string>>
+  readonly projectedCashMinor: string
+  readonly openingBalanceMinor?: string
+  readonly warnings: readonly InvestmentWarning[]
+}
+
 export interface SaleOrRedemptionDraft extends InvestmentOperationBase {
   readonly type: "SALE" | "REDEMPTION"
   readonly quantityDelta?: string

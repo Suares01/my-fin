@@ -18,6 +18,7 @@ export { ReverseInvestmentOperation } from "./investments/operations/reverse-inv
 export { AmendInvestmentOperation } from "./investments/operations/amend-investment-operation.js"
 export { RecordInvestmentValuation } from "./investments/valuations/record-investment-valuation.js"
 export { PreviewInvestmentOperation } from "./investments/queries/preview-investment-operation.js"
+export { PreviewInvestmentPositionOpening } from "./investments/queries/preview-investment-position-opening.js"
 export { GetInvestmentPortfolioSummary } from "./investments/queries/get-investment-portfolio-summary.js"
 export { ListInvestmentAccounts } from "./investments/queries/list-investment-accounts.js"
 export { ListInvestmentInstruments } from "./investments/queries/list-investment-instruments.js"

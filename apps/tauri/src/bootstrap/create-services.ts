@@ -41,6 +41,7 @@ import {
   OpenInvestmentPosition,
   OpenInvestmentPositionWithPurchase,
   PreviewInvestmentOperation,
+  PreviewInvestmentPositionOpening,
   RecordInvestmentAmortization,
   RecordInvestmentExpense,
   RecordInvestmentIncome,
@@ -142,6 +143,7 @@ export interface MyFinServices {
       readonly list: ListInvestmentPositions
       readonly open: OpenInvestmentPosition
       readonly openWithPurchase: OpenInvestmentPositionWithPurchase
+      readonly previewOpening: PreviewInvestmentPositionOpening
       readonly updateMetadata: UpdateInvestmentPositionMetadata
     }
     readonly operations: {
@@ -383,6 +385,9 @@ export function createMyFinServices(
           eventDispatcher,
           options.ids,
           options.clock
+        ),
+        previewOpening: new PreviewInvestmentPositionOpening(
+          transactionManager
         ),
         updateMetadata: new UpdateInvestmentPositionMetadata(
           transactionManager,

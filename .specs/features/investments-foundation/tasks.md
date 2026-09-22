@@ -6,8 +6,8 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 
 **Design:** [design.md](./design.md), aprovado pelo usuário com “Aprovo design, siga para tasks.md”.
 **Spec:** [spec.md](./spec.md), 148 requisitos aprovados.
-**Status:** Execute em andamento: T1–T77 e T95 concluídas em commits atômicos; próxima tarefa T78.
-**Total:** 95 tarefas em 16 fases sequenciais. T1–T77 e T95 concluídas; T78 depende da abertura atômica.
+**Status:** Execute em andamento: T1–T77 e T95–T96 concluídas em commits atômicos; próxima tarefa T78.
+**Total:** 96 tarefas em 16 fases sequenciais. T1–T77 e T95–T96 concluídas; T78 depende da prévia read-only.
 
 Cada tarefa entrega um componente ou um caso de uso. `Where` indica seu ponto principal; testes, exports, mapper privado e ajustes mecânicos de consumidores do mesmo contrato pertencem ao mesmo commit. Isso não autoriza implementar outro componente antecipadamente. Wrapper fino de um mesmo comando discriminado pode compartilhar tarefa; comportamento econômico distinto tem tarefa própria.
 
@@ -166,7 +166,7 @@ T72 -> T73 -> T74 -> T75 -> T76 -> T77
 ### Phase 14: Formulários de abertura e operações
 
 ```text
-T95 -> T78 -> T79 -> T80 -> T81 -> T82 -> T83
+T95 -> T96 -> T78 -> T79 -> T80 -> T81 -> T82 -> T83
 ```
 
 ### Phase 15: Avaliação, correção e listas
@@ -198,7 +198,7 @@ T55 -> T56
 T61 -> T62
 T67 -> T68
 T71 -> T72
-T77 -> T95 -> T78
+T77 -> T95 -> T96 -> T78
 T83 -> T84
 T88 -> T89
 ```
@@ -2870,12 +2870,52 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 **Adequacy verdict:** PASS. All T95 outcomes are asserted on public results or persisted state, with no speculative tests.
 
 
+### T96: Prévia read-only da abertura
+
+**What**: Pré-visualizar abertura/alocação e compra/aplicação iniciais antes de existir positionId, usando o planner e estado transacional atuais.
+**Where**: `packages/application/src/investments/queries/preview-investment-position-opening.ts`
+**Depends on**: T95
+**Reuses**: Planner puro T11, readers T60, contrato de prévia T61, comandos T50/T95.
+**Requirement**: INV-21, INV-22, INV-23, INV-27, INV-28, INV-30, INV-33, INV-100, INV-120, INV-122, INV-124, INV-145, INV-148
+**Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven.
+
+**Done when**:
+
+- [x] Comando read-only para alocação e compra inicial retorna custo, fluxo, postings/categorias, caixa projetado e warning; aceita saldo inicial explícito proposto sem inferir valor de mercado; não reserva ID/seq nem grava fatos/receipt.
+- [x] Mesmo livro, entidades, quantidade, termos, rota, categorias e saldo inicial ativo são validados antes da prévia; confirmação continua a revalidar.
+- [x] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos, incluindo fixtures normativos e ausência de efeitos; registrar contagens/adequação/rastreabilidade.
+- [x] Gate `Full Memory + Build` passa.
+
+**Tests**: integration (Command); testes acompanham a query nesta tarefa.
+**Gate**: Full Memory + Build
+**Commit**: `feat(investments): prévia read-only da abertura`
+
+**Execution evidence**: before T96, Memory 54 files/620 tests, Application 257 tests and React 719 tests; after T96, Memory 55 files/632 tests (12 new), Application 257 and React 719. Full Memory + Build passed: Domain/Application/Memory/SQLite/Tauri-infrastructure builds; Application, Memory and React test suites; Application/Memory/app lint and typechecks; Vite build; `git diff --check`. The three unfinished T78 files were temporarily isolated during this gate and restored after the T96 commit. Native UAT remains pending.
+
+| Done-when criterion / requirement | Assertion evidence | Spec-defined outcome | Covered |
+| --- | --- | --- | --- |
+| INV-27/30/33/100: allocation and first purchase use exact plan | `preview-investment-position-opening.test.ts:82-90` `expect(await preview(h).execute(allocation)).toMatchObject({ ok: true, value: { bookCostDeltaMinor: "1000", netCashFlowMinor: "0", postings: [], categories: {}, projectedCashMinor: "-1000" } })`; `:119-132` asserts external principal, fees, taxes and balanced postings | Allocation creates no posting; external application has exact four postings and cash projection | Yes |
+| INV-120/122/145: explicit opening balance and real cash | `preview-investment-position-opening.test.ts:143-150` `expect(...).toMatchObject({ ok: true, value: { openingBalanceMinor: "1500", bookCostDeltaMinor: "1000", projectedCashMinor: "500", warnings: [] } })` | Proposed 1,500 less known cost 1,000 leaves 500 cash; no valuation inferred | Yes |
+| INV-28/124/148: active opening balance and negative-cash warning | `preview-investment-position-opening.test.ts:172-181` `expect(...).toMatchObject({ ok: false, error: { code: "OPENING_BALANCE_ALREADY_SET" } })`; `:186-200` asserts `ok: true`, `projectedCashMinor: "-1000"` and exact warning | Existing opening balance rejects second proposal; negative cash warns but remains valid | Yes |
+| INV-21/22/23 and T96 validation: cost, quantity, terms, route, category, book/entity/currency | `preview-investment-position-opening.test.ts:205-286` asserts exact `INVESTMENT_BOOK_COST_REQUIRED`, `INVALID_INVESTMENT_OPERATION`, `INVALID_FIXED_INCOME_TERMS`, `ENTITY_NOT_FOUND`, `CURRENCY_MISMATCH`, `INVALID_INVESTMENT_CATEGORY`, `INVESTMENT_ENTITY_NOT_ACTIVE` codes | Invalid draft fails before preview; partial terms remain accepted | Yes |
+| T96 read-only: no facts, receipts, ID or sequence reservation | `preview-investment-position-opening.test.ts:297-317` `expect(h.store.snapshot()).toEqual(before)`, `expect(h.publisher.events).toHaveLength(facts)`, confirmation asserts `position-1`, `operation-1`, `entry-1` and `expect(...sequence).toBe("1")` | Preview does not change persistent state or consume financial identities | Yes |
+
+| Test assertion | Maps to | Keep |
+| --- | --- | --- |
+| `preview-investment-position-opening.test.ts:82-134` exact plan/result assertions | INV-27/30/33/100 and T96 output | Yes |
+| `preview-investment-position-opening.test.ts:143-200` exact cash/opening/warning assertions | INV-28/120/122/124/145/148 | Yes |
+| `preview-investment-position-opening.test.ts:205-286` exact error/result assertions | INV-21/22/23 and T96 validation | Yes |
+| `preview-investment-position-opening.test.ts:297-317` snapshot/facts/IDs/sequence assertions | T96 read-only criterion | Yes |
+
+**Adequacy verdict**: PASS. The 12 scenarios assert public values and state, cover task-owned invalid branches and exact negative-cash behavior, and map to approved requirements. No assertion was weakened or removed; the tests follow the Command integration convention in the Test Coverage Matrix.
+
+
 ### T78: Formulário de abertura
 
 **What**: Entregar formulário de abertura conforme os requisitos abaixo.
 **Where**: `apps/tauri/src/features/investments/forms/open-investment-position-form.tsx`
-**Depends on**: T95
-**Reuses**: Catálogos existentes, forms T74/T76, preview T61 e abertura atômica T95.
+**Depends on**: T96
+**Reuses**: Catálogos existentes, forms T74/T76, prévia de abertura T96 e abertura atômica T95.
 **Requirement**: INV-19, INV-21, INV-22, INV-23, INV-27, INV-28, INV-33, INV-99, INV-100, INV-101, INV-109, INV-110, INV-111, INV-120, INV-121, INV-122, INV-123, INV-124, INV-137, INV-138, INV-145, INV-148
 **Tools**: MCP: NONE. Ferramentas locais: exec_command/apply_patch. Skill: tlc-spec-driven. Usar shadcn ao compor componentes da biblioteca; playwright quando aplicável à evidência em navegador.
 
@@ -3261,6 +3301,7 @@ Um componente/caso de uso por tarefa, com testes e integrações mecânicas do m
 | T56  | Cancelar operação                        | ✅ Um componente/contrato coeso |
 | T57  | Substituir operação                      | ✅ Um componente/contrato coeso |
 | T58  | Registrar avaliação manual               | ✅ Um componente/contrato coeso |
+| T96  | Prévia read-only da abertura            | ✅ Um componente/contrato coeso |
 | T59  | Guard de manutenção genérica do journal  | ✅ Um componente/contrato coeso |
 | T60  | Avisos em comandos financeiros comuns    | ✅ Um componente/contrato coeso |
 | T61  | Prévia da operação                       | ✅ Um componente/contrato coeso |
@@ -3360,6 +3401,7 @@ Um componente/caso de uso por tarefa, com testes e integrações mecânicas do m
 | T55  | T54                    | T54           | ✅ Match |
 | T56  | T55                    | T55           | ✅ Match |
 | T57  | T56                    | T56           | ✅ Match |
+| T96  | T95                    | T95           | ✅ Match |
 | T58  | T57                    | T57           | ✅ Match |
 | T59  | T58                    | T58           | ✅ Match |
 | T60  | T59                    | T59           | ✅ Match |
@@ -3381,7 +3423,7 @@ Um componente/caso de uso por tarefa, com testes e integrações mecânicas do m
 | T76  | T75                    | T75           | ✅ Match |
 | T77  | T76                    | T76           | ✅ Match |
 | T95  | T77                    | T77           | ✅ Match |
-| T78  | T95                    | T95           | ✅ Match |
+| T78  | T96                    | T96           | ✅ Match |
 | T79  | T78                    | T78           | ✅ Match |
 | T80  | T79                    | T79           | ✅ Match |
 | T81  | T80                    | T80           | ✅ Match |
@@ -3459,6 +3501,7 @@ Um componente/caso de uso por tarefa, com testes e integrações mecânicas do m
 | T54  | Command                     | integration     | integration | ✅ Mesmo commit |
 | T55  | Command                     | integration     | integration | ✅ Mesmo commit |
 | T56  | Command                     | integration     | integration | ✅ Mesmo commit |
+| T96  | Command                     | integration     | integration | ✅ Mesmo commit |
 | T57  | Command                     | integration     | integration | ✅ Mesmo commit |
 | T58  | Command                     | integration     | integration | ✅ Mesmo commit |
 | T59  | Command                     | integration     | integration | ✅ Mesmo commit |
@@ -3526,25 +3569,25 @@ Mapeamento de planejamento, não evidência de implementação. Cada ID também 
 | INV-18         | T6, T18, T24, T31, T44, T45, T64, T76                                                                                                                                                                                                | Planned |
 | INV-19         | T5, T8, T19, T25, T32, T50, T65, T78, T88                                                                                                                                                                                            | Planned |
 | INV-20         | T8, T12, T19, T25, T32, T47, T50, T65, T77, T91                                                                                                                                                                                      | Planned |
-| INV-21         | T2, T8, T19, T25, T50, T78                                                                                                                                                                                                           | Planned |
-| INV-22         | T7, T19, T25, T65, T78, T91                                                                                                                                                                                                          | Planned |
-| INV-23         | T7, T19, T25, T78                                                                                                                                                                                                                    | Planned |
+| INV-21         | T2, T8, T19, T25, T50, T78, T96 | Planned |
+| INV-22         | T7, T19, T25, T65, T78, T91, T96 | Planned |
+| INV-23         | T7, T19, T25, T78, T96 | Planned |
 | INV-24         | T2, T7                                                                                                                                                                                                                               | Planned |
 | INV-25         | T7, T8, T65, T88, T91                                                                                                                                                                                                                | Planned |
 | INV-26         | T6, T7, T8, T24, T25, T31, T45, T47, T64, T65, T76, T77, T88, T91                                                                                                                                                                    | Planned |
-| INV-27 | T11, T50, T78, T95 | Planned |
-| INV-28         | T38, T39, T50, T60, T78                                                                                                                                                                                                              | Planned |
+| INV-27 | T11, T50, T78, T95, T96 | Planned |
+| INV-28         | T38, T39, T50, T60, T78, T96 | Planned |
 | INV-29         | T11, T50, T51, T79                                                                                                                                                                                                                   | Planned |
-| INV-30 | T11, T50, T51, T79, T95 | Planned |
+| INV-30 | T11, T50, T51, T79, T95, T96 | Planned |
 | INV-31         | T60, T68, T70, T94                                                                                                                                                                                                                   | Planned |
 | INV-32 | T38, T39, T50, T51, T55, T60, T79, T83, T95 | Planned |
-| INV-33         | T50, T95, T78                                                                                                                                                                                                                        | Planned |
+| INV-33         | T50, T95, T78, T96 | Planned |
 | INV-34 | T9, T50, T51, T95 | Planned |
-| INV-120        | T49, T50, T78                                                                                                                                                                                                                        | Planned |
+| INV-120        | T49, T50, T78, T96 | Planned |
 | INV-121        | T49, T50, T78                                                                                                                                                                                                                        | Planned |
-| INV-122        | T49, T78                                                                                                                                                                                                                             | Planned |
+| INV-122        | T49, T78, T96 | Planned |
 | INV-123        | T2, T49, T50, T78                                                                                                                                                                                                                    | Planned |
-| INV-124        | T49, T78                                                                                                                                                                                                                             | Planned |
+| INV-124        | T49, T78, T96 | Planned |
 | INV-137        | T49, T50, T78                                                                                                                                                                                                                        | Planned |
 | INV-35         | T8, T11, T51, T52, T54, T80                                                                                                                                                                                                          | Planned |
 | INV-36         | T2, T11, T12, T51, T52, T61, T79, T80                                                                                                                                                                                                | Planned |
@@ -3620,7 +3663,7 @@ Mapeamento de planejamento, não evidência de implementação. Cada ID também 
 | INV-88         | T13, T17, T21, T23, T24, T25, T26, T27, T28, T29, T30, T34, T40                                                                                                                                                                      | Planned |
 | INV-89         | T5, T6, T12, T13, T40, T44, T71                                                                                                                                                                                                      | Planned |
 | INV-90         | T12, T15, T16, T48, T73                                                                                                                                                                                                              | Planned |
-| INV-145        | T12, T38, T39, T48, T49, T50, T51, T55, T56, T57, T60, T61, T62, T63, T73, T78, T79, T83, T87                                                                                                                                        | Planned |
+| INV-145        | T12, T38, T39, T48, T49, T50, T51, T55, T56, T57, T60, T61, T62, T63, T73, T78, T79, T83, T87, T96 | Planned |
 | INV-91         | T71, T92, T93                                                                                                                                                                                                                        | Planned |
 | INV-92         | T71, T92, T93                                                                                                                                                                                                                        | Planned |
 | INV-93         | T14, T62, T72, T75, T86, T92                                                                                                                                                                                                         | Planned |
@@ -3630,7 +3673,7 @@ Mapeamento de planejamento, não evidência de implementação. Cada ID também 
 | INV-97         | T14, T62, T65, T72, T88, T92                                                                                                                                                                                                         | Planned |
 | INV-98         | T14, T65, T66, T67, T70, T72, T88, T89, T90, T94                                                                                                                                                                                     | Planned |
 | INV-99         | T64, T74, T76, T78, T92, T93                                                                                                                                                                                                         | Planned |
-| INV-100        | T61, T78, T79, T80, T81, T82, T83, T84, T85                                                                                                                                                                                          | Planned |
+| INV-100        | T61, T78, T79, T80, T81, T82, T83, T84, T85, T96 | Planned |
 | INV-101        | T71, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T91, T92, T93                                                                                                                                                                 | Planned |
 | INV-102        | T59, T70, T94                                                                                                                                                                                                                        | Planned |
 | INV-103        | T37, T69, T70, T94                                                                                                                                                                                                                   | Planned |
@@ -3644,7 +3687,7 @@ Mapeamento de planejamento, não evidência de implementação. Cada ID também 
 | INV-111        | T73, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T92                                                                                                                                                                           | Planned |
 | INV-112        | T86, T87, T88, T89, T90, T91, T92, T93, T94                                                                                                                                                                                          | Planned |
 | INV-143        | T75                                                                                                                                                                                                                                  | Planned |
-| INV-148        | T61, T73, T78, T79, T80, T81, T82, T83, T85, T92                                                                                                                                                                                     | Planned |
+| INV-148        | T61, T73, T78, T79, T80, T81, T82, T83, T85, T92, T96 | Planned |
 | INV-113        | T25, T32, T38, T39, T43, T63, T87                                                                                                                                                                                                    | Planned |
 | INV-114        | T6, T24, T25, T31, T32, T46, T64, T76                                                                                                                                                                                                | Planned |
 | INV-115        | T38, T39, T42, T43, T74, T87                                                                                                                                                                                                         | Planned |
