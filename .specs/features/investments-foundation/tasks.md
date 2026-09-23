@@ -6,8 +6,8 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 
 **Design:** [design.md](./design.md), aprovado pelo usuário com “Aprovo design, siga para tasks.md”.
 **Spec:** [spec.md](./spec.md), 148 requisitos aprovados.
-**Status:** Execute em andamento: T1–T79 e T95–T97 concluídas em commits atômicos; próxima tarefa T80.
-**Total:** 97 tarefas em 16 fases sequenciais. T1–T79 e T95–T97 concluídas; T80 reutiliza o formulário e o preview de operações.
+**Status:** Execute em andamento: T1–T80 e T95–T97 concluídas em commits atômicos; próxima tarefa T81.
+**Total:** 97 tarefas em 16 fases sequenciais. T1–T80 e T95–T97 concluídas; T81 registra rendimentos.
 
 Cada tarefa entrega um componente ou um caso de uso. `Where` indica seu ponto principal; testes, exports, mapper privado e ajustes mecânicos de consumidores do mesmo contrato pertencem ao mesmo commit. Isso não autoriza implementar outro componente antecipadamente. Wrapper fino de um mesmo comando discriminado pode compartilhar tarefa; comportamento econômico distinto tem tarefa própria.
 
@@ -3054,13 +3054,62 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Separar custo retirado de bruto recebido, unidades/total/parcial e despesas; total preenche custo exato, parcial não inventa média e confirmação mostra efeitos/categorias.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 16 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full React` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Separar custo retirado de bruto recebido, unidades/total/parcial e despesas; total preenche custo exato, parcial não inventa média e confirmação mostra efeitos/categorias.
+- [x] Escrever/atualizar no mesmo commit pelo menos 16 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full React` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (React); testes acompanham o componente nesta tarefa.
 **Gate**: Full React
 **Commit**: `feat(investments-ui): formulário de venda/resgate`
+
+**Execution evidence**: antes da T80, React tinha 73 arquivos/770 testes; depois, 74 arquivos/797 testes (27 novos, nenhum removido/pulado). Full React passou: builds Domain, Application, Memory, SQLite e infraestrutura Tauri; Vitest Tauri 74/74 arquivos e 797/797 testes; tsc --noEmit; git diff --check. ESLint dos três arquivos novos passou. UAT nativo permanece pendente: jsdom não comprova IPC, foco de Drawer nem layout real.
+
+| Critério / requisito | Assertion file:line | Resultado definido pela spec | Coberto |
+| --- | --- | --- | --- |
+| Livro, tipo e posição aberta, INV-101/110 | investment-sale-form.test.tsx:280 expect(screen.getByText(/Selecione um livro/)).toBeTruthy(); :286 expect(screen.getByRole("button", { name: "Resgatar" })).toBeTruthy(); :292 expect(screen.getByRole("button", { name: "Vender" })).toBeTruthy(); :299 expect(screen.queryByRole("button", { name: "Resgatar" })).toBeNull() | Livro ativo; renda fixa resgata, negociado vende; CLOSED não oferece saída | Sim |
+| Saída total exata, INV-40/139 | investment-sale-form.test.tsx:308-313 expect(screen.getByLabelText("Custo da parte vendida/resgatada")).toHaveProperty("value", "5000,00"), expect(screen.getByLabelText("Quantidade")).toHaveProperty("value", "10") e expect(screen.getByLabelText("Valor bruto recebido")).toHaveProperty("value", ""); :337-351 expect(state.sale).toHaveBeenCalledWith(expect.objectContaining({ quantityDelta: "10", bookCostReductionMinor: "500000", grossProceedsMinor: "510000", taxesMinor: "2000", destination: { mode: "EXTERNAL_ACCOUNT", accountId: "bank-1" } })); record-investment-sale.test.ts:241-246 expect(f.h.store.listInvestmentPositions()[0]).toMatchObject({ quantity: "0", bookCostMinor: "0", status: "CLOSED", closedOn: "2026-08-04" }) | Total preenche custo/unidades, não bruto; registro fecha a posição | Sim |
+| Saída parcial sem custo inferido, INV-35/39 | investment-sale-form.test.tsx:357-367 expect(screen.getByLabelText("Custo da parte vendida/resgatada")).toHaveProperty("value", "") e expect(screen.getByLabelText("Quantidade")).toHaveProperty("value", ""); :376-389 expect(state.sale).toHaveBeenCalledWith(expect.objectContaining({ quantityDelta: "2", bookCostReductionMinor: "40000", grossProceedsMinor: "50000" })); :413-415 expect(screen.getByText(/Informe o custo retirado/)).toBeTruthy() e expect(state.sale).not.toHaveBeenCalled() | Custo parcial é informado, sem média/FIFO implícitos | Sim |
+| Modo por valor e custo zero, INV-36 | investment-sale-form.test.tsx:395-402 expect(state.sale.mock.calls[0][0]).not.toHaveProperty("quantityDelta"); :483-490 comando com bookCostReductionMinor: "0", quantityDelta: "2" | AMOUNT não inventa unidades; posição UNITS de custo zero pode vender | Sim |
+| Limites de custo, unidades e líquido, INV-36/41 | investment-sale-form.test.tsx:427 expect(screen.getByText(/excede o custo da posição/)).toBeTruthy(); :440 expect(screen.getByText(/Informe a quantidade/)).toBeTruthy(); :454 expect(screen.getByText(/excede as unidades disponíveis/)).toBeTruthy(); :468 expect(screen.getByText(/Retire todo o custo/)).toBeTruthy(); :503 expect(screen.getByText(/líquido não pode ser negativo/)).toBeTruthy(); record-investment-sale.test.ts:300-328 expect(...).toMatchObject({ ok: false, error: { code: "INVALID_INVESTMENT_OPERATION" } }) | Saídas inválidas são rejeitadas sem operação | Sim |
+| Categorias de resultado e despesas, INV-37/126 | investment-sale-form.test.tsx:517 expect(screen.getByText(/categoria de ganho/)).toBeTruthy(); :531 expect(screen.getByText(/categoria de perda/)).toBeTruthy(); :555 expect(screen.getByText(/categoria de taxas/)).toBeTruthy(); :560 expect(screen.getByText(/categoria de impostos/)).toBeTruthy(); :575-586 expect(state.sale).toHaveBeenCalledWith(expect.objectContaining({ bookCostReductionMinor: "40000", grossProceedsMinor: "50000", feesMinor: "1000", taxesMinor: "500", gainCategoryId: "gain-1", feeCategoryId: "fee-1", taxCategoryId: "tax-1" })) | Resultado bruto determina ganho/perda; despesas acompanham a venda | Sim |
+| Postings internos/externos, INV-37/38/126 | record-investment-sale.test.ts:180-190 expect(f.h.store.listJournalEntries()[0]?.postings).toEqual(expect.arrayContaining([expect.objectContaining({ accountId: f.broker.id, amountMinor: 50n }), expect.objectContaining({ accountId: f.gain.id, amountMinor: -100n }), expect.objectContaining({ accountId: f.fee.id, amountMinor: 20n }), expect.objectContaining({ accountId: f.tax.id, amountMinor: 30n })])); :203 expect(f.h.store.listJournalEntries()).toHaveLength(1); :204-213 expect(f.h.store.listJournalEntries()[0]?.postings).toEqual(expect.arrayContaining([expect.objectContaining({ accountId: f.bank.id, amountMinor: 450n }), expect.objectContaining({ accountId: f.broker.id, amountMinor: -400n }), expect.objectContaining({ accountId: f.gain.id, amountMinor: -100n }), expect.objectContaining({ accountId: f.fee.id, amountMinor: 20n }), expect.objectContaining({ accountId: f.tax.id, amountMinor: 30n })])) | Matriz interna/externa exata; sem segunda transferência | Sim |
+| Prévia de custo, fluxo, contas e categorias, INV-100 | investment-sale-form.test.tsx:621-626 expect(screen.getByText(/Custo: -R\$\s*400,00/)).toBeTruthy(), expect(screen.getByText(/Fluxo líquido: R\$\s*485,00/)).toBeTruthy(), expect(screen.getByText(/Carteira: R\$\s*85,00/)).toBeTruthy() e categorias | Mostrar efeitos antes da confirmação | Sim |
+| Destino externo e settlement, INV-13/38 | investment-sale-form.test.tsx:634-655 expect(state.preview).toHaveBeenCalledWith(expect.objectContaining({ draft: expect.objectContaining({ destination: { mode: "INTERNAL_CASH" } }) })), expect(screen.getByLabelText("Conta de destino")).toHaveProperty("value", "bank-1") e expect(state.sale).toHaveBeenCalledWith(expect.objectContaining({ destination: { mode: "EXTERNAL_ACCOUNT", accountId: "bank-1" } })); :670 expect(screen.getByText(/Escolha a conta de destino/)).toBeTruthy() | Padrão de settlement só pré-seleciona após escolha externa | Sim |
+| Aviso não bloqueante, INV-148 | investment-sale-form.test.tsx:702-707 expect(screen.getByText(/Possível caixa negativo/)).toBeTruthy() e expect(screen.getByRole("button", { name: "Resgatar" })).not.toHaveProperty("disabled", true) | Caixa negativo não impede Salvar | Sim |
+| Retry, pendência e conflito, INV-109/111 | investment-sale-form.test.tsx:723-725 expect(save).toHaveProperty("disabled", true) e expect(state.sale).toHaveBeenCalledTimes(1); :757-766 expect(screen.getByLabelText("Custo da parte vendida/resgatada")).toHaveProperty("value", "400,00") e expect(state.sale.mock.calls[1][0].requestId).toBe(state.sale.mock.calls[0][0].requestId); :779 expect(screen.getByText(/Atualize a posição/)).toBeTruthy() | Um envio por vez; falha preserva intenção e orienta recarga | Sim |
+
+| Assertion file:line | Mapeia para | Manter |
+| --- | --- | --- |
+| investment-sale-form.test.tsx:280 expect(screen.getByText(/Selecione um livro/)).toBeTruthy() | INV-101/110 | Sim |
+| investment-sale-form.test.tsx:286 expect(screen.getByRole("button", { name: "Resgatar" })).toBeTruthy() | INV-101 | Sim |
+| investment-sale-form.test.tsx:292 expect(screen.getByRole("button", { name: "Vender" })).toBeTruthy() | INV-101 | Sim |
+| investment-sale-form.test.tsx:299 expect(screen.queryByRole("button", { name: "Resgatar" })).toBeNull() | INV-40, entidade CLOSED | Sim |
+| investment-sale-form.test.tsx:308-313 expect(screen.getByLabelText("Quantidade")).toHaveProperty("value", "10") e bruto vazio | INV-139 | Sim |
+| investment-sale-form.test.tsx:337-351 expect(state.sale).toHaveBeenCalledWith(expect.objectContaining({ bookCostReductionMinor: "500000", grossProceedsMinor: "510000", taxesMinor: "2000" })) | INV-38/139 | Sim |
+| investment-sale-form.test.tsx:357-367 expect(screen.getByLabelText("Quantidade")).toHaveProperty("value", "") | INV-35/39 | Sim |
+| investment-sale-form.test.tsx:376-389 expect(state.sale).toHaveBeenCalledWith(expect.objectContaining({ quantityDelta: "2", bookCostReductionMinor: "40000", grossProceedsMinor: "50000" })) | INV-35/39 | Sim |
+| investment-sale-form.test.tsx:395-402 expect(state.sale.mock.calls[0][0]).not.toHaveProperty("quantityDelta") | INV-36 | Sim |
+| investment-sale-form.test.tsx:413-415 expect(state.sale).not.toHaveBeenCalled() | INV-35 | Sim |
+| investment-sale-form.test.tsx:427-429 expect(state.sale).not.toHaveBeenCalled() | INV-36 | Sim |
+| investment-sale-form.test.tsx:440-442 expect(state.sale).not.toHaveBeenCalled() | INV-36 | Sim |
+| investment-sale-form.test.tsx:454-456 expect(state.sale).not.toHaveBeenCalled() | INV-36 | Sim |
+| investment-sale-form.test.tsx:468-470 expect(state.sale).not.toHaveBeenCalled() | INV-41 | Sim |
+| investment-sale-form.test.tsx:483-490 expect(state.sale).toHaveBeenCalledWith(expect.objectContaining({ bookCostReductionMinor: "0", quantityDelta: "2" })) | INV-36, custo zero permitido | Sim |
+| investment-sale-form.test.tsx:503-505 expect(state.sale).not.toHaveBeenCalled() | INV-36, líquido negativo | Sim |
+| investment-sale-form.test.tsx:517-519 expect(screen.getByText(/categoria de ganho/)).toBeTruthy() | INV-37 | Sim |
+| investment-sale-form.test.tsx:531-543 expect(state.preview).toHaveBeenCalledWith(expect.objectContaining({ draft: expect.objectContaining({ lossCategoryId: "loss-1", grossProceedsMinor: "30000" }) })) | INV-37 | Sim |
+| investment-sale-form.test.tsx:555-562 expect(screen.getByText(/categoria de impostos/)).toBeTruthy() | INV-126 | Sim |
+| investment-sale-form.test.tsx:575-586 expect(state.sale).toHaveBeenCalledWith(expect.objectContaining({ feesMinor: "1000", taxesMinor: "500", feeCategoryId: "fee-1", taxCategoryId: "tax-1" })) | INV-37/126 | Sim |
+| investment-sale-form.test.tsx:621-626 expect(screen.getByText(/Fluxo líquido: R\$\s*485,00/)).toBeTruthy() | INV-100 | Sim |
+| investment-sale-form.test.tsx:634-655 expect(screen.getByLabelText("Conta de destino")).toHaveProperty("value", "bank-1") e destino externo no comando | INV-13/38 | Sim |
+| investment-sale-form.test.tsx:670-672 expect(state.sale).not.toHaveBeenCalled() | INV-13 | Sim |
+| investment-sale-form.test.tsx:702-707 expect(screen.getByText(/Possível caixa negativo/)).toBeTruthy() | INV-148 | Sim |
+| investment-sale-form.test.tsx:723-725 expect(state.sale).toHaveBeenCalledTimes(1) | INV-111 | Sim |
+| investment-sale-form.test.tsx:757-766 expect(state.sale.mock.calls[1][0].requestId).toBe(state.sale.mock.calls[0][0].requestId) | INV-109 | Sim |
+| investment-sale-form.test.tsx:779 expect(screen.getByText(/Atualize a posição/)).toBeTruthy() | INV-109 | Sim |
+
+**Adequacy verdict**: PASS. Os 27 cenários React cobrem escolhas, payloads, limites, prévia e retry. Assertions já existentes do comando provam estados de posição e postings da matriz. Nenhum teste foi removido, pulado ou enfraquecido; o padrão React/RHF/React Query do projeto e a matriz de cobertura foram seguidos.
+
 
 ### T81: Formulário de rendimento
 
