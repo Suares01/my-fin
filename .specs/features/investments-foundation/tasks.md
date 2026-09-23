@@ -6,8 +6,8 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 
 **Design:** [design.md](./design.md), aprovado pelo usuário com “Aprovo design, siga para tasks.md”.
 **Spec:** [spec.md](./spec.md), 148 requisitos aprovados.
-**Status:** Execute em andamento: T1–T80 e T95–T97 concluídas em commits atômicos; próxima tarefa T81.
-**Total:** 97 tarefas em 16 fases sequenciais. T1–T80 e T95–T97 concluídas; T81 registra rendimentos.
+**Status:** Execute em andamento: T1–T81 e T95–T97 concluídas em commits atômicos; próxima tarefa T82.
+**Total:** 97 tarefas em 16 fases sequenciais. T1–T81 e T95–T97 concluídas; T82 registra amortizações.
 
 Cada tarefa entrega um componente ou um caso de uso. `Where` indica seu ponto principal; testes, exports, mapper privado e ajustes mecânicos de consumidores do mesmo contrato pertencem ao mesmo commit. Isso não autoriza implementar outro componente antecipadamente. Wrapper fino de um mesmo comando discriminado pode compartilhar tarefa; comportamento econômico distinto tem tarefa própria.
 
@@ -3122,13 +3122,46 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Capturar bruto e retenções do evento com categorias, inclusive posição encerrada em vínculos ativos; uma submissão INCOME sem FEE/TAX duplicadas.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full React` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Capturar bruto e retenções do evento com categorias, inclusive posição encerrada em vínculos ativos; uma submissão INCOME sem FEE/TAX duplicadas.
+- [x] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full React` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (React); testes acompanham o componente nesta tarefa.
 **Gate**: Full React
 **Commit**: `feat(investments-ui): formulário de rendimento`
+
+**Execution evidence**: antes da T81, React tinha 74 arquivos/797 testes; depois, 75 arquivos/811 testes (14 novos, nenhum removido/pulado). Full React passou: builds Domain, Application, Memory, SQLite e infraestrutura Tauri; Vitest Tauri 75/75 arquivos e 811/811 testes; tsc --noEmit; git diff --check. ESLint dos três arquivos novos passou. UAT nativo permanece pendente: jsdom não comprova IPC, foco de Drawer nem layout real.
+
+| Critério / requisito | Assertion file:line | Resultado definido pela spec | Coberto |
+| --- | --- | --- | --- |
+| Livro e campos aplicáveis, INV-100/101/110 | investment-income-form.test.tsx:209 expect(screen.getByText(/Selecione um livro/)).toBeTruthy(); :215-220 expect(screen.queryByLabelText("Quantidade")).toBeNull(), expect(screen.queryByLabelText("Conta de destino")).toBeNull() e bruto visível | INCOME requer livro e não pede custo, unidades nem rota externa | Sim |
+| Posição encerrada ativa, INV-119 | investment-income-form.test.tsx:236-247 expect(state.income).toHaveBeenCalledWith(expect.objectContaining({ positionId: "position-1", expectedPositionVersion: 4, type: "INCOME", grossAmountMinor: "10000", cashMode: "INTERNAL_CASH" })) e ausência de quantityDelta/bookCostReductionMinor; record-investment-income.test.ts:209-225 expect(f.h.store.listInvestmentPositions()[0]).toMatchObject({ status: "CLOSED", bookCostMinor: "0", quantity: "0" }) | Rendimento posterior não reabre alocação | Sim |
+| Bruto e categorias, INV-42/126 | investment-income-form.test.tsx:261-263 expect(screen.getByText(/bruto maior que zero/)).toBeTruthy() e não envio; :275-277 categoria de rendimento obrigatória; :290-299 categorias de taxas/impostos obrigatórias quando parcelas não zero; :311-313 líquido negativo não envia | Bruto positivo, retenções não negativas e categorias por parcela | Sim |
+| Rendimento bruto 100, imposto 20, INV-44 | investment-income-form.test.tsx:323-350 expect(state.preview).toHaveBeenCalledWith(expect.objectContaining({ draft: expect.objectContaining({ type: "INCOME", grossAmountMinor: "10000", taxesMinor: "2000", incomeCategoryId: "income-1", taxCategoryId: "tax-1", cashMode: "INTERNAL_CASH" }) })) e comando único; :405-408 expect(screen.getByText(/Fluxo líquido: R\$\s*80,00/)).toBeTruthy(), expect(screen.getByText(/Rendimentos: -R\$\s*100,00/)).toBeTruthy(), expect(screen.getByText(/Impostos: R\$\s*20,00/)).toBeTruthy() | Receita 100, imposto 20, líquido 80, custo 0 | Sim |
+| Retenções na mesma operação, INV-126 | investment-income-form.test.tsx:365-375 expect(state.income).toHaveBeenCalledWith(expect.objectContaining({ type: "INCOME", feesMinor: "1000", taxesMinor: "500", feeCategoryId: "fee-1", taxCategoryId: "tax-1" })) e expect(state.income).toHaveBeenCalledTimes(1); record-investment-income.test.ts:200-204 expect(f.h.store.listInvestmentOperations()).toHaveLength(2) e expect(f.h.store.listJournalEntries()).toHaveLength(1) | Sem FEE/TAX auxiliares; um journal para evento | Sim |
+| Prévia de custo, fluxo, contas e categorias, INV-100 | investment-income-form.test.tsx:403-412 expect(screen.getByText(/Custo: R\$\s*0,00/)).toBeTruthy(), expect(screen.getByText(/Carteira: R\$\s*80,00/)).toBeTruthy() e categorias Rendimentos/Impostos | Mostrar custo zero, caixa, receita/despesa e categorias antes de salvar | Sim |
+| Aviso não bloqueante, INV-148 | investment-income-form.test.tsx:442-447 expect(screen.getByText(/Possível caixa negativo/)).toBeTruthy() e botão não desabilitado | Aviso não impede registro válido | Sim |
+| Pendência, retry e conflito, INV-109/111 | investment-income-form.test.tsx:462-464 expect(save).toHaveProperty("disabled", true) e expect(state.income).toHaveBeenCalledTimes(1); :498-510 campo/requestId preservados; :525 expect(screen.getByText(/Atualize a posição/)).toBeTruthy() | Um envio por vez; falha preserva intenção e orienta atualização | Sim |
+
+| Assertion file:line | Mapeia para | Manter |
+| --- | --- | --- |
+| investment-income-form.test.tsx:209 expect(screen.getByText(/Selecione um livro/)).toBeTruthy() | INV-101/110 | Sim |
+| investment-income-form.test.tsx:215-220 expect(screen.queryByLabelText("Quantidade")).toBeNull() e expect(screen.queryByLabelText("Conta de destino")).toBeNull() | INV-100/42 | Sim |
+| investment-income-form.test.tsx:236-247 expect(state.income).toHaveBeenCalledWith(expect.objectContaining({ type: "INCOME", cashMode: "INTERNAL_CASH" })) | INV-119 | Sim |
+| investment-income-form.test.tsx:261-263 expect(state.income).not.toHaveBeenCalled() | INV-42, bruto positivo | Sim |
+| investment-income-form.test.tsx:275-277 expect(screen.getByText(/categoria de rendimento/)).toBeTruthy() | INV-42, categoria de receita | Sim |
+| investment-income-form.test.tsx:290-299 expect(screen.getByText(/categoria de impostos/)).toBeTruthy() | INV-126, retenções | Sim |
+| investment-income-form.test.tsx:311-313 expect(state.income).not.toHaveBeenCalled() | INV-42, líquido não negativo | Sim |
+| investment-income-form.test.tsx:323-350 expect(state.income).toHaveBeenCalledWith(expect.objectContaining({ grossAmountMinor: "10000", taxesMinor: "2000" })) | INV-44 | Sim |
+| investment-income-form.test.tsx:365-375 expect(state.income).toHaveBeenCalledTimes(1) | INV-126 | Sim |
+| investment-income-form.test.tsx:403-412 expect(screen.getByText(/Rendimentos: -R\$\s*100,00/)).toBeTruthy() e expect(screen.getByText(/Impostos: R\$\s*20,00/)).toBeTruthy() | INV-44/100 | Sim |
+| investment-income-form.test.tsx:442-447 expect(screen.getByText(/Possível caixa negativo/)).toBeTruthy() | INV-148 | Sim |
+| investment-income-form.test.tsx:462-464 expect(state.income).toHaveBeenCalledTimes(1) | INV-111 | Sim |
+| investment-income-form.test.tsx:498-510 expect(state.income.mock.calls[1][0].requestId).toBe(state.income.mock.calls[0][0].requestId) | INV-109 | Sim |
+| investment-income-form.test.tsx:525 expect(screen.getByText(/Atualize a posição/)).toBeTruthy() | INV-109 | Sim |
+
+**Adequacy verdict**: PASS. Os 14 cenários React cobrem bruto, parcelas, categorias, posição encerrada, prévia, aviso e recuperação. Testes já existentes do comando provam o journal único e preservação da posição. Nenhum teste foi removido, pulado ou enfraquecido; a matriz React e o padrão RHF/React Query foram seguidos.
+
 
 ### T82: Formulário de amortização
 
