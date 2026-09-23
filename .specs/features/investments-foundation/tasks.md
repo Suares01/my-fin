@@ -6,8 +6,8 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 
 **Design:** [design.md](./design.md), aprovado pelo usuário com “Aprovo design, siga para tasks.md”.
 **Spec:** [spec.md](./spec.md), 148 requisitos aprovados.
-**Status:** Execute em andamento: T1–T78 e T95–T97 concluídas em commits atômicos; próxima tarefa T79.
-**Total:** 97 tarefas em 16 fases sequenciais. T1–T78 e T95–T97 concluídas; T79 usa a versão CAS da consulta.
+**Status:** Execute em andamento: T1–T79 e T95–T97 concluídas em commits atômicos; próxima tarefa T80.
+**Total:** 97 tarefas em 16 fases sequenciais. T1–T79 e T95–T97 concluídas; T80 reutiliza o formulário e o preview de operações.
 
 Cada tarefa entrega um componente ou um caso de uso. `Where` indica seu ponto principal; testes, exports, mapper privado e ajustes mecânicos de consumidores do mesmo contrato pertencem ao mesmo commit. Isso não autoriza implementar outro componente antecipadamente. Wrapper fino de um mesmo comando discriminado pode compartilhar tarefa; comportamento econômico distinto tem tarefa própria.
 
@@ -3000,13 +3000,48 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Solicitar principal, quantidade aplicável, despesas/categorias e rota explícita; pré-seleção de settlement não decide silenciosamente, preview negativo mantém Salvar habilitado.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full React` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Solicitar principal, quantidade aplicável, despesas/categorias e rota explícita; pré-seleção de settlement não decide silenciosamente, preview negativo mantém Salvar habilitado.
+- [x] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full React` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (React); testes acompanham o componente nesta tarefa.
 **Gate**: Full React
 **Commit**: `feat(investments-ui): formulário de compra/aplicação`
+
+**Execution evidence**: antes da T79, React tinha 72 arquivos/754 testes; depois, 73 arquivos/770 testes (16 cenários novos, nenhum removido ou pulado). Full React passou: builds Domain, Application, Memory, SQLite e infraestrutura Tauri; Vitest Tauri 73/73 arquivos e 770/770 testes; tsc --noEmit; git diff --check. ESLint dos três arquivos novos passou. UAT nativo permanece pendente: jsdom não comprova IPC, foco de Drawer nem layout real.
+
+| Critério / requisito | Assertion file:line | Resultado definido pela spec | Coberto |
+| --- | --- | --- | --- |
+| Livro e tipo especializado, INV-101/110 | investment-purchase-form.test.tsx:281 expect(screen.getByText(/Selecione um livro/)).toBeTruthy(); :287 expect(screen.getByRole("button", { name: "Aplicar" })).toBeTruthy(); :306 expect(screen.getByRole("button", { name: "Comprar" })).toBeTruthy() | Livro obrigatório; renda fixa usa APPLICATION, demais classes PURCHASE | Sim |
+| Entidade ativa, INV-118 | investment-purchase-form.test.tsx:293-296 expect(screen.queryByRole("button", { name: "Aplicar" })).toBeNull() e nenhum preview/envio; investment-position.test.ts:334,346,407 expect((error as DomainError).code).toBe("INVESTMENT_ENTITY_NOT_ACTIVE") via expectInactive | CLOSED não oferece envio; conta/instrumento inativo é rejeitado no domínio | Sim |
+| Principal, quantidade e CAS, INV-36/100 | investment-purchase-form.test.tsx:316-327 expect(state.purchase).toHaveBeenCalledWith(expect.objectContaining({ expectedPositionVersion: 4, capitalMinor: "10000", funding: { mode: "INTERNAL_CASH" } })) e not.toHaveProperty("quantityDelta"); :337-339 principal zero bloqueado; :348-357 quantityDelta: "2.5" na prévia | Versão real; principal positivo; UNITS exige quantidade e AMOUNT não inventa zero | Sim |
+| Categorias e despesas, INV-29/125/126 | investment-purchase-form.test.tsx:369-376 expect(screen.getByText(/categoria de taxas/i)).toBeTruthy() e imposto; :389-411 draft/comando com capitalMinor: "100000", feesMinor: "1000", taxesMinor: "500" e ambas categorias; record-investment-purchase.test.ts:118-135 expect(h.store.listJournalEntries()[0]?.postings).toEqual(expect.arrayContaining([...])) | Capital 1.000 não incorpora taxa 10/imposto 5; despesas compõem o mesmo journal | Sim |
+| Prévia de custo, fluxo, contas e categorias, INV-100 | investment-purchase-form.test.tsx:443-448 expect(screen.getByText(/Custo: R\$\s*1\.000,00/)).toBeTruthy(), expect(screen.getByText(/Fluxo líquido: -R\$\s*1\.015,00/)).toBeTruthy(), expect(screen.getByText(/Carteira: -R\$\s*15,00/)).toBeTruthy() e asserts de Taxas/Impostos | Mostrar todos os efeitos antes de salvar | Sim |
+| Rota externa explícita e settlement, INV-13/30 | investment-purchase-form.test.tsx:456-486 expect(screen.getByLabelText("Conta de origem")).toHaveProperty("value", "bank-1") só após escolher EXTERNAL; comando com funding: { mode: "EXTERNAL_ACCOUNT", accountId: "bank-1" }; :501-503 conta ausente bloqueia; record-investment-purchase.test.ts:118-135 quatro postings literais | Pré-seleção não decide modo; um journal balanceado na rota externa | Sim |
+| Caixa negativo, INV-32/145/148 | investment-purchase-form.test.tsx:533-538 expect(screen.getByText(/Possível caixa negativo/)).toBeTruthy() e botão habilitado; record-investment-purchase.test.ts:219-229 expect(...).toMatchObject({ ok: true, value: { warnings: [{ code: "INVESTMENT_CASH_NEGATIVE", cashMinor: "-1200" }] } }) | Aviso visível não bloqueia sucesso | Sim |
+| Falha, retry e envio único, INV-109/111 | investment-purchase-form.test.tsx:559-563 expect(save).toHaveProperty("disabled", true) e expect(state.purchase).toHaveBeenCalledTimes(1); :598-605 campo preservado e requestId igual; :623 expect(screen.getByText(/Atualize a posição/)).toBeTruthy() | Uma submissão por vez; falha preserva intenção e orienta conflito | Sim |
+
+| Assertion file:line | Mapeia para | Manter |
+| --- | --- | --- |
+| investment-purchase-form.test.tsx:281 expect(screen.getByText(/Selecione um livro/)).toBeTruthy() | INV-101/110 | Sim |
+| investment-purchase-form.test.tsx:287 expect(screen.getByRole("button", { name: "Aplicar" })).toBeTruthy() | INV-101 | Sim |
+| investment-purchase-form.test.tsx:293-296 expect(screen.queryByRole("button", { name: "Aplicar" })).toBeNull() e nenhum envio | INV-118 | Sim |
+| investment-purchase-form.test.tsx:306 expect(screen.getByRole("button", { name: "Comprar" })).toBeTruthy() | INV-101 | Sim |
+| investment-purchase-form.test.tsx:316-327 expect(state.purchase).toHaveBeenCalledWith(expect.objectContaining({ expectedPositionVersion: 4, capitalMinor: "10000" })) | INV-29/36/100 | Sim |
+| investment-purchase-form.test.tsx:337-339 expect(state.purchase).not.toHaveBeenCalled() | Principal positivo T79 | Sim |
+| investment-purchase-form.test.tsx:348-357 expect(state.preview).toHaveBeenCalledWith(expect.objectContaining({ draft: expect.objectContaining({ quantityDelta: "2.5" }) })) | INV-36 | Sim |
+| investment-purchase-form.test.tsx:369-376 expect(screen.getByText(/categoria de taxas/i)).toBeTruthy() e imposto | INV-29/126 | Sim |
+| investment-purchase-form.test.tsx:389-411 expect(state.purchase).toHaveBeenCalledWith(expect.objectContaining({ capitalMinor: "100000", feesMinor: "1000", taxesMinor: "500" })) | INV-29/125/126 | Sim |
+| investment-purchase-form.test.tsx:443-448 expect(screen.getByText(/Custo: R\$\s*1\.000,00/)).toBeTruthy() e expect(screen.getByText(/Categoria de impostos: Impostos/)).toBeTruthy() | INV-100 | Sim |
+| investment-purchase-form.test.tsx:456-486 expect(state.purchase).toHaveBeenCalledWith(expect.objectContaining({ funding: { mode: "EXTERNAL_ACCOUNT", accountId: "bank-1" } })) | INV-13/30 | Sim |
+| investment-purchase-form.test.tsx:501-503 expect(state.purchase).not.toHaveBeenCalled() | INV-13 | Sim |
+| investment-purchase-form.test.tsx:533-538 aviso visível e not.toHaveProperty("disabled", true) | INV-32/145/148 | Sim |
+| investment-purchase-form.test.tsx:559-563 expect(state.purchase).toHaveBeenCalledTimes(1) | INV-111 | Sim |
+| investment-purchase-form.test.tsx:598-605 expect(state.purchase.mock.calls[1][0].requestId).toBe(state.purchase.mock.calls[0][0].requestId) | INV-109 | Sim |
+| investment-purchase-form.test.tsx:623 expect(screen.getByText(/Atualize a posição/)).toBeTruthy() | INV-109 | Sim |
+
+**Adequacy verdict**: PASS. Os 16 cenários React cobrem campos, rotas, prévia, entidade encerrada e recuperação; assertions de comando/domínio provam postings e entidades inativas. Nenhum teste foi removido, pulado ou enfraquecido. Os testes seguem a matriz React e o padrão RHF/React Query existente.
+
 
 ### T80: Formulário de venda/resgate
 

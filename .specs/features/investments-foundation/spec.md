@@ -534,7 +534,7 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-10 | S1 | Tasks | Planned | T14, T62, T63, T75, T86 |
 | INV-11 | S2 | Tasks | In progress: T3 profiles | T3, T4, T23, T41, T42, T63, T74, T87 |
 | INV-12 | S2 | Tasks | In progress: T3 profiles | T3, T38, T39, T42, T43, T74 |
-| INV-13 | S2 | Tasks | Planned | T42, T61, T74, T79, T80 |
+| INV-13 | S2 | Tasks | In progress: T79 purchase/application UI complete; remaining mapped work pending | T42, T61, T74, T79, T80 |
 | INV-14 | S2 | Tasks | In progress: T6 instrument | T6, T18, T24, T31, T44, T64, T76 |
 | INV-15 | S2 | Tasks | In progress: T6 instrument | T6, T44, T64, T76 |
 | INV-16 | S2 | Tasks | In progress: T6 instrument | T6, T24, T44, T45, T76 |
@@ -550,14 +550,14 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-26 | S2 | Tasks | In progress: T6 instrument; T7 fixed-income terms; T8 position | T6, T7, T8, T24, T25, T31, T45, T47, T64, T65, T76, T77, T88, T91 |
 | INV-27 | S3 | Tasks | Planned | T11, T50, T78, T95, T96 |
 | INV-28 | S3 | Tasks | Planned | T38, T39, T50, T60, T78, T96 |
-| INV-29 | S3 | Tasks | Planned | T11, T50, T51, T79 |
-| INV-30 | S3 | Tasks | Planned | T11, T50, T51, T79, T95, T96 |
+| INV-29 | S3 | Tasks | Implemented: T11, T50, T51 and T79 | T11, T50, T51, T79 |
+| INV-30 | S3 | Tasks | Implemented: T11, T50, T51, T79, T95 and T96 | T11, T50, T51, T79, T95, T96 |
 | INV-31 | S3 | Tasks | Planned | T60, T68, T70, T94 |
-| INV-32 | S3 | Tasks | Planned | T38, T39, T50, T51, T55, T60, T79, T83, T95 |
+| INV-32 | S3 | Tasks | In progress: T79 purchase/application UI complete; remaining mapped work pending | T38, T39, T50, T51, T55, T60, T79, T83, T95 |
 | INV-33 | S3 | Tasks | T95 atomic command, T96 preview and T78 opening UI complete | T50, T95, T96, T78 |
 | INV-34 | S3 | Tasks | In progress: T9 operation | T9, T50, T51, T95 |
 | INV-35 | S4 | Tasks | In progress: T8 position | T8, T11, T51, T52, T54, T80 |
-| INV-36 | S4 | Tasks | In progress: T2 values | T2, T11, T12, T51, T52, T61, T79, T80 |
+| INV-36 | S4 | Tasks | In progress: T2 values; T79 purchase/application UI complete | T2, T11, T12, T51, T52, T61, T79, T80 |
 | INV-37 | S4 | Tasks | Planned | T11, T52, T69, T80 |
 | INV-38 | S4 | Tasks | Planned | T11, T52, T69, T80 |
 | INV-39 | S4 | Tasks | In progress: T8 position | T8, T11, T52, T80 |
@@ -621,8 +621,8 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-97 | S8 | Tasks | Planned | T14, T62, T65, T72, T88, T92 |
 | INV-98 | S8 | Tasks | Planned | T14, T65, T66, T67, T70, T72, T88, T89, T90, T94 |
 | INV-99 | S8 | Tasks | Planned | T64, T74, T76, T78, T92, T93 |
-| INV-100 | S8 | Tasks | In progress: T78 form and T97 CAS view complete; operation forms pending | T61, T78, T97, T79, T80, T81, T82, T83, T84, T85, T96 |
-| INV-101 | S8 | Tasks | Planned | T71, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T91, T92, T93 |
+| INV-100 | S8 | Tasks | In progress: T78 opening, T97 CAS and T79 purchase/application UI complete; remaining operation forms pending | T61, T78, T97, T79, T80, T81, T82, T83, T84, T85, T96 |
+| INV-101 | S8 | Tasks | In progress: T79 purchase/application UI complete; remaining mapped work pending | T71, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T91, T92, T93 |
 | INV-102 | S8 | Tasks | Planned | T59, T70, T94 |
 | INV-103 | S8 | Tasks | Planned | T37, T69, T70, T94 |
 | INV-104 | S8 | Tasks | Planned | T71, T72, T73, T92, T94 |
@@ -630,24 +630,24 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-106 | S8 | Tasks | Planned | T72, T86, T87, T88, T89, T90, T91, T92 |
 | INV-107 | S8 | Tasks | Planned | T63, T72, T75, T86, T87, T88, T92 |
 | INV-108 | S8 | Tasks | Planned | T72, T86, T87, T88, T89, T90, T91, T92 |
-| INV-109 | S8 | Tasks | Planned | T73, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T94 |
-| INV-110 | S8 | Tasks | Planned | T74, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T88, T89, T91, T92, T93, T94 |
-| INV-111 | S8 | Tasks | Planned | T73, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T92 |
+| INV-109 | S8 | Tasks | In progress: T79 purchase/application UI complete; remaining mapped work pending | T73, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T94 |
+| INV-110 | S8 | Tasks | In progress: T79 purchase/application UI complete; remaining mapped work pending | T74, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T88, T89, T91, T92, T93, T94 |
+| INV-111 | S8 | Tasks | In progress: T79 purchase/application UI complete; remaining mapped work pending | T73, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T92 |
 | INV-112 | S8 | Tasks | Planned | T86, T87, T88, T89, T90, T91, T92, T93, T94 |
 | INV-113 | S9 | Tasks | Planned | T25, T32, T38, T39, T43, T63, T87 |
 | INV-114 | S9 | Tasks | Planned | T6, T24, T25, T31, T32, T46, T64, T76 |
 | INV-115 | S9 | Tasks | Planned | T38, T39, T42, T43, T74, T87 |
 | INV-116 | S9 | Tasks | Planned | T6, T24, T31, T43, T46, T64, T76, T87 |
 | INV-117 | S9 | Tasks | Planned | T46, T59, T66, T67, T89, T90 |
-| INV-118 | S9 | Tasks | In progress: T8 position | T8, T51, T79, T88 |
+| INV-118 | S9 | Tasks | In progress: T8 position; T79 purchase/application UI complete | T8, T51, T79, T88 |
 | INV-119 | S9 | Tasks | In progress: T8 position | T8, T53, T55, T81, T83, T91 |
 | INV-120 | S3 | Tasks | Planned | T49, T50, T78, T96 |
 | INV-121 | S3 | Tasks | Planned | T49, T50, T78 |
 | INV-122 | S3 | Tasks | Planned | T49, T78, T96 |
 | INV-123 | S3 | Tasks | In progress: T2 values | T2, T49, T50, T78 |
 | INV-124 | S3 | Tasks | Planned | T49, T78, T96 |
-| INV-125 | S4 | Tasks | Planned | T11, T51, T79 |
-| INV-126 | S4 | Tasks | Planned | T11, T51, T52, T53, T54, T55, T79, T80, T81, T82, T83 |
+| INV-125 | S4 | Tasks | Implemented: T11, T51 and T79 | T11, T51, T79 |
+| INV-126 | S4 | Tasks | In progress: T79 purchase/application UI complete; remaining mapped work pending | T11, T51, T52, T53, T54, T55, T79, T80, T81, T82, T83 |
 | INV-127 | S5 | Tasks | In progress: T8 position | T8, T19, T21, T25, T27, T30, T32, T47, T50, T58, T67, T90 |
 | INV-128 | S5 | Tasks | In progress: T8 position | T8, T25, T51, T52, T54, T56, T57, T85 |
 | INV-129 | S5 | Tasks | In progress: T8 position | T8, T47, T53, T55, T57, T77, T85 |
@@ -666,12 +666,12 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-142 | S5 | Tasks | Planned | T10, T58, T84 |
 | INV-143 | S8 | Tasks | Planned | T75 |
 | INV-144 | S9 | Tasks | In progress: T8 position | T8, T43, T46, T56, T57, T85, T91 |
-| INV-145 | S7 | Tasks | Planned | T12, T38, T39, T48, T49, T50, T51, T55, T56, T57, T60, T61, T62, T63, T73, T78, T79, T83, T87, T96 |
+| INV-145 | S7 | Tasks | In progress: T79 purchase/application UI complete; remaining mapped work pending | T12, T38, T39, T48, T49, T50, T51, T55, T56, T57, T60, T61, T62, T63, T73, T78, T79, T83, T87, T96 |
 | INV-146 | S5 | Tasks | Planned | T62, T63, T86, T87, T92 |
 | INV-147 | S5 | Tasks | Planned | T49, T60, T62, T86, T87, T92 |
-| INV-148 | S8 | Tasks | Planned | T61, T73, T78, T79, T80, T81, T82, T83, T85, T92, T96 |
+| INV-148 | S8 | Tasks | In progress: T79 purchase/application UI complete; remaining mapped work pending | T61, T73, T78, T79, T80, T81, T82, T83, T85, T92, T96 |
 
-**Coverage:** 148 requisitos mapeados para seções e evidência em [design.md](./design.md) e para as 97 tarefas de [tasks.md](./tasks.md). Design aprovado; Execute em andamento; T1–T78 e T95–T97 concluídas. IDs anteriores preservados. INV-28/32/70/77/121 revisados pela decisão explícita A11; INV-120–148 detalham os refinamentos desta discussão.
+**Coverage:** 148 requisitos mapeados para seções e evidência em [design.md](./design.md) e para as 97 tarefas de [tasks.md](./tasks.md). Design aprovado; Execute em andamento; T1–T79 e T95–T97 concluídas. IDs anteriores preservados. INV-28/32/70/77/121 revisados pela decisão explícita A11; INV-120–148 detalham os refinamentos desta discussão.
 
 ## Success Criteria
 
