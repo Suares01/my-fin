@@ -6,8 +6,8 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 
 **Design:** [design.md](./design.md), aprovado pelo usuário com “Aprovo design, siga para tasks.md”.
 **Spec:** [spec.md](./spec.md), 148 requisitos aprovados.
-**Status:** Execute em andamento: T1–T82 e T95–T97 concluídas em commits atômicos; próxima tarefa T83.
-**Total:** 97 tarefas em 16 fases sequenciais. T1–T82 e T95–T97 concluídas; T83 registra despesas especializadas.
+**Status:** Execute em andamento: T1–T83 e T95–T97 concluídas em commits atômicos; próxima tarefa T84.
+**Total:** 97 tarefas em 16 fases sequenciais. T1–T83 e T95–T97 concluídas; T84 inicia a fase de avaliação/correção e listas.
 
 Cada tarefa entrega um componente ou um caso de uso. `Where` indica seu ponto principal; testes, exports, mapper privado e ajustes mecânicos de consumidores do mesmo contrato pertencem ao mesmo commit. Isso não autoriza implementar outro componente antecipadamente. Wrapper fino de um mesmo comando discriminado pode compartilhar tarefa; comportamento econômico distinto tem tarefa própria.
 
@@ -3234,11 +3234,47 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Oferecer FEE/TAX independente com categoria explícita e caixa interno; explicar vínculo à posição e permitir aviso negativo sem segunda confirmação.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full React + Build` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Oferecer FEE/TAX independente com categoria explícita e caixa interno; explicar vínculo à posição e permitir aviso negativo sem segunda confirmação.
+- [x] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full React + Build` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (React); testes acompanham o componente nesta tarefa.
+
+**Evidência T83 (2026-09-23):** Antes: Tauri 76 arquivos/828 testes; depois: 77 arquivos/841 testes (13 cenários React novos, nenhum removido/pulado). Full React + Build passou: builds Domain, Application, Memory, SQLite e infraestrutura Tauri; Vitest Tauri 77/77 arquivos e 841/841 testes; `tsc --noEmit`, ESLint global sem warnings, Vite build e `git diff --check`. O build emitiu apenas o aviso pré-existente de chunk grande. UAT nativo segue pendente.
+
+**Adequação A — critérios e efeitos:**
+
+| Critério | Asserção `file:line` | Resultado da spec | Coberto |
+| --- | --- | --- | --- |
+| Livro, tipo, vínculo e campos aplicáveis, INV-100/101/110/126 | `investment-expense-form.test.tsx:228` `expect(screen.getByText(/Selecione um livro/)).toBeTruthy()`; `:234-241` tipo/campos/vínculo e ausência de custo/unidades/rota externa | FEE/TAX posterior vinculado à posição, sem dupla retenção nem principal | Sim; Drawer/foco nativo em T92–T93 |
+| FEE e TAX independentes, INV-43/44/126 | `investment-expense-form.test.tsx:250-266` payload FEE `amountMinor: "1000"`, categoria e caixa interno; `:280-289` payload TAX `amountMinor: "2000"`; `record-investment-expense.test.ts:136-148` postings e tipo FEE; `:157-164` só TAX | Despesa positiva em journal próprio, conta da carteira contra categoria explícita | Sim |
+| Posição encerrada, INV-119 | `investment-expense-form.test.tsx:303-313` payload de FEE sem custo/unidades; `record-investment-expense.test.ts:169-180` posição continua CLOSED, custo/unidades zero | Fluxo posterior não reabre alocação | Sim |
+| Validação, INV-43 | `investment-expense-form.test.tsx:325-327` valor zero não envia; `:337-339` categoria ausente não envia; `record-investment-expense.test.ts:184-190` categoria inválida rejeitada | Valor estritamente positivo e categoria gerenciada ativa | Sim |
+| Prévia, INV-100/44 | `investment-expense-form.test.tsx:347-364` draft FEE, custo 0, fluxo/carteira -10, categoria +10 | Caixa interno -10, despesa +10, custo invariável | Sim |
+| Caixa negativo, INV-32/145/148 | `investment-expense-form.test.tsx:394-398` aviso com Salvar habilitado; `:434` `expect(onSuccess).toHaveBeenCalledWith(expect.objectContaining({ warnings: [warning] }))`; `record-investment-expense.test.ts:116-135` retorno com cash -1010 | Registro confirmado com aviso, sem segunda confirmação | Sim |
+| Falha e retry, INV-109 | `investment-expense-form.test.tsx:482-488` valor/tipo preservados e mesmo requestId; `:503` conflito pede atualizar posição | Retry da mesma intenção, erro acionável | Sim |
+| Pendência, INV-111 | `investment-expense-form.test.tsx:453-455` botão desabilitado, uma chamada | Novo envio bloqueado durante a submissão | Sim |
+
+**Adequação C — necessidade dos 13 cenários:**
+
+| Asserção `file:line` | Requisito/edge | Manter |
+| --- | --- | --- |
+| `investment-expense-form.test.tsx:228` `expect(screen.getByText(/Selecione um livro/)).toBeTruthy()` | INV-101/110, livro ativo | Sim |
+| `:234-241` `expect(screen.queryByLabelText("Quantidade")).toBeNull()` e vínculo CDB | INV-100/126, campos e posição | Sim |
+| `:250-266` `expect(state.expense).toHaveBeenCalledTimes(1)` e payload FEE | INV-43/44, taxa única | Sim |
+| `:280-289` `expect(state.expense).toHaveBeenCalledTimes(1)` e payload TAX | INV-43/44, imposto único | Sim |
+| `:303-313` `expect(state.expense.mock.calls[0][0]).not.toHaveProperty("quantityDelta")` | INV-119, pós-fechamento | Sim |
+| `:325-327` `expect(state.expense).not.toHaveBeenCalled()` | INV-43, valor positivo | Sim |
+| `:337-339` `expect(state.expense).not.toHaveBeenCalled()` | INV-43, categoria explícita | Sim |
+| `:347-364` `expect(screen.getByText(/Fluxo líquido: -R\$\s*10,00/)).toBeTruthy()` | INV-100/44, prévia contábil | Sim |
+| `:394-398` `expect(screen.getByText(/Possível caixa negativo/)).toBeTruthy()` | INV-32/148, aviso não bloqueante | Sim |
+| `:434` `expect(onSuccess).toHaveBeenCalledWith(expect.objectContaining({ warnings: [warning] }))` | INV-145, aviso confirmado | Sim |
+| `:453-455` `expect(state.expense).toHaveBeenCalledTimes(1)` | INV-111, pendência | Sim |
+| `:482-488` `expect(state.expense.mock.calls[1][0].requestId).toBe(state.expense.mock.calls[0][0].requestId)` | INV-109, retry | Sim |
+| `:503` `expect(screen.getByText(/Atualize a posição/)).toBeTruthy()` | INV-109, CAS | Sim |
+
+**Adequacy verdict:** PASS. Check A cobre os requisitos de T83 com asserções de payload, UI e Memory; Check B não depende apenas de contagem de chamadas; Check C mapeia os 13 cenários à spec; Check D segue a suíte React co-localizada e os controles shadcn existentes. Prova nativa de Drawer/foco, IPC e viewport permanece para T92–T94.
+
 **Gate**: Full React + Build
 **Commit**: `feat(investments-ui): formulário de despesa de investimento`
 
