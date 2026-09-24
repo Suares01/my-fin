@@ -6,8 +6,8 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 
 **Design:** [design.md](./design.md), aprovado pelo usuário com “Aprovo design, siga para tasks.md”.
 **Spec:** [spec.md](./spec.md), 148 requisitos aprovados.
-**Status:** Execute em andamento: T1–T81 e T95–T97 concluídas em commits atômicos; próxima tarefa T82.
-**Total:** 97 tarefas em 16 fases sequenciais. T1–T81 e T95–T97 concluídas; T82 registra amortizações.
+**Status:** Execute em andamento: T1–T82 e T95–T97 concluídas em commits atômicos; próxima tarefa T83.
+**Total:** 97 tarefas em 16 fases sequenciais. T1–T82 e T95–T97 concluídas; T83 registra despesas especializadas.
 
 Cada tarefa entrega um componente ou um caso de uso. `Where` indica seu ponto principal; testes, exports, mapper privado e ajustes mecânicos de consumidores do mesmo contrato pertencem ao mesmo commit. Isso não autoriza implementar outro componente antecipadamente. Wrapper fino de um mesmo comando discriminado pode compartilhar tarefa; comportamento econômico distinto tem tarefa própria.
 
@@ -3174,12 +3174,53 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Pedir custo reduzido e bruto/despesas, sem edição de unidades; preview mostra efeito no custo/resultado e erros mantêm dados.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full React` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Pedir custo reduzido e bruto/despesas, sem edição de unidades; preview mostra efeito no custo/resultado e erros mantêm dados.
+- [x] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full React` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (React); testes acompanham o componente nesta tarefa.
 **Gate**: Full React
+
+**Evidência T82 (2026-09-23):** Antes: Tauri 75 arquivos/811 testes; depois: 76 arquivos/828 testes (17 cenários React novos, nenhum removido ou pulado). Full React passou: builds Domain, Application, Memory, SQLite e infraestrutura Tauri; Vitest Tauri 76/76 arquivos e 828/828 testes; `tsc --noEmit`, ESLint dos três arquivos novos e `git diff --check`. O formulário envia um único `AMORTIZATION` com CAS, caixa interno, custo reduzido e retenções, sem campo nem payload de unidades. UAT nativo segue pendente.
+
+**Adequação A — critérios e efeitos:**
+
+| Critério | Asserção `file:line` | Resultado da spec | Coberto |
+| --- | --- | --- | --- |
+| Livro e campos aplicáveis, INV-100/101/110 | `investment-amortization-form.test.tsx:212` `expect(screen.getByText(/Selecione um livro/)).toBeTruthy()`; `:218-223` presença de custo/bruto/taxas/impostos e ausência de Quantidade/Conta de destino | Formulário controlado só pede campos de amortização em livro ativo | Sim; Drawer/foco nativo em T92–T93 |
+| Posição e custo, INV-42/46 | `investment-amortization-form.test.tsx:231-232` posição aberta; `:242-256` custo positivo e até o atual; `record-investment-amortization.test.ts:131-135` `expect(...).toMatchObject({ quantity: "10", bookCostMinor: "800", status: "OPEN" })` | Reduz custo 200 de 1.000, mantém 10 unidades/OPEN | Sim |
+| Resultado e categorias, INV-42/44 | `investment-amortization-form.test.tsx:267` payload com bruto zero/perda; `:284`, `:296` exigem ganho/perda conforme sinal; `:374-381` custo -200, custo final 800, resultado +20, caixa +220 e categoria Ganhos | R-C determina ganho/perda e fluxo interno, sem mexer nas unidades | Sim |
+| Retenções, INV-44/126 | `investment-amortization-form.test.tsx:341-360` comando único com `feesMinor: "200"`, `taxesMinor: "1000"` e categorias; `record-investment-amortization.test.ts:157-167` quatro postings exatos e operações `["OPENING_ALLOCATION", "AMORTIZATION"]` | Taxas/impostos no journal da mesma amortização, sem FEE/TAX auxiliares | Sim |
+| Ganho bruto 100 e imposto 20, INV-44 | `investment-amortization-form.test.tsx:410-429` draft custo 200/bruto 300/imposto 20; `expect(screen.getByText(/Ganhos: -R\$\s*100,00/)).toBeTruthy()` e `expect(screen.getByText(/Impostos: R\$\s*20,00/)).toBeTruthy()` | Ganho bruto 100, despesa 20, ganho ledger líquido 80, recebimento 280 | Sim |
+| Prévia, INV-100 | `investment-amortization-form.test.tsx:374-381` asserções de custo/resultado/fluxo/contas/categoria; `:410-429` asserções de draft e imposto | Efeitos em custo, caixa e categorias antes de salvar | Sim |
+| Falha/retry, INV-109 | `investment-amortization-form.test.tsx:505-517` erro acionável, custo/bruto preservados e mesmo requestId; `:532` instrução de atualizar posição no CAS | Dados preservados e retry idempotente | Sim |
+| Pendência, INV-111 | `investment-amortization-form.test.tsx:479-481` botão desabilitado e exatamente uma chamada | Sem envio duplicado enquanto pendente | Sim |
+| Aviso, INV-148 | `investment-amortization-form.test.tsx:459-463` aviso de caixa negativo e botão habilitado | Aviso não impede salvar | Sim |
+
+**Adequação C — necessidade dos 17 cenários:**
+
+| Asserção `file:line` | Requisito/edge | Manter |
+| --- | --- | --- |
+| `investment-amortization-form.test.tsx:212` `expect(screen.getByText(/Selecione um livro/)).toBeTruthy()` | INV-101/110, livro ativo | Sim |
+| `:218-223` campos presentes; `expect(screen.queryByLabelText("Quantidade")).toBeNull()` | INV-100/46, só campos aplicáveis | Sim |
+| `:231-232` `expect(state.amortization).not.toHaveBeenCalled()` | INV-42, posição fechada não amortizável | Sim |
+| `:242-244` `expect(state.amortization).not.toHaveBeenCalled()` | INV-42, custo positivo | Sim |
+| `:254-256` `expect(state.amortization).not.toHaveBeenCalled()` | INV-42, limite de custo | Sim |
+| `:267` `expect(state.amortization).toHaveBeenCalledWith(expect.objectContaining(...))` | INV-42, bruto zero/perda explícita | Sim |
+| `:284-286` `expect(state.amortization).not.toHaveBeenCalled()` | INV-44, categoria de ganho | Sim |
+| `:296-298` `expect(state.amortization).not.toHaveBeenCalled()` | INV-44, categoria de perda | Sim |
+| `:309-316` `expect(state.amortization).not.toHaveBeenCalled()` | INV-126, categorias de taxas/impostos | Sim |
+| `:326-328` `expect(state.amortization).not.toHaveBeenCalled()` | INV-42, líquido não negativo | Sim |
+| `:341-364` `expect(state.amortization).toHaveBeenCalledTimes(1)` e ausência de `quantityDelta`/`destination` | INV-42/46/126, payload único | Sim |
+| `:374-381` `expect(screen.getByText(/Custo após: R\$\s*800,00/)).toBeTruthy()` | INV-100/46, prévia normativa | Sim |
+| `:410-429` `expect(screen.getByText(/Impostos: R\$\s*20,00/)).toBeTruthy()` | INV-44, ganho bruto e imposto | Sim |
+| `:459-463` `expect(screen.getByText(/Possível caixa negativo/)).toBeTruthy()` | INV-148, aviso não bloqueante | Sim |
+| `:479-481` `expect(state.amortization).toHaveBeenCalledTimes(1)` | INV-111, pendência | Sim |
+| `:505-517` `expect(state.amortization.mock.calls[1][0].requestId).toBe(state.amortization.mock.calls[0][0].requestId)` | INV-109, retry | Sim |
+| `:532` `expect(screen.getByText(/Atualize a posição/)).toBeTruthy()` | INV-109, conflito CAS | Sim |
+
+**Adequacy verdict:** PASS. A matriz React/React Query do projeto foi seguida; asserções cobrem valores de payload e efeitos visíveis, e o teste Memory citado prova unidades e journal único. Check B sem asserções rasas ou testes enfraquecidos; Check C sem cenários fora da spec; Check D conforme testes co-localizados existentes. Foco de Drawer, IPC e viewport exigem UAT nativo posterior.
+
 **Commit**: `feat(investments-ui): formulário de amortização`
 
 ### T83: Formulário de despesa de investimento
