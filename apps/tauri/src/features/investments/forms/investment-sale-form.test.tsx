@@ -11,6 +11,7 @@ import {
 import type { InvestmentPositionView } from "@workspace/application"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { InvestmentSaleForm } from "./investment-sale-form"
+import { correctionOperation } from "./investment-correction-test-fixtures"
 
 const state = vi.hoisted(() => ({
   session: { status: "ACTIVE", bookId: "book-1" } as
@@ -43,6 +44,7 @@ const state = vi.hoisted(() => ({
   incomes: [{ id: "gain-1", name: "Ganhos" }],
   preview: vi.fn(),
   sale: vi.fn(),
+  amend: vi.fn(),
   receipt: vi.fn(),
   toast: vi.fn(),
 }))
@@ -79,6 +81,7 @@ vi.mock("../../../providers", () => ({
       operations: {
         preview: { execute: state.preview },
         sale: { execute: state.sale },
+        amend: { execute: state.amend },
       },
       requests: { get: state.receipt },
     },
@@ -246,6 +249,21 @@ function partial() {
   fill("Valor bruto recebido", "500,00")
   fill("Data da operação", "2026-09-01")
   choose("Categoria de ganho", "gain-1")
+}
+
+function renderCorrection(operation: ReturnType<typeof correctionOperation>) {
+  render(
+    <QueryClientProvider
+      client={
+        new QueryClient({ defaultOptions: { queries: { retry: false } } })
+      }
+    >
+      <InvestmentSaleForm
+        position={position}
+        amendment={{ operation, reason: "Ajuste justificado" }}
+      />
+    </QueryClientProvider>
+  )
 }
 
 describe("InvestmentSaleForm", () => {
@@ -777,6 +795,120 @@ describe("InvestmentSaleForm", () => {
     fireEvent.click(screen.getByRole("button", { name: "Resgatar" }))
     await waitFor(() =>
       expect(screen.getByText(/Atualize a posição/)).toBeTruthy()
+    )
+  })
+  it("amends the original REDEMPTION through its specialized fields", async () => {
+    success()
+    state.preview.mockResolvedValue({
+      ok: true,
+      value: {
+        positionId: "position-1",
+        positionVersion: 4,
+        allocationRevision: 2,
+        bookCostDeltaMinor: "0",
+        netCashFlowMinor: "1234",
+        postings: [{ accountId: "wallet-1", amountMinor: "1234" }],
+        categories: { gainCategoryId: "gain-1" },
+        projectedCashMinor: "61234",
+        warnings: [],
+      },
+    })
+    state.amend.mockResolvedValue({
+      ok: true,
+      value: {
+        requestId: "request-1",
+        positionId: "position-1",
+        positionVersion: 5,
+        operationId: "operation-original",
+        replacementOperationId: "replacement-1",
+        journalEntryIds: [],
+        warnings: [],
+      },
+    })
+    renderCorrection(
+      correctionOperation("REDEMPTION", {
+        bookCostDeltaMinor: "-40000",
+        grossAmountMinor: "50000",
+        quantityDelta: "-2",
+        beforeQuantity: "10",
+        gainCategoryId: "gain-1",
+      })
+    )
+    expect(
+      screen.getByLabelText("Custo da parte vendida/resgatada")
+    ).toHaveProperty("value", "400,00")
+    await waitFor(() =>
+      expect(screen.getByText(/Fluxo líquido: R\$\s*12,34/)).toBeTruthy()
+    )
+    expect(screen.getByText(/Carteira: R\$\s*12,34/)).toBeTruthy()
+    fill("Data da operação", "2026-09-02")
+    fireEvent.click(document.querySelector('button[type="submit"]')!)
+    await waitFor(() =>
+      expect(state.amend).toHaveBeenCalledWith(
+        expect.objectContaining({
+          operationId: "operation-original",
+          expectedOperationVersion: 0,
+          expectedPositionVersion: 4,
+          reason: "Ajuste justificado",
+          replacement: expect.objectContaining({
+            bookCostReductionMinor: "40000",
+            grossProceedsMinor: "50000",
+            occurredOn: "2026-09-02",
+            type: "REDEMPTION",
+          }),
+        })
+      )
+    )
+    expect(state.sale).not.toHaveBeenCalled()
+    await waitFor(() =>
+      expect(state.preview).toHaveBeenCalledWith(
+        expect.objectContaining({
+          amendment: {
+            operationId: "operation-original",
+            expectedOperationVersion: 0,
+          },
+        })
+      )
+    )
+  })
+
+  it("preserves an amendment draft and requestId after a version conflict", async () => {
+    success()
+    state.amend.mockResolvedValueOnce({
+      ok: false,
+      error: { code: "OPTIMISTIC_CONCURRENCY_FAILURE" },
+    })
+    state.amend.mockResolvedValue({
+      ok: true,
+      value: {
+        requestId: "request-1",
+        positionId: "position-1",
+        positionVersion: 5,
+        replacementOperationId: "replacement-1",
+        journalEntryIds: [],
+        warnings: [],
+      },
+    })
+    renderCorrection(
+      correctionOperation("REDEMPTION", {
+        bookCostDeltaMinor: "-40000",
+        grossAmountMinor: "50000",
+        quantityDelta: "-2",
+        beforeQuantity: "10",
+        gainCategoryId: "gain-1",
+      })
+    )
+    fireEvent.click(document.querySelector('button[type="submit"]')!)
+    await waitFor(() =>
+      expect(screen.getByText(/Recarregue o histórico/)).toBeTruthy()
+    )
+    expect(
+      screen.getByLabelText("Custo da parte vendida/resgatada")
+    ).toHaveProperty("value", "400,00")
+    fireEvent.click(document.querySelector('button[type="submit"]')!)
+    await waitFor(() => expect(state.amend).toHaveBeenCalledTimes(2))
+    expect(state.amend.mock.calls[1][0].requestId).toBe(
+      state.amend.mock.calls[0][0].requestId
     )
   })
 })

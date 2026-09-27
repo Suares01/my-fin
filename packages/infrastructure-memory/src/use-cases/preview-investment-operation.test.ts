@@ -6,6 +6,8 @@ import {
   OpenInvestmentPosition,
   PreviewInvestmentOperation,
   RecordInvestmentPurchase,
+  RecordInvestmentSale,
+  RecordInvestmentAmortization,
 } from "@workspace/application"
 import { describe, expect, it } from "vitest"
 import { createBook, createHarness } from "./test-helpers.js"
@@ -432,5 +434,230 @@ describe("PreviewInvestmentOperation", () => {
       ok: false,
       error: { code: "OPTIMISTIC_CONCURRENCY_FAILURE" },
     })
+  })
+  it.each(["journal", "no journal"] as const)(
+    "previews net sale amendment with %s, without writes",
+    async (kind) => {
+      const f = await setup()
+      const originalDraft = {
+        ...sale(f),
+        grossProceedsMinor: kind === "journal" ? "500" : "400",
+      }
+      const recorded = await new RecordInvestmentSale(
+        f.h.transactionManager,
+        f.h.dispatcher,
+        f.h.ids,
+        f.h.clock
+      ).execute(originalDraft)
+      if (!recorded.ok) throw new Error("sale fixture failed")
+      const before = f.h.store.snapshot()
+      f.h.publisher.clear()
+      const result = await preview(f).execute({
+        bookId: "book-1",
+        draft: {
+          ...originalDraft,
+          requestId: "sale-replacement",
+          expectedPositionVersion: 1,
+          grossProceedsMinor: "600",
+        },
+        amendment: {
+          operationId: recorded.value.operationId!,
+          expectedOperationVersion: 0,
+        },
+      })
+      expect(result).toMatchObject({
+        ok: true,
+        value: {
+          positionVersion: 1,
+          bookCostDeltaMinor: "0",
+          netCashFlowMinor: kind === "journal" ? "100" : "200",
+          projectedCashMinor: "-400",
+          postings: expect.arrayContaining([
+            {
+              accountId: f.broker.id,
+              amountMinor: kind === "journal" ? "100" : "200",
+            },
+            {
+              accountId: f.gain.id,
+              amountMinor: kind === "journal" ? "-100" : "-200",
+            },
+          ]),
+        },
+      })
+      expect(f.h.store.snapshot()).toEqual(before)
+      expect(f.h.publisher.events).toEqual([])
+    }
+  )
+
+  it("previews net amortization amendment with persisted journal, without writes", async () => {
+    const f = await setup()
+    const originalDraft = {
+      bookId: "book-1",
+      requestId: "amortization-1",
+      positionId: "position-1",
+      expectedPositionVersion: 0,
+      type: "AMORTIZATION" as const,
+      occurredOn: "2026-08-04",
+      description: "Amortization",
+      currency: "BRL",
+      bookCostReductionMinor: "200",
+      grossProceedsMinor: "220",
+      gainCategoryId: f.gain.id,
+      lossCategoryId: f.loss.id,
+      feeCategoryId: f.fee.id,
+      taxCategoryId: f.tax.id,
+      cashMode: "INTERNAL_CASH" as const,
+    }
+    const recorded = await new RecordInvestmentAmortization(
+      f.h.transactionManager,
+      f.h.dispatcher,
+      f.h.ids,
+      f.h.clock
+    ).execute(originalDraft)
+    if (!recorded.ok) throw new Error(JSON.stringify(recorded.error))
+    const before = f.h.store.snapshot()
+    f.h.publisher.clear()
+    const result = await preview(f).execute({
+      bookId: "book-1",
+      draft: {
+        ...originalDraft,
+        requestId: "amortization-replacement",
+        expectedPositionVersion: 1,
+        grossProceedsMinor: "250",
+      },
+      amendment: {
+        operationId: recorded.value.operationId!,
+        expectedOperationVersion: 0,
+      },
+    })
+    expect(result).toMatchObject({
+      ok: true,
+      value: {
+        positionVersion: 1,
+        bookCostDeltaMinor: "0",
+        netCashFlowMinor: "30",
+        projectedCashMinor: "-750",
+        postings: expect.arrayContaining([
+          {
+            accountId: f.broker.id,
+            amountMinor: "30",
+          },
+          {
+            accountId: f.gain.id,
+            amountMinor: "-30",
+          },
+        ]),
+      },
+    })
+    expect(f.h.store.snapshot()).toEqual(before)
+    expect(f.h.publisher.events).toEqual([])
+  })
+
+  it("projects amendment cash at the earlier replacement date", async () => {
+    const f = await setup()
+    const originalDraft = { ...sale(f), occurredOn: "2026-08-06" }
+    const recorded = await new RecordInvestmentSale(
+      f.h.transactionManager,
+      f.h.dispatcher,
+      f.h.ids,
+      f.h.clock
+    ).execute(originalDraft)
+    if (!recorded.ok) throw new Error("sale fixture failed")
+    const before = f.h.store.snapshot()
+    expect(
+      await preview(f).execute({
+        bookId: "book-1",
+        draft: {
+          ...originalDraft,
+          requestId: "earlier-replacement",
+          occurredOn: "2026-08-05",
+          expectedPositionVersion: 1,
+          grossProceedsMinor: "600",
+        },
+        amendment: {
+          operationId: recorded.value.operationId!,
+          expectedOperationVersion: 0,
+        },
+      })
+    ).toMatchObject({
+      ok: true,
+      value: {
+        projectedCashMinor: "-400",
+        warnings: [{ asOf: "2026-08-05", cashMinor: "-400" }],
+      },
+    })
+    expect(f.h.store.snapshot()).toEqual(before)
+  })
+
+  it("rejects an amendment target that is no longer the last effective operation", async () => {
+    const f = await setup()
+    const original = await new RecordInvestmentSale(
+      f.h.transactionManager,
+      f.h.dispatcher,
+      f.h.ids,
+      f.h.clock
+    ).execute(sale(f))
+    if (!original.ok) throw new Error("sale fixture failed")
+    const later = await new RecordInvestmentPurchase(
+      f.h.transactionManager,
+      f.h.dispatcher,
+      f.h.ids,
+      f.h.clock
+    ).execute({
+      ...purchase(),
+      requestId: "later-purchase",
+      expectedPositionVersion: 1,
+      occurredOn: "2026-08-05",
+    })
+    if (!later.ok) throw new Error("purchase fixture failed")
+    const before = f.h.store.snapshot()
+    expect(
+      await preview(f).execute({
+        bookId: "book-1",
+        draft: {
+          ...sale(f),
+          requestId: "replacement",
+          expectedPositionVersion: 2,
+        },
+        amendment: {
+          operationId: original.value.operationId!,
+          expectedOperationVersion: 0,
+        },
+      })
+    ).toMatchObject({
+      ok: false,
+      error: { code: "INVESTMENT_OPERATION_NOT_CORRECTABLE" },
+    })
+    expect(f.h.store.snapshot()).toEqual(before)
+  })
+
+  it("rejects a stale amendment target without mutating state", async () => {
+    const f = await setup()
+    const recorded = await new RecordInvestmentSale(
+      f.h.transactionManager,
+      f.h.dispatcher,
+      f.h.ids,
+      f.h.clock
+    ).execute(sale(f))
+    if (!recorded.ok) throw new Error("sale fixture failed")
+    const before = f.h.store.snapshot()
+    expect(
+      await preview(f).execute({
+        bookId: "book-1",
+        draft: {
+          ...sale(f),
+          requestId: "replacement",
+          expectedPositionVersion: 1,
+        },
+        amendment: {
+          operationId: recorded.value.operationId!,
+          expectedOperationVersion: 1,
+        },
+      })
+    ).toMatchObject({
+      ok: false,
+      error: { code: "OPTIMISTIC_CONCURRENCY_FAILURE" },
+    })
+    expect(f.h.store.snapshot()).toEqual(before)
   })
 })

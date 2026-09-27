@@ -3,6 +3,7 @@ import {
   Decimal,
   InvestmentPosition,
   investmentPositionIdFromString,
+  investmentOperationIdFromString,
   planInvestmentAccounting,
   Result,
 } from "@workspace/domain"
@@ -64,6 +65,203 @@ export class PreviewInvestmentOperation {
               "INVESTMENT_ENTITY_NOT_ACTIVE",
               "Investment instrument must be active"
             )
+
+          if (command.amendment !== undefined) {
+            const targetLookup =
+              await repositories.investmentOperations.findById(
+                book.id,
+                investmentOperationIdFromString(command.amendment.operationId)
+              )
+            if (targetLookup.kind === "NOT_FOUND")
+              throw missing("Investment operation")
+            if (targetLookup.kind === "BOOK_MISMATCH")
+              throw mismatch("Investment operation")
+            const original = targetLookup.value
+            const originalSnapshot = original.toSnapshot()
+            if (original.version !== command.amendment.expectedOperationVersion)
+              throw concurrent()
+            if (
+              originalSnapshot.positionId !== position.id ||
+              originalSnapshot.type !== command.draft.type ||
+              originalSnapshot.currency !== command.draft.currency
+            )
+              throw invalid(
+                "Replacement must retain position, type and currency"
+              )
+            const last =
+              await repositories.investmentOperations.findLastEffective(
+                book.id,
+                position.id
+              )
+            if (
+              last?.id !== original.id ||
+              originalSnapshot.role !== "BUSINESS"
+            )
+              throw new ApplicationError(
+                "INVESTMENT_OPERATION_NOT_CORRECTABLE",
+                "Investment operation is not the last effective operation"
+              )
+            const previous =
+              await repositories.investmentOperations.findLastEffective(
+                book.id,
+                position.id,
+                original.id
+              )
+            if (
+              previous !== null &&
+              command.draft.occurredOn < previous.toSnapshot().occurredOn
+            )
+              throw invalid(
+                "Replacement date precedes the prior effective operation"
+              )
+            if (originalSnapshot.positionBefore.kind !== "EXISTING")
+              throw invalid("Opening allocation cannot be amended")
+            const prior = originalSnapshot.positionBefore
+            const priorSnapshot = {
+              ...snapshot,
+              quantity: prior.quantity,
+              bookCostMinor: prior.bookCostMinor,
+              status: prior.status,
+              openedOn: prior.openedOn,
+              closedOn: prior.closedOn,
+              allocationEffectiveOn: prior.allocationEffectiveOn,
+            }
+            const priorPosition = InvestmentPosition.restore(priorSnapshot)
+            if (changesAllocation(command.draft))
+              priorPosition.assertCanAllocate(
+                account.status === "ACTIVE",
+                instrument.value.status === "ACTIVE"
+              )
+            else
+              priorPosition.assertCanRecordPostClosureCashFlow(
+                account.status === "ACTIVE",
+                instrument.value.status === "ACTIVE"
+              )
+            validateDraft(command.draft, priorSnapshot)
+            const categories = await categoriesFor(
+              repositories,
+              book.id,
+              command.draft
+            )
+            const externalAccountId = await externalAccountFor(
+              repositories,
+              book.id,
+              snapshot.investmentAccountId,
+              command.draft
+            )
+            const plan = planInvestmentAccounting(
+              planInput(
+                command.draft,
+                snapshot.investmentAccountId,
+                externalAccountId,
+                categories
+              )
+            )
+            priorPosition.applyOperation({
+              ...(quantityDelta(command.draft) === undefined
+                ? {}
+                : { quantityDelta: quantityDelta(command.draft) }),
+              bookCostDeltaMinor: plan.bookCostDeltaMinor,
+              occurredOn: command.draft.occurredOn,
+            })
+            const originalJournal =
+              originalSnapshot.journalEntryId === undefined
+                ? null
+                : await repositories.journalEntries.findById(
+                    originalSnapshot.journalEntryId
+                  )
+            if (
+              originalSnapshot.journalEntryId !== undefined &&
+              originalJournal === null
+            )
+              throw missing("Investment journal entry")
+            if (originalJournal !== null && originalJournal.bookId !== book.id)
+              throw mismatch("Investment journal entry")
+            const grouped = new Map<string, bigint>()
+            for (const posting of plan.postings)
+              grouped.set(
+                posting.accountId,
+                (grouped.get(posting.accountId) ?? 0n) +
+                  BigInt(posting.amountMinor)
+              )
+            for (const posting of originalJournal?.postings ?? [])
+              grouped.set(
+                posting.accountId,
+                (grouped.get(posting.accountId) ?? 0n) -
+                  posting.amount.amountMinor
+              )
+            const postings = [...grouped].flatMap(([accountId, amountMinor]) =>
+              amountMinor === 0n
+                ? []
+                : [{ accountId, amountMinor: amountMinor.toString() }]
+            )
+            const bookCostDeltaMinor = (
+              BigInt(plan.bookCostDeltaMinor) -
+              BigInt(originalSnapshot.bookCostDeltaMinor)
+            ).toString()
+            const netCashFlowMinor = (
+              BigInt(plan.netCashFlowMinor) -
+              BigInt(originalSnapshot.netCashFlowMinor)
+            ).toString()
+            const asOf = command.draft.occurredOn
+            const cash = await repositories.investmentReads.accountCash(
+              book.id,
+              [snapshot.investmentAccountId],
+              asOf
+            )
+            const current = cash[0]
+            if (current === undefined)
+              throw new ApplicationError(
+                "UNEXPECTED_ERROR",
+                "Investment cash state was not returned"
+              )
+            const replacementInvestmentDelta = plan.postings
+              .filter(
+                (posting) => posting.accountId === snapshot.investmentAccountId
+              )
+              .reduce((sum, posting) => sum + BigInt(posting.amountMinor), 0n)
+            const originalInvestmentDelta =
+              originalSnapshot.occurredOn <= asOf
+                ? (originalJournal?.postings ?? [])
+                    .filter(
+                      (posting) =>
+                        posting.accountId === snapshot.investmentAccountId
+                    )
+                    .reduce(
+                      (sum, posting) => sum + posting.amount.amountMinor,
+                      0n
+                    )
+                : 0n
+            const investmentPostingDelta =
+              replacementInvestmentDelta - originalInvestmentDelta
+            const projectedCashMinor = (
+              BigInt(current.cashMinor) +
+              investmentPostingDelta -
+              BigInt(bookCostDeltaMinor)
+            ).toString()
+            return {
+              positionId: position.id,
+              positionVersion: position.version,
+              allocationRevision: position.allocationRevision,
+              bookCostDeltaMinor,
+              netCashFlowMinor,
+              postings,
+              categories,
+              projectedCashMinor,
+              warnings:
+                BigInt(projectedCashMinor) < 0n
+                  ? [
+                      {
+                        code: "INVESTMENT_CASH_NEGATIVE" as const,
+                        investmentAccountId: snapshot.investmentAccountId,
+                        cashMinor: projectedCashMinor,
+                        currency: current.currency,
+                        asOf,
+                      },
+                    ]
+                  : [],
+            } satisfies InvestmentOperationPreview
+          }
 
           if (changesAllocation(command.draft))
             position.assertCanAllocate(

@@ -160,6 +160,10 @@ export type InvestmentOperationDraft =
 export interface PreviewInvestmentOperationCommand {
   readonly bookId: string
   readonly draft: InvestmentOperationDraft
+  readonly amendment?: {
+    readonly operationId: string
+    readonly expectedOperationVersion: number
+  }
 }
 
 export interface InvestmentOperationPreview {

@@ -78,6 +78,58 @@ describe("SqliteInvestmentOperationQueries", () => {
     expect((await list()).items[0]?.sequence).toBe("2"))
   it("ends cursor at final page", async () =>
     expect((await list()).nextCursor).toBeNull())
+  it("returns persisted fields needed to amend the same operation", async () => {
+    expect((await list()).items[0]).toMatchObject({
+      id: "o2",
+      type: "PURCHASE",
+      role: "BUSINESS",
+      version: 0,
+      description: "Original",
+      currency: "BRL",
+      quantityDelta: "2",
+      feesMinor: "0",
+      taxesMinor: "0",
+      cashMode: "EXTERNAL_ACCOUNT",
+      settlementAccountId: "a",
+      gainCategoryId: "a",
+      lossCategoryId: "a",
+      incomeCategoryId: "a",
+      feeCategoryId: "a",
+      taxCategoryId: "a",
+      beforeKind: "EXISTING",
+      beforeQuantity: "5",
+      beforeBookCostMinor: "100",
+      beforeStatus: "OPEN",
+      beforeOpenedOn: "2026-01-01",
+      beforeAllocationEffectiveOn: "2026-01-01",
+    })
+  })
+  it.each([
+    "APPLICATION",
+    "SALE",
+    "REDEMPTION",
+    "INCOME",
+    "AMORTIZATION",
+    "FEE",
+    "TAX",
+    "OPENING_ALLOCATION",
+  ])("preserves %s for correction routing", async (type) => {
+    await db.execute("UPDATE investment_operations SET type=? WHERE id='o2'", [
+      type,
+    ])
+    expect((await list()).items[0]?.type).toBe(type)
+  })
+  it("exposes lineage and version for the last effective operation", async () => {
+    await db.execute(
+      "UPDATE investment_operations SET reversed_by_id='o1', version=1 WHERE id='o2'"
+    )
+    expect((await list()).items[0]).toMatchObject({
+      role: "BUSINESS",
+      version: 1,
+      reversalOf: "o1",
+      reversedBy: "o1",
+    })
+  })
   function list() {
     return q.listOperations({ bookId: "b", positionId: "p", limit: 25 })
   }
@@ -89,7 +141,7 @@ describe("SqliteInvestmentOperationQueries", () => {
     reversal?: string
   ) {
     await db.execute(
-      "INSERT INTO investment_operations (id,book_id,position_id,type,role,occurred_on,recorded_at,sequence,description,currency,book_cost_delta_minor,gross_amount_minor,fees_minor,taxes_minor,net_cash_flow_minor,cash_mode,before_kind,version,journal_entry_id,reversal_of_id) VALUES (?, 'b','p','PURCHASE','BUSINESS',?,'2026-01-01T00:00:00.000Z',?,'x','BRL',10,10,0,0,-10,'NONE','EXISTING',0,?,?)",
+      "INSERT INTO investment_operations (id,book_id,position_id,type,role,occurred_on,recorded_at,sequence,description,currency,quantity_delta,book_cost_delta_minor,gross_amount_minor,fees_minor,taxes_minor,net_cash_flow_minor,cash_mode,settlement_account_id,gain_category_id,loss_category_id,income_category_id,fee_category_id,tax_category_id,before_kind,before_quantity,before_book_cost_minor,before_status,before_opened_on,before_allocation_effective_on,version,journal_entry_id,reversal_of_id) VALUES (?, 'b','p','PURCHASE','BUSINESS',?,'2026-01-01T00:00:00.000Z',?,'Original','BRL','2',10,10,0,0,-10,'EXTERNAL_ACCOUNT','a','a','a','a','a','a','EXISTING','5',100,'OPEN','2026-01-01','2026-01-01',0,?,?)",
       [id, date, sequence, journal ?? null, reversal ?? null]
     )
   }

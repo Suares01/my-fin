@@ -11,6 +11,7 @@ import {
 import { afterEach, describe, expect, it, vi } from "vitest"
 import type { InvestmentPositionView } from "@workspace/application"
 import { InvestmentPurchaseForm } from "./investment-purchase-form"
+import { correctionOperation } from "./investment-correction-test-fixtures"
 
 const state = vi.hoisted(() => ({
   session: { status: "ACTIVE", bookId: "book-1" } as
@@ -41,6 +42,7 @@ const state = vi.hoisted(() => ({
   ],
   preview: vi.fn(),
   purchase: vi.fn(),
+  amend: vi.fn(),
   receipt: vi.fn(),
   toast: vi.fn(),
 }))
@@ -77,6 +79,7 @@ vi.mock("../../../providers", () => ({
       operations: {
         preview: { execute: state.preview },
         purchase: { execute: state.purchase },
+        amend: { execute: state.amend },
       },
       requests: { get: state.receipt },
     },
@@ -243,6 +246,21 @@ function choose(label: string, value: string) {
 function basic() {
   fill("Principal", "100,00")
   fill("Data da operação", "2026-09-01")
+}
+
+function renderCorrection(operation: ReturnType<typeof correctionOperation>) {
+  render(
+    <QueryClientProvider
+      client={
+        new QueryClient({ defaultOptions: { queries: { retry: false } } })
+      }
+    >
+      <InvestmentPurchaseForm
+        position={basePosition}
+        amendment={{ operation, reason: "Ajuste justificado" }}
+      />
+    </QueryClientProvider>
+  )
 }
 
 describe("InvestmentPurchaseForm", () => {
@@ -621,6 +639,56 @@ describe("InvestmentPurchaseForm", () => {
     fireEvent.click(screen.getByRole("button", { name: "Aplicar" }))
     await waitFor(() =>
       expect(screen.getByText(/Atualize a posição/)).toBeTruthy()
+    )
+  })
+  it("amends the original APPLICATION through its specialized fields", async () => {
+    success()
+    state.amend.mockResolvedValue({
+      ok: true,
+      value: {
+        requestId: "request-1",
+        positionId: "position-1",
+        positionVersion: 5,
+        operationId: "operation-original",
+        replacementOperationId: "replacement-1",
+        journalEntryIds: [],
+        warnings: [],
+      },
+    })
+    renderCorrection(
+      correctionOperation("APPLICATION", {
+        bookCostDeltaMinor: "10000",
+        feesMinor: "1000",
+        feeCategoryId: "fee-1",
+      })
+    )
+    expect(screen.getByLabelText("Principal")).toHaveProperty("value", "100,00")
+    fireEvent.click(document.querySelector('button[type="submit"]')!)
+    await waitFor(() =>
+      expect(state.amend).toHaveBeenCalledWith(
+        expect.objectContaining({
+          operationId: "operation-original",
+          expectedOperationVersion: 0,
+          expectedPositionVersion: 4,
+          reason: "Ajuste justificado",
+          replacement: expect.objectContaining({
+            capitalMinor: "10000",
+            feesMinor: "1000",
+            type: "APPLICATION",
+          }),
+        })
+      )
+    )
+    expect(state.purchase).not.toHaveBeenCalled()
+    await waitFor(() =>
+      expect(state.preview).toHaveBeenCalledWith(
+        expect.objectContaining({
+          amendment: {
+            operationId: "operation-original",
+            expectedOperationVersion: 0,
+          },
+        })
+      )
     )
   })
 })

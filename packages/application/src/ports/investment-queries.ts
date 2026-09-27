@@ -114,11 +114,34 @@ export interface InvestmentInstrumentQueries {
 export interface InvestmentOperationHistoryItem {
   readonly id: string
   readonly type: string
+  readonly role: "BUSINESS" | "REVERSAL"
+  readonly version: number
   readonly occurredOn: string
+  readonly settledOn?: string
+  readonly recordedAt: string
   readonly sequence: string
+  readonly description: string
+  readonly currency: string
+  readonly quantityDelta?: string
   readonly grossAmountMinor: string
   readonly netCashFlowMinor: string
-  readonly bookCostDeltaMinor?: string
+  readonly bookCostDeltaMinor: string
+  readonly feesMinor: string
+  readonly taxesMinor: string
+  readonly cashMode: "NONE" | "INTERNAL_CASH" | "EXTERNAL_ACCOUNT"
+  readonly settlementAccountId?: string
+  readonly gainCategoryId?: string
+  readonly lossCategoryId?: string
+  readonly incomeCategoryId?: string
+  readonly feeCategoryId?: string
+  readonly taxCategoryId?: string
+  readonly beforeKind: "UNOPENED" | "EXISTING"
+  readonly beforeQuantity?: string
+  readonly beforeBookCostMinor?: string
+  readonly beforeStatus?: "OPEN" | "CLOSED"
+  readonly beforeOpenedOn?: string
+  readonly beforeClosedOn?: string
+  readonly beforeAllocationEffectiveOn?: string
   readonly journalEntryId?: string
   readonly reversalOf?: string
   readonly reversedBy?: string

@@ -39,15 +39,22 @@ import {
   purchaseFormSchema,
   type PurchaseFormValues,
 } from "./investment-purchase-form-model"
+import {
+  purchaseCorrectionDefaults,
+  type InvestmentAmendment,
+  correctionErrorMessage,
+} from "./investment-correction-form-model"
 
 type Props = {
   readonly position: InvestmentPositionView
+  readonly amendment?: InvestmentAmendment
   readonly onSuccess?: (result: InvestmentMutationResult) => void
   readonly onCancel?: () => void
 }
 
 export function InvestmentPurchaseForm({
   position,
+  amendment,
   onSuccess,
   onCancel,
 }: Props) {
@@ -60,7 +67,10 @@ export function InvestmentPurchaseForm({
   const [failure, setFailure] = useState<string | null>(null)
   const form = useForm<PurchaseFormValues>({
     resolver: zodResolver(purchaseFormSchema),
-    defaultValues: purchaseFormDefaults,
+    defaultValues:
+      amendment === undefined
+        ? purchaseFormDefaults
+        : purchaseCorrectionDefaults(amendment.operation),
   })
   const values = useWatch({ control: form.control }) as PurchaseFormValues
   const wallet = wallets.data?.find(
@@ -81,15 +91,31 @@ export function InvestmentPurchaseForm({
     [balances.data, position.currency]
   )
   const expenseCategories = categories.data ?? []
-  const intentKey = `${bookId ?? "none"}:${position.id}:${position.version}:${JSON.stringify(values)}`
+  const intentKey = `${bookId ?? "none"}:${position.id}:${position.version}:${amendment?.operation.id ?? "new"}:${amendment?.operation.version ?? "new"}:${amendment?.reason ?? ""}:${JSON.stringify(values)}`
   const purchase = useInvestmentSubmission<PurchaseOrApplicationDraft>({
     intentKey,
     execute: ({ bookId: activeBookId, requestId, draft }) =>
-      services.investments.operations.purchase.execute({
-        ...draft,
-        bookId: activeBookId,
-        requestId,
-      }),
+      amendment === undefined
+        ? services.investments.operations.purchase.execute({
+            ...draft,
+            bookId: activeBookId,
+            requestId,
+          })
+        : services.investments.operations.amend.execute({
+            bookId: activeBookId,
+            requestId,
+            operationId: amendment.operation.id,
+            expectedOperationVersion: amendment.operation.version,
+            expectedPositionVersion: position.version,
+            reason: amendment.reason,
+            replacement: {
+              ...draft,
+              type: amendment.operation
+                .type as PurchaseOrApplicationDraft["type"],
+              bookId: activeBookId,
+              requestId,
+            },
+          }),
   })
   const pending = form.formState.isSubmitting || purchase.isPending
 
@@ -129,13 +155,28 @@ export function InvestmentPurchaseForm({
         })
   const draft = draftResult?.ok ? draftResult.draft : null
   const previewQuery = useQuery({
-    queryKey: ["investments", bookId, "purchase-preview", draft],
+    queryKey: [
+      "investments",
+      bookId,
+      "purchase-preview",
+      draft,
+      amendment?.operation.id,
+      amendment?.operation.version,
+    ],
     queryFn: () =>
       draft === null
         ? Promise.reject(new Error("Prévia indisponível"))
         : services.investments.operations.preview.execute({
             bookId: draft.bookId,
             draft,
+            ...(amendment === undefined
+              ? {}
+              : {
+                  amendment: {
+                    operationId: amendment.operation.id,
+                    expectedOperationVersion: amendment.operation.version,
+                  },
+                }),
           }),
     enabled: draft !== null && position.status === "OPEN",
     retry: false,
@@ -164,7 +205,10 @@ export function InvestmentPurchaseForm({
       const result = await purchase.submit(validated.draft)
       onSuccess?.(result)
     } catch (error) {
-      const message = purchaseErrorMessage(error)
+      const message =
+        amendment === undefined
+          ? purchaseErrorMessage(error)
+          : correctionErrorMessage(error)
       setFailure(message)
       toast.add({
         type: "error",

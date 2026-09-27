@@ -11,6 +11,7 @@ import {
 import type { InvestmentPositionView } from "@workspace/application"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { InvestmentExpenseForm } from "./investment-expense-form"
+import { correctionOperation } from "./investment-correction-test-fixtures"
 
 const state = vi.hoisted(() => ({
   session: { status: "ACTIVE", bookId: "book-1" } as
@@ -25,6 +26,7 @@ const state = vi.hoisted(() => ({
   ],
   preview: vi.fn(),
   expense: vi.fn(),
+  amend: vi.fn(),
   receipt: vi.fn(),
   toast: vi.fn(),
 }))
@@ -60,6 +62,7 @@ vi.mock("../../../providers", () => ({
       operations: {
         preview: { execute: state.preview },
         expense: { execute: state.expense },
+        amend: { execute: state.amend },
       },
       requests: { get: state.receipt },
     },
@@ -213,6 +216,21 @@ function basic() {
 }
 function save() {
   fireEvent.click(screen.getByRole("button", { name: "Registrar despesa" }))
+}
+
+function renderCorrection(operation: ReturnType<typeof correctionOperation>) {
+  render(
+    <QueryClientProvider
+      client={
+        new QueryClient({ defaultOptions: { queries: { retry: false } } })
+      }
+    >
+      <InvestmentExpenseForm
+        position={position}
+        amendment={{ operation, reason: "Ajuste justificado" }}
+      />
+    </QueryClientProvider>
+  )
 }
 
 describe("InvestmentExpenseForm", () => {
@@ -502,5 +520,84 @@ describe("InvestmentExpenseForm", () => {
     await waitFor(() =>
       expect(screen.getByText(/Atualize a posição/)).toBeTruthy()
     )
+  })
+  it("amends the original FEE through its specialized fields", async () => {
+    success()
+    state.amend.mockResolvedValue({
+      ok: true,
+      value: {
+        requestId: "request-1",
+        positionId: "position-1",
+        positionVersion: 5,
+        operationId: "operation-original",
+        replacementOperationId: "replacement-1",
+        journalEntryIds: [],
+        warnings: [],
+      },
+    })
+    renderCorrection(
+      correctionOperation("FEE", { feesMinor: "1000", feeCategoryId: "fee-1" })
+    )
+    expect(screen.getByLabelText("Valor pago")).toHaveProperty("value", "10,00")
+    fireEvent.click(document.querySelector('button[type="submit"]')!)
+    await waitFor(() =>
+      expect(state.amend).toHaveBeenCalledWith(
+        expect.objectContaining({
+          operationId: "operation-original",
+          expectedOperationVersion: 0,
+          expectedPositionVersion: 4,
+          reason: "Ajuste justificado",
+          replacement: expect.objectContaining({
+            amountMinor: "1000",
+            expenseCategoryId: "fee-1",
+            type: "FEE",
+          }),
+        })
+      )
+    )
+    expect(state.expense).not.toHaveBeenCalled()
+    await waitFor(() =>
+      expect(state.preview).toHaveBeenCalledWith(
+        expect.objectContaining({
+          amendment: {
+            operationId: "operation-original",
+            expectedOperationVersion: 0,
+          },
+        })
+      )
+    )
+  })
+
+  it("amends TAX with the persisted tax amount and category", async () => {
+    success()
+    state.amend.mockResolvedValue({
+      ok: true,
+      value: {
+        requestId: "request-1",
+        positionId: "position-1",
+        positionVersion: 5,
+        operationId: "operation-original",
+        replacementOperationId: "replacement-1",
+        journalEntryIds: [],
+        warnings: [],
+      },
+    })
+    renderCorrection(
+      correctionOperation("TAX", { taxesMinor: "2000", taxCategoryId: "tax-1" })
+    )
+    expect(screen.getByLabelText("Valor pago")).toHaveProperty("value", "20,00")
+    fireEvent.click(document.querySelector('button[type="submit"]')!)
+    await waitFor(() =>
+      expect(state.amend).toHaveBeenCalledWith(
+        expect.objectContaining({
+          replacement: expect.objectContaining({
+            amountMinor: "2000",
+            expenseCategoryId: "tax-1",
+            type: "TAX",
+          }),
+        })
+      )
+    )
+    expect(state.expense).not.toHaveBeenCalled()
   })
 })

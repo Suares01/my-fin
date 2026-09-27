@@ -42,14 +42,25 @@ import {
   saleFormSchema,
   type SaleFormValues,
 } from "./investment-sale-form-model"
+import {
+  saleCorrectionDefaults,
+  type InvestmentAmendment,
+  correctionErrorMessage,
+} from "./investment-correction-form-model"
 
 type Props = {
   readonly position: InvestmentPositionView
+  readonly amendment?: InvestmentAmendment
   readonly onSuccess?: (result: InvestmentMutationResult) => void
   readonly onCancel?: () => void
 }
 
-export function InvestmentSaleForm({ position, onSuccess, onCancel }: Props) {
+export function InvestmentSaleForm({
+  position,
+  amendment,
+  onSuccess,
+  onCancel,
+}: Props) {
   const services = useMyFin()
   const { session } = useActiveBook()
   const bookId = session.status === "ACTIVE" ? session.bookId : null
@@ -60,7 +71,10 @@ export function InvestmentSaleForm({ position, onSuccess, onCancel }: Props) {
   const [failure, setFailure] = useState<string | null>(null)
   const form = useForm<SaleFormValues>({
     resolver: zodResolver(saleFormSchema),
-    defaultValues: saleFormDefaults,
+    defaultValues:
+      amendment === undefined
+        ? saleFormDefaults
+        : saleCorrectionDefaults(amendment.operation),
   })
   const values = useWatch({ control: form.control }) as SaleFormValues
   const wallet = wallets.data?.find(
@@ -86,16 +100,34 @@ export function InvestmentSaleForm({ position, onSuccess, onCancel }: Props) {
     bookId ?? "none",
     position.id,
     position.version,
+    amendment?.operation.id ?? "new",
+    amendment?.operation.version ?? "new",
+    amendment?.reason ?? "",
     JSON.stringify(values),
   ].join(":")
   const sale = useInvestmentSubmission<SaleOrRedemptionDraft>({
     intentKey,
     execute: ({ bookId: activeBookId, requestId, draft }) =>
-      services.investments.operations.sale.execute({
-        ...draft,
-        bookId: activeBookId,
-        requestId,
-      }),
+      amendment === undefined
+        ? services.investments.operations.sale.execute({
+            ...draft,
+            bookId: activeBookId,
+            requestId,
+          })
+        : services.investments.operations.amend.execute({
+            bookId: activeBookId,
+            requestId,
+            operationId: amendment.operation.id,
+            expectedOperationVersion: amendment.operation.version,
+            expectedPositionVersion: position.version,
+            reason: amendment.reason,
+            replacement: {
+              ...draft,
+              type: amendment.operation.type as SaleOrRedemptionDraft["type"],
+              bookId: activeBookId,
+              requestId,
+            },
+          }),
   })
   const pending = form.formState.isSubmitting || sale.isPending
   const priorScope = useRef(values.scope)
@@ -160,13 +192,28 @@ export function InvestmentSaleForm({ position, onSuccess, onCancel }: Props) {
         })
   const draft = draftResult?.ok ? draftResult.draft : null
   const previewQuery = useQuery({
-    queryKey: ["investments", bookId, "sale-preview", draft],
+    queryKey: [
+      "investments",
+      bookId,
+      "sale-preview",
+      draft,
+      amendment?.operation.id,
+      amendment?.operation.version,
+    ],
     queryFn: () =>
       draft === null
         ? Promise.reject(new Error("Prévia indisponível"))
         : services.investments.operations.preview.execute({
             bookId: draft.bookId,
             draft,
+            ...(amendment === undefined
+              ? {}
+              : {
+                  amendment: {
+                    operationId: amendment.operation.id,
+                    expectedOperationVersion: amendment.operation.version,
+                  },
+                }),
           }),
     enabled: draft !== null && position.status === "OPEN",
     retry: false,
@@ -207,7 +254,10 @@ export function InvestmentSaleForm({ position, onSuccess, onCancel }: Props) {
       const result = await sale.submit(validated.draft)
       onSuccess?.(result)
     } catch (error) {
-      const message = saleErrorMessage(error)
+      const message =
+        amendment === undefined
+          ? saleErrorMessage(error)
+          : correctionErrorMessage(error)
       setFailure(message)
       toast.add({
         type: "error",

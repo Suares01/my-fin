@@ -11,6 +11,7 @@ import {
 import type { InvestmentPositionView } from "@workspace/application"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { InvestmentAmortizationForm } from "./investment-amortization-form"
+import { correctionOperation } from "./investment-correction-test-fixtures"
 
 const state = vi.hoisted(() => ({
   session: { status: "ACTIVE", bookId: "book-1" } as
@@ -27,6 +28,7 @@ const state = vi.hoisted(() => ({
   incomes: [{ id: "gain-1", name: "Ganhos" }],
   preview: vi.fn(),
   amortization: vi.fn(),
+  amend: vi.fn(),
   receipt: vi.fn(),
   toast: vi.fn(),
 }))
@@ -64,6 +66,7 @@ vi.mock("../../../providers", () => ({
       operations: {
         preview: { execute: state.preview },
         amortization: { execute: state.amortization },
+        amend: { execute: state.amend },
       },
       requests: { get: state.receipt },
     },
@@ -197,6 +200,21 @@ function basic() {
 }
 function save() {
   fireEvent.click(screen.getByRole("button", { name: "Registrar amortização" }))
+}
+
+function renderCorrection(operation: ReturnType<typeof correctionOperation>) {
+  render(
+    <QueryClientProvider
+      client={
+        new QueryClient({ defaultOptions: { queries: { retry: false } } })
+      }
+    >
+      <InvestmentAmortizationForm
+        position={position}
+        amendment={{ operation, reason: "Ajuste justificado" }}
+      />
+    </QueryClientProvider>
+  )
 }
 
 describe("InvestmentAmortizationForm", () => {
@@ -530,6 +548,59 @@ describe("InvestmentAmortizationForm", () => {
     save()
     await waitFor(() =>
       expect(screen.getByText(/Atualize a posição/)).toBeTruthy()
+    )
+  })
+  it("amends the original AMORTIZATION through its specialized fields", async () => {
+    success()
+    state.amend.mockResolvedValue({
+      ok: true,
+      value: {
+        requestId: "request-1",
+        positionId: "position-1",
+        positionVersion: 5,
+        operationId: "operation-original",
+        replacementOperationId: "replacement-1",
+        journalEntryIds: [],
+        warnings: [],
+      },
+    })
+    renderCorrection(
+      correctionOperation("AMORTIZATION", {
+        bookCostDeltaMinor: "-20000",
+        grossAmountMinor: "22000",
+        gainCategoryId: "gain-1",
+      })
+    )
+    expect(screen.getByLabelText("Custo reduzido")).toHaveProperty(
+      "value",
+      "200,00"
+    )
+    fireEvent.click(document.querySelector('button[type="submit"]')!)
+    await waitFor(() =>
+      expect(state.amend).toHaveBeenCalledWith(
+        expect.objectContaining({
+          operationId: "operation-original",
+          expectedOperationVersion: 0,
+          expectedPositionVersion: 4,
+          reason: "Ajuste justificado",
+          replacement: expect.objectContaining({
+            bookCostReductionMinor: "20000",
+            grossProceedsMinor: "22000",
+            type: "AMORTIZATION",
+          }),
+        })
+      )
+    )
+    expect(state.amortization).not.toHaveBeenCalled()
+    await waitFor(() =>
+      expect(state.preview).toHaveBeenCalledWith(
+        expect.objectContaining({
+          amendment: {
+            operationId: "operation-original",
+            expectedOperationVersion: 0,
+          },
+        })
+      )
     )
   })
 })
