@@ -6,8 +6,8 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 
 **Design:** [design.md](./design.md), aprovado pelo usuário com “Aprovo design, siga para tasks.md”.
 **Spec:** [spec.md](./spec.md), 148 requisitos aprovados.
-**Status:** Execute em andamento: T1–T83 e T95–T97 concluídas em commits atômicos; próxima tarefa T84.
-**Total:** 97 tarefas em 16 fases sequenciais. T1–T83 e T95–T97 concluídas; T84 inicia a fase de avaliação/correção e listas.
+**Status:** Execute em andamento: T1–T84 e T95–T97 concluídas em commits atômicos; próxima tarefa T85.
+**Total:** 97 tarefas em 16 fases sequenciais. T1–T84 e T95–T97 concluídas; T85 continua a fase de avaliação/correção e listas.
 
 Cada tarefa entrega um componente ou um caso de uso. `Where` indica seu ponto principal; testes, exports, mapper privado e ajustes mecânicos de consumidores do mesmo contrato pertencem ao mesmo commit. Isso não autoriza implementar outro componente antecipadamente. Wrapper fino de um mesmo comando discriminado pode compartilhar tarefa; comportamento econômico distinto tem tarefa própria.
 
@@ -3291,11 +3291,49 @@ Cada fase tem de 4 a 7 tarefas. Se houver delegação durante Execute, propor ba
 
 **Done when**:
 
-- [ ] Enviar bruto/instante e revisão observada, opcionais desconhecidos e quantidade coerente; revisão obsoleta exige recarregar sem converter valuation em custo ou lucro informado.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 14 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full React` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Enviar bruto/instante e revisão observada, opcionais desconhecidos e quantidade coerente; revisão obsoleta exige recarregar sem converter valuation em custo ou lucro informado.
+- [x] Escrever/atualizar no mesmo commit pelo menos 14 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full React` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (React); testes acompanham o componente nesta tarefa.
+
+**Evidência T84 (2026-09-27):** Antes: Tauri 77 arquivos/841 testes; depois: 78 arquivos/857 testes. São 16 cenários React novos, nenhum removido ou pulado. Full React passou: cinco builds de dependências, 78/78 arquivos e 857/857 testes Tauri, `tsc --noEmit`. O formulário preserva o valor de data local convertido em ISO e o requestId quando o draft permanece igual.
+
+**Adequação A — critérios e efeitos:**
+
+| Critério | Asserção `file:line` | Resultado da spec | Coberto |
+| --- | --- | --- | --- |
+| Livro, campos e revisão observada, INV-100/101/110/131 | `investment-valuation-form.test.tsx:140` `expect(screen.getByText(/Selecione um livro/)).toBeTruthy()`; `:144-149` presença dos campos; `:157-169` payload com `expectedAllocationRevision: 2`, `grossValueMinor: "120000"`, quantidade `"10"` e instante ISO | Avaliação usa revisão observada e pede apenas campos aplicáveis | Sim; Drawer/foco nativo em T92–T93 |
+| Opcionais desconhecidos, INV-59 | `:180-183` `not.toHaveProperty("netValueMinor")` e `not.toHaveProperty("withdrawableValueMinor")`; `:187-188` ausência de quantidade/preço em posição por valor | Omissão não vira zero nem bruto | Sim |
+| Valores e quantidade válidos, INV-48/142 | `:196-208` bruto ausente/negativo sem envio; `:216-228` líquido/resgatável negativos sem envio; `:236-248` preço/quantidade incoerentes sem envio | Avaliação inválida não é enviada | Sim; validação transacional permanece no comando T58 |
+| Instante da observação, INV-47/49/58 | `:167` `valuedAt: new Date("2026-09-01T10:00").toISOString()`; `:256-258` instante ausente não envia | Nova observação recebe instante explícito; histórico/cobertura visual em T90 | Parcial no conjunto da feature |
+| Sem efeito contábil/custo ou preço antigo, INV-47/130 | `:330-331` ausência de `bookCostMinor` e `profitMinor` no comando; `:165-166` quantidade/preço informados nesta revisão | A UI não envia custo/lucro; preço é observação atual explícita | Sim na superfície do formulário; domínio em T58 |
+| Conflito e retry, INV-109/131 | `:301-308` valor preservado e requestId igual no retry; `:321` instrução de recarregar a posição | Draft preservado; revisão obsoleta exige nova avaliação consciente | Sim |
+| Submissão pendente, INV-111 | `:273-275` botão desabilitado e uma chamada | Envio duplicado impedido | Sim |
+
+**Adequação C — necessidade dos 16 cenários:**
+
+| Asserção `file:line` | Requisito/edge | Manter |
+| --- | --- | --- |
+| `investment-valuation-form.test.tsx:140` seleção de livro | INV-101/110 | Sim |
+| `:144-149` campos presentes | INV-100/101 | Sim |
+| `:157-169` payload de valor/revisão/instante | INV-47/49/58/131/142 | Sim |
+| `:180-183` opcionais ausentes | INV-59 | Sim |
+| `:187-188` campos de quantidade ausentes | INV-100 | Sim |
+| `:196-198` bruto ausente | INV-48 | Sim |
+| `:206-208` bruto negativo | INV-48 | Sim |
+| `:216-218` líquido negativo | INV-48 | Sim |
+| `:226-228` resgatável negativo | INV-48 | Sim |
+| `:236-238` preço unitário ausente | INV-142 | Sim |
+| `:246-248` quantidade divergente | INV-142 | Sim |
+| `:256-258` instante ausente | INV-47/49 | Sim |
+| `:273-275` pendência | INV-111 | Sim |
+| `:301-308` falha e retry | INV-109 | Sim |
+| `:321` revisão obsoleta | INV-131 | Sim |
+| `:330-331` custo/lucro fora do payload | INV-47/130 | Sim |
+
+**Adequacy verdict:** PASS para T84. Check A cobre os critérios do formulário com asserções de valores; Check B inclui payload e estado visível, sem depender apenas de contagem; Check C vincula os 16 cenários à spec; Check D segue testes React co-localizados e controles existentes. Histórico, foco do Drawer e UAT nativo ficam nas tarefas próprias.
+
 **Gate**: Full React
 **Commit**: `feat(investments-ui): formulário de avaliação`
 
