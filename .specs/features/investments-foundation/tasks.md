@@ -6,8 +6,8 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 
 **Design:** [design.md](./design.md), aprovado pelo usuário com “Aprovo design, siga para tasks.md”.
 **Spec:** [spec.md](./spec.md), 148 requisitos aprovados.
-**Status:** Execute em andamento: T1–T84 e T95–T97 concluídas em commits atômicos; próxima tarefa T85.
-**Total:** 97 tarefas em 16 fases sequenciais. T1–T84 e T95–T97 concluídas; T85 continua a fase de avaliação/correção e listas.
+**Status:** Execute em andamento: T1–T86 e T95–T97 concluídas em commits atômicos; próxima tarefa T87.
+**Total:** 97 tarefas em 16 fases sequenciais. T1–T86 e T95–T97 concluídas; T87 continua a fase de listas.
 
 Cada tarefa entrega um componente ou um caso de uso. `Where` indica seu ponto principal; testes, exports, mapper privado e ajustes mecânicos de consumidores do mesmo contrato pertencem ao mesmo commit. Isso não autoriza implementar outro componente antecipadamente. Wrapper fino de um mesmo comando discriminado pode compartilhar tarefa; comportamento econômico distinto tem tarefa própria.
 
@@ -3383,11 +3383,27 @@ Revisão reversa: os 6 cenários Memory novos cobrem read-only, journal opcional
 
 **Done when**:
 
-- [ ] Exibir disponível/contábil/avaliado, moeda/data/cobertura e desconhecidos; loading/erro não viram zero e total com inconsistência conserva fórmula/aviso até caixa corrigido.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full React` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Exibir disponível/contábil/avaliado, moeda/data/cobertura e desconhecidos; loading/erro não viram zero e total com inconsistência conserva fórmula/aviso até caixa corrigido.
+- [x] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full React` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (React); testes acompanham o componente nesta tarefa.
+
+**Evidência T86 (2026-09-28):** Antes: Tauri 79 arquivos/888 testes; depois: 80 arquivos/904 testes. São 16 cenários React novos, nenhum removido ou pulado. Full React passou: cinco builds de dependências, 80/80 arquivos e 904/904 testes Tauri, `tsc --noEmit`; lint dos dois arquivos passou.
+
+**Adequação A — critérios e efeitos:**
+
+| Critério | Asserção `file:line` | Resultado da spec | Coberto |
+| --- | --- | --- | --- |
+| Disponível, contábil, avaliado, moeda e data, INV-09/54/56/93/140/141 | `investment-portfolio-summary.test.tsx:54-79` valores distintos R$ 1.200/2.000/2.200 e data 27/09; `:241-252` moeda USD | Cards mostram os totais fornecidos pelo resumo na moeda-base e data única | Sim; cálculo de origem coberto por T62 |
+| Cobertura, fallback, fechamento e desconhecidos, INV-52/53/58/59 | `:81-118` contagem 1/2, datas distintas, fallback em custo, fechada 0/0 com caixa preservado, opcionais desconhecidos | Não sincroniza cotações nem inventa valor líquido | Sim no resumo; histórico detalhado em T90 |
+| Outros ativos e saldos arquivados, INV-10 | `:119-125` valores separados do disponível | Disponível mantém escopo diário ativo | Sim; origem em T62 |
+| Vazio, carregamento e erros, INV-106/107/108 | `:126-179` ação de cadastro, skeleton, erro/retry, dados anteriores preservados | Nenhum estado de rede fabrica zero | Sim |
+| Inconsistência e correção, INV-60/146/147 | `:180-239` caixa negativo assinado, total avaliado ainda R$ 2.100, avisos exatos e remoção após correção | Total calculado permanece visível com alerta até recálculo sem aviso | Sim |
+| Viewport, INV-112 | `investment-portfolio-summary.tsx` grid de uma coluna e três em md; `min-w-0` e `break-words` | Estrutura responsiva | Parcial; medidas reais 360/1280 em T93 |
+
+**Adequação B–D:** Asserções observam valores, cobertura, ações e mudança de estado, não apenas presença do componente. Os 16 cenários são distintos e ligados aos ACs acima. Os testes ficam junto ao componente, usam contratos locais e verificam loading/erro sem dados falsos. Verificação visual em navegador e integração da página seguem T92–T93. **Adequacy verdict:** PASS para T86.
+
 **Gate**: Full React
 **Commit**: `feat(investments-ui): cards patrimoniais`
 
