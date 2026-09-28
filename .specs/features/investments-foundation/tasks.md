@@ -6,8 +6,8 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 
 **Design:** [design.md](./design.md), aprovado pelo usuário com “Aprovo design, siga para tasks.md”.
 **Spec:** [spec.md](./spec.md), 148 requisitos aprovados.
-**Status:** Execute em andamento: T1–T88 e T95–T97 concluídas em commits atômicos; próxima tarefa T89.
-**Total:** 97 tarefas em 16 fases sequenciais. T1–T88 e T95–T97 concluídas; T89 inicia a fase de históricos e navegação.
+**Status:** Execute em andamento: T1–T89 e T95–T97 concluídas em commits atômicos; próxima tarefa T90.
+**Total:** 97 tarefas em 16 fases sequenciais. T1–T89 e T95–T97 concluídas; T90 continua a fase de históricos e navegação.
 
 Cada tarefa entrega um componente ou um caso de uso. `Where` indica seu ponto principal; testes, exports, mapper privado e ajustes mecânicos de consumidores do mesmo contrato pertencem ao mesmo commit. Isso não autoriza implementar outro componente antecipadamente. Wrapper fino de um mesmo comando discriminado pode compartilhar tarefa; comportamento econômico distinto tem tarefa própria.
 
@@ -3490,11 +3490,26 @@ Revisão reversa: os 6 cenários Memory novos cobrem read-only, journal opcional
 
 **Done when**:
 
-- [ ] Mostrar fatos/reversões/substituições, efeitos e datas de ocorrência/registro, journal opcional e acesso à correção somente da última efetiva; paginação isolada.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full React` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Mostrar fatos/reversões/substituições, efeitos e datas de ocorrência/registro, journal opcional e acesso à correção somente da última efetiva; paginação isolada.
+- [x] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full React` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (React); testes acompanham o componente nesta tarefa.
+
+**Evidência T89 (2026-09-28):** Antes: Tauri 82 arquivos/944 testes; depois: 83 arquivos/961 testes. São 17 cenários React novos, nenhum removido ou pulado. Full React passou: cinco builds de dependências, 83/83 arquivos e 961/961 testes Tauri, `tsc --noEmit`; lint dos dois arquivos passou.
+
+**Adequação A — critérios e efeitos:**
+
+| Critério | Asserção `file:line` | Resultado da spec | Coberto |
+| --- | --- | --- | --- |
+| Fatos, datas e efeitos persistidos, INV-61/65/69/72/73/96/132/133/134 | `investment-operation-history.test.tsx:102-132` ocorrência 01/09 distinta do registro 27/09, quantidade -10, bruto 1.200, fluxo 1.180, custo -1.000 e journal | UI mostra fatos e efeitos normalizados sem recalcular; data de registro explícita | Sim na UI; reversão transacional em T56–T57 |
+| Journal opcional e lineage, INV-61/63/64/68/117/135/136 | `:135-224` sem journal, original/reversão/substituta em registros separados e ambos os sentidos de cardinalidade contábil | Histórico não inventa journal nem apaga o original | Sim na visualização; estado atual/reabertura em T91 |
+| Correção só da última efetiva, INV-63/110 | `:226-263` item antigo/reversão/original substituído não mostram ação; última efetiva aciona callback com operação | Acesso à correção segue `correctableOperation` de T85 | Sim em jsdom; Drawer/foco em T92–T93 |
+| Paginação e estados, INV-98/106/108 | `:265-318` cursor, pendência, loading sem falso vazio, erro/retry, dado antigo e vazio | Histórico usa cursor independente da posição selecionada | Sim; escopo de cursor no hook T72 |
+| Viewport, INV-112 | `investment-operation-history.tsx` cards em coluna, métricas em grid responsivo e `min-w-0` | Estrutura sem tabela larga | Parcial; viewport real em T93 |
+
+**Adequação B–D:** Os 17 cenários verificam efeitos, datas, links e callbacks. A consulta já fornece ordenação por ocorrência/sequência; a UI escolhe a primeira operação efetiva entre páginas carregadas e só oferece correção a ela. Testes ficam junto ao componente e usam o contrato real. Integração do formulário e prova nativa seguem T92–T93. **Adequacy verdict:** PASS para T89.
+
 **Gate**: Full React
 **Commit**: `feat(investments-ui): histórico visual de operações`
 
