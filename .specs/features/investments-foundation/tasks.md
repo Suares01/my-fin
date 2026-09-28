@@ -3474,6 +3474,8 @@ Revisão reversa: os 6 cenários Memory novos cobrem read-only, journal opcional
 
 **Adequação B–D:** Asserções verificam payload de filtros e ações, valores, estado e paginação. Os 23 cenários representam ramos distintos, com testes co-localizados e contratos locais; a query/hook já verifica limite e cursor por livro/filtro. Integração dos callbacks e prova de foco/viewport nativos seguem T92–T93. **Adequacy verdict:** PASS para T88.
 
+**Correção de regressão T88 (2026-09-28):** A integração com o read model mostrou que `assetClass` era comparada a `instrument.type` (por exemplo, `FIXED_INCOME` contra `CDB`), o resultado devolvia `CDB` como classe, "Todos os estados" era interpretado como OPEN e o cursor usava a primeira linha não exibida, pulando-a. Quatro testes SQLite reproduziram as falhas; um cenário React exige `status: ALL` explícito. A query agora usa o classificador do domínio para filtro e saída, aceita ALL sem cláusula de estado e cria o cursor a partir da última linha exibida. Antes: SQLite 53/958, React 84/978; depois: SQLite 53/961 (+3 líquidos por substituição do teste de classe), React 84/979 (+1). Full SQLite, Application 28/258, Full React, lint/tipos dos packages alterados, build Tauri e `git diff --check` passaram. Aviso existente de chunk >500 kB no build. Adequação: PASS para os quatro defeitos discriminados; UAT de filtros e viewport continua em T93. Commit separado: `fix(investments): filtros e cursor das posições`.
+
 **Gate**: Full React + Build
 **Commit**: `feat(investments-ui): tabela de posições`
 

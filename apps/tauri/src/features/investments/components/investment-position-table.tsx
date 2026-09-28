@@ -133,7 +133,7 @@ export function InvestmentPositionTable({
   const filters = {
     ...(accountId === "ALL" ? {} : { accountId }),
     ...(assetClass === "ALL" ? {} : { assetClass }),
-    ...(status === "ALL" ? {} : { status: status as "OPEN" | "CLOSED" }),
+    status: status as "OPEN" | "CLOSED" | "ALL",
     search,
   }
   const query = useInvestmentPositions(filters)

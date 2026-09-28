@@ -38,8 +38,33 @@ describe("SqliteInvestmentPositionQueries", () => {
     expect((await list({ search: "%" })).items).toHaveLength(0))
   it("filters account", async () =>
     expect((await list({ accountId: "missing" })).items).toHaveLength(0))
-  it("filters class", async () =>
-    expect((await list({ assetClass: "STOCK" })).items).toHaveLength(0))
+  it("returns the normalized asset class for each instrument type", async () =>
+    expect((await list()).items[0]?.assetClass).toBe("FIXED_INCOME"))
+  it("filters by asset class rather than instrument type", async () =>
+    expect(
+      (await list({ assetClass: "FIXED_INCOME" })).items.map((item) => item.id)
+    ).toEqual(["p1"]))
+  it("includes open and closed positions when status is ALL", async () =>
+    expect(
+      (await list({ status: "ALL" })).items.map((item) => item.id)
+    ).toEqual(["p1", "p2"]))
+  it("pages across both statuses without losing the next row", async () => {
+    const first = await q.listPositions({
+      bookId: "b",
+      status: "ALL",
+      limit: 1,
+    })
+    expect(first.items.map((item) => item.id)).toEqual(["p1"])
+    expect(first.nextCursor).not.toBeNull()
+    const second = await q.listPositions({
+      bookId: "b",
+      status: "ALL",
+      limit: 1,
+      cursor: first.nextCursor!,
+    })
+    expect(second.items.map((item) => item.id)).toEqual(["p2"])
+    expect(second.nextCursor).toBeNull()
+  })
   it("keeps book isolation", async () =>
     expect(
       (await q.listPositions({ bookId: "other", limit: 25, status: "OPEN" }))
@@ -78,7 +103,7 @@ describe("SqliteInvestmentPositionQueries", () => {
     expect((await list({ accountId: "none" })).items).toEqual([]))
   function list(
     x: Partial<{
-      status: "OPEN" | "CLOSED"
+      status: "OPEN" | "CLOSED" | "ALL"
       search: string
       accountId: string
       assetClass: string

@@ -23,7 +23,7 @@ export class ListInvestmentPositions {
     readonly bookId: string
     readonly accountId?: string
     readonly assetClass?: string
-    readonly status?: "OPEN" | "CLOSED"
+    readonly status?: "OPEN" | "CLOSED" | "ALL"
     readonly search?: string
     readonly limit?: number
     readonly cursor?: string

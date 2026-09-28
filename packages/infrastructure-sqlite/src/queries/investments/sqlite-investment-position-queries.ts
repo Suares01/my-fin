@@ -1,3 +1,8 @@
+import {
+  INVESTMENT_INSTRUMENT_TYPES,
+  investmentInstrumentClassFor,
+} from "@workspace/domain"
+import type { InvestmentInstrumentType } from "@workspace/domain"
 import type {
   InvestmentPositionView,
   InvestmentQueries,
@@ -50,15 +55,25 @@ export class SqliteInvestmentPositionQueries implements Pick<
     if (cursor !== undefined && cursor.fingerprint !== fingerprint)
       throw new Error("INVALID_QUERY cursor")
     return this.database.readTransaction(async (reader) => {
-      const params: string[] = [query.bookId, query.status ?? "OPEN"]
-      let where = "p.book_id=? AND p.status=?"
+      const params: string[] = [query.bookId]
+      let where = "p.book_id=?"
+      if (query.status !== "ALL") {
+        where += " AND p.status=?"
+        params.push(query.status ?? "OPEN")
+      }
       if (query.accountId !== undefined) {
         where += " AND p.investment_account_id=?"
         params.push(query.accountId)
       }
       if (query.assetClass !== undefined) {
-        where += " AND i.type=?"
-        params.push(query.assetClass)
+        const types = INVESTMENT_INSTRUMENT_TYPES.filter(
+          (type) => investmentInstrumentClassFor(type) === query.assetClass
+        )
+        where +=
+          types.length === 0
+            ? " AND 1=0"
+            : ` AND i.type IN (${types.map(() => "?").join(",")})`
+        params.push(...types)
       }
       if (query.search !== undefined) {
         where +=
@@ -89,7 +104,9 @@ export class SqliteInvestmentPositionQueries implements Pick<
           investmentAccountId: row.investment_account_id,
           instrumentId: row.instrument_id,
           instrumentName: row.instrument_name,
-          assetClass: row.type,
+          assetClass: investmentInstrumentClassFor(
+            row.type as InvestmentInstrumentType
+          ),
           ...(row.label === null ? {} : { label: row.label }),
           ...(row.quantity === null ? {} : { quantity: row.quantity }),
           bookCostMinor: row.book_cost_minor,
@@ -109,18 +126,17 @@ export class SqliteInvestmentPositionQueries implements Pick<
                     valuedAt: row.valued_at!,
                   },
         }))
-      const last = items.at(-1)
-      const source = rows[query.limit]
+      const lastRow = rows[query.limit - 1]
       return {
         items,
         nextCursor:
-          source === undefined || last === undefined
+          rows.length <= query.limit || lastRow === undefined
             ? null
             : encodeInvestmentPositionCursor({
                 fingerprint,
-                name: source.normalized_name,
-                label: source.normalized_label,
-                id: source.id,
+                name: lastRow.normalized_name,
+                label: lastRow.normalized_label,
+                id: lastRow.id,
               }),
       }
     })

@@ -233,6 +233,11 @@ describe("InvestmentPositionTable", () => {
     expect(state.filters.at(-1)).toMatchObject({ assetClass: "EQUITY" })
   })
 
+  it("requests all statuses by default", () => {
+    show()
+    expect(state.filters.at(-1)).toMatchObject({ status: "ALL" })
+  })
+
   it("filters by open or closed status through the read-model hook", () => {
     show()
     selectOption("Estado", "Encerradas")
