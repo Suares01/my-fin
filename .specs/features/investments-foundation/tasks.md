@@ -6,8 +6,8 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 
 **Design:** [design.md](./design.md), aprovado pelo usuário com “Aprovo design, siga para tasks.md”.
 **Spec:** [spec.md](./spec.md), 148 requisitos aprovados.
-**Status:** Execute em andamento: T1–T86 e T95–T97 concluídas em commits atômicos; próxima tarefa T87.
-**Total:** 97 tarefas em 16 fases sequenciais. T1–T86 e T95–T97 concluídas; T87 continua a fase de listas.
+**Status:** Execute em andamento: T1–T87 e T95–T97 concluídas em commits atômicos; próxima tarefa T88.
+**Total:** 97 tarefas em 16 fases sequenciais. T1–T87 e T95–T97 concluídas; T88 encerra a fase de listas.
 
 Cada tarefa entrega um componente ou um caso de uso. `Where` indica seu ponto principal; testes, exports, mapper privado e ajustes mecânicos de consumidores do mesmo contrato pertencem ao mesmo commit. Isso não autoriza implementar outro componente antecipadamente. Wrapper fino de um mesmo comando discriminado pode compartilhar tarefa; comportamento econômico distinto tem tarefa própria.
 
@@ -3418,11 +3418,27 @@ Revisão reversa: os 6 cenários Memory novos cobrem read-only, journal opcional
 
 **Done when**:
 
-- [ ] Mostrar L/C/caixa/valor/resultado por carteira, seleção e ações de configuração/lifecycle com erros, vazio e aviso visível mesmo se caixa agregado for positivo.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full React` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Mostrar L/C/caixa/valor/resultado por carteira, seleção e ações de configuração/lifecycle com erros, vazio e aviso visível mesmo se caixa agregado for positivo.
+- [x] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full React` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (React); testes acompanham o componente nesta tarefa.
+
+**Evidência T87 (2026-09-28):** Antes: Tauri 80 arquivos/904 testes; depois: 81 arquivos/921 testes. São 17 cenários React novos, nenhum removido ou pulado. Full React passou: cinco builds de dependências, 81/81 arquivos e 921/921 testes Tauri, `tsc --noEmit`; lint dos dois arquivos passou.
+
+**Adequação A — critérios e efeitos:**
+
+| Critério | Asserção `file:line` | Resultado da spec | Coberto |
+| --- | --- | --- | --- |
+| Cinco valores por carteira, INV-55/94 | `investment-account-list.test.tsx:76-89` saldo/custo/caixa/valor/resultado distintos | Consulta é exibida sem recalcular o contrato | Sim; fórmulas verificadas em T63 |
+| Metadados e opcionais, INV-11/115 | `:91-114` instituição, referência, moeda, vínculo presente/ausente | Opcionais ausentes não geram instituição ou liquidação fictícia | Sim na lista; cadastro/configuração em T74 |
+| Caixa negativo por carteira e recuperação, INV-60/145/146/147 | `:116-145` caixa -100 com outra carteira +200, alerta global/linha e remoção após nova consulta | Aviso visível mesmo com agregado positivo, sem substituir o valor calculado | Sim na lista; total do livro em T86 |
+| Seleção e ações, INV-113/116 | `:147-198` seleção, configuração, arquivar somente saldo zero, reativação; posição aberta é revalidada pelo comando | Callbacks explícitos para integração e estado arquivado sem arquivamento repetido | Parcial; comandos/Drawer em T92 |
+| Erros, vazio e pendência, INV-106/107/108 | `:200-248` erro de ação preserva valores, loading/erro sem zeros, retry, vazio/cadastro, menu pendente isolado | Estados distinguem ausência de dados e erro | Sim |
+| Viewport, INV-112 | `investment-account-list.tsx` grid de uma coluna e duas em lg; `min-w-0`, `break-words` e ações flexíveis | Estrutura responsiva | Parcial; medidas reais 360/1280 em T93 |
+
+**Adequação B–D:** Asserções verificam valores distintos, callbacks e transições de estado. Os 17 cenários cobrem os ramos da lista e os avisos sem depender da soma agregada. O componente usa contratos locais e deixa a validação de posição aberta, a revalidação de vínculo e a execução dos comandos para a integração T92. **Adequacy verdict:** PASS para T87.
+
 **Gate**: Full React
 **Commit**: `feat(investments-ui): lista de carteiras`
 
