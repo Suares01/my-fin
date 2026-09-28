@@ -206,6 +206,33 @@ export function useInvestmentPositions(
   })
 }
 
+export function useInvestmentPosition(positionId: string | undefined) {
+  const services = useMyFin()
+  const { session } = useActiveBook()
+  const bookId = session.status === "ACTIVE" ? session.bookId : null
+  return useQuery({
+    queryKey: investmentKeys.position(
+      bookId ?? "unresolved",
+      positionId ?? "unresolved"
+    ),
+    enabled: bookId !== null && positionId !== undefined,
+    retry: false,
+    queryFn: async () => {
+      if (bookId === null || positionId === undefined)
+        throw new Error("Investment position requires an active book and ID")
+      const page = resultValue(
+        await services.investments.positions.list.execute({
+          bookId,
+          positionId,
+          status: "ALL",
+          limit: 1,
+        })
+      )
+      return page.items[0] ?? null
+    },
+  })
+}
+
 function useInvestmentHistory<T>(input: {
   readonly positionId: string | undefined
   readonly resource: "operations" | "valuations"

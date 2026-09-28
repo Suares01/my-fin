@@ -21,6 +21,7 @@ export class ListInvestmentPositions {
   ) {}
   public async execute(input: {
     readonly bookId: string
+    readonly positionId?: string
     readonly accountId?: string
     readonly assetClass?: string
     readonly status?: "OPEN" | "CLOSED" | "ALL"
@@ -40,6 +41,9 @@ export class ListInvestmentPositions {
       return Result.ok(
         await this.queries.listPositions({
           bookId,
+          ...(input.positionId === undefined
+            ? {}
+            : { positionId: parseRequiredId(input.positionId, "positionId") }),
           ...(input.accountId === undefined
             ? {}
             : { accountId: parseRequiredId(input.accountId, "accountId") }),

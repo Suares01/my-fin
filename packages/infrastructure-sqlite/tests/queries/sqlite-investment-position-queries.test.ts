@@ -65,6 +65,43 @@ describe("SqliteInvestmentPositionQueries", () => {
     expect(second.items.map((item) => item.id)).toEqual(["p2"])
     expect(second.nextCursor).toBeNull()
   })
+  it("loads one closed position by ID in the active book", async () => {
+    expect(
+      (await list({ positionId: "p2", status: "ALL" })).items.map(
+        (item) => item.id
+      )
+    ).toEqual(["p2"])
+  })
+  it("does not resolve a position ID in another book", async () => {
+    expect(
+      (
+        await q.listPositions({
+          bookId: "other",
+          positionId: "p1",
+          status: "ALL",
+          limit: 1,
+        })
+      ).items
+    ).toEqual([])
+  })
+  it("returns known fixed-income terms without inventing absent terms", async () => {
+    await db.execute(
+      "INSERT INTO investment_fixed_income_terms (position_id,book_id,rate_kind,annual_rate,issue_date,maturity_date) VALUES ('p1','b','PREFIXED','11.5','2026-01-01','2028-01-01')"
+    )
+    expect((await list({ positionId: "p1" })).items[0]).toMatchObject({
+      quantityMode: "UNITS",
+      openedOn: "2026-01-01",
+      fixedIncomeTerms: {
+        rateKind: "PREFIXED",
+        annualRate: "11.5",
+        issueDate: "2026-01-01",
+        maturityDate: "2028-01-01",
+      },
+    })
+    expect(
+      (await list({ positionId: "p2", status: "ALL" })).items[0]
+    ).not.toHaveProperty("fixedIncomeTerms")
+  })
   it("keeps book isolation", async () =>
     expect(
       (await q.listPositions({ bookId: "other", limit: 25, status: "OPEN" }))
@@ -106,6 +143,7 @@ describe("SqliteInvestmentPositionQueries", () => {
       status: "OPEN" | "CLOSED" | "ALL"
       search: string
       accountId: string
+      positionId: string
       assetClass: string
       limit: number
     }> = {}

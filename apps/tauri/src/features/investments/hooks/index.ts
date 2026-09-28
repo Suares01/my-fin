@@ -10,6 +10,7 @@ export {
   useInvestmentInstruments,
   useInvestmentOperations,
   useInvestmentPortfolio,
+  useInvestmentPosition,
   useInvestmentPositions,
   useInvestmentValuations,
 } from "./investment-queries.js"

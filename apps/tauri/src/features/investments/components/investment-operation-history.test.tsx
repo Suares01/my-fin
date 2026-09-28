@@ -64,7 +64,7 @@ function query(
     ...overrides,
   }
 }
-function show(positionId: string | null = "position-1") {
+function show(positionId: string | null = "position-1", canCorrect = true) {
   const onCorrect = vi.fn()
   return {
     onCorrect,
@@ -72,6 +72,7 @@ function show(positionId: string | null = "position-1") {
       <InvestmentOperationHistory
         positionId={positionId ?? undefined}
         onCorrect={onCorrect}
+        canCorrect={canCorrect}
       />
     ),
   }
@@ -237,6 +238,14 @@ describe("InvestmentOperationHistory", () => {
     openActions()
     fireEvent.click(screen.getByRole("menuitem", { name: "Corrigir operação" }))
     expect(onCorrect).toHaveBeenCalledWith(operation)
+  })
+
+  it("hides correction when the parent forbids archived-catalog amendments", () => {
+    show("position-1", false)
+    expect(screen.getByTestId("operation-operation-1")).toBeTruthy()
+    expect(
+      screen.queryByRole("button", { name: "Ações da operação operation-1" })
+    ).toBeNull()
   })
 
   it("does not offer correction for reversed or replaced records", () => {

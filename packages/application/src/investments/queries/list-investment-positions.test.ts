@@ -22,6 +22,27 @@ describe("ListInvestmentPositions", () => {
       })
     )
   })
+  it("forwards a validated position ID and ALL state to the book-scoped query", async () => {
+    const queries = {
+      listPositions: vi.fn().mockResolvedValue({ items: [], nextCursor: null }),
+    }
+    const execute = new ListInvestmentPositions(
+      { findById: vi.fn().mockResolvedValue({}) } as never,
+      queries as never
+    )
+    await execute.execute({
+      bookId: "book",
+      positionId: "position-1",
+      status: "ALL",
+      limit: 1,
+    })
+    expect(queries.listPositions).toHaveBeenCalledWith({
+      bookId: "book",
+      positionId: "position-1",
+      status: "ALL",
+      limit: 1,
+    })
+  })
   it("rejects invalid limits and unknown books", async () => {
     const queries = { listPositions: vi.fn() }
     const books = { findById: vi.fn().mockResolvedValue(null) }

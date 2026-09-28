@@ -31,6 +31,8 @@ export const investmentKeys = {
     [...investmentKeys.all(bookId), "instruments", { status }] as const,
   positions: (bookId: string, filters: InvestmentPositionFilters) =>
     [...investmentKeys.all(bookId), "positions", filters] as const,
+  position: (bookId: string, positionId: string) =>
+    [...investmentKeys.all(bookId), "position", positionId] as const,
   operations: (bookId: string, positionId: string) =>
     [...investmentKeys.all(bookId), "operations", positionId] as const,
   valuations: (bookId: string, positionId: string) =>

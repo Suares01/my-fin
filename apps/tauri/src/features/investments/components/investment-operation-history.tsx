@@ -32,6 +32,7 @@ import { useInvestmentOperations } from "../hooks"
 type Props = {
   readonly positionId: string | undefined
   readonly onCorrect: (operation: InvestmentOperationHistoryItem) => void
+  readonly canCorrect?: boolean
 }
 
 const operationLabels: Record<string, string> = {
@@ -74,7 +75,11 @@ function cashRoute(operation: InvestmentOperationHistoryItem): string {
   }
 }
 
-export function InvestmentOperationHistory({ positionId, onCorrect }: Props) {
+export function InvestmentOperationHistory({
+  positionId,
+  onCorrect,
+  canCorrect = true,
+}: Props) {
   const query = useInvestmentOperations(positionId)
 
   if (positionId === undefined)
@@ -139,8 +144,9 @@ export function InvestmentOperationHistory({ positionId, onCorrect }: Props) {
       ) : (
         <>
           {operations.map((operation) => {
-            const canCorrect =
+            const canCorrectOperation =
               lastEffectiveOperationId !== undefined &&
+              canCorrect &&
               correctableOperation(operation, lastEffectiveOperationId)
             const money = (minor: string) =>
               formatMinorAmount(minor, operation.currency)
@@ -270,7 +276,7 @@ export function InvestmentOperationHistory({ positionId, onCorrect }: Props) {
                     )}
                   </div>
                 </CardContent>
-                {canCorrect && (
+                {canCorrectOperation && (
                   <CardFooter>
                     <DropdownMenu>
                       <DropdownMenuTrigger

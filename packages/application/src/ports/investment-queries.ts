@@ -1,3 +1,4 @@
+import type { FixedIncomeTermsSnapshot } from "@workspace/domain"
 import type { InvestmentWarning } from "./investment-commands.js"
 import type { QueryPage } from "./query-inputs.js"
 
@@ -47,6 +48,10 @@ export interface InvestmentPositionView {
   readonly instrumentId: string
   readonly instrumentName: string
   readonly assetClass: string
+  readonly quantityMode?: "UNITS" | "AMOUNT"
+  readonly openedOn?: string
+  readonly closedOn?: string
+  readonly fixedIncomeTerms?: FixedIncomeTermsSnapshot
   readonly label?: string
   readonly quantity?: string
   readonly bookCostMinor: string
@@ -163,6 +168,7 @@ export interface InvestmentValuationHistoryItem {
 }
 export interface ListInvestmentPositionsQuery {
   readonly bookId: string
+  readonly positionId?: string
   readonly accountId?: string
   readonly assetClass?: string
   readonly status?: "OPEN" | "CLOSED" | "ALL"

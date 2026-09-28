@@ -14,6 +14,7 @@ import {
   useInvestmentInstruments,
   useInvestmentOperations,
   useInvestmentPortfolio,
+  useInvestmentPosition,
   useInvestmentPositions,
   useInvestmentValuations,
 } from "./index.js"
@@ -342,6 +343,51 @@ describe("investment query hooks", () => {
         investmentKeys.positions("book-1", { search: "Tesouro" })
       )
     ).toBeDefined()
+  })
+
+  it("loads one position by ID with both states scoped to the active book", async () => {
+    const serviceFacade = services()
+    vi.mocked(
+      serviceFacade.investments.positions.list.execute
+    ).mockResolvedValue({
+      ok: true,
+      value: {
+        items: [{ id: "position-1", status: "CLOSED" }],
+        nextCursor: null,
+      },
+    } as never)
+    const { result } = renderHook(() => useInvestmentPosition("position-1"), {
+      wrapper: wrapperFor(serviceFacade, new QueryClient()),
+    })
+    await waitFor(() => expect(result.current.data?.id).toBe("position-1"))
+    expect(
+      serviceFacade.investments.positions.list.execute
+    ).toHaveBeenCalledWith({
+      bookId: "book-1",
+      positionId: "position-1",
+      status: "ALL",
+      limit: 1,
+    })
+  })
+
+  it("returns null when a position is absent from the active book", async () => {
+    const serviceFacade = services()
+    const { result } = renderHook(() => useInvestmentPosition("foreign"), {
+      wrapper: wrapperFor(serviceFacade, new QueryClient()),
+    })
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    expect(result.current.data).toBeNull()
+  })
+
+  it("does not fetch position detail without an active book", () => {
+    const serviceFacade = services()
+    const { result } = renderHook(() => useInvestmentPosition("position-1"), {
+      wrapper: wrapperFor(serviceFacade, new QueryClient(), null),
+    })
+    expect(result.current.fetchStatus).toBe("idle")
+    expect(
+      serviceFacade.investments.positions.list.execute
+    ).not.toHaveBeenCalled()
   })
 
   it("does not query position history until both the book and position are present", () => {
