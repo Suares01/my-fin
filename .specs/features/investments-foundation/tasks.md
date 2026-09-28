@@ -6,8 +6,8 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 
 **Design:** [design.md](./design.md), aprovado pelo usuário com “Aprovo design, siga para tasks.md”.
 **Spec:** [spec.md](./spec.md), 148 requisitos aprovados.
-**Status:** Execute em andamento: T1–T89 e T95–T97 concluídas em commits atômicos; próxima tarefa T90.
-**Total:** 97 tarefas em 16 fases sequenciais. T1–T89 e T95–T97 concluídas; T90 continua a fase de históricos e navegação.
+**Status:** Execute em andamento: T1–T90 e T95–T97 concluídas em commits atômicos; próxima tarefa T91.
+**Total:** 97 tarefas em 16 fases sequenciais. T1–T90 e T95–T97 concluídas; T91 continua a fase de históricos e navegação.
 
 Cada tarefa entrega um componente ou um caso de uso. `Where` indica seu ponto principal; testes, exports, mapper privado e ajustes mecânicos de consumidores do mesmo contrato pertencem ao mesmo commit. Isso não autoriza implementar outro componente antecipadamente. Wrapper fino de um mesmo comando discriminado pode compartilhar tarefa; comportamento econômico distinto tem tarefa própria.
 
@@ -3516,7 +3516,7 @@ Revisão reversa: os 6 cenários Memory novos cobrem read-only, journal opcional
 ### T90: Histórico visual de avaliações
 
 **What**: Entregar histórico visual de avaliações conforme os requisitos abaixo.
-**Where**: `apps/tauri/src/features/investments/components/investment-valuation-history.tsx`
+**Where**: `apps/tauri/src/features/investments/components/investment-valuation-history.tsx`; extensão aditiva de `InvestmentValuationHistoryItem` e da query SQLite existente para dados persistidos de observação.
 **Depends on**: T89
 **Reuses**: Query de avaliações e form T84.
 **Requirement**: INV-47, INV-49, INV-50, INV-51, INV-53, INV-58, INV-59, INV-96, INV-98, INV-106, INV-108, INV-112, INV-117, INV-127, INV-130
@@ -3524,12 +3524,28 @@ Revisão reversa: os 6 cenários Memory novos cobrem read-only, journal opcional
 
 **Done when**:
 
-- [ ] Mostrar observações antigas/atuais e revisão/data, opcionais desconhecidos e cadastro append; cursor independente sem substituir histórico ao avaliar.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full React` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Mostrar observações antigas/atuais e revisão/data, opcionais desconhecidos e cadastro append; cursor independente sem substituir histórico ao avaliar.
+- [x] Escrever/atualizar no mesmo commit pelo menos 10 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full React` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
-**Tests**: integration (React); testes acompanham o componente nesta tarefa.
-**Gate**: Full React
+**Tests**: integration (SQLite e React); testes acompanham contrato e componente.
+
+**Evidência T90 (2026-09-28):** Antes: Application 28 arquivos/258 testes, SQLite 53/956, React 83/961. Depois: Application 28/258, SQLite 53/958 (+2), React 84/978 (+17). Nenhum teste removido ou pulado. Full SQLite + Full React verdes, incluindo cinco builds de dependências, `check:migrations`, lint e tipos de Application/SQLite, 84/84 arquivos React, 978/978 testes React e `tsc --noEmit`.
+
+**Adequação A — critérios e efeitos:**
+
+| Critério | Asserção `file:line` | Resultado da spec | Coberto |
+| --- | --- | --- | --- |
+| Contrato histórico, INV-47/49/59 | `packages/infrastructure-sqlite/tests/queries/sqlite-investment-valuation-queries.test.ts:40-65` instante/moeda e ausência real de opcionais; quantidade, preço, bruto, líquido e resgatável persistidos | Query aditiva não inventa zero/bruto para opcionais ausentes | Sim |
+| Atualidade, datas e revisão, INV-49/50/51/58/127/130 | `investment-valuation-history.test.tsx:123-173` ID vigente, data de avaliação, registro posterior, revisão histórica e fallback | Vigência vem do ID/revisão selecionados pelo read model; datas históricas continuam visíveis | Sim na UI; regra de escolha testada em T62/T65 |
+| Valores e fechamento, INV-53/59 | `:139-191` 5.200/5.180/3.000 distintos, desconhecidos e CLOSED zero com observações preservadas | Fechamento não apaga avaliações nem as torna atuais | Sim |
+| Cadastro append, INV-47/49/117 | `:193-226` callback de nova avaliação e cards anteriores preservados após append | Não há edição ou hard delete no histórico | Sim; formulário em T84 |
+| Paginação, loading e erro, INV-96/98/106/108 | `:228-283` próxima página, botão pendente, loading/erro/retry, dados anteriores e vazio | Cursor de avaliações independente no hook T72 | Sim |
+| Viewport, INV-112 | `investment-valuation-history.tsx` cards em coluna e grid responsivo | Estrutura sem tabela larga | Parcial; viewport real em T93 |
+
+**Adequação B–D:** Asserções verificam valores, revisão, datas e transições, não apenas contagem. Os dois testes SQLite discriminam NULL de valor informado; os 17 React cobrem vigência, histórico e estados. Consulta e componente usam contratos locais; integração do Drawer e prova nativa seguem T92–T93. **Adequacy verdict:** PASS para T90.
+
+**Gate**: Full SQLite + Full React
 **Commit**: `feat(investments-ui): histórico visual de avaliações`
 
 ### T91: Detalhe da posição

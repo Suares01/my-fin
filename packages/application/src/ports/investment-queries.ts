@@ -151,9 +151,15 @@ export interface InvestmentOperationHistoryItem {
 export interface InvestmentValuationHistoryItem {
   readonly id: string
   readonly valuedAt: string
+  readonly recordedAt: string
   readonly recordSequence: string
-  readonly grossValueMinor: string
   readonly allocationRevision: number
+  readonly currency: string
+  readonly quantity?: string
+  readonly unitPrice?: string
+  readonly grossValueMinor: string
+  readonly netValueMinor?: string
+  readonly withdrawableValueMinor?: string
 }
 export interface ListInvestmentPositionsQuery {
   readonly bookId: string

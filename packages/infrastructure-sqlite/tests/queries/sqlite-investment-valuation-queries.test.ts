@@ -37,6 +37,33 @@ describe("SqliteInvestmentValuationQueries", () => {
     expect((await list()).items[1]).toMatchObject({ allocationRevision: 1 }))
   it("preserves gross value", async () =>
     expect((await list()).items[0]?.grossValueMinor).toBe("20"))
+  it("returns observation time and currency without inventing optional values", async () => {
+    const item = (await list()).items[0]
+    expect(item).toMatchObject({
+      recordedAt: "2026-01-02T00:00:00.000Z",
+      currency: "BRL",
+      allocationRevision: 2,
+    })
+    expect(item).not.toHaveProperty("quantity")
+    expect(item).not.toHaveProperty("unitPrice")
+    expect(item).not.toHaveProperty("netValueMinor")
+    expect(item).not.toHaveProperty("withdrawableValueMinor")
+  })
+  it("returns quantity, unit price, net and withdrawable values when persisted", async () => {
+    await db.execute(
+      "INSERT INTO investment_valuations (id,book_id,position_id,allocation_revision,valued_at,valued_on,recorded_at,record_sequence,source,quantity,unit_price,currency,gross_value_minor,net_value_minor,withdrawable_value_minor) VALUES ('v3','b','p',2,'2026-01-03T00:00:00.000Z','2026-01-03','2026-01-04T10:00:00.000Z',3,'MANUAL','10','5.20','BRL',520,518,300)"
+    )
+    expect((await list()).items[0]).toMatchObject({
+      id: "v3",
+      valuedAt: "2026-01-03T00:00:00.000Z",
+      recordedAt: "2026-01-04T10:00:00.000Z",
+      quantity: "10",
+      unitPrice: "5.20",
+      grossValueMinor: "520",
+      netValueMinor: "518",
+      withdrawableValueMinor: "300",
+    })
+  })
   it("scopes position", async () =>
     expect(
       (await q.listValuations({ bookId: "b", positionId: "x", limit: 25 }))
