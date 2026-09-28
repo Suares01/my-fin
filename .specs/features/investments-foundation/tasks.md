@@ -6,8 +6,8 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 
 **Design:** [design.md](./design.md), aprovado pelo usuário com “Aprovo design, siga para tasks.md”.
 **Spec:** [spec.md](./spec.md), 148 requisitos aprovados.
-**Status:** Execute em andamento: T1–T87 e T95–T97 concluídas em commits atômicos; próxima tarefa T88.
-**Total:** 97 tarefas em 16 fases sequenciais. T1–T87 e T95–T97 concluídas; T88 encerra a fase de listas.
+**Status:** Execute em andamento: T1–T88 e T95–T97 concluídas em commits atômicos; próxima tarefa T89.
+**Total:** 97 tarefas em 16 fases sequenciais. T1–T88 e T95–T97 concluídas; T89 inicia a fase de históricos e navegação.
 
 Cada tarefa entrega um componente ou um caso de uso. `Where` indica seu ponto principal; testes, exports, mapper privado e ajustes mecânicos de consumidores do mesmo contrato pertencem ao mesmo commit. Isso não autoriza implementar outro componente antecipadamente. Wrapper fino de um mesmo comando discriminado pode compartilhar tarefa; comportamento econômico distinto tem tarefa própria.
 
@@ -3453,11 +3453,27 @@ Revisão reversa: os 6 cenários Memory novos cobrem read-only, journal opcional
 
 **Done when**:
 
-- [ ] Exibir instrumento/rótulo/carteira/classe/quantidade/custo/base/status e filtros paginados; ações respeitam estado, tabela rola internamente em viewport estreito.
-- [ ] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
-- [ ] Gate `Full React + Build` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
+- [x] Exibir instrumento/rótulo/carteira/classe/quantidade/custo/base/status e filtros paginados; ações respeitam estado, tabela rola internamente em viewport estreito.
+- [x] Escrever/atualizar no mesmo commit pelo menos 12 cenários distintos dos ACs acima; conferir todos os ramos/fixtures aplicáveis da matriz, registrar contagem antes/depois e evidência por requisito.
+- [x] Gate `Full React + Build` passa; revisão de adequação e rastreabilidade atualizadas antes do commit.
 
 **Tests**: integration (React); testes acompanham o componente nesta tarefa.
+
+**Evidência T88 (2026-09-28):** Antes: Tauri 81 arquivos/921 testes; depois: 82 arquivos/944 testes. São 23 cenários React novos, nenhum removido ou pulado. Full React + Build passou: cinco builds de dependências, 82/82 arquivos e 944/944 testes Tauri, lint completo do app, `tsc --noEmit`, `pnpm --filter tauri build` e `git diff --check`. O build emitiu somente aviso de chunk >500 kB.
+
+**Adequação A — critérios e efeitos:**
+
+| Critério | Asserção `file:line` | Resultado da spec | Coberto |
+| --- | --- | --- | --- |
+| Dados, identidade e avaliação, INV-19/25/26/95 | `investment-position-table.test.tsx:126-142` instrumento/rótulo/carteira/classe/estado/quantidade/custo/valor/data; `:205-220` duas posições do mesmo instrumento com ações distinguíveis | Linhas são identificadas por posição; status vem da consulta, sem inferir encerramento por vencimento | Sim na tabela; persistência/termos em T65 |
+| Opcionais, data/base, fallback e fechamento, INV-52/53/58/59 | `:145-202` líquido/resgatável próprios ou desconhecidos, quantidade desconhecida, custo fallback, CLOSED zero e histórico disponível | Valor base explícito, sem preencher opcionais com bruto | Sim |
+| Filtros e paginação, INV-97/98 | `:222-265` carteira/classe/estado/busca enviados ao hook; próximo cursor só com `hasNextPage`, botão pendente bloqueado | Consulta paginada no read model; limite 25/cursor testados no hook T72 | Sim |
+| Ações por estado, INV-110/118 | `:267-302` menu aciona compra; venda/avaliação/configuração para OPEN ativo; carteira ou instrumento arquivado oculta negociação | Ações seguem estado conhecido, domínio valida em tempo de comando | Sim em jsdom; foco nativo em T93 |
+| Loading, erro e vazio, INV-106/107/108 | `:304-349` sem falso vazio, retry, dados anteriores, criar ou limpar filtros | Consulta falha sem substituir dados por vazio | Sim |
+| Viewport, INV-112 | `:351-358` tabela dentro de container com rolagem horizontal; `investment-position-table.tsx` filtros responsivos | Rolagem confinada ao componente | Parcial; dimensões reais 360/1280 em T93 |
+
+**Adequação B–D:** Asserções verificam payload de filtros e ações, valores, estado e paginação. Os 23 cenários representam ramos distintos, com testes co-localizados e contratos locais; a query/hook já verifica limite e cursor por livro/filtro. Integração dos callbacks e prova de foco/viewport nativos seguem T92–T93. **Adequacy verdict:** PASS para T88.
+
 **Gate**: Full React + Build
 **Commit**: `feat(investments-ui): tabela de posições`
 
