@@ -50,6 +50,8 @@ import { useInvestmentPositions } from "../hooks"
 
 type Props = {
   readonly accounts: readonly InvestmentAccountView[]
+  readonly accountIdFilter?: string | null
+  readonly onAccountFilterChange?: (accountId: string | null) => void
   readonly instruments: readonly InvestmentInstrumentView[]
   readonly onCreate: () => void
   readonly onView: (position: InvestmentPositionView) => void
@@ -118,6 +120,8 @@ function PositionFilter({
 
 export function InvestmentPositionTable({
   accounts,
+  accountIdFilter,
+  onAccountFilterChange,
   instruments,
   onCreate,
   onView,
@@ -126,7 +130,13 @@ export function InvestmentPositionTable({
   onEvaluate,
   onConfigure,
 }: Props) {
-  const [accountId, setAccountId] = useState("ALL")
+  const [localAccountId, setLocalAccountId] = useState("ALL")
+  const accountId =
+    accountIdFilter === undefined ? localAccountId : (accountIdFilter ?? "ALL")
+  const setAccountId = (next: string) => {
+    setLocalAccountId(next)
+    onAccountFilterChange?.(next === "ALL" ? null : next)
+  }
   const [assetClass, setAssetClass] = useState("ALL")
   const [status, setStatus] = useState("ALL")
   const [search, setSearch] = useState("")

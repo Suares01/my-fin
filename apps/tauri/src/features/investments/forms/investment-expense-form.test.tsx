@@ -196,13 +196,16 @@ function success() {
   })
   state.receipt.mockResolvedValue(null)
 }
-function renderForm(target: InvestmentPositionView = position) {
+function renderForm(
+  target: InvestmentPositionView = position,
+  initialType?: "FEE" | "TAX"
+) {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   })
   render(
     <QueryClientProvider client={client}>
-      <InvestmentExpenseForm position={target} />
+      <InvestmentExpenseForm position={target} initialType={initialType} />
     </QueryClientProvider>
   )
 }
@@ -257,6 +260,12 @@ describe("InvestmentExpenseForm", () => {
     expect(screen.queryByLabelText("Quantidade")).toBeNull()
     expect(screen.queryByLabelText("Conta de destino")).toBeNull()
     expect(screen.getByText(/vinculada à posição CDB/)).toBeTruthy()
+  })
+
+  it("starts on tax when opened from the tax action", () => {
+    success()
+    renderForm(position, "TAX")
+    expect(screen.getByLabelText("Imposto")).toHaveProperty("checked", true)
   })
 
   it("records a fee with internal cash, CAS and explicit expense category", async () => {

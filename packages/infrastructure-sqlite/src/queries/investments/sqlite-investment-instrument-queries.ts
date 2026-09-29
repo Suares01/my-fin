@@ -1,3 +1,5 @@
+import { investmentInstrumentClassFor } from "@workspace/domain"
+import type { InvestmentInstrumentType } from "@workspace/domain"
 import type {
   InvestmentInstrumentQueries,
   InvestmentInstrumentView,
@@ -8,6 +10,7 @@ type Row = {
   id: string
   name: string
   type: string
+  version: number
   currency: string
   issuer_name: string | null
   status: "ACTIVE" | "ARCHIVED"
@@ -40,7 +43,7 @@ export class SqliteInvestmentInstrumentQueries implements InvestmentInstrumentQu
   ): Promise<readonly InvestmentInstrumentView[]> {
     return this.database.readTransaction(async (reader) => {
       const rows = await reader.query<Row>(
-        "SELECT i.id,i.name,i.type,i.currency,i.issuer_name,i.status,x.scheme,x.value,x.market FROM investment_instruments i LEFT JOIN investment_instrument_identifiers x ON x.book_id=i.book_id AND x.instrument_id=i.id WHERE i.book_id=?" +
+        "SELECT i.id,i.name,i.type,i.version,i.currency,i.issuer_name,i.status,x.scheme,x.value,x.market FROM investment_instruments i LEFT JOIN investment_instrument_identifiers x ON x.book_id=i.book_id AND x.instrument_id=i.id WHERE i.book_id=?" +
           (status === undefined ? "" : " AND i.status=?") +
           (instrumentId === undefined ? "" : " AND i.id=?") +
           " ORDER BY i.normalized_name ASC,i.id ASC,x.rowid ASC",
@@ -70,6 +73,10 @@ export class SqliteInvestmentInstrumentQueries implements InvestmentInstrumentQu
           prior === undefined
             ? {
                 id: row.id,
+                instrumentClass: investmentInstrumentClassFor(
+                  row.type as InvestmentInstrumentType
+                ),
+                version: row.version,
                 name: row.name,
                 type: row.type,
                 currency: row.currency,

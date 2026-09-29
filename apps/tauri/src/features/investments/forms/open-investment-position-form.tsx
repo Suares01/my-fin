@@ -518,10 +518,11 @@ export function OpenInvestmentPositionForm({ onSuccess, onCancel }: Props) {
     return (
       <section className="flex flex-col gap-4">
         <p className="text-sm text-muted-foreground">
-          Escolha o tipo Investimento para esta carteira. O cadastro é
-          independente da abertura.
+          Cadastre uma carteira de investimento. O cadastro é independente da
+          abertura.
         </p>
         <AccountForm
+          lockedType="INVESTMENT_ACCOUNT"
           onSuccess={(id) => {
             form.setValue("investmentAccountId", id)
             setCatalog(null)

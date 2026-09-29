@@ -38,6 +38,8 @@ const account: InvestmentAccountView = {
 }
 const instrument: InvestmentInstrumentView = {
   id: "instrument-1",
+  instrumentClass: "FIXED_INCOME",
+  version: 0,
   name: "CDB A",
   type: "CDB",
   currency: "BRL",
@@ -217,6 +219,15 @@ describe("InvestmentPositionTable", () => {
         name: "Ações da posição CDB A — Reserva 2030",
       })
     ).toBeTruthy()
+  })
+
+  it("accepts a wallet selection from the parent without changing portfolio data", () => {
+    show({
+      accountIdFilter: "wallet-2",
+      accounts: [account, { ...account, id: "wallet-2", name: "Corretora B" }],
+    })
+    expect(state.filters.at(-1)).toMatchObject({ accountId: "wallet-2" })
+    expect(screen.getByRole("combobox", { name: "Carteira" })).toBeTruthy()
   })
 
   it("filters by wallet through the read-model hook", () => {

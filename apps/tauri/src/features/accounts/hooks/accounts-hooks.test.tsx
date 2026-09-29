@@ -284,6 +284,37 @@ describe("account data hooks", () => {
     expect(invalidate).toHaveBeenCalledTimes(1)
   })
 
+  it("refreshes investment catalogs and archived balances only for a new wallet's book", async () => {
+    const serviceFacade = services()
+    const queryClient = new QueryClient()
+    const invalidate = vi.spyOn(queryClient, "invalidateQueries")
+    const { result } = renderHook(() => useCreateAccount(), {
+      wrapper: wrapperFor(serviceFacade, queryClient),
+    })
+    await act(async () => {
+      await result.current.mutateAsync({
+        bookId: "book-1",
+        name: "Corretora",
+        type: "INVESTMENT_ACCOUNT",
+      })
+    })
+    expect(invalidate).toHaveBeenCalledWith({
+      queryKey: accountKeys.balances("book-1"),
+      exact: true,
+    })
+    expect(invalidate).toHaveBeenCalledWith({
+      queryKey: accountKeys.balances("book-1", true),
+      exact: true,
+    })
+    expect(invalidate).toHaveBeenCalledWith({
+      queryKey: ["investments", "book-1"],
+      exact: false,
+    })
+    expect(invalidate).not.toHaveBeenCalledWith(
+      expect.objectContaining({ queryKey: ["investments", "book-2"] })
+    )
+  })
+
   it("does not invalidate balances when account creation fails", async () => {
     const serviceFacade = services()
     vi.mocked(serviceFacade.accounts.create.execute).mockResolvedValue({

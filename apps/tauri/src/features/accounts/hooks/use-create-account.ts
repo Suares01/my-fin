@@ -18,9 +18,23 @@ export function useCreateAccount() {
     },
     retry: false,
     onSuccess: (_account, command) =>
-      queryClient.invalidateQueries({
-        queryKey: accountKeys.balances(command.bookId),
-        exact: true,
-      }),
+      Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: accountKeys.balances(command.bookId),
+          exact: true,
+        }),
+        ...(command.type === "INVESTMENT_ACCOUNT"
+          ? [
+              queryClient.invalidateQueries({
+                queryKey: accountKeys.balances(command.bookId, true),
+                exact: true,
+              }),
+              queryClient.invalidateQueries({
+                queryKey: ["investments", command.bookId],
+                exact: false,
+              }),
+            ]
+          : []),
+      ]).then(() => undefined),
   })
 }

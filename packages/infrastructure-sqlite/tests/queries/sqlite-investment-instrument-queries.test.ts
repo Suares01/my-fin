@@ -31,6 +31,15 @@ describe("SqliteInvestmentInstrumentQueries", () => {
     await seed("x", "X", "ARCHIVED")
     expect((await list("ARCHIVED")).map((x) => x.id)).toEqual(["x"])
   })
+  it("exposes the persisted CAS version and domain class for editing", async () => {
+    await seed("a", "A")
+    await database.execute(
+      "UPDATE investment_instruments SET version=4 WHERE id='a'"
+    )
+    await expect(list()).resolves.toMatchObject([
+      { id: "a", version: 4, instrumentClass: "FIXED_INCOME" },
+    ])
+  })
   it("returns optional issuer", async () => {
     await seed("a", "A", "ACTIVE", "Issuer")
     await expect(list()).resolves.toMatchObject([{ issuerName: "Issuer" }])

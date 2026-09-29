@@ -27,6 +27,7 @@ type CreateAccountFormOutput = z.output<typeof createAccountSchema>
 
 type AccountFormProps = {
   readonly mode?: "create" | "edit"
+  readonly lockedType?: "INVESTMENT_ACCOUNT"
   readonly initialAccount?: FinancialAccountBalance
   readonly settlementAccounts?: readonly {
     readonly id: string
@@ -48,12 +49,14 @@ const accountTypes = [
 
 function formValues(
   mode: "create" | "edit",
-  initialAccount?: FinancialAccountBalance
+  initialAccount?: FinancialAccountBalance,
+  lockedType?: "INVESTMENT_ACCOUNT"
 ): CreateAccountFormInput {
   if (mode === "edit" && initialAccount !== undefined) {
     return {
       name: initialAccount.accountName,
-      type: (initialAccount.financialAccount?.type ??
+      type: (lockedType ??
+        initialAccount.financialAccount?.type ??
         "OTHER_ASSET") as CreateAccountFormInput["type"],
       institutionName: initialAccount.financialAccount?.institutionName ?? "",
       displayReference: initialAccount.financialAccount?.displayReference ?? "",
@@ -64,7 +67,7 @@ function formValues(
 
   return {
     name: "",
-    type: "OTHER_ASSET",
+    type: lockedType ?? "OTHER_ASSET",
     institutionName: "",
     displayReference: "",
     defaultSettlementAccountId: "",
@@ -78,6 +81,7 @@ function optionalValue(value: string | undefined): string | undefined {
 
 export function AccountForm({
   mode = "create",
+  lockedType,
   initialAccount,
   settlementAccounts = [],
   onSuccess,
@@ -94,7 +98,7 @@ export function AccountForm({
     resolver: zodResolver(createAccountSchema),
     mode: "onSubmit",
     reValidateMode: "onChange",
-    defaultValues: formValues(mode, initialAccount),
+    defaultValues: formValues(mode, initialAccount, lockedType),
   })
 
   const activeBookId = session.status === "ACTIVE" ? session.bookId : null
@@ -179,8 +183,12 @@ export function AccountForm({
           name="type"
           label="Tipo da conta"
           description="Defina a finalidade da conta. Outro ativo fica fora do dinheiro disponível e não cria lançamentos."
-          disabled={pending}
-          options={accountTypes}
+          disabled={pending || lockedType !== undefined}
+          options={
+            lockedType === undefined
+              ? accountTypes
+              : accountTypes.filter((type) => type.value === lockedType)
+          }
         />
         <ControlledInput
           control={form.control}

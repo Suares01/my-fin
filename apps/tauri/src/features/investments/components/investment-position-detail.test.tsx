@@ -318,7 +318,7 @@ describe("InvestmentPositionDetail", () => {
   it("dispatches correction from the active operations tab", () => {
     show()
     fireEvent.click(screen.getByRole("button", { name: "Corrigir operação" }))
-    expect(onCorrect).toHaveBeenCalledWith({ id: "operation-1" })
+    expect(onCorrect).toHaveBeenCalledWith({ id: "operation-1" }, position)
   })
 
   it("blocks actions and correction when the wallet is archived", () => {

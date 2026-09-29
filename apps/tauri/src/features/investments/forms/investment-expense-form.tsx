@@ -46,6 +46,7 @@ import {
 
 type Props = {
   readonly position: InvestmentPositionView
+  readonly initialType?: "FEE" | "TAX"
   readonly amendment?: InvestmentAmendment
   readonly onSuccess?: (result: InvestmentMutationResult) => void
   readonly onCancel?: () => void
@@ -53,6 +54,7 @@ type Props = {
 
 export function InvestmentExpenseForm({
   position,
+  initialType = "FEE",
   amendment,
   onSuccess,
   onCancel,
@@ -67,7 +69,7 @@ export function InvestmentExpenseForm({
     resolver: zodResolver(expenseFormSchema),
     defaultValues:
       amendment === undefined
-        ? expenseFormDefaults
+        ? { ...expenseFormDefaults, type: initialType }
         : expenseCorrectionDefaults(amendment.operation),
   })
   const values = useWatch({ control: form.control }) as ExpenseFormValues

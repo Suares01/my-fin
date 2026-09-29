@@ -612,28 +612,28 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-88 | S7 | Tasks | Planned | T13, T17, T21, T23, T24, T25, T26, T27, T28, T29, T30, T34, T40 |
 | INV-89 | S7 | Tasks | In progress: T5 identities | T5, T6, T12, T13, T40, T44, T71 |
 | INV-90 | S7 | Tasks | Planned | T12, T15, T16, T48, T73 |
-| INV-91 | S8 | Tasks | Planned | T71, T92, T93 |
-| INV-92 | S8 | Tasks | Planned | T71, T92, T93 |
-| INV-93 | S8 | Tasks | T86 cards complete; remaining mapped work/validation pending | T14, T62, T72, T75, T86, T92 |
-| INV-94 | S8 | Tasks | T87 list complete; remaining mapped work/validation pending | T14, T63, T72, T87, T92 |
-| INV-95 | S8 | Tasks | T88 table complete; remaining mapped work/validation pending; T91 detail complete | T14, T65, T72, T88, T91, T92 |
+| INV-91 | S8 | Tasks | T92 page complete; remaining mapped work/validation pending | T71, T92, T93 |
+| INV-92 | S8 | Tasks | T92 page complete; remaining mapped work/validation pending | T71, T92, T93 |
+| INV-93 | S8 | Tasks | T92 page complete; remaining mapped work/validation pending | T14, T62, T72, T75, T86, T92 |
+| INV-94 | S8 | Tasks | T92 page complete; remaining mapped work/validation pending | T14, T63, T72, T87, T92 |
+| INV-95 | S8 | Tasks | T92 page complete; remaining mapped work/validation pending | T14, T65, T72, T88, T91, T92 |
 | INV-96 | S8 | Tasks | T89 history complete; remaining mapped work/validation pending; T90 valuation history complete; T91 detail complete | T14, T65, T66, T67, T72, T89, T90, T91, T93 |
-| INV-97 | S8 | Tasks | T88 table complete; remaining mapped work/validation pending | T14, T62, T65, T72, T88, T92 |
+| INV-97 | S8 | Tasks | T92 page complete; remaining mapped work/validation pending | T14, T62, T65, T72, T88, T92 |
 | INV-98 | S8 | Tasks | T88 table complete; remaining mapped work/validation pending; T89 history complete; T90 valuation history complete | T14, T65, T66, T67, T70, T72, T88, T89, T90, T94 |
-| INV-99 | S8 | Tasks | Planned | T64, T74, T76, T78, T92, T93 |
+| INV-99 | S8 | Tasks | T92 page complete; remaining mapped work/validation pending | T64, T74, T76, T78, T92, T93 |
 | INV-100 | S8 | Tasks | T84 form complete; remaining mapped work/validation pending; T85 correction form complete | T61, T78, T97, T79, T80, T81, T82, T83, T84, T85, T96 |
-| INV-101 | S8 | Tasks | T84 form complete; remaining mapped work/validation pending; T85 correction form complete; T91 detail complete | T71, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T91, T92, T93 |
+| INV-101 | S8 | Tasks | T92 page complete; remaining mapped work/validation pending | T71, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T91, T92, T93 |
 | INV-102 | S8 | Tasks | Planned | T59, T70, T94 |
 | INV-103 | S8 | Tasks | Planned | T37, T69, T70, T94 |
-| INV-104 | S8 | Tasks | Planned | T71, T72, T73, T92, T94 |
-| INV-105 | S8 | Tasks | T91 detail complete; remaining mapped work/validation pending | T72, T73, T91, T92, T93 |
-| INV-106 | S8 | Tasks | T86 cards complete; remaining mapped work/validation pending; T87 list complete; T88 table complete; T89 history complete; T90 valuation history complete; T91 detail complete | T72, T86, T87, T88, T89, T90, T91, T92 |
-| INV-107 | S8 | Tasks | T86 cards complete; remaining mapped work/validation pending; T87 list complete; T88 table complete | T63, T72, T75, T86, T87, T88, T92 |
-| INV-108 | S8 | Tasks | T86 cards complete; remaining mapped work/validation pending; T87 list complete; T88 table complete; T89 history complete; T90 valuation history complete; T91 detail complete | T72, T86, T87, T88, T89, T90, T91, T92 |
+| INV-104 | S8 | Tasks | T92 page complete; remaining mapped work/validation pending | T71, T72, T73, T92, T94 |
+| INV-105 | S8 | Tasks | T92 page complete; remaining mapped work/validation pending | T72, T73, T91, T92, T93 |
+| INV-106 | S8 | Tasks | T92 page complete; remaining mapped work/validation pending | T72, T86, T87, T88, T89, T90, T91, T92 |
+| INV-107 | S8 | Tasks | T92 page complete; remaining mapped work/validation pending | T63, T72, T75, T86, T87, T88, T92 |
+| INV-108 | S8 | Tasks | T92 page complete; remaining mapped work/validation pending | T72, T86, T87, T88, T89, T90, T91, T92 |
 | INV-109 | S8 | Tasks | T84 form complete; remaining mapped work/validation pending; T85 correction form complete | T73, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T94 |
-| INV-110 | S8 | Tasks | T84 form complete; remaining mapped work/validation pending; T85 correction form complete; T88 table complete; T89 history complete; T91 detail complete | T74, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T88, T89, T91, T92, T93, T94 |
-| INV-111 | S8 | Tasks | T84 form complete; remaining mapped work/validation pending; T85 correction form complete | T73, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T92 |
-| INV-112 | S8 | Tasks | T86 cards complete; remaining mapped work/validation pending; T87 list complete; T88 table complete; T89 history complete; T90 valuation history complete; T91 detail complete | T86, T87, T88, T89, T90, T91, T92, T93, T94 |
+| INV-110 | S8 | Tasks | T92 page complete; remaining mapped work/validation pending | T74, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T88, T89, T91, T92, T93, T94 |
+| INV-111 | S8 | Tasks | T92 page complete; remaining mapped work/validation pending | T73, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T92 |
+| INV-112 | S8 | Tasks | T92 page complete; remaining mapped work/validation pending | T86, T87, T88, T89, T90, T91, T92, T93, T94 |
 | INV-113 | S9 | Tasks | T87 list complete; remaining mapped work/validation pending | T25, T32, T38, T39, T43, T63, T87 |
 | INV-114 | S9 | Tasks | Planned | T6, T24, T25, T31, T32, T46, T64, T76 |
 | INV-115 | S9 | Tasks | T87 list complete; remaining mapped work/validation pending | T38, T39, T42, T43, T74, T87 |
@@ -659,7 +659,7 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-135 | S6 | Tasks | Planned; T85 correction form complete; T89 history complete | T26, T57, T59, T66, T70, T85, T89, T94 |
 | INV-136 | S6 | Tasks | Planned; T85 correction form complete; T89 history complete | T26, T57, T59, T66, T70, T85, T89, T94 |
 | INV-137 | S3 | Tasks | Planned | T49, T50, T78 |
-| INV-138 | S1 | Tasks | Planned | T42, T74, T75, T78, T92 |
+| INV-138 | S1 | Tasks | T92 page complete; remaining mapped work/validation pending | T42, T74, T75, T78, T92 |
 | INV-139 | S4 | Tasks | Implemented: T52, T61 and T80 | T52, T61, T80 |
 | INV-140 | S5 | Tasks | T86 cards complete; remaining mapped work/validation pending | T14, T37, T38, T39, T62, T68, T69, T72, T86 |
 | INV-141 | S5 | Tasks | T86 cards complete; remaining mapped work/validation pending | T14, T37, T38, T39, T62, T68, T69, T72, T86 |
@@ -667,11 +667,11 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-143 | S8 | Tasks | Planned | T75 |
 | INV-144 | S9 | Tasks | In progress: T8 position; T85 correction form complete; T91 detail complete | T8, T43, T46, T56, T57, T85, T91 |
 | INV-145 | S7 | Tasks | In progress: T79 purchase/application and T83 expense warning complete; T87 pending; T87 list complete | T12, T38, T39, T48, T49, T50, T51, T55, T56, T57, T60, T61, T62, T63, T73, T78, T79, T83, T87, T96 |
-| INV-146 | S5 | Tasks | T86 cards complete; remaining mapped work/validation pending; T87 list complete | T62, T63, T86, T87, T92 |
-| INV-147 | S5 | Tasks | T86 cards complete; remaining mapped work/validation pending; T87 list complete | T49, T60, T62, T86, T87, T92 |
-| INV-148 | S8 | Tasks | In progress: T79–T83 operation forms complete; T85 correction form complete; T92 pending | T61, T73, T78, T79, T80, T81, T82, T83, T85, T92, T96 |
+| INV-146 | S5 | Tasks | T92 page complete; remaining mapped work/validation pending | T62, T63, T86, T87, T92 |
+| INV-147 | S5 | Tasks | T92 page complete; remaining mapped work/validation pending | T49, T60, T62, T86, T87, T92 |
+| INV-148 | S8 | Tasks | T92 page complete; remaining mapped work/validation pending | T61, T73, T78, T79, T80, T81, T82, T83, T85, T92, T96 |
 
-**Coverage:** 148 requisitos mapeados para seções e evidência em [design.md](./design.md) e para as 97 tarefas de [tasks.md](./tasks.md). Design aprovado; Execute em andamento; T1–T90 e T95–T97 concluídas. IDs anteriores preservados. INV-28/32/70/77/121 revisados pela decisão explícita A11; INV-120–148 detalham os refinamentos desta discussão.
+**Coverage:** 148 requisitos mapeados para seções e evidência em [design.md](./design.md) e para as 97 tarefas de [tasks.md](./tasks.md). Design aprovado; Execute em andamento; T1–T92 e T95–T97 concluídas. IDs anteriores preservados. INV-28/32/70/77/121 revisados pela decisão explícita A11; INV-120–148 detalham os refinamentos desta discussão.
 
 ## Success Criteria
 

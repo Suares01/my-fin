@@ -33,6 +33,7 @@ import {
 } from "../hooks"
 import { InvestmentOperationHistory } from "./investment-operation-history"
 import { InvestmentValuationHistory } from "./investment-valuation-history"
+import { formatDate, positionTerms } from "./investment-position-terms"
 
 export type InvestmentPositionAction =
   | "purchase"
@@ -50,7 +51,10 @@ type Props = {
     action: InvestmentPositionAction,
     position: InvestmentPositionView
   ) => void
-  readonly onCorrect: (operation: InvestmentOperationHistoryItem) => void
+  readonly onCorrect: (
+    operation: InvestmentOperationHistoryItem,
+    position: InvestmentPositionView
+  ) => void
 }
 
 const classNames: Record<string, string> = {
@@ -61,49 +65,6 @@ const classNames: Record<string, string> = {
   STRUCTURED: "Estruturados",
   CRYPTO: "Criptoativos",
   OTHER: "Outros",
-}
-
-function formatDate(value: string): string {
-  const [year, month, day] = value.split("-")
-  return `${day}/${month}/${year}`
-}
-
-function terms(position: InvestmentPositionView) {
-  const data = position.fixedIncomeTerms
-  if (data === undefined) return []
-  return [
-    data.rateKind && {
-      label: "Rentabilidade",
-      value:
-        data.rateKind === "PREFIXED"
-          ? "Prefixada"
-          : data.rateKind === "INDEXED"
-            ? "Indexada"
-            : "Híbrida",
-    },
-    data.index && { label: "Índice", value: data.index },
-    data.annualRate && { label: "Taxa anual", value: `${data.annualRate}%` },
-    data.indexPercentage && {
-      label: "Percentual do índice",
-      value: `${data.indexPercentage}%`,
-    },
-    data.annualSpreadRate && {
-      label: "Spread anual",
-      value: `${data.annualSpreadRate}%`,
-    },
-    data.issueDate && {
-      label: "Emissão",
-      value: formatDate(data.issueDate),
-    },
-    data.gracePeriodDate && {
-      label: "Carência",
-      value: formatDate(data.gracePeriodDate),
-    },
-    data.maturityDate && {
-      label: "Vencimento",
-      value: formatDate(data.maturityDate),
-    },
-  ].filter((term): term is { label: string; value: string } => Boolean(term))
 }
 
 export function InvestmentPositionDetail({
@@ -170,7 +131,7 @@ export function InvestmentPositionDetail({
   const canAct = catalogReady && !archived
   const isOpen = position.status === "OPEN"
   const money = (minor: string) => formatMinorAmount(minor, position.currency)
-  const knownTerms = terms(position)
+  const knownTerms = positionTerms(position)
   const actions: readonly {
     readonly key: InvestmentPositionAction
     readonly label: string
@@ -358,7 +319,7 @@ export function InvestmentPositionDetail({
             <InvestmentOperationHistory
               positionId={position.id}
               canCorrect={canAct}
-              onCorrect={onCorrect}
+              onCorrect={(operation) => onCorrect(operation, position)}
             />
           )}
         </TabsPanel>

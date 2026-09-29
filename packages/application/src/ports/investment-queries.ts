@@ -95,6 +95,8 @@ export interface InvestmentAccountQueries {
 }
 export interface InvestmentInstrumentView {
   readonly id: string
+  readonly instrumentClass: string
+  readonly version: number
   readonly name: string
   readonly type: string
   readonly currency: string

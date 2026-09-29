@@ -71,6 +71,27 @@ describe("AccountForm", () => {
     ).toBe("false")
   })
 
+  it("creates a locked investment wallet from the investments page", async () => {
+    state.mutateAsync.mockResolvedValue({ id: "wallet-1" })
+    render(<AccountForm lockedType="INVESTMENT_ACCOUNT" />)
+    expect(
+      screen
+        .getByRole("button", { name: "Investimento" })
+        .getAttribute("aria-disabled")
+    ).toBe("true")
+    fireEvent.change(screen.getByLabelText("Nome da conta"), {
+      target: { value: "Corretora" },
+    })
+    fireEvent.click(screen.getByRole("button", { name: "Criar conta" }))
+    await waitFor(() =>
+      expect(state.mutateAsync).toHaveBeenCalledWith({
+        bookId: "book-1",
+        name: "Corretora",
+        type: "INVESTMENT_ACCOUNT",
+      })
+    )
+  })
+
   it("validates the name through the resolver before sending a command", async () => {
     render(<AccountForm />)
 
@@ -449,6 +470,48 @@ describe("AccountForm", () => {
         accountId: "account-1",
         expectedVersion: 4,
         profile: { type: "BANK_ACCOUNT" },
+      })
+    )
+    expect(state.mutateAsync).not.toHaveBeenCalled()
+  })
+
+  it("honors a locked investment type while classifying an existing other asset", async () => {
+    state.configureAsync.mockResolvedValue({ id: "account-1" })
+    render(
+      <AccountForm
+        mode="edit"
+        lockedType="INVESTMENT_ACCOUNT"
+        initialAccount={{
+          accountId: "account-1",
+          accountName: "Reserva",
+          accountKind: "ASSET",
+          rawBalanceMinor: "0",
+          displayBalanceMinor: "0",
+          amountMinor: "0",
+          currency: "BRL",
+          asOf: null,
+          archived: false,
+          version: 4,
+          financialAccount: { type: "OTHER_ASSET" },
+        }}
+      />
+    )
+
+    expect(
+      screen
+        .getByRole("button", { name: "Investimento" })
+        .getAttribute("aria-pressed")
+    ).toBe("true")
+    fireEvent.click(
+      screen.getByRole("button", { name: "Salvar classificação" })
+    )
+
+    await waitFor(() =>
+      expect(state.configureAsync).toHaveBeenCalledWith({
+        bookId: "book-1",
+        accountId: "account-1",
+        expectedVersion: 4,
+        profile: { type: "INVESTMENT_ACCOUNT" },
       })
     )
     expect(state.mutateAsync).not.toHaveBeenCalled()
