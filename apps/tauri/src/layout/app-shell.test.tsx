@@ -5,6 +5,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { MemoryRouter, Route, Routes } from "react-router"
@@ -144,6 +145,55 @@ describe("ApplicationShell navigation", () => {
     setViewport(1024)
     renderShell("/transactions")
     expect(screen.getByRole("link", { name: "Categorias" })).toBeTruthy()
+  })
+
+  it("renders the investments link in desktop navigation", () => {
+    setViewport(1024)
+    renderShell("/investments")
+    expect(navigationLink("Investimentos").getAttribute("href")).toBe(
+      "/investments"
+    )
+  })
+
+  it("renders the investments link in opened mobile navigation", async () => {
+    setViewport(375)
+    renderShell("/investments")
+    fireEvent.click(screen.getByRole("button", { name: "Toggle Sidebar" }))
+    await waitFor(() => expect(navigationLink("Investimentos")).toBeTruthy())
+  })
+
+  it("marks investments active on the list route", () => {
+    renderShell("/investments")
+    expect(navigationLink("Investimentos").hasAttribute("data-active")).toBe(
+      true
+    )
+  })
+
+  it("keeps investments active on a position URL", () => {
+    renderShell("/investments/positions/position-1")
+    expect(navigationLink("Investimentos").hasAttribute("data-active")).toBe(
+      true
+    )
+  })
+
+  it("shows an investments breadcrumb on the list route", () => {
+    renderShell("/investments")
+    expect(screen.getByLabelText("breadcrumb").textContent).toContain(
+      "Investimentos"
+    )
+  })
+
+  it("shows a linked list breadcrumb and readable position label", () => {
+    renderShell("/investments/positions/position-1")
+    const breadcrumb = screen.getByLabelText("breadcrumb")
+    expect(breadcrumb.textContent).toContain("Investimentos")
+    expect(breadcrumb.textContent).toContain("Detalhe da posição")
+    expect(breadcrumb.textContent).not.toContain("position-1")
+    expect(
+      within(breadcrumb)
+        .getByRole("link", { name: "Investimentos" })
+        .getAttribute("href")
+    ).toBe("/investments")
   })
 
   it("shows the global transaction action with an active book", () => {

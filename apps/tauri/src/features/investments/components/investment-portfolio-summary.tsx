@@ -25,6 +25,7 @@ import { formatMinorAmount } from "@workspace/ui/money"
 
 type Props = {
   readonly summary: Portfolio | undefined
+  readonly accountCount: number | undefined
   readonly isPending: boolean
   readonly isError: boolean
   readonly onRetry: () => void
@@ -38,6 +39,7 @@ function date(value: string): string {
 
 export function InvestmentPortfolioSummary({
   summary,
+  accountCount,
   isPending,
   isError,
   onRetry,
@@ -72,7 +74,9 @@ export function InvestmentPortfolioSummary({
       (warning) => warning.code === "INVESTMENT_CASH_NEGATIVE"
     ) || BigInt(summary.investmentCashMinor) < 0n
   const empty =
-    summary.openPositionCount === 0 && summary.investmentLedgerMinor === "0"
+    accountCount === 0 &&
+    summary.openPositionCount === 0 &&
+    summary.investmentLedgerMinor === "0"
   const cards = [
     {
       id: "available-card",

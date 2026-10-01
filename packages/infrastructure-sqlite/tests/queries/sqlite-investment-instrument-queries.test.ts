@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import { initializeSqliteDatabase } from "../../src/database/initialize-sqlite-database.js"
 import { SqliteInvestmentInstrumentQueries } from "../../src/queries/investments/sqlite-investment-instrument-queries.js"
 import { BetterSqliteDatabase } from "../support/better-sqlite-database.js"
+import { withTauriIntegerRows } from "../support/tauri-integer-rows.js"
 
 describe("SqliteInvestmentInstrumentQueries", () => {
   let database: BetterSqliteDatabase
@@ -39,6 +40,19 @@ describe("SqliteInvestmentInstrumentQueries", () => {
     await expect(list()).resolves.toMatchObject([
       { id: "a", version: 4, instrumentClass: "FIXED_INCOME" },
     ])
+  })
+  it("returns a numeric CAS version from Tauri integer text", async () => {
+    await seed("a", "A")
+    await database.execute(
+      "UPDATE investment_instruments SET version=4 WHERE id='a'"
+    )
+    const ipcQueries = new SqliteInvestmentInstrumentQueries(
+      withTauriIntegerRows(database)
+    )
+    expect(
+      (await ipcQueries.listInvestmentInstruments({ bookId: "book-1" }))[0]
+        ?.version
+    ).toBe(4)
   })
   it("returns optional issuer", async () => {
     await seed("a", "A", "ACTIVE", "Issuer")

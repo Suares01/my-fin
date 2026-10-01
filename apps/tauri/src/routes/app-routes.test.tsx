@@ -1,5 +1,5 @@
 /* @vitest-environment jsdom */
-import { cleanup, render, screen } from "@testing-library/react"
+import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { MemoryRouter, Outlet } from "react-router"
 
@@ -37,6 +37,24 @@ vi.mock("../features/categories/components/categories-page", () => ({
 vi.mock("../features/accounts/components/accounts-page", () => ({
   AccountsPage: () => <h1>Contas</h1>,
 }))
+vi.mock("../features/investments/components/investments-page", () => ({
+  InvestmentsPage: ({
+    positionId,
+    onNavigatePosition,
+  }: {
+    positionId?: string
+    onNavigatePosition: (id: string | null) => void
+  }) => (
+    <section data-testid="investment-content">
+      <h1>Investimentos</h1>
+      <p data-testid="position-route">{positionId ?? "lista"}</p>
+      <button onClick={() => onNavigatePosition("position-1")}>
+        Ver posição
+      </button>
+      <button onClick={() => onNavigatePosition(null)}>Fechar posição</button>
+    </section>
+  ),
+}))
 vi.mock("../bootstrap/handle-bootstrap", () => ({
   HandleBootstrap: () => <h1>Bootstrap</h1>,
 }))
@@ -49,9 +67,9 @@ vi.mock("../features/books/components/create-book-page", () => ({
 
 import AppRoutes from "./app-routes.js"
 
-function renderRoutes(path: string) {
+function renderRoutes(path: string, bookId: string | null = "book-1") {
   mocks.activeBook.mockReturnValue({
-    session: { status: "ACTIVE", bookId: "book-1" },
+    session: bookId ? { status: "ACTIVE", bookId } : { status: "UNRESOLVED" },
   })
   return render(
     <MemoryRouter initialEntries={[path]}>
@@ -87,6 +105,55 @@ describe("AppRoutes", () => {
   it("hands the active book context to transactions", () => {
     renderRoutes("/transactions")
     expect(screen.getByRole("heading").textContent).toContain("book-1")
+  })
+
+  it("renders investments on direct navigation inside the shell", () => {
+    renderRoutes("/investments")
+    expect(screen.getByRole("heading", { name: "Investimentos" })).toBeTruthy()
+    expect(screen.getByTestId("application-shell").textContent).toContain(
+      "Investimentos"
+    )
+    expect(screen.getByTestId("position-route").textContent).toBe("lista")
+  })
+
+  it("passes a direct position URL to the investments page", () => {
+    renderRoutes("/investments/positions/position-2")
+    expect(screen.getByTestId("position-route").textContent).toBe("position-2")
+  })
+
+  it("navigates from the list to a position URL", () => {
+    renderRoutes("/investments")
+    fireEvent.click(screen.getByRole("button", { name: "Ver posição" }))
+    expect(screen.getByTestId("position-route").textContent).toBe("position-1")
+  })
+
+  it("preserves the investments page instance while opening a position", () => {
+    renderRoutes("/investments")
+    const page = screen.getByTestId("investment-content")
+    fireEvent.click(screen.getByRole("button", { name: "Ver posição" }))
+    expect(screen.getByTestId("investment-content")).toBe(page)
+  })
+
+  it("returns from a position URL to the investments list", () => {
+    renderRoutes("/investments/positions/position-2")
+    fireEvent.click(screen.getByRole("button", { name: "Fechar posição" }))
+    expect(screen.getByTestId("position-route").textContent).toBe("lista")
+  })
+
+  it("requires book selection before opening investments", () => {
+    renderRoutes("/investments", null)
+    expect(
+      screen.getByText("Selecione um livro para ver investimentos")
+    ).toBeTruthy()
+    expect(
+      screen.getByRole("link", { name: "Escolher livro" }).getAttribute("href")
+    ).toBe("/books")
+    expect(screen.queryByRole("heading", { name: "Investimentos" })).toBeNull()
+  })
+
+  it("keeps the dashboard route available beside investments", () => {
+    renderRoutes("/dashboard")
+    expect(screen.getByRole("heading", { name: "Categorias" })).toBeTruthy()
   })
 
   it("keeps the accounts route available", () => {

@@ -9,6 +9,7 @@ import {
   Landmark,
   Plus,
   Tags,
+  TrendingUp,
   WalletCards,
 } from "lucide-react"
 import * as React from "react"
@@ -114,6 +115,11 @@ const sidebarData = {
           icon: ArrowLeftRight,
           href: "/transactions",
         },
+        {
+          label: "Investimentos",
+          icon: TrendingUp,
+          href: "/investments",
+        },
       ],
     },
     {
@@ -158,7 +164,9 @@ const NavMenuItem = ({ item }: { item: NavItem }) => {
 
   const Icon = item.icon
   const hasChildren = item.children && item.children.length > 0
-  const isActive = location.pathname === item.href
+  const isActive =
+    location.pathname === item.href ||
+    location.pathname.startsWith(`${item.href}/`)
 
   if (!hasChildren) {
     return (
@@ -367,6 +375,16 @@ function AutoBreadcrumb() {
   }
 
   const { group, item } = route
+  const breadcrumbs =
+    item.href === "/investments" && pathnames[1] === "positions"
+      ? [
+          { to: "/investments", label: item.label },
+          { to: location.pathname, label: "Detalhe da posição" },
+        ]
+      : pathnames.map((value, index) => ({
+          to: `/${pathnames.slice(0, index + 1).join("/")}`,
+          label: index === 0 ? item.label : value,
+        }))
 
   return (
     <Breadcrumb>
@@ -377,10 +395,8 @@ function AutoBreadcrumb() {
           </BreadcrumbLink>
         </BreadcrumbItem>
         <BreadcrumbSeparator className="hidden md:block" />
-        {pathnames.map((value, index) => {
-          const to = `/${pathnames.slice(0, index + 1).join("/")}`
-          const isLast = index === pathnames.length - 1
-          const label = index === 0 ? item.label : value
+        {breadcrumbs.map(({ to, label }, index) => {
+          const isLast = index === breadcrumbs.length - 1
 
           return (
             <React.Fragment key={to}>
@@ -410,7 +426,7 @@ export function ApplicationShell({ className }: ApplicationShellProps) {
   return (
     <SidebarProvider className={cn("my-fin-shell", className)}>
       <AppSidebar />
-      <SidebarInset>
+      <SidebarInset className="min-w-0">
         <header className="flex h-16 shrink-0 items-center gap-2 border-b border-border/80">
           <div className="flex flex-1 items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
@@ -424,8 +440,8 @@ export function ApplicationShell({ className }: ApplicationShellProps) {
             <TransactionCreateQuickAction />
           </div>
         </header>
-        <div className="flex w-full flex-1 flex-col p-4 sm:p-6">
-          <div className="mr-0 min-h-[100vh] w-full flex-1 rounded-xl md:min-h-min">
+        <div className="flex w-full min-w-0 flex-1 flex-col p-4 sm:p-6">
+          <div className="mr-0 min-h-[100vh] w-full min-w-0 flex-1 rounded-xl md:min-h-min">
             <Outlet />
           </div>
         </div>

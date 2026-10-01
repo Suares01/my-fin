@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import { initializeSqliteDatabase } from "../../src/database/initialize-sqlite-database.js"
 import { SqliteInvestmentOperationQueries } from "../../src/queries/investments/sqlite-investment-operation-queries.js"
 import { BetterSqliteDatabase } from "../support/better-sqlite-database.js"
+import { withTauriIntegerRows } from "../support/tauri-integer-rows.js"
 describe("SqliteInvestmentOperationQueries", () => {
   let db: BetterSqliteDatabase
   let q: SqliteInvestmentOperationQueries
@@ -36,6 +37,38 @@ describe("SqliteInvestmentOperationQueries", () => {
   afterEach(async () => db.close())
   it("orders date descending", async () =>
     expect((await list()).items.map((x) => x.id)).toEqual(["o2", "o1"]))
+  it("orders equal-date sequences numerically and paginates without skipping", async () => {
+    await seed("o12", "2026-01-02", 12)
+    expect((await list()).items.map((item) => item.id)).toEqual([
+      "o12",
+      "o2",
+      "o1",
+    ])
+    const first = await q.listOperations({
+      bookId: "b",
+      positionId: "p",
+      limit: 1,
+    })
+    expect(first.items.map((item) => item.id)).toEqual(["o12"])
+    const second = await q.listOperations({
+      bookId: "b",
+      positionId: "p",
+      limit: 1,
+      cursor: first.nextCursor!,
+    })
+    expect(second.items.map((item) => item.id)).toEqual(["o2"])
+  })
+  it("returns a numeric operation version from Tauri integer text", async () => {
+    const ipcQueries = new SqliteInvestmentOperationQueries(
+      withTauriIntegerRows(db)
+    )
+    const result = await ipcQueries.listOperations({
+      bookId: "b",
+      positionId: "p",
+      limit: 25,
+    })
+    expect(result.items[0]?.version).toBe(0)
+  })
   it("returns optional journal", async () =>
     expect((await list()).items[0]).toMatchObject({ journalEntryId: "j" }))
   it("keeps no-journal operation", async () =>

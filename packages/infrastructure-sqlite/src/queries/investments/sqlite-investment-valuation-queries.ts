@@ -50,7 +50,7 @@ export class SqliteInvestmentValuationQueries implements Pick<
       }
       args.push(String(query.limit + 1))
       const rows = await reader.query<Row>(
-        `SELECT id,valued_at,recorded_at,CAST(record_sequence AS TEXT) record_sequence,allocation_revision,currency,quantity,unit_price,CAST(gross_value_minor AS TEXT) gross_value_minor,CAST(net_value_minor AS TEXT) net_value_minor,CAST(withdrawable_value_minor AS TEXT) withdrawable_value_minor FROM investment_valuations WHERE ${where} ORDER BY valued_at DESC,record_sequence DESC,id DESC LIMIT ?`,
+        `SELECT id,valued_at,recorded_at,CAST(record_sequence AS TEXT) record_sequence,allocation_revision,currency,quantity,unit_price,CAST(gross_value_minor AS TEXT) gross_value_minor,CAST(net_value_minor AS TEXT) net_value_minor,CAST(withdrawable_value_minor AS TEXT) withdrawable_value_minor FROM investment_valuations WHERE ${where} ORDER BY valued_at DESC,investment_valuations.record_sequence DESC,id DESC LIMIT ?`,
         args
       )
       const items: InvestmentValuationHistoryItem[] = rows
@@ -72,7 +72,7 @@ export class SqliteInvestmentValuationQueries implements Pick<
             ? {}
             : { withdrawableValueMinor: r.withdrawable_value_minor }),
         }))
-      const next = rows[query.limit]
+      const next = rows.length > query.limit ? rows[query.limit - 1] : undefined
       return {
         items,
         nextCursor:

@@ -217,6 +217,25 @@ describe("SqliteInvestmentOperationRepository", () => {
       )
     ).resolves.toMatchObject({ id: "second" })
   })
+  it("selects sequence 12 after sequence 2 on the same day", async () => {
+    await repository.add(
+      operation({
+        id: investmentOperationIdFromString("sequence-2"),
+        sequence: "2",
+      })
+    )
+    await repository.add(
+      operation({
+        id: investmentOperationIdFromString("sequence-12"),
+        sequence: "12",
+      })
+    )
+    const last = await repository.findLastEffective(
+      "book-1",
+      investmentPositionIdFromString("position-1")
+    )
+    expect(last?.id).toBe("sequence-12")
+  })
   it("excludes the correction target from last effective lookup", async () => {
     const first = operation({
       id: investmentOperationIdFromString("first"),

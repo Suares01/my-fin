@@ -171,10 +171,12 @@ export class SqliteLedgerAccountRepository implements LedgerAccountRepository {
     if (profile === undefined) {
       return
     }
-    await this.executor.execute(
-      "DELETE FROM investment_accounts WHERE ledger_account_id = ? AND book_id = ?",
-      [account.id, account.bookId]
-    )
+    if (profile.type !== "INVESTMENT_ACCOUNT") {
+      await this.executor.execute(
+        "DELETE FROM investment_accounts WHERE ledger_account_id = ? AND book_id = ?",
+        [account.id, account.bookId]
+      )
+    }
 
     await this.executor.execute(
       "INSERT INTO financial_accounts (ledger_account_id, book_id, type, institution_name, display_reference) " +
@@ -192,7 +194,9 @@ export class SqliteLedgerAccountRepository implements LedgerAccountRepository {
 
     if (profile.type === "INVESTMENT_ACCOUNT") {
       await this.executor.execute(
-        "INSERT INTO investment_accounts (ledger_account_id, book_id, default_settlement_account_id) VALUES (?, ?, ?)",
+        "INSERT INTO investment_accounts (ledger_account_id, book_id, default_settlement_account_id) VALUES (?, ?, ?) " +
+          "ON CONFLICT(ledger_account_id) DO UPDATE SET " +
+          "default_settlement_account_id = excluded.default_settlement_account_id",
         [
           account.id,
           account.bookId,

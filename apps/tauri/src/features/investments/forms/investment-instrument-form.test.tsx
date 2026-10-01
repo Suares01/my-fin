@@ -308,6 +308,11 @@ describe("InvestmentInstrumentForm", () => {
         })
       )
     )
+    expect(
+      screen.getByText(
+        "Feche as posições abertas antes de arquivar este instrumento."
+      )
+    ).toBeTruthy()
   })
 
   it("calls cancel without saving", () => {

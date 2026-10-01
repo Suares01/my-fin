@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import { initializeSqliteDatabase } from "../../src/database/initialize-sqlite-database.js"
 import { SqliteInvestmentPositionQueries } from "../../src/queries/investments/sqlite-investment-position-queries.js"
 import { BetterSqliteDatabase } from "../support/better-sqlite-database.js"
+import { withTauriIntegerRows } from "../support/tauri-integer-rows.js"
 describe("SqliteInvestmentPositionQueries", () => {
   let db: BetterSqliteDatabase
   let q: SqliteInvestmentPositionQueries
@@ -23,11 +24,33 @@ describe("SqliteInvestmentPositionQueries", () => {
     expect((await list({ status: "CLOSED" })).items[0]?.instrumentName).toBe(
       "Beta"
     ))
+  it("returns numeric version and allocation revision from Tauri integer text", async () => {
+    const ipcQueries = new SqliteInvestmentPositionQueries(
+      withTauriIntegerRows(db)
+    )
+    const position = (
+      await ipcQueries.listPositions({ bookId: "b", limit: 25 })
+    ).items[0]
+    expect(position).toMatchObject({ version: 0, allocationRevision: 1 })
+  })
   it("returns cost fallback", async () =>
     expect((await list()).items[0]?.valuation).toMatchObject({
       basis: "BOOK_COST",
       currentValueMinor: "10",
     }))
+  it("projects persisted gross, net and withdrawable values from the current valuation", async () => {
+    await db.execute(
+      "INSERT INTO investment_valuations (id,book_id,position_id,allocation_revision,valued_at,valued_on,recorded_at,record_sequence,source,currency,gross_value_minor,net_value_minor,withdrawable_value_minor) VALUES ('v1','b','p1',1,'2026-01-02T12:00:00.000Z','2026-01-02','2026-01-02T12:00:00.000Z',1,'MANUAL','BRL',120,118,110)"
+    )
+    expect((await list()).items[0]?.valuation).toEqual({
+      basis: "VALUATION",
+      currentValueMinor: "120",
+      netValueMinor: "118",
+      withdrawableValueMinor: "110",
+      valuationId: "v1",
+      valuedAt: "2026-01-02T12:00:00.000Z",
+    })
+  })
   it("returns closed zero", async () =>
     expect(
       (await list({ status: "CLOSED" })).items[0]?.valuation

@@ -21,6 +21,7 @@ import { FieldGroup } from "@workspace/ui/components/field"
 import { Spinner } from "@workspace/ui/components/spinner"
 import { toast } from "@workspace/ui/components/toast"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useRef, useState } from "react"
 import { useFieldArray, useForm } from "react-hook-form"
 import type { z } from "zod"
 import { ControlledInput } from "../../../components/forms/controlled-input"
@@ -105,6 +106,8 @@ export function InvestmentInstrumentForm({
   onSuccess,
   onCancel,
 }: InvestmentInstrumentFormProps) {
+  const drawerContainerRef = useRef<HTMLElement | null>(null)
+  const [statusError, setStatusError] = useState<string | null>(null)
   const services = useMyFin()
   const queryClient = useQueryClient()
   const { session } = useActiveBook()
@@ -222,6 +225,7 @@ export function InvestmentInstrumentForm({
 
   async function changeStatus(status: "ACTIVE" | "ARCHIVED") {
     if (activeBookId === null || initialInstrument === undefined) return
+    setStatusError(null)
     try {
       await setStatus.mutateAsync({
         bookId: activeBookId,
@@ -230,10 +234,12 @@ export function InvestmentInstrumentForm({
         status,
       })
     } catch (error) {
+      const message = instrumentErrorMessage(error)
+      setStatusError(message)
       toast.add({
         type: "error",
         title: "Não foi possível alterar o instrumento",
-        description: instrumentErrorMessage(error),
+        description: message,
       })
     }
   }
@@ -267,7 +273,14 @@ export function InvestmentInstrumentForm({
     )
 
   return (
-    <form className="flex w-full flex-col gap-6" onSubmit={submit}>
+    <form
+      ref={(node) => {
+        drawerContainerRef.current =
+          node?.closest<HTMLElement>('[data-slot="drawer-content"]') ?? null
+      }}
+      className="flex w-full flex-col gap-6"
+      onSubmit={submit}
+    >
       <FieldGroup>
         <ControlledInput
           control={form.control}
@@ -358,6 +371,12 @@ export function InvestmentInstrumentForm({
           A moeda é definida pelo livro e não é alterada por este formulário.
         </AlertDescription>
       </Alert>
+      {statusError && (
+        <Alert variant="destructive">
+          <AlertTitle>Não foi possível alterar o instrumento</AlertTitle>
+          <AlertDescription>{statusError}</AlertDescription>
+        </Alert>
+      )}
       <div className="flex flex-wrap justify-end gap-3">
         {isEdit && initialInstrument !== undefined && (
           <DropdownMenu>
@@ -368,7 +387,10 @@ export function InvestmentInstrumentForm({
             >
               Ações
             </DropdownMenuTrigger>
-            <DropdownMenuContent>
+            <DropdownMenuContent
+              container={drawerContainerRef}
+              onPointerDown={(event) => event.stopPropagation()}
+            >
               <DropdownMenuItem
                 onClick={() =>
                   void changeStatus(

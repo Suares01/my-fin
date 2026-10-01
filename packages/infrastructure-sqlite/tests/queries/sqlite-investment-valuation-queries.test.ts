@@ -33,6 +33,27 @@ describe("SqliteInvestmentValuationQueries", () => {
   afterEach(async () => db.close())
   it("orders newest first", async () =>
     expect((await list()).items.map((x) => x.id)).toEqual(["v2", "v1"]))
+  it("orders equal-time sequences numerically and paginates without skipping", async () => {
+    await seed("v12", "2026-01-02T00:00:00.000Z", 12, 2, "120")
+    expect((await list()).items.map((item) => item.id)).toEqual([
+      "v12",
+      "v2",
+      "v1",
+    ])
+    const first = await q.listValuations({
+      bookId: "b",
+      positionId: "p",
+      limit: 1,
+    })
+    expect(first.items.map((item) => item.id)).toEqual(["v12"])
+    const second = await q.listValuations({
+      bookId: "b",
+      positionId: "p",
+      limit: 1,
+      cursor: first.nextCursor!,
+    })
+    expect(second.items.map((item) => item.id)).toEqual(["v2"])
+  })
   it("preserves historical revision", async () =>
     expect((await list()).items[1]).toMatchObject({ allocationRevision: 1 }))
   it("preserves gross value", async () =>

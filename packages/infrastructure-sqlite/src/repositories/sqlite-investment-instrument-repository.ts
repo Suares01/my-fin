@@ -14,6 +14,7 @@ import {
 } from "@workspace/domain"
 import type { SqliteExecutor } from "../database/sqlite-executor.js"
 import { mapSqliteError } from "../database/sqlite-error.js"
+import { readInteger } from "../queries/sqlite-query-values.js"
 
 type InstrumentRow = {
   readonly id: unknown
@@ -268,8 +269,14 @@ function enumValue<T extends string>(
 }
 
 function nonNegativeInteger(value: unknown, field: string): number {
-  if (typeof value !== "number" || !Number.isSafeInteger(value) || value < 0) {
+  let parsed: number
+  try {
+    parsed = readInteger(value, field)
+  } catch {
     throw new TypeError(`Invalid investment instrument ${field}`)
   }
-  return value
+  if (parsed < 0) {
+    throw new TypeError(`Invalid investment instrument ${field}`)
+  }
+  return parsed
 }

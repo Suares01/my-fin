@@ -10,6 +10,7 @@ import { initializeSqliteDatabase } from "../../src/database/initialize-sqlite-d
 import { SqliteFinancialBookRepository } from "../../src/repositories/sqlite-financial-book-repository.js"
 import { SqliteInvestmentInstrumentRepository } from "../../src/repositories/sqlite-investment-instrument-repository.js"
 import { BetterSqliteDatabase } from "../support/better-sqlite-database.js"
+import { withTauriIntegerRows } from "../support/tauri-integer-rows.js"
 
 function book(id = "book-1"): FinancialBook {
   return FinancialBook.create({
@@ -62,6 +63,16 @@ describe("SqliteInvestmentInstrumentRepository", () => {
     await expect(
       repository.findById("book-1", investmentInstrumentIdFromString("missing"))
     ).resolves.toEqual({ kind: "NOT_FOUND" })
+  })
+
+  it("restores a persisted instrument when Tauri returns its version as text", async () => {
+    const value = instrument({ version: 0 })
+    await repository.add(value)
+    const ipcRepository = new SqliteInvestmentInstrumentRepository(
+      withTauriIntegerRows(database)
+    )
+    const found = await ipcRepository.findById("book-1", value.id)
+    expect(found.kind === "FOUND" ? found.value.version : null).toBe(0)
   })
 
   it("round-trips every scalar field and identifiers", async () => {

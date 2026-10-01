@@ -36,11 +36,13 @@ const show = (
     isError?: boolean
     onRetry?: () => void
     onCreateAccount?: () => void
+    accountCount?: number
   } = {}
 ) =>
   render(
     <InvestmentPortfolioSummary
       summary={summary ?? (props.isPending || props.isError ? undefined : base)}
+      accountCount={props.accountCount ?? 0}
       isPending={props.isPending ?? false}
       isError={props.isError ?? false}
       onRetry={props.onRetry ?? vi.fn()}
@@ -151,6 +153,19 @@ describe("InvestmentPortfolioSummary", () => {
     fireEvent.click(screen.getByRole("button", { name: "Cadastrar carteira" }))
     expect(onCreateAccount).toHaveBeenCalledTimes(1)
   })
+  it("does not call a funded empty wallet an absent wallet", () => {
+    show(
+      {
+        ...base,
+        investmentLedgerMinor: "0",
+        openPositionCount: 0,
+      },
+      { accountCount: 1 }
+    )
+    expect(
+      screen.queryByText(/Nenhuma carteira ou posição cadastrada/)
+    ).toBeNull()
+  })
   it("shows loading instead of a fabricated zero", () => {
     show(undefined, { isPending: true })
     expect(screen.getByLabelText("Carregando resumo patrimonial")).toBeTruthy()
@@ -229,6 +244,7 @@ describe("InvestmentPortfolioSummary", () => {
     rerender(
       <InvestmentPortfolioSummary
         summary={base}
+        accountCount={1}
         isPending={false}
         isError={false}
         onRetry={vi.fn()}

@@ -8,11 +8,12 @@ import {
   encodeInvestmentOperationCursor,
 } from "@workspace/application"
 import type { SqliteDatabase } from "../../database/index.js"
+import { readInteger } from "../sqlite-query-values.js"
 type Row = {
   id: string
   type: string
   role: "BUSINESS" | "REVERSAL"
-  version: number
+  version: unknown
   occurred_on: string
   settled_on: string | null
   recorded_at: string
@@ -74,7 +75,7 @@ export class SqliteInvestmentOperationQueries implements Pick<
       }
       args.push(String(query.limit + 1))
       const rows = await reader.query<Row>(
-        `SELECT id,type,role,version,occurred_on,settled_on,recorded_at,CAST(sequence AS TEXT) sequence,description,currency,quantity_delta,CAST(gross_amount_minor AS TEXT) gross_amount_minor,CAST(net_cash_flow_minor AS TEXT) net_cash_flow_minor,CAST(book_cost_delta_minor AS TEXT) book_cost_delta_minor,CAST(fees_minor AS TEXT) fees_minor,CAST(taxes_minor AS TEXT) taxes_minor,cash_mode,settlement_account_id,gain_category_id,loss_category_id,income_category_id,fee_category_id,tax_category_id,before_kind,before_quantity,CAST(before_book_cost_minor AS TEXT) before_book_cost_minor,before_status,before_opened_on,before_closed_on,before_allocation_effective_on,journal_entry_id,reversal_of_id,reversed_by_id,replacement_of_id,replaced_by_id FROM investment_operations WHERE ${where} ORDER BY occurred_on DESC,sequence DESC,id DESC LIMIT ?`,
+        `SELECT id,type,role,version,occurred_on,settled_on,recorded_at,CAST(sequence AS TEXT) sequence,description,currency,quantity_delta,CAST(gross_amount_minor AS TEXT) gross_amount_minor,CAST(net_cash_flow_minor AS TEXT) net_cash_flow_minor,CAST(book_cost_delta_minor AS TEXT) book_cost_delta_minor,CAST(fees_minor AS TEXT) fees_minor,CAST(taxes_minor AS TEXT) taxes_minor,cash_mode,settlement_account_id,gain_category_id,loss_category_id,income_category_id,fee_category_id,tax_category_id,before_kind,before_quantity,CAST(before_book_cost_minor AS TEXT) before_book_cost_minor,before_status,before_opened_on,before_closed_on,before_allocation_effective_on,journal_entry_id,reversal_of_id,reversed_by_id,replacement_of_id,replaced_by_id FROM investment_operations WHERE ${where} ORDER BY occurred_on DESC,investment_operations.sequence DESC,id DESC LIMIT ?`,
         args
       )
       const items: InvestmentOperationHistoryItem[] = rows
@@ -83,7 +84,7 @@ export class SqliteInvestmentOperationQueries implements Pick<
           id: r.id,
           type: r.type,
           role: r.role,
-          version: r.version,
+          version: readInteger(r.version, "version"),
           ...(r.settled_on === null ? {} : { settledOn: r.settled_on }),
           recordedAt: r.recorded_at,
           description: r.description,
@@ -154,7 +155,7 @@ export class SqliteInvestmentOperationQueries implements Pick<
             ? {}
             : { replacedBy: r.replaced_by_id }),
         }))
-      const next = rows[query.limit]
+      const next = rows.length > query.limit ? rows[query.limit - 1] : undefined
       return {
         items,
         nextCursor:

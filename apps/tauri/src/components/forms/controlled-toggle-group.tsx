@@ -53,7 +53,7 @@ export function ControlledToggleGroup<
             value={field.value ? [field.value] : []}
             onValueChange={(value) => field.onChange(value[0] ?? "")}
             onBlur={field.onBlur}
-            className="w-full sm:w-fit"
+            className="w-full flex-wrap sm:w-fit sm:flex-nowrap"
             disabled={disabled}
           >
             {options.map((option) => (

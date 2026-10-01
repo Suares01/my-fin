@@ -601,6 +601,24 @@ describe("InvestmentsPage", () => {
     expect(state.invalidated).toEqual([])
   })
 
+  it("explains a residual wallet balance when archival is rejected", async () => {
+    state.archive.mockRejectedValue(
+      Object.assign(new Error("in use"), {
+        code: "INVESTMENT_ACCOUNT_IN_USE",
+      })
+    )
+    show()
+    fireEvent.click(screen.getByRole("button", { name: "Arquivar da lista" }))
+    await waitFor(() =>
+      expect(
+        screen.getByText(
+          "Feche as posições e transfira o saldo antes de arquivar esta carteira."
+        )
+      ).toBeTruthy()
+    )
+    expect(state.invalidated).toEqual([])
+  })
+
   it("opens instrument creation and edit with persisted class/version", () => {
     show()
     fireEvent.click(

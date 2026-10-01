@@ -12,6 +12,7 @@ import type {
   ListInvestmentPositionsQuery,
 } from "@workspace/application"
 import type { SqliteDatabase } from "../../database/index.js"
+import { readInteger } from "../sqlite-query-values.js"
 import {
   decodeInvestmentPositionCursor,
   encodeInvestmentPositionCursor,
@@ -42,11 +43,13 @@ type Row = {
   book_cost_minor: string
   currency: string
   status: "OPEN" | "CLOSED"
-  version: number
-  allocation_revision: number
+  version: unknown
+  allocation_revision: unknown
   valuation_id: string | null
   valued_at: string | null
   gross_value_minor: string | null
+  net_value_minor: string | null
+  withdrawable_value_minor: string | null
 }
 const escapeLike = (value: string) => value.replace(/[\\%_]/g, "\\$&")
 /** Paged, book-scoped position list; valuation detail is resolved by its dedicated query. */
@@ -114,7 +117,7 @@ export class SqliteInvestmentPositionQueries implements Pick<
       }
       params.push(String(query.limit + 1))
       const rows = await reader.query<Row>(
-        `SELECT p.id,p.investment_account_id,p.instrument_id,i.name instrument_name,i.normalized_name,i.type,p.quantity_mode,p.opened_on,p.closed_on,t.position_id term_position_id,t.rate_kind,t.index_name,t.annual_rate,t.index_percentage,t.annual_spread_rate,t.issue_date,t.grace_period_date,t.maturity_date,p.label,p.normalized_label,CAST(p.quantity AS TEXT) quantity,CAST(p.book_cost_minor AS TEXT) book_cost_minor,p.currency,p.status,p.version,p.allocation_revision,v.id valuation_id,v.valued_at,CAST(v.gross_value_minor AS TEXT) gross_value_minor FROM investment_positions p JOIN investment_instruments i ON i.id=p.instrument_id AND i.book_id=p.book_id LEFT JOIN investment_fixed_income_terms t ON t.position_id=p.id AND t.book_id=p.book_id LEFT JOIN investment_valuations v ON v.id=(SELECT x.id FROM investment_valuations x WHERE x.book_id=p.book_id AND x.position_id=p.id AND x.allocation_revision=p.allocation_revision ORDER BY x.valued_at DESC,x.recorded_at DESC,x.record_sequence DESC,x.id DESC LIMIT 1) WHERE ${where} ORDER BY i.normalized_name,p.normalized_label,p.id LIMIT ?`,
+        `SELECT p.id,p.investment_account_id,p.instrument_id,i.name instrument_name,i.normalized_name,i.type,p.quantity_mode,p.opened_on,p.closed_on,t.position_id term_position_id,t.rate_kind,t.index_name,t.annual_rate,t.index_percentage,t.annual_spread_rate,t.issue_date,t.grace_period_date,t.maturity_date,p.label,p.normalized_label,CAST(p.quantity AS TEXT) quantity,CAST(p.book_cost_minor AS TEXT) book_cost_minor,p.currency,p.status,p.version,p.allocation_revision,v.id valuation_id,v.valued_at,CAST(v.gross_value_minor AS TEXT) gross_value_minor,CAST(v.net_value_minor AS TEXT) net_value_minor,CAST(v.withdrawable_value_minor AS TEXT) withdrawable_value_minor FROM investment_positions p JOIN investment_instruments i ON i.id=p.instrument_id AND i.book_id=p.book_id LEFT JOIN investment_fixed_income_terms t ON t.position_id=p.id AND t.book_id=p.book_id LEFT JOIN investment_valuations v ON v.id=(SELECT x.id FROM investment_valuations x WHERE x.book_id=p.book_id AND x.position_id=p.id AND x.allocation_revision=p.allocation_revision ORDER BY x.valued_at DESC,x.recorded_at DESC,x.record_sequence DESC,x.id DESC LIMIT 1) WHERE ${where} ORDER BY i.normalized_name,p.normalized_label,p.id LIMIT ?`,
         params
       )
       const items: InvestmentPositionView[] = rows
@@ -163,8 +166,11 @@ export class SqliteInvestmentPositionQueries implements Pick<
           bookCostMinor: row.book_cost_minor,
           currency: row.currency,
           status: row.status,
-          allocationRevision: row.allocation_revision,
-          version: row.version,
+          allocationRevision: readInteger(
+            row.allocation_revision,
+            "allocation_revision"
+          ),
+          version: readInteger(row.version, "version"),
           valuation:
             row.status === "CLOSED"
               ? { basis: "CLOSED", currentValueMinor: "0" }
@@ -175,6 +181,14 @@ export class SqliteInvestmentPositionQueries implements Pick<
                     currentValueMinor: row.gross_value_minor!,
                     valuationId: row.valuation_id,
                     valuedAt: row.valued_at!,
+                    ...(row.net_value_minor === null
+                      ? {}
+                      : { netValueMinor: row.net_value_minor }),
+                    ...(row.withdrawable_value_minor === null
+                      ? {}
+                      : {
+                          withdrawableValueMinor: row.withdrawable_value_minor,
+                        }),
                   },
         }))
       const lastRow = rows[query.limit - 1]

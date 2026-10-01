@@ -225,7 +225,6 @@ export function InvestmentAccountList({
                               Configurar carteira
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                              disabled={account.ledgerBalanceMinor !== "0"}
                               onClick={() => onArchive(account)}
                             >
                               Arquivar carteira

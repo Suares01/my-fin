@@ -595,7 +595,7 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-71 | S6 | Tasks | In progress: T8 position | T8, T56 |
 | INV-72 | S6 | Tasks | In progress: T9 operation; T85 correction form complete; T89 history complete | T9, T20, T26, T29, T33, T36, T56, T57, T66, T85, T89 |
 | INV-73 | S6 | Tasks | In progress: T9 operation; T85 correction form complete; T89 history complete | T9, T56, T57, T85, T89 |
-| INV-74 | S7 | Tasks | T91 detail complete; remaining mapped work/validation pending | T12, T13, T18, T19, T20, T21, T23, T24, T25, T26, T27, T28, T31, T32, T33, T34, T35, T40, T41, T42, T43, T44, T45, T46, T47, T48, T51, T52, T53, T54, T55, T56, T57, T58, T59, T61, T63, T64, T65, T66, T67, T71, T72, T73, T91, T93 |
+| INV-74 | S7 | Tasks | T91 detail and T93 native book isolation complete; final validation pending | T12, T13, T18, T19, T20, T21, T23, T24, T25, T26, T27, T28, T31, T32, T33, T34, T35, T40, T41, T42, T43, T44, T45, T46, T47, T48, T51, T52, T53, T54, T55, T56, T57, T58, T59, T61, T63, T64, T65, T66, T67, T71, T72, T73, T91, T93 |
 | INV-75 | S7 | Tasks | Planned | T13, T16, T22, T28, T29, T30, T35, T36, T40, T48, T50, T51, T52, T53, T54, T55, T56, T57, T58, T60, T95 |
 | INV-76 | S7 | Tasks | In progress: T4 aggregate | T4, T12, T13, T23, T24, T25, T26, T31, T32, T33, T40, T42, T45, T46, T47, T48, T51, T52, T53, T54, T55, T56, T57, T61, T73 |
 | INV-77 | S7 | Tasks | Planned | T38, T39, T40, T48, T51, T60 |
@@ -612,28 +612,28 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-88 | S7 | Tasks | Planned | T13, T17, T21, T23, T24, T25, T26, T27, T28, T29, T30, T34, T40 |
 | INV-89 | S7 | Tasks | In progress: T5 identities | T5, T6, T12, T13, T40, T44, T71 |
 | INV-90 | S7 | Tasks | Planned | T12, T15, T16, T48, T73 |
-| INV-91 | S8 | Tasks | T92 page complete; remaining mapped work/validation pending | T71, T92, T93 |
-| INV-92 | S8 | Tasks | T92 page complete; remaining mapped work/validation pending | T71, T92, T93 |
+| INV-91 | S8 | Tasks | T92 page and T93 route/native navigation complete; final validation pending | T71, T92, T93 |
+| INV-92 | S8 | Tasks | T92 page and T93 book guard/native empty book complete; final validation pending | T71, T92, T93 |
 | INV-93 | S8 | Tasks | T92 page complete; remaining mapped work/validation pending | T14, T62, T72, T75, T86, T92 |
 | INV-94 | S8 | Tasks | T92 page complete; remaining mapped work/validation pending | T14, T63, T72, T87, T92 |
 | INV-95 | S8 | Tasks | T92 page complete; remaining mapped work/validation pending | T14, T65, T72, T88, T91, T92 |
-| INV-96 | S8 | Tasks | T89 history complete; remaining mapped work/validation pending; T90 valuation history complete; T91 detail complete | T14, T65, T66, T67, T72, T89, T90, T91, T93 |
+| INV-96 | S8 | Tasks | T91 detail and T93 native history complete; final validation pending | T14, T65, T66, T67, T72, T89, T90, T91, T93 |
 | INV-97 | S8 | Tasks | T92 page complete; remaining mapped work/validation pending | T14, T62, T65, T72, T88, T92 |
 | INV-98 | S8 | Tasks | T88 table complete; remaining mapped work/validation pending; T89 history complete; T90 valuation history complete | T14, T65, T66, T67, T70, T72, T88, T89, T90, T94 |
-| INV-99 | S8 | Tasks | T92 page complete; remaining mapped work/validation pending | T64, T74, T76, T78, T92, T93 |
+| INV-99 | S8 | Tasks | T92 page and T93 native creation/classification complete; final validation pending | T64, T74, T76, T78, T92, T93 |
 | INV-100 | S8 | Tasks | T84 form complete; remaining mapped work/validation pending; T85 correction form complete | T61, T78, T97, T79, T80, T81, T82, T83, T84, T85, T96 |
-| INV-101 | S8 | Tasks | T92 page complete; remaining mapped work/validation pending | T71, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T91, T92, T93 |
+| INV-101 | S8 | Tasks | T92 page and T93 native operations complete; final validation pending | T71, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T91, T92, T93 |
 | INV-102 | S8 | Tasks | Planned | T59, T70, T94 |
 | INV-103 | S8 | Tasks | Planned | T37, T69, T70, T94 |
 | INV-104 | S8 | Tasks | T92 page complete; remaining mapped work/validation pending | T71, T72, T73, T92, T94 |
-| INV-105 | S8 | Tasks | T92 page complete; remaining mapped work/validation pending | T72, T73, T91, T92, T93 |
+| INV-105 | S8 | Tasks | T92 page and T93 native book switch complete; final validation pending | T72, T73, T91, T92, T93 |
 | INV-106 | S8 | Tasks | T92 page complete; remaining mapped work/validation pending | T72, T86, T87, T88, T89, T90, T91, T92 |
 | INV-107 | S8 | Tasks | T92 page complete; remaining mapped work/validation pending | T63, T72, T75, T86, T87, T88, T92 |
 | INV-108 | S8 | Tasks | T92 page complete; remaining mapped work/validation pending | T72, T86, T87, T88, T89, T90, T91, T92 |
 | INV-109 | S8 | Tasks | T84 form complete; remaining mapped work/validation pending; T85 correction form complete | T73, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T94 |
-| INV-110 | S8 | Tasks | T92 page complete; remaining mapped work/validation pending | T74, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T88, T89, T91, T92, T93, T94 |
+| INV-110 | S8 | Tasks | T92 page and T93 native Investimentos keyboard/focus complete; T94 Transações pending | T74, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T88, T89, T91, T92, T93, T94 |
 | INV-111 | S8 | Tasks | T92 page complete; remaining mapped work/validation pending | T73, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T92 |
-| INV-112 | S8 | Tasks | T92 page complete; remaining mapped work/validation pending | T86, T87, T88, T89, T90, T91, T92, T93, T94 |
+| INV-112 | S8 | Tasks | T92 page and T93 native Investimentos viewports complete; T94 Transações pending | T86, T87, T88, T89, T90, T91, T92, T93, T94 |
 | INV-113 | S9 | Tasks | T87 list complete; remaining mapped work/validation pending | T25, T32, T38, T39, T43, T63, T87 |
 | INV-114 | S9 | Tasks | Planned | T6, T24, T25, T31, T32, T46, T64, T76 |
 | INV-115 | S9 | Tasks | T87 list complete; remaining mapped work/validation pending | T38, T39, T42, T43, T74, T87 |

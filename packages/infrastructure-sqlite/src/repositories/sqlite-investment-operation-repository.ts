@@ -53,7 +53,7 @@ export class SqliteInvestmentOperationRepository implements InvestmentOperationR
         " WHERE book_id = ? AND position_id = ? AND role = 'BUSINESS' " +
         "AND reversed_by_id IS NULL AND replaced_by_id IS NULL" +
         (excludeOperationId === undefined ? "" : " AND id <> ?") +
-        " ORDER BY occurred_on DESC, sequence DESC LIMIT 1",
+        " ORDER BY occurred_on DESC, investment_operations.sequence DESC LIMIT 1",
       excludeOperationId === undefined
         ? [bookId, positionId]
         : [bookId, positionId, excludeOperationId]

@@ -26,6 +26,7 @@ import { ErrorState } from "@workspace/ui/components/error-state"
 import { Skeleton } from "@workspace/ui/components/skeleton"
 import { formatMinorAmount } from "@workspace/ui/money"
 import { MoreHorizontalIcon } from "lucide-react"
+import { useRef } from "react"
 import { correctableOperation } from "../forms/investment-correction-form-model"
 import { useInvestmentOperations } from "../hooks"
 
@@ -81,6 +82,7 @@ export function InvestmentOperationHistory({
   canCorrect = true,
 }: Props) {
   const query = useInvestmentOperations(positionId)
+  const drawerContainerRef = useRef<HTMLElement | null>(null)
 
   if (positionId === undefined)
     return (
@@ -120,6 +122,10 @@ export function InvestmentOperationHistory({
 
   return (
     <section
+      ref={(node) => {
+        drawerContainerRef.current =
+          node?.closest<HTMLElement>('[data-slot="drawer-content"]') ?? null
+      }}
       aria-label="Histórico de operações"
       className="flex min-w-0 flex-col gap-4"
     >
@@ -290,7 +296,11 @@ export function InvestmentOperationHistory({
                       >
                         <MoreHorizontalIcon />
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
+                      <DropdownMenuContent
+                        align="end"
+                        container={drawerContainerRef}
+                        onPointerDown={(event) => event.stopPropagation()}
+                      >
                         <DropdownMenuGroup>
                           <DropdownMenuItem
                             onClick={() => onCorrect(operation)}

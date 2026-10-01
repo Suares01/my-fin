@@ -1,4 +1,4 @@
-import { useId } from "react"
+import { useId, useRef } from "react"
 import { Controller, type FieldValues } from "react-hook-form"
 import {
   Select,
@@ -30,6 +30,7 @@ export function ControlledSelect<
   readonly placeholder?: string
 }) {
   const id = useId()
+  const portalContainerRef = useRef<HTMLDivElement>(null)
   const items = [{ value: null, label: placeholder }, ...options]
   return (
     <Controller
@@ -43,42 +44,48 @@ export function ControlledSelect<
           error={fieldState.error}
           disabled={disabled}
         >
-          <Select
-            name={field.name}
-            items={items}
-            value={field.value || null}
-            onValueChange={(value) => field.onChange(value ?? "")}
-            disabled={disabled}
-            modal={false}
-          >
-            <SelectTrigger
-              ref={field.ref}
-              onBlur={field.onBlur}
-              id={id}
-              className="w-full"
+          <div ref={portalContainerRef} className="relative">
+            <Select
+              name={field.name}
+              items={items}
+              value={field.value || null}
+              onValueChange={(value) => field.onChange(value ?? "")}
               disabled={disabled}
-              aria-invalid={fieldState.invalid}
-              aria-describedby={
-                [
-                  description && `${id}-description`,
-                  fieldState.error && `${id}-error`,
-                ]
-                  .filter(Boolean)
-                  .join(" ") || undefined
-              }
+              modal={false}
             >
-              <SelectValue placeholder={placeholder} />
-            </SelectTrigger>
-            <SelectContent alignItemWithTrigger={false}>
-              <SelectGroup>
-                {items.map((item) => (
-                  <SelectItem key={item.value ?? "empty"} value={item.value}>
-                    {item.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
+              <SelectTrigger
+                ref={field.ref}
+                onBlur={field.onBlur}
+                id={id}
+                className="w-full"
+                disabled={disabled}
+                aria-invalid={fieldState.invalid}
+                aria-describedby={
+                  [
+                    description && `${id}-description`,
+                    fieldState.error && `${id}-error`,
+                  ]
+                    .filter(Boolean)
+                    .join(" ") || undefined
+                }
+              >
+                <SelectValue placeholder={placeholder} />
+              </SelectTrigger>
+              <SelectContent
+                alignItemWithTrigger={false}
+                container={portalContainerRef}
+                onPointerDown={(event) => event.stopPropagation()}
+              >
+                <SelectGroup>
+                  {items.map((item) => (
+                    <SelectItem key={item.value ?? "empty"} value={item.value}>
+                      {item.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
         </ControlledField>
       )}
     />

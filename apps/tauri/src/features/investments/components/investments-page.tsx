@@ -199,9 +199,14 @@ function InvestmentBookPage({
       else await reactivate.mutateAsync(command)
       await invalidateInvestmentQueries(queryClient, bookId)
       await balances.refetch()
-    } catch {
+    } catch (error) {
       setActionError(
-        "Não foi possível atualizar a carteira. Atualize os dados e tente novamente."
+        typeof error === "object" &&
+          error !== null &&
+          "code" in error &&
+          error.code === "INVESTMENT_ACCOUNT_IN_USE"
+          ? "Feche as posições e transfira o saldo antes de arquivar esta carteira."
+          : "Não foi possível atualizar a carteira. Atualize os dados e tente novamente."
       )
     } finally {
       setAccountPendingId(undefined)
@@ -257,6 +262,7 @@ function InvestmentBookPage({
 
       <InvestmentPortfolioSummary
         summary={summary.data}
+        accountCount={accounts.data?.length}
         isPending={summary.isPending}
         isError={summary.isError}
         onRetry={() => void summary.refetch()}
@@ -477,7 +483,7 @@ function InvestmentBookPage({
         {detailId !== null && (
           <>
             <DrawerBackdrop />
-            <DrawerContent className="data-[vaul-drawer-direction=right]:sm:max-w-2xl">
+            <DrawerContent className="data-[vaul-drawer-direction=right]:w-full data-[vaul-drawer-direction=right]:sm:max-w-2xl">
               <DrawerHeader>
                 <DrawerTitle>Detalhe da posição</DrawerTitle>
                 <DrawerDescription>
@@ -513,7 +519,7 @@ function InvestmentBookPage({
         {action !== null && (
           <>
             <DrawerBackdrop />
-            <DrawerContent className="data-[vaul-drawer-direction=right]:sm:max-w-2xl">
+            <DrawerContent className="data-[vaul-drawer-direction=right]:w-full data-[vaul-drawer-direction=right]:sm:max-w-2xl">
               <DrawerHeader>
                 <DrawerTitle>{actionTitles[action.kind]}</DrawerTitle>
                 <DrawerDescription>

@@ -5,12 +5,13 @@ import type {
   InvestmentInstrumentView,
 } from "@workspace/application"
 import type { SqliteDatabase } from "../../database/index.js"
+import { readInteger } from "../sqlite-query-values.js"
 
 type Row = {
   id: string
   name: string
   type: string
-  version: number
+  version: unknown
   currency: string
   issuer_name: string | null
   status: "ACTIVE" | "ARCHIVED"
@@ -76,7 +77,7 @@ export class SqliteInvestmentInstrumentQueries implements InvestmentInstrumentQu
                 instrumentClass: investmentInstrumentClassFor(
                   row.type as InvestmentInstrumentType
                 ),
-                version: row.version,
+                version: readInteger(row.version, "version"),
                 name: row.name,
                 type: row.type,
                 currency: row.currency,

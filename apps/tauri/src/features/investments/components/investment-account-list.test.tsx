@@ -174,13 +174,11 @@ describe("InvestmentAccountList", () => {
     expect(props.onArchive).toHaveBeenCalledWith(zero)
   })
 
-  it("disables archive when the ledger balance is nonzero", () => {
+  it("dispatches archive with residual balance so the domain can explain the rejection", () => {
     const { props } = show()
     openActions("Corretora A")
-    const action = screen.getByRole("menuitem", { name: "Arquivar carteira" })
-    expect(action.getAttribute("data-disabled")).not.toBeNull()
-    fireEvent.click(action)
-    expect(props.onArchive).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole("menuitem", { name: "Arquivar carteira" }))
+    expect(props.onArchive).toHaveBeenCalledWith(first)
   })
 
   it("reactivates an archived wallet without exposing archive or configure", () => {

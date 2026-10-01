@@ -199,6 +199,62 @@ describe("SqliteLedgerAccountRepository", () => {
     )
   })
 
+  it("archives and reactivates an investment account without deleting its closed position", async () => {
+    const repository = new SqliteLedgerAccountRepository(database)
+    const account = restoredAccount({
+      financialAccount: { type: "INVESTMENT_ACCOUNT" },
+    })
+    await repository.add(account)
+    await database.execute(
+      "INSERT INTO investment_instruments (id,book_id,name,normalized_name,type,currency,status,version) VALUES (?,?,?,?,?,?,?,?)",
+      ["instrument-1", "book-1", "CDB", "cdb", "CDB", "BRL", "ACTIVE", 0]
+    )
+    await database.execute(
+      "INSERT INTO investment_positions (id,book_id,investment_account_id,instrument_id,normalized_label,quantity_mode,book_cost_minor,currency,opened_on,closed_on,status,allocation_revision,allocation_effective_on,version) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+      [
+        "position-1",
+        "book-1",
+        account.id,
+        "instrument-1",
+        "",
+        "AMOUNT",
+        0,
+        "BRL",
+        "2026-01-01",
+        "2026-01-02",
+        "CLOSED",
+        2,
+        "2026-01-02",
+        1,
+      ]
+    )
+
+    await repository.save(
+      restoredAccount({
+        financialAccount: { type: "INVESTMENT_ACCOUNT" },
+        status: "ARCHIVED",
+        version: 1,
+      }),
+      0
+    )
+    expect((await repository.findById(account.id))?.status).toBe("ARCHIVED")
+    await repository.save(
+      restoredAccount({
+        financialAccount: { type: "INVESTMENT_ACCOUNT" },
+        status: "ACTIVE",
+        version: 2,
+      }),
+      1
+    )
+    expect((await repository.findById(account.id))?.version).toBe(2)
+    expect(
+      await database.query<{ id: string; status: string }>(
+        "SELECT id,status FROM investment_positions WHERE id = ?",
+        ["position-1"]
+      )
+    ).toEqual([{ id: "position-1", status: "CLOSED" }])
+  })
+
   it("updates profile and settlement in the account CAS", async () => {
     const repository = new SqliteLedgerAccountRepository(database)
     const settlement = restoredAccount({
