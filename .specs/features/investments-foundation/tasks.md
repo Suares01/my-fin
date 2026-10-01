@@ -3763,8 +3763,10 @@ Revisão reversa: os 6 cenários Memory novos cobrem read-only, journal opcional
 
 **Done when**:
 
-- [ ] Fixture com caixa negativo e atualização que o torna não negativo confirma aviso removido e operações históricas idênticas.
-- [ ] Gate do package afetado + Build passa antes do commit atômico.
+- [x] Fixture com caixa negativo e atualização que o torna não negativo confirma aviso removido e operações históricas idênticas.
+- [x] Gate do package afetado + Build passa antes do commit atômico.
+
+**Evidência T100 (2026-10-01):** `investment-cash-warnings.test.ts:210-212` afirma caixa inicial -1000; `:226` exige ausência de aviso após saldo inicial +1000; `:234-239` afirma caixa 0, operações e posição (incluindo histórico) idênticas e um journal novo. `investment-portfolio-summary.test.tsx:227-254` confirma que a UI retira o aviso quando recebe o resumo atualizado. Memory 55 arquivos/640 testes antes e depois; React focado 1 arquivo/17 testes. Full Memory + Build passou: builds Domain/Application/Memory, 640/640 testes, lint, tipos e `git diff --check`. **Adequacy verdict:** PASS para as cláusulas de INV-147; re-verificação independente pendente.
 
 **Tests**: integration (Memory) e apresentação (React), conforme a costura.
 **Gate**: Full Memory + Build
@@ -4163,7 +4165,7 @@ Mapeamento de planejamento, não evidência de implementação. Cada ID também 
 | INV-141        | T14, T37, T38, T39, T62, T68, T69, T72, T86                                                                                                                                                                                          | Planned |
 | INV-142        | T10, T58, T84                                                                                                                                                                                                                        | Planned |
 | INV-146        | T62, T63, T86, T87, T92                                                                                                                                                                                                              | T92 page complete; remaining mapped work/validation pending |
-| INV-147        | T49, T60, T62, T86, T87, T92                                                                                                                                                                                                         | T92 page complete; remaining mapped work/validation pending |
+| INV-147        | T49, T60, T62, T86, T87, T92, T100                                                                                                                                                                                                   | T100 history and warning assertions complete; independent validation pending |
 | INV-61         | T9, T26, T33, T56, T57, T66, T85, T89, T91, T98 | Implemented; T98 repair complete; validation pending |
 | INV-62         | T8, T56, T85                                                                                                                                                                                                                         | In progress |
 | INV-63         | T9, T20, T26, T33, T56, T57, T59, T66, T70, T89, T94                                                                                                                                                                                 | Implemented; validation pending |

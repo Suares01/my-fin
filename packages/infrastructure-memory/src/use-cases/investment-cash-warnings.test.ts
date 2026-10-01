@@ -198,6 +198,18 @@ describe("investment cash warnings for common journal commands", () => {
 
   it("removes the warning when an opening balance covers the allocated cost", async () => {
     const f = await setup()
+    const operationsBefore = f.h.store.listInvestmentOperations()
+    const positionsBefore = f.h.store.listInvestmentPositions()
+    const cashBefore = await f.h.transactionManager.execute((repositories) =>
+      repositories.investmentReads.accountCash(
+        "book-1",
+        [f.broker.id as never],
+        "2026-08-04"
+      )
+    )
+    expect(cashBefore.value).toMatchObject([
+      { investmentAccountId: f.broker.id, cashMinor: "-1000" },
+    ])
     const result = await new SetOpeningBalance(
       f.h.transactionManager,
       f.h.dispatcher,
@@ -212,7 +224,19 @@ describe("investment cash warnings for common journal commands", () => {
       description: "Opening",
     })
     expect(result.ok && result.value.warnings).toBeUndefined()
-    expect(f.h.store.listInvestmentOperations()).toHaveLength(1)
+    const cashAfter = await f.h.transactionManager.execute((repositories) =>
+      repositories.investmentReads.accountCash(
+        "book-1",
+        [f.broker.id as never],
+        "2026-08-04"
+      )
+    )
+    expect(cashAfter.value).toMatchObject([
+      { investmentAccountId: f.broker.id, cashMinor: "0" },
+    ])
+    expect(f.h.store.listInvestmentOperations()).toEqual(operationsBefore)
+    expect(f.h.store.listInvestmentPositions()).toEqual(positionsBefore)
+    expect(f.h.store.listJournalEntries()).toHaveLength(1)
   })
 
   it("warns every affected investment account in a transfer", async () => {
