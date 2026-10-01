@@ -690,6 +690,12 @@ describe("AmendInvestmentOperation", () => {
     async (failAfter) => {
       const f = await setup()
       await sale(f)
+      const positionsBefore = f.h.store.listInvestmentPositions()
+      const operationsBefore = f.h.store.listInvestmentOperations()
+      const journalsBefore = f.h.store.listJournalEntries()
+      expect(
+        f.h.store.getInvestmentRequest("book-1" as never, "amend")
+      ).toBeUndefined()
       const result = await new AmendInvestmentOperation(
         failingManager(f.h.transactionManager, failAfter),
         f.h.dispatcher,
@@ -712,6 +718,12 @@ describe("AmendInvestmentOperation", () => {
       expect(f.h.store.listJournalEntries()).toMatchObject([
         expect.objectContaining({ id: "entry-1", version: 0 }),
       ])
+      expect(f.h.store.listInvestmentPositions()).toEqual(positionsBefore)
+      expect(f.h.store.listInvestmentOperations()).toEqual(operationsBefore)
+      expect(f.h.store.listJournalEntries()).toEqual(journalsBefore)
+      expect(
+        f.h.store.getInvestmentRequest("book-1" as never, "amend")
+      ).toBeUndefined()
     }
   )
 })

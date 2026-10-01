@@ -3805,8 +3805,10 @@ Revisão reversa: os 6 cenários Memory novos cobrem read-only, journal opcional
 
 **Done when**:
 
-- [ ] Fixture com operação que possui journal falha após tentativa de persistência e compara operações, posição, journals e recibo com snapshots anteriores.
-- [ ] Gate `Full Memory + Build` passa antes do commit atômico.
+- [x] Fixture com operação que possui journal falha após tentativa de persistência e compara operações, posição, journals e recibo com snapshots anteriores.
+- [x] Gate `Full Memory + Build` passa antes do commit atômico.
+
+**Evidência T102 (2026-10-01):** `amend-investment-operation.test.ts:688-708` injeta falha após cada uma das oito escritas do amendment com journal e exige `UNEXPECTED_ERROR`; `:721-726` compara posição, operações/lineage e journals/postings completos com snapshots anteriores e exige ausência do recibo. O teste já afirmava posição 6/600, original sem `replacedBy` e journal inicial, preservado sem enfraquecimento. O sucesso com journal, reversão e substituição é afirmado em `:142-174`. Memory 55 arquivos/640 testes antes e depois; Full Memory + Build verde com lint, tipos, builds e `git diff --check`. **Adequacy verdict:** PASS para atomicidade INV-65/75 neste caso; re-verificação independente pendente.
 
 **Tests**: integration (Memory transaction).
 **Gate**: Full Memory + Build
@@ -4242,7 +4244,7 @@ Mapeamento de planejamento, não evidência de implementação. Cada ID também 
 | INV-62         | T8, T56, T85                                                                                                                                                                                                                         | In progress |
 | INV-63         | T9, T20, T26, T33, T56, T57, T59, T66, T70, T89, T94                                                                                                                                                                                 | Implemented; validation pending |
 | INV-64         | T9, T20, T26, T33, T56, T57, T59, T66, T70, T89, T94                                                                                                                                                                                 | Implemented; validation pending |
-| INV-65         | T9, T26, T33, T56, T57, T66, T85, T89                                                                                                                                                                                                | In progress |
+| INV-65         | T9, T26, T33, T56, T57, T66, T85, T89, T102                                                                                                                                                                                          | T102 complete atomic rollback assertion; independent validation pending |
 | INV-66         | T9, T56, T57                                                                                                                                                                                                                         | Planned |
 | INV-67         | T56, T57, T59, T70, T85, T94                                                                                                                                                                                                         | Implemented; validation pending |
 | INV-68         | T9, T20, T26, T57, T59, T66, T70, T85, T89, T94                                                                                                                                                                                      | Implemented; validation pending |
@@ -4257,7 +4259,7 @@ Mapeamento de planejamento, não evidência de implementação. Cada ID também 
 | INV-135        | T26, T57, T59, T66, T70, T85, T89, T94                                                                                                                                                                                               | Implemented; validation pending |
 | INV-136        | T26, T57, T59, T66, T70, T85, T89, T94                                                                                                                                                                                               | Implemented; validation pending |
 | INV-74         | T12, T13, T18, T19, T20, T21, T23, T24, T25, T26, T27, T28, T31, T32, T33, T34, T35, T40, T41, T42, T43, T44, T45, T46, T47, T48, T51, T52, T53, T54, T55, T56, T57, T58, T59, T61, T63, T64, T65, T66, T67, T71, T72, T73, T91, T93 | T91 detail and T93 native book isolation complete; final validation pending |
-| INV-75 | T13, T16, T22, T28, T29, T30, T35, T36, T40, T48, T50, T51, T52, T53, T54, T55, T56, T57, T58, T60, T95 | Planned |
+| INV-75 | T13, T16, T22, T28, T29, T30, T35, T36, T40, T48, T50, T51, T52, T53, T54, T55, T56, T57, T58, T60, T95, T102 | T102 amendment rollback assertion complete; independent validation pending |
 | INV-76         | T4, T12, T13, T23, T24, T25, T26, T31, T32, T33, T40, T42, T45, T46, T47, T48, T51, T52, T53, T54, T55, T56, T57, T61, T73                                                                                                           | Planned |
 | INV-77         | T38, T39, T40, T48, T51, T60                                                                                                                                                                                                         | Planned |
 | INV-78 | T5, T12, T13, T16, T22, T28, T35, T40, T48, T49, T50, T51, T52, T53, T54, T55, T56, T57, T58, T71, T73, T95 | Planned |
