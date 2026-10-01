@@ -108,6 +108,15 @@ export class AmendInvestmentOperation {
             account.status === "ACTIVE",
             instrument.value.status === "ACTIVE"
           )
+        else if (
+          (command.replacement.type === "SALE" ||
+            command.replacement.type === "REDEMPTION") &&
+          position.toSnapshot().status === "CLOSED"
+        )
+          position.assertCanReopen(
+            account.status === "ACTIVE",
+            instrument.value.status === "ACTIVE"
+          )
         else
           position.assertCanAllocate(
             account.status === "ACTIVE",

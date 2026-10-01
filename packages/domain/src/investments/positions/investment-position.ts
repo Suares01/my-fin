@@ -248,6 +248,7 @@ export class InvestmentPosition extends AggregateRoot<
     readonly state: PositionEconomicState
     readonly effect: PositionOperationEffect
   }): void {
+    const previousFinalState = this.position
     const state = input.state
     const quantity =
       state.kind === "UNOPENED"
@@ -276,7 +277,19 @@ export class InvestmentPosition extends AggregateRoot<
           }
         : { closedOn: undefined }),
     }
-    this.applyOperation(input.effect)
+    if (input.effect.bookCostDeltaMinor === undefined) throw invalidOperation()
+    const occurredOn = parseDate(input.effect.occurredOn)
+    const currency = Currency.parse(this.position.currency)
+    const finalCost =
+      currentCost(this.position) +
+      parseCost(input.effect.bookCostDeltaMinor, currency)
+    const finalQuantity = this.applyQuantityDelta(input.effect.quantityDelta)
+    this.applyEconomicState(
+      finalQuantity,
+      finalCost,
+      occurredOn,
+      previousFinalState
+    )
   }
 
   toSnapshot(): InvestmentPositionSnapshot {
@@ -301,14 +314,15 @@ export class InvestmentPosition extends AggregateRoot<
   private applyEconomicState(
     quantity: Decimal | undefined,
     cost: bigint,
-    occurredOn: LocalDate
+    occurredOn: LocalDate,
+    comparisonState: InvestmentPositionSnapshot = this.position
   ): void {
     if (cost < 0n) throw invalidOperation()
     const status = deriveStatus(this.position.quantityMode, quantity, cost)
     const economicChanged =
-      cost !== currentCost(this.position) ||
-      (quantity?.toString() ?? undefined) !== this.position.quantity
-    const previousStatus = this.position.status
+      cost !== currentCost(comparisonState) ||
+      (quantity?.toString() ?? undefined) !== comparisonState.quantity
+    const previousStatus = comparisonState.status
     this.position = {
       ...this.position,
       ...(quantity === undefined
@@ -319,17 +333,17 @@ export class InvestmentPosition extends AggregateRoot<
       ...(status === "CLOSED"
         ? {
             closedOn:
-              previousStatus === "CLOSED"
+              this.position.status === "CLOSED"
                 ? this.position.closedOn
                 : occurredOn.toString(),
           }
         : { closedOn: undefined }),
       allocationRevision: economicChanged
-        ? nextRevision(this.position.allocationRevision)
-        : this.position.allocationRevision,
+        ? nextRevision(comparisonState.allocationRevision)
+        : comparisonState.allocationRevision,
       allocationEffectiveOn: economicChanged
         ? occurredOn.toString()
-        : this.position.allocationEffectiveOn,
+        : comparisonState.allocationEffectiveOn,
       version: nextVersion(this.version),
     }
     this.record(

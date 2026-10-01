@@ -179,6 +179,127 @@ describe("AmendInvestmentOperation", () => {
     ])
   })
 
+  it("reopens a position when amending its last total sale to a partial sale", async () => {
+    const f = await setup()
+    expect(
+      await sale(f, {
+        quantityDelta: "10",
+        bookCostReductionMinor: "1000",
+        grossProceedsMinor: "1100",
+      })
+    ).toMatchObject({ ok: true })
+    expect(f.h.store.listInvestmentPositions()[0]).toMatchObject({
+      quantity: "0",
+      bookCostMinor: "0",
+      status: "CLOSED",
+      closedOn: "2026-08-04",
+      allocationRevision: 2,
+    })
+
+    expect(await amend(f)).toMatchObject({
+      ok: true,
+      value: {
+        reversalOperationId: "operation-3",
+        replacementOperationId: "operation-4",
+        positionVersion: 2,
+        allocationRevision: 3,
+        journalEntryIds: ["entry-3", "entry-2"],
+      },
+    })
+    expect(f.h.store.listInvestmentPositions()[0]).toMatchObject({
+      quantity: "5",
+      bookCostMinor: "500",
+      status: "OPEN",
+      closedOn: undefined,
+      allocationRevision: 3,
+    })
+    expect(f.h.store.listInvestmentOperations()).toMatchObject([
+      expect.objectContaining({ id: "operation-1" }),
+      expect.objectContaining({ id: "operation-2", replacedBy: "operation-4" }),
+      expect.objectContaining({
+        id: "operation-3",
+        role: "REVERSAL",
+        reversalOf: "operation-2",
+      }),
+      expect.objectContaining({
+        id: "operation-4",
+        replacementOf: "operation-2",
+        quantityDelta: "-5",
+        bookCostDeltaMinor: "-500",
+      }),
+    ])
+    const journals = f.h.store.listJournalEntries()
+    expect(journals).toHaveLength(3)
+    expect(journals.find((entry) => entry.id === "entry-1")).toMatchObject({
+      reversedBy: "entry-3",
+      replacedBy: "entry-2",
+    })
+    expect(journals.find((entry) => entry.id === "entry-3")).toMatchObject({
+      reversalOf: "entry-1",
+    })
+    expect(journals.find((entry) => entry.id === "entry-2")).toMatchObject({
+      replacementOf: "entry-1",
+    })
+    expect(
+      journals
+        .flatMap((entry) => entry.postings)
+        .filter((posting) => posting.accountId === f.gain.id)
+        .reduce((total, posting) => total + posting.amountMinor, 0n)
+    ).toBe(-100n)
+  })
+
+  it("keeps the position closed when amending its last total sale to another total sale", async () => {
+    const f = await setup()
+    await sale(f, {
+      quantityDelta: "10",
+      bookCostReductionMinor: "1000",
+      grossProceedsMinor: "1100",
+    })
+    expect(
+      await amend(f, {
+        replacement: {
+          ...(await amendment(f)),
+          quantityDelta: "10",
+          bookCostReductionMinor: "1000",
+          grossProceedsMinor: "1200",
+        },
+      })
+    ).toMatchObject({
+      ok: true,
+      value: {
+        reversalOperationId: "operation-3",
+        replacementOperationId: "operation-4",
+        positionVersion: 2,
+        allocationRevision: 2,
+        journalEntryIds: ["entry-3", "entry-2"],
+      },
+    })
+    expect(f.h.store.listInvestmentPositions()[0]).toMatchObject({
+      quantity: "0",
+      bookCostMinor: "0",
+      status: "CLOSED",
+      closedOn: "2026-08-04",
+      allocationRevision: 2,
+    })
+    expect(f.h.store.listInvestmentOperations()[1]).toMatchObject({
+      id: "operation-2",
+      replacedBy: "operation-4",
+    })
+    expect(f.h.store.listInvestmentOperations()[3]).toMatchObject({
+      id: "operation-4",
+      replacementOf: "operation-2",
+      quantityDelta: "-10",
+      bookCostDeltaMinor: "-1000",
+    })
+    expect(
+      f.h.store
+        .listJournalEntries()
+        .flatMap((entry) => entry.postings)
+        .filter((posting) => posting.accountId === f.gain.id)
+        .reduce((total, posting) => total + posting.amountMinor, 0n)
+    ).toBe(-200n)
+  })
+
   it("keeps the journal-less lineage journal-less", async () => {
     const f = await setup()
     await sale(f, { grossProceedsMinor: "400", gainCategoryId: undefined })

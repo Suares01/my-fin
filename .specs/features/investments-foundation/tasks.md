@@ -181,6 +181,12 @@ T84 -> T85 -> T86 -> T87 -> T88
 T89 -> T90 -> T91 -> T92 -> T93 -> T94
 ```
 
+### Phase 17: Reparos da validação independente
+
+```text
+T94 -> T98 -> T99 -> T100
+```
+
 ### Phase Execution Map
 
 Transições entre fases, também dependências explícitas:
@@ -3711,6 +3717,57 @@ Revisão reversa: os 6 cenários Memory novos cobrem read-only, journal opcional
 **Gate**: Full React + Build + Final + Native afetado
 **Commit**: `feat(investments-ui): integração visual com transações`
 
+### T98: Corrigir amendment da última venda total fechada
+
+**What**: Permitir a substituição da última SALE/REDEMPTION efetiva quando a própria saída total deixou a posição CLOSED, mantendo a exigência de carteira e instrumento ativos.
+**Where**: `packages/application/src/investments/operations/amend-investment-operation.ts`; teste de use case Memory co-localizado.
+**Depends on**: T94 e `validation.md` rodada 1 (INV-61 FAIL).
+**Requirement**: INV-61, INV-63, INV-64, INV-65, INV-68, INV-69, INV-128, INV-129.
+
+**Done when**:
+
+- [x] Corrigir a última saída total para substituição parcial que reabre posição e para substituição total que permanece CLOSED; conferir original, reversão, substituta, postings e revision sem efeito duplicado.
+- [x] Preservar a guarda de conta/instrumento ativo e as rejeições existentes para operação não corrigível; registrar evidência e adequação.
+- [x] Gate `Full Cross + Build` passa antes do commit atômico.
+
+**Evidência T98 (2026-10-01):** `investment-position.test.ts:276-303` verifica substituição de saída total com estado final fechado, `closedOn` da substituta, versão 2 e allocationRevision preservada em 2. `amend-investment-operation.test.ts:180-300` acrescenta dois cenários de integração: saída total CLOSED → substituta parcial OPEN/custo 500/quantidade 5/revisão 3, e saída total CLOSED → substituta total CLOSED/custo 0/quantidade 0/revisão 2. Asserções cobrem vínculo original/reversão/substituta, journals e soma líquida de postings da receita (-100/-200 minor respectivamente). A guarda continua a chamar `assertCanReopen`, que exige conta e instrumento ativos; os testes existentes de não corrigível e CAS seguiram verdes. Antes: Domain 404, Memory 638; depois: Domain 405 (+1), Memory 640 (+2). Full Cross + Build verde: Domain 405, Application 261, Memory 640, SQLite 974, adapter Tauri 63; migrações, lint, tipos, builds e `git diff --check` verdes. **Adequacy verdict:** PASS para INV-61/128/129 nesta tarefa; nova verificação independente ainda pendente.
+
+**Tests**: unit (Domain) e integration (Memory).
+**Gate**: Full Cross + Build
+**Commit**: `fix(investments): corrigir última venda total fechada`
+
+### T99: Provar preservação de saldo no backfill financeiro
+
+**What**: Fortalecer o fixture migratório com saldo anterior não zero para ASSET e LIABILITY e comparar postings/saldos após o backfill v5.
+**Where**: `packages/infrastructure-sqlite/tests/migrations/investment-migrations.test.ts`.
+**Depends on**: T98 e `validation.md` rodada 1 (INV-05/06 GAP).
+**Requirement**: INV-05, INV-06.
+
+**Done when**:
+
+- [ ] Teste demonstra saldos não zero antes/depois da migração, perfis corretos e postings históricos idênticos.
+- [ ] Gate `Full SQLite + Build` passa antes do commit atômico.
+
+**Tests**: integration (SQLite migration).
+**Gate**: Full SQLite + Build
+**Commit**: `test(investments): provar saldos no backfill financeiro`
+
+### T100: Provar histórico preservado ao remover aviso de caixa
+
+**What**: Completar a asserção de INV-147 para provar que a retirada do aviso não altera operações persistidas ou lineage.
+**Where**: teste de integração do resumo patrimonial e/ou use case de saldo inicial.
+**Depends on**: T99 e `validation.md` rodada 1 (INV-147 GAP).
+**Requirement**: INV-147.
+
+**Done when**:
+
+- [ ] Fixture com caixa negativo e atualização que o torna não negativo confirma aviso removido e operações históricas idênticas.
+- [ ] Gate do package afetado + Build passa antes do commit atômico.
+
+**Tests**: integration (Memory) e apresentação (React), conforme a costura.
+**Gate**: Full Memory + Build
+**Commit**: `test(investments): preservar histórico ao ajustar caixa`
+
 ## Task Granularity Check
 
 Um componente/caso de uso por tarefa, com testes e integrações mecânicas do mesmo contrato. Não usar o ponto principal como permissão para agregar funcionalidades adjacentes.
@@ -4096,8 +4153,8 @@ Mapeamento de planejamento, não evidência de implementação. Cada ID também 
 | INV-59         | T10, T14, T58, T62, T65, T67, T84, T86, T88, T90, T91                                                                                                                                                                                | T91 detail complete; remaining mapped work/validation pending |
 | INV-60         | T14, T38, T39, T60, T62, T63, T86, T87                                                                                                                                                                                               | Planned |
 | INV-127        | T8, T19, T21, T25, T27, T30, T32, T47, T50, T58, T67, T90                                                                                                                                                                            | Planned |
-| INV-128        | T8, T25, T51, T52, T54, T56, T57, T85                                                                                                                                                                                                | In progress |
-| INV-129        | T8, T47, T53, T55, T57, T77, T85                                                                                                                                                                                                     | In progress |
+| INV-128        | T8, T25, T51, T52, T54, T56, T57, T85, T98 | Implemented; T98 repair complete; validation pending |
+| INV-129        | T8, T47, T53, T55, T57, T77, T85, T98 | Implemented; T98 repair complete; validation pending |
 | INV-130        | T58, T62, T65, T67, T84, T90                                                                                                                                                                                                         | Planned |
 | INV-131        | T12, T58, T73, T84                                                                                                                                                                                                                   | Planned |
 | INV-140        | T14, T37, T38, T39, T62, T68, T69, T72, T86                                                                                                                                                                                          | Planned |
@@ -4105,7 +4162,7 @@ Mapeamento de planejamento, não evidência de implementação. Cada ID também 
 | INV-142        | T10, T58, T84                                                                                                                                                                                                                        | Planned |
 | INV-146        | T62, T63, T86, T87, T92                                                                                                                                                                                                              | T92 page complete; remaining mapped work/validation pending |
 | INV-147        | T49, T60, T62, T86, T87, T92                                                                                                                                                                                                         | T92 page complete; remaining mapped work/validation pending |
-| INV-61         | T9, T26, T33, T56, T57, T66, T85, T89, T91                                                                                                                                                                                           | In progress; T91 detail complete |
+| INV-61         | T9, T26, T33, T56, T57, T66, T85, T89, T91, T98 | Implemented; T98 repair complete; validation pending |
 | INV-62         | T8, T56, T85                                                                                                                                                                                                                         | In progress |
 | INV-63         | T9, T20, T26, T33, T56, T57, T59, T66, T70, T89, T94                                                                                                                                                                                 | Implemented; validation pending |
 | INV-64         | T9, T20, T26, T33, T56, T57, T59, T66, T70, T89, T94                                                                                                                                                                                 | Implemented; validation pending |

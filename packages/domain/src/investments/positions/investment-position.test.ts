@@ -272,6 +272,40 @@ describe("InvestmentPosition", () => {
     })
   })
 
+  it("compares an amended total sale with its previous final allocation", () => {
+    const position = InvestmentPosition.openWithAllocation(input())
+    position.applyOperation({
+      quantityDelta: "-10",
+      bookCostDeltaMinor: "-1000",
+      occurredOn: "2026-02-01",
+    })
+    position.replaceOperation({
+      state: {
+        kind: "EXISTING",
+        quantity: "10",
+        bookCostMinor: "1000",
+        status: "OPEN",
+        openedOn: "2026-01-01",
+        allocationEffectiveOn: "2026-01-01",
+      },
+      effect: {
+        quantityDelta: "-10",
+        bookCostDeltaMinor: "-1000",
+        occurredOn: "2026-03-01",
+      },
+    })
+
+    expect(position.toSnapshot()).toMatchObject({
+      quantity: "0",
+      bookCostMinor: "0",
+      status: "CLOSED",
+      closedOn: "2026-03-01",
+      allocationRevision: 2,
+      allocationEffectiveOn: "2026-02-01",
+      version: 2,
+    })
+  })
+
   it("creates a new revision when cancellation restores a historical allocation", () => {
     const position = InvestmentPosition.openWithAllocation(input())
     position.applyOperation({
