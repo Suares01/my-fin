@@ -552,7 +552,7 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-28 | S3 | Tasks | Planned | T38, T39, T50, T60, T78, T96 |
 | INV-29 | S3 | Tasks | Implemented: T11, T50, T51 and T79 | T11, T50, T51, T79 |
 | INV-30 | S3 | Tasks | Implemented: T11, T50, T51, T79, T95 and T96 | T11, T50, T51, T79, T95, T96 |
-| INV-31 | S3 | Tasks | Planned | T60, T68, T70, T94 |
+| INV-31 | S3 | Tasks | Implemented; validation pending | T60, T68, T70, T94 |
 | INV-32 | S3 | Tasks | Implemented: T38, T39, T50, T51, T55, T60, T79, T83 and T95 | T38, T39, T50, T51, T55, T60, T79, T83, T95 |
 | INV-33 | S3 | Tasks | T95 atomic command, T96 preview and T78 opening UI complete | T50, T95, T96, T78 |
 | INV-34 | S3 | Tasks | In progress: T9 operation | T9, T50, T51, T95 |
@@ -566,7 +566,7 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-42 | S4 | Tasks | Implemented: T11, T53, T54, T69, T81 and T82 | T11, T53, T54, T69, T81, T82 |
 | INV-43 | S4 | Tasks | Implemented: T11, T55, T69 and T83 | T11, T55, T69, T83 |
 | INV-44 | S4 | Tasks | Implemented: T11, T51–T55, T69 and T81–T83 | T11, T51, T52, T53, T54, T55, T69, T81, T82, T83 |
-| INV-45 | S4 | Tasks | Planned | T11, T51, T52, T70, T94 |
+| INV-45 | S4 | Tasks | Implemented; validation pending | T11, T51, T52, T70, T94 |
 | INV-46 | S4 | Tasks | Implemented: T8, T11, T52, T54 and T82 | T8, T11, T52, T54, T82 |
 | INV-47 | S5 | Tasks | T84 form complete; remaining mapped work/validation pending; T90 valuation history complete | T10, T21, T27, T34, T58, T67, T84, T90 |
 | INV-48 | S5 | Tasks | T84 form complete; remaining mapped work/validation pending | T2, T10, T27, T58, T84 |
@@ -584,13 +584,13 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-60 | S5 | Tasks | T86 cards complete; remaining mapped work/validation pending; T87 list complete | T14, T38, T39, T60, T62, T63, T86, T87 |
 | INV-61 | S6 | Tasks | In progress: T9 operation; T85 correction form complete; T89 history complete; T91 detail complete | T9, T26, T33, T56, T57, T66, T85, T89, T91 |
 | INV-62 | S6 | Tasks | In progress: T8 position; T85 correction form complete | T8, T56, T85 |
-| INV-63 | S6 | Tasks | In progress: T9 operation; T89 history complete | T9, T20, T26, T33, T56, T57, T59, T66, T70, T89, T94 |
-| INV-64 | S6 | Tasks | In progress: T9 operation; T89 history complete | T9, T20, T26, T33, T56, T57, T59, T66, T70, T89, T94 |
+| INV-63 | S6 | Tasks | Implemented; validation pending | T9, T20, T26, T33, T56, T57, T59, T66, T70, T89, T94 |
+| INV-64 | S6 | Tasks | Implemented; validation pending | T9, T20, T26, T33, T56, T57, T59, T66, T70, T89, T94 |
 | INV-65 | S6 | Tasks | In progress: T9 operation; T85 correction form complete; T89 history complete | T9, T26, T33, T56, T57, T66, T85, T89 |
 | INV-66 | S6 | Tasks | In progress: T9 operation | T9, T56, T57 |
-| INV-67 | S6 | Tasks | Planned; T85 correction form complete | T56, T57, T59, T70, T85, T94 |
-| INV-68 | S6 | Tasks | In progress: T9 operation; T85 correction form complete; T89 history complete | T9, T20, T26, T57, T59, T66, T70, T85, T89, T94 |
-| INV-69 | S6 | Tasks | In progress: T9 operation; T85 correction form complete; T89 history complete | T9, T20, T26, T33, T56, T57, T59, T66, T70, T85, T89, T94 |
+| INV-67 | S6 | Tasks | Implemented; validation pending | T56, T57, T59, T70, T85, T94 |
+| INV-68 | S6 | Tasks | Implemented; validation pending | T9, T20, T26, T57, T59, T66, T70, T85, T89, T94 |
+| INV-69 | S6 | Tasks | Implemented; validation pending | T9, T20, T26, T33, T56, T57, T59, T66, T70, T85, T89, T94 |
 | INV-70 | S6 | Tasks | Planned; T85 correction form complete | T56, T57, T60, T85 |
 | INV-71 | S6 | Tasks | In progress: T8 position | T8, T56 |
 | INV-72 | S6 | Tasks | In progress: T9 operation; T85 correction form complete; T89 history complete | T9, T20, T26, T29, T33, T36, T56, T57, T66, T85, T89 |
@@ -619,21 +619,21 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-95 | S8 | Tasks | T92 page complete; remaining mapped work/validation pending | T14, T65, T72, T88, T91, T92 |
 | INV-96 | S8 | Tasks | T91 detail and T93 native history complete; final validation pending | T14, T65, T66, T67, T72, T89, T90, T91, T93 |
 | INV-97 | S8 | Tasks | T92 page complete; remaining mapped work/validation pending | T14, T62, T65, T72, T88, T92 |
-| INV-98 | S8 | Tasks | T88 table complete; remaining mapped work/validation pending; T89 history complete; T90 valuation history complete | T14, T65, T66, T67, T70, T72, T88, T89, T90, T94 |
+| INV-98 | S8 | Tasks | Implemented; validation pending | T14, T65, T66, T67, T70, T72, T88, T89, T90, T94 |
 | INV-99 | S8 | Tasks | T92 page and T93 native creation/classification complete; final validation pending | T64, T74, T76, T78, T92, T93 |
 | INV-100 | S8 | Tasks | T84 form complete; remaining mapped work/validation pending; T85 correction form complete | T61, T78, T97, T79, T80, T81, T82, T83, T84, T85, T96 |
 | INV-101 | S8 | Tasks | T92 page and T93 native operations complete; final validation pending | T71, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T91, T92, T93 |
-| INV-102 | S8 | Tasks | Planned | T59, T70, T94 |
-| INV-103 | S8 | Tasks | Planned | T37, T69, T70, T94 |
-| INV-104 | S8 | Tasks | T92 page complete; remaining mapped work/validation pending | T71, T72, T73, T92, T94 |
+| INV-102 | S8 | Tasks | Implemented; validation pending | T59, T70, T94 |
+| INV-103 | S8 | Tasks | Implemented; validation pending | T37, T69, T70, T94 |
+| INV-104 | S8 | Tasks | Implemented; validation pending | T71, T72, T73, T92, T94 |
 | INV-105 | S8 | Tasks | T92 page and T93 native book switch complete; final validation pending | T72, T73, T91, T92, T93 |
 | INV-106 | S8 | Tasks | T92 page complete; remaining mapped work/validation pending | T72, T86, T87, T88, T89, T90, T91, T92 |
 | INV-107 | S8 | Tasks | T92 page complete; remaining mapped work/validation pending | T63, T72, T75, T86, T87, T88, T92 |
 | INV-108 | S8 | Tasks | T92 page complete; remaining mapped work/validation pending | T72, T86, T87, T88, T89, T90, T91, T92 |
-| INV-109 | S8 | Tasks | T84 form complete; remaining mapped work/validation pending; T85 correction form complete | T73, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T94 |
-| INV-110 | S8 | Tasks | T92 page and T93 native Investimentos keyboard/focus complete; T94 Transações pending | T74, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T88, T89, T91, T92, T93, T94 |
+| INV-109 | S8 | Tasks | Implemented; validation pending | T73, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T94 |
+| INV-110 | S8 | Tasks | Implemented; validation pending | T74, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T88, T89, T91, T92, T93, T94 |
 | INV-111 | S8 | Tasks | T92 page complete; remaining mapped work/validation pending | T73, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T92 |
-| INV-112 | S8 | Tasks | T92 page and T93 native Investimentos viewports complete; T94 Transações pending | T86, T87, T88, T89, T90, T91, T92, T93, T94 |
+| INV-112 | S8 | Tasks | Implemented; validation pending | T86, T87, T88, T89, T90, T91, T92, T93, T94 |
 | INV-113 | S9 | Tasks | T87 list complete; remaining mapped work/validation pending | T25, T32, T38, T39, T43, T63, T87 |
 | INV-114 | S9 | Tasks | Planned | T6, T24, T25, T31, T32, T46, T64, T76 |
 | INV-115 | S9 | Tasks | T87 list complete; remaining mapped work/validation pending | T38, T39, T42, T43, T74, T87 |
@@ -656,8 +656,8 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-132 | S6 | Tasks | T89 history complete; remaining mapped work/validation pending | T9, T11, T13, T20, T26, T30, T33, T56, T57, T66, T89 |
 | INV-133 | S6 | Tasks | T89 history complete; remaining mapped work/validation pending | T9, T20, T26, T56, T57, T66, T89 |
 | INV-134 | S6 | Tasks | Planned; T85 correction form complete; T89 history complete | T9, T20, T26, T56, T57, T66, T85, T89 |
-| INV-135 | S6 | Tasks | Planned; T85 correction form complete; T89 history complete | T26, T57, T59, T66, T70, T85, T89, T94 |
-| INV-136 | S6 | Tasks | Planned; T85 correction form complete; T89 history complete | T26, T57, T59, T66, T70, T85, T89, T94 |
+| INV-135 | S6 | Tasks | Implemented; validation pending | T26, T57, T59, T66, T70, T85, T89, T94 |
+| INV-136 | S6 | Tasks | Implemented; validation pending | T26, T57, T59, T66, T70, T85, T89, T94 |
 | INV-137 | S3 | Tasks | Planned | T49, T50, T78 |
 | INV-138 | S1 | Tasks | T92 page complete; remaining mapped work/validation pending | T42, T74, T75, T78, T92 |
 | INV-139 | S4 | Tasks | Implemented: T52, T61 and T80 | T52, T61, T80 |

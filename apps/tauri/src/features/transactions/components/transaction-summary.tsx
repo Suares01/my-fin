@@ -80,7 +80,7 @@ export function TransactionSummary({
             <div className="min-w-0">
               <p className="text-xs text-muted-foreground">{card.label}</p>
               <p
-                className="text-base font-semibold tracking-tight tabular-nums"
+                className="text-base font-semibold tracking-tight break-all tabular-nums"
                 data-testid={`transaction-summary-${card.key}`}
               >
                 {summary.isPending ? (

@@ -69,6 +69,33 @@ describe("TransactionSummary", () => {
     )
   })
 
+  it("renders both sides of a mixed investment from the summary query", () => {
+    const investmentFilters = { ...filters, types: ["INVESTMENT"] as const }
+    mocks.summary.mockReturnValue({
+      data: {
+        incomeMinor: "1000",
+        expenseMinor: "1200",
+        largestTransactionMinor: "2500",
+        transactionCount: 1,
+        currency: "BRL",
+      },
+      isPending: false,
+      isError: false,
+      refetch: vi.fn(),
+    })
+    render(<TransactionSummary filters={investmentFilters} />)
+    expect(mocks.summary).toHaveBeenCalledWith(investmentFilters)
+    expect(screen.getByTestId("transaction-summary-income").textContent).toBe(
+      "R$ 10,00"
+    )
+    expect(screen.getByTestId("transaction-summary-expense").textContent).toBe(
+      "R$ 12,00"
+    )
+    expect(screen.getByTestId("transaction-summary-count").textContent).toBe(
+      "1"
+    )
+  })
+
   it("renders four skeleton values during the initial query", () => {
     mocks.summary.mockReturnValue({
       data: undefined,

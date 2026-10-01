@@ -13,6 +13,7 @@ const ALL_TRANSACTION_TYPES = [
   "INCOME",
   "EXPENSE",
   "TRANSFER",
+  "INVESTMENT",
 ] as const satisfies readonly TransactionType[]
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -30,6 +31,7 @@ const typeLabels: ReadonlyArray<{ value: TransactionType; label: string }> = [
   { value: "INCOME", label: "Receita" },
   { value: "EXPENSE", label: "Despesa" },
   { value: "TRANSFER", label: "Transferência" },
+  { value: "INVESTMENT", label: "Investimento" },
 ]
 
 const statusLabels: ReadonlyArray<{
@@ -141,7 +143,7 @@ export function TransactionFilters({
       </select>
 
       {/* Type Toggle */}
-      <div className="flex items-center rounded-lg border border-border p-0.5">
+      <div className="flex max-w-full flex-wrap items-center rounded-lg border border-border p-0.5">
         <button
           type="button"
           onClick={() => update({ types: ALL_TRANSACTION_TYPES })}

@@ -71,9 +71,43 @@ describe("TransactionFilters", () => {
     fireEvent.click(screen.getByRole("button", { name: "Todos" }))
     expect(props.onChange).toHaveBeenCalledWith(
       expect.objectContaining({
-        types: ["INCOME", "EXPENSE", "TRANSFER"],
+        types: ["INCOME", "EXPENSE", "TRANSFER", "INVESTMENT"],
       })
     )
+  })
+
+  it("includes investment in the unfiltered type selection", () => {
+    expect(emptyTransactionFilters.types).toEqual([
+      "INCOME",
+      "EXPENSE",
+      "TRANSFER",
+      "INVESTMENT",
+    ])
+  })
+
+  it("filters only investment transactions", () => {
+    const { props } = renderFilters()
+    fireEvent.click(screen.getByRole("button", { name: "Investimento" }))
+    expect(props.onChange).toHaveBeenCalledWith(
+      expect.objectContaining({ types: ["INVESTMENT"] })
+    )
+  })
+
+  it("marks the investment filter as selected", () => {
+    render(
+      <TransactionFilters
+        filters={{ ...emptyTransactionFilters, types: ["INVESTMENT"] }}
+        accounts={[]}
+        categories={[]}
+        onChange={vi.fn()}
+        onReset={vi.fn()}
+      />
+    )
+    expect(
+      screen
+        .getByRole("button", { name: "Investimento" })
+        .getAttribute("aria-pressed")
+    ).toBe("true")
   })
 
   it("emits the selected account", () => {

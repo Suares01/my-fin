@@ -1,10 +1,5 @@
 import { AnimatePresence, motion } from "motion/react"
-import {
-  FileTextIcon,
-  MoreHorizontalIcon,
-  PencilIcon,
-  Undo2Icon,
-} from "lucide-react"
+import { MoreHorizontalIcon, PencilIcon, Undo2Icon } from "lucide-react"
 import { JournalChainListItem } from "@workspace/application"
 import {
   Table,
@@ -34,7 +29,8 @@ import {
   type TransactionType,
 } from "../transaction-list-model.js"
 import { TransactionRowDetails } from "./transaction-row-details.js"
-import { format } from "date-fns"
+import { format, parseISO } from "date-fns"
+import { Link } from "react-router"
 
 interface TransactionTableProps {
   transactions: readonly JournalChainListItem[]
@@ -48,6 +44,14 @@ interface TransactionTableProps {
   onEdit?: (transaction: JournalChainListItem) => void
   onCancel?: (transaction: JournalChainListItem) => void
   actionPendingChainId?: string
+}
+
+function transactionSign(tx: JournalChainListItem): "+" | "-" | "" {
+  if (tx.type === "INVESTMENT" && tx.investment) {
+    const flow = BigInt(tx.investment.netCashFlowMinor)
+    return flow > 0n ? "+" : flow < 0n ? "-" : ""
+  }
+  return transactionAmountSign(tx.type as TransactionType)
 }
 
 function statusBadge(status: JournalChainListItem["status"]) {
@@ -390,8 +394,13 @@ function TransactionRow({
 }) {
   const canOperate =
     (tx.status === "ACTIVE" || tx.status === "EDITED") &&
+    tx.type !== "INVESTMENT" &&
+    tx.canEditWithGenericFlow &&
     onEdit !== undefined &&
     onCancel !== undefined
+  const canViewInvestment =
+    tx.type === "INVESTMENT" && tx.investment !== undefined
+  const sign = transactionSign(tx)
 
   return (
     <>
@@ -417,11 +426,15 @@ function TransactionRow({
           <div className="flex items-center gap-2.5">
             <div className="min-w-0">
               <p className="truncate text-sm font-medium">{tx.description}</p>
-              {tx.categories[0] && (
+              {tx.type === "INVESTMENT" ? (
+                <Badge variant="secondary" className="mt-0.5 text-[10px]">
+                  Investimento
+                </Badge>
+              ) : tx.categories[0] ? (
                 <Badge variant="secondary" className="mt-0.5 text-[10px]">
                   {tx.categories[0].name}
                 </Badge>
-              )}
+              ) : null}
             </div>
           </div>
         </TableCell>
@@ -436,20 +449,20 @@ function TransactionRow({
           <span
             className={cn(
               "text-sm font-semibold tabular-nums",
-              tx.type === "INCOME" ? "text-emerald-500" : "text-foreground"
+              sign === "+" ? "text-emerald-500" : "text-foreground"
             )}
           >
-            {tx.type === "INCOME" ? "+" : "-"}
+            {sign}
             <FormattedMoney
-              amountMinor={BigInt(tx.amountMinor).toString()}
-              currency="BRL"
+              amountMinor={tx.amountMinor}
+              currency={tx.currency}
             />
           </span>
         </TableCell>
 
         <TableCell className="hidden md:table-cell">
           <span className="text-sm text-muted-foreground">
-            {format(tx.occurredOn, "dd/MM/yyyy")}
+            {format(parseISO(tx.occurredOn), "dd/MM/yyyy")}
           </span>
         </TableCell>
 
@@ -458,7 +471,7 @@ function TransactionRow({
         </TableCell>
 
         <TableCell>
-          {canOperate && (
+          {(canOperate || canViewInvestment) && (
             <DropdownMenu>
               <DropdownMenuTrigger
                 render={
@@ -478,27 +491,43 @@ function TransactionRow({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuGroup>
-                  <DropdownMenuItem
-                    className="hover:cursor-pointer"
-                    onClick={(event) => {
-                      event.stopPropagation()
-                      onEdit(tx)
-                    }}
-                  >
-                    <PencilIcon />
-                    Editar
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="hover:cursor-pointer"
-                    variant="destructive"
-                    onClick={(event) => {
-                      event.stopPropagation()
-                      onCancel(tx)
-                    }}
-                  >
-                    <Undo2Icon />
-                    Cancelar
-                  </DropdownMenuItem>
+                  {canViewInvestment && (
+                    <DropdownMenuItem
+                      render={
+                        <Link
+                          to={`/investments/positions/${encodeURIComponent(tx.investment!.positionId)}`}
+                          onClick={(event) => event.stopPropagation()}
+                        />
+                      }
+                    >
+                      Ver operação de investimento
+                    </DropdownMenuItem>
+                  )}
+                  {canOperate && (
+                    <>
+                      <DropdownMenuItem
+                        className="hover:cursor-pointer"
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          onEdit(tx)
+                        }}
+                      >
+                        <PencilIcon />
+                        Editar
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="hover:cursor-pointer"
+                        variant="destructive"
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          onCancel(tx)
+                        }}
+                      >
+                        <Undo2Icon />
+                        Cancelar
+                      </DropdownMenuItem>
+                    </>
+                  )}
                 </DropdownMenuGroup>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -518,34 +547,14 @@ function TransactionRow({
                 transition={{ duration: 0.2, ease: "easeInOut" }}
                 className="overflow-hidden"
               >
-                <div className="flex flex-wrap gap-4 border-b bg-muted/30 px-4 py-3 pl-12 text-sm">
-                  {/* {tx.merchantInfo && (
-                    <div className="flex items-start gap-2 text-muted-foreground">
-                      <InfoIcon className="mt-0.5 size-3.5 shrink-0" />
-                      <span>{tx.merchantInfo}</span>
-                    </div>
-                  )} */}
-
-                  {/* {tx.cardLast4 && (
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <CreditCardIcon className="size-3.5 shrink-0" />
-                      <span className="tabular-nums">
-                        Paid with card ending ****{tx.cardLast4}
-                      </span>
-                    </div>
-                  )} */}
-
-                  {/* {tx.notes && (
-                    <div className="flex items-start gap-2 text-muted-foreground">
-                      <StickyNoteIcon className="mt-0.5 size-3.5 shrink-0" />
-                      <span>{tx.notes}</span>
-                    </div>
-                  )} */}
-
-                  <Button variant="ghost" size="xs" className="ml-auto">
-                    <FileTextIcon className="size-3.5" />
-                    View Receipt
-                  </Button>
+                <div className="border-b bg-muted/30 px-4 py-3 pl-12 text-sm">
+                  <TransactionRowDetails
+                    chainId={tx.chainId}
+                    presentedEntryId={tx.presentedEntryId}
+                    status={tx.status}
+                    onEdit={onEdit}
+                    onDelete={onCancel}
+                  />
                 </div>
               </motion.div>
             </td>

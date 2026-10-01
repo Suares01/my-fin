@@ -18,6 +18,7 @@ const JOURNAL_CHAIN_TYPES = [
   "OPENING_BALANCE",
   "INCOME",
   "EXPENSE",
+  "INVESTMENT",
   "TRANSFER",
 ] as const satisfies readonly JournalBusinessType[]
 const JOURNAL_CHAIN_ORIGINS = [

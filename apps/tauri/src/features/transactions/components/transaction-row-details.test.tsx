@@ -3,6 +3,7 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import type { JournalChainDetail } from "@workspace/application"
 import { afterEach, describe, expect, it, vi } from "vitest"
+import { MemoryRouter } from "react-router"
 import { TransactionRowDetails } from "./transaction-row-details.js"
 
 const mockDetail = vi.fn()
@@ -21,6 +22,7 @@ const detail = {
   sequence: "1",
   description: "Salário",
   origin: "MANUAL",
+  canEditWithGenericFlow: true,
   amountMinor: "10000",
   currency: "BRL",
   financialAccounts: [{ id: "account-1", name: "Banco" }],
@@ -47,11 +49,103 @@ function renderDetails(status: "ACTIVE" | "EDITED" | "CANCELLED" = "ACTIVE") {
     onEdit: vi.fn(),
     onDelete: vi.fn(),
   }
-  return { props, ...render(<TransactionRowDetails {...props} />) }
+  return {
+    props,
+    ...render(
+      <MemoryRouter>
+        <TransactionRowDetails {...props} />
+      </MemoryRouter>
+    ),
+  }
 }
 
 describe("TransactionRowDetails", () => {
   afterEach(cleanup)
+  const investmentDetail = {
+    ...detail,
+    type: "INVESTMENT",
+    canEditWithGenericFlow: false,
+    currency: "USD",
+    amountMinor: "2500",
+    investment: {
+      operationId: "operation-1",
+      positionId: "position-1",
+      operationType: "REDEMPTION",
+      netCashFlowMinor: "-2500",
+      grossAmountMinor: "3000",
+      bookCostDeltaMinor: "-2000",
+    },
+    categories: [
+      { id: "income", name: "Ganho", kind: "INCOME" },
+      { id: "expense", name: "Taxa", kind: "EXPENSE" },
+    ],
+    postings: [
+      {
+        id: "p1",
+        account: { id: "income", name: "Ganho", kind: "INCOME" },
+        amountMinor: "-1000",
+        currency: "USD",
+        position: 0,
+      },
+      {
+        id: "p2",
+        account: { id: "expense", name: "Taxa", kind: "EXPENSE" },
+        amountMinor: "500",
+        currency: "USD",
+        position: 1,
+      },
+    ],
+  } as JournalChainDetail
+
+  it("shows operation type and exact investment amounts", () => {
+    mockDetail.mockReturnValue({ data: investmentDetail })
+    renderDetails()
+    expect(
+      screen.getByLabelText("Operação de investimento").textContent
+    ).toContain("Operação: Resgate")
+    expect(screen.getByText(/US\$\s*30,00/)).toBeTruthy()
+    expect(screen.getByText(/US\$\s*20,00/)).toBeTruthy()
+    expect(screen.getByText(/-US\$\s*25,00/)).toBeTruthy()
+  })
+
+  it("shows both income and expense postings in a mixed investment", () => {
+    mockDetail.mockReturnValue({ data: investmentDetail })
+    renderDetails()
+    expect(screen.getByText(/Receita: Ganho/)).toBeTruthy()
+    expect(screen.getByText(/Despesa: Taxa/)).toBeTruthy()
+    expect(screen.getByText(/US\$\s*10,00/).textContent).toBe("US$ 10,00")
+    expect(screen.getByText(/US\$\s*5,00/).textContent).toBe("US$ 5,00")
+  })
+
+  it("links the investment detail to the position", () => {
+    mockDetail.mockReturnValue({ data: investmentDetail })
+    renderDetails()
+    expect(
+      screen
+        .getByRole("link", { name: "Ver operação de investimento" })
+        .getAttribute("href")
+    ).toBe("/investments/positions/position-1")
+  })
+
+  it("hides generic edit and cancellation for an active investment", () => {
+    mockDetail.mockReturnValue({ data: investmentDetail })
+    renderDetails()
+    expect(screen.queryByRole("button", { name: "Editar" })).toBeNull()
+    expect(
+      screen.queryByRole("button", { name: "Cancelar lançamento" })
+    ).toBeNull()
+  })
+
+  it("keeps the specialized link for a cancelled investment", () => {
+    mockDetail.mockReturnValue({
+      data: { ...investmentDetail, status: "CANCELLED" },
+    })
+    renderDetails("CANCELLED")
+    expect(
+      screen.getByRole("link", { name: "Ver operação de investimento" })
+    ).toBeTruthy()
+  })
+
   it("shows income account", () => {
     mockDetail.mockReturnValue({ data: detail })
     renderDetails()

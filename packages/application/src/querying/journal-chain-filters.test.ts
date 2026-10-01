@@ -90,6 +90,24 @@ describe("journal chain filter normalization", () => {
     ).toEqual(["EXPENSE", "TRANSFER"])
   })
 
+  it("accepts INVESTMENT in list filters", () => {
+    expect(
+      normalizeJournalChainFilters({
+        ...baseQuery,
+        types: ["INVESTMENT", "EXPENSE", "INVESTMENT"],
+      }).types
+    ).toEqual(["EXPENSE", "INVESTMENT"])
+  })
+
+  it("accepts INVESTMENT in summary filters", () => {
+    expect(
+      normalizeJournalChainSummaryFilters({
+        bookId: "book-1",
+        types: ["INVESTMENT"],
+      }).types
+    ).toEqual(["INVESTMENT"])
+  })
+
   it("deduplicates and sorts origins", () => {
     expect(
       normalizeJournalChainFilters({
