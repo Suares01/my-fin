@@ -1,5 +1,6 @@
 import {
   AmendInvestmentOperation,
+  ArchiveLedgerAccount,
   CreateExpenseCategory,
   CreateFinancialAccount,
   CreateIncomeCategory,
@@ -9,6 +10,8 @@ import {
   RecordInvestmentExpense,
   RecordInvestmentIncome,
   RecordInvestmentPurchase,
+  ReactivateLedgerAccount,
+  SetInvestmentInstrumentStatus,
   type RepositoryContext,
   type TransactionManager,
   RecordInvestmentSale,
@@ -44,7 +47,7 @@ async function setup() {
     occurredOn: "2026-08-04",
   })
   if (!opening.ok) throw new Error("fixture failed")
-  return { h, broker, gain, expense }
+  return { h, broker, gain, expense, instrument: instrument.value }
 }
 async function account(
   h: ReturnType<typeof createHarness>,
@@ -247,6 +250,113 @@ describe("AmendInvestmentOperation", () => {
         .reduce((total, posting) => total + posting.amountMinor, 0n)
     ).toBe(-100n)
   })
+
+  it.each(["account", "instrument"] as const)(
+    "reopens a closed position only after its archived %s is reactivated",
+    async (target) => {
+      const f = await setup()
+      expect(
+        await sale(f, {
+          quantityDelta: "10",
+          bookCostReductionMinor: "1000",
+          grossProceedsMinor: "1000",
+          gainCategoryId: undefined,
+        })
+      ).toMatchObject({ ok: true })
+      expect(f.h.store.listInvestmentPositions()[0]).toMatchObject({
+        status: "CLOSED",
+        quantity: "0",
+        bookCostMinor: "0",
+      })
+
+      if (target === "account") {
+        expect(
+          await new ArchiveLedgerAccount(
+            f.h.transactionManager,
+            f.h.dispatcher
+          ).execute({
+            bookId: "book-1",
+            accountId: f.broker.id,
+            expectedVersion: 0,
+          })
+        ).toMatchObject({
+          ok: true,
+          value: { id: f.broker.id, status: "ARCHIVED", version: 1 },
+        })
+      } else {
+        expect(
+          await new SetInvestmentInstrumentStatus(
+            f.h.transactionManager,
+            f.h.dispatcher
+          ).execute({
+            bookId: "book-1",
+            instrumentId: f.instrument.id,
+            expectedVersion: 0,
+            status: "ARCHIVED",
+          })
+        ).toMatchObject({
+          ok: true,
+          value: { id: f.instrument.id, status: "ARCHIVED", version: 1 },
+        })
+      }
+
+      const before = f.h.store.snapshot()
+      expect(await amend(f)).toMatchObject({
+        ok: false,
+        error: { code: "INVESTMENT_ENTITY_NOT_ACTIVE" },
+      })
+      expect(f.h.store.snapshot()).toEqual(before)
+
+      if (target === "account") {
+        expect(
+          await new ReactivateLedgerAccount(
+            f.h.transactionManager,
+            f.h.dispatcher
+          ).execute({
+            bookId: "book-1",
+            accountId: f.broker.id,
+            expectedVersion: 1,
+          })
+        ).toMatchObject({
+          ok: true,
+          value: { id: f.broker.id, status: "ACTIVE", version: 2 },
+        })
+      } else {
+        expect(
+          await new SetInvestmentInstrumentStatus(
+            f.h.transactionManager,
+            f.h.dispatcher
+          ).execute({
+            bookId: "book-1",
+            instrumentId: f.instrument.id,
+            expectedVersion: 1,
+            status: "ACTIVE",
+          })
+        ).toMatchObject({
+          ok: true,
+          value: { id: f.instrument.id, status: "ACTIVE", version: 2 },
+        })
+      }
+
+      expect(await amend(f)).toMatchObject({
+        ok: true,
+        value: {
+          reversalOperationId: "operation-3",
+          replacementOperationId: "operation-4",
+        },
+      })
+      expect(f.h.store.listInvestmentPositions()[0]).toMatchObject({
+        status: "OPEN",
+        quantity: "5",
+        bookCostMinor: "500",
+        closedOn: undefined,
+      })
+      expect(f.h.store.listInvestmentOperations()[1]).toMatchObject({
+        id: "operation-2",
+        replacedBy: "operation-4",
+      })
+    }
+  )
 
   it("keeps the position closed when amending its last total sale to another total sale", async () => {
     const f = await setup()

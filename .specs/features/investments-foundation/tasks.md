@@ -3841,8 +3841,10 @@ Revisão reversa: os 6 cenários Memory novos cobrem read-only, journal opcional
 
 **Done when**:
 
-- [ ] Teste afirma INVESTMENT_ENTITY_NOT_ACTIVE sem mudanças quando conta/instrumento está arquivado e sucesso após reativação, preservando o mesmo ID.
-- [ ] Gate `Full Memory + Build` passa antes do commit atômico.
+- [x] Teste afirma INVESTMENT_ENTITY_NOT_ACTIVE sem mudanças quando conta/instrumento está arquivado e sucesso após reativação, preservando o mesmo ID.
+- [x] Gate `Full Memory + Build` passa antes do commit atômico.
+
+**Evidência T104 (2026-10-01):** `amend-investment-operation.test.ts:257-300` fecha posição por venda total sem journal e arquiva conta ou instrumento por comando real, afirmando mesmo ID/status/version; `:303-308` exige `INVESTMENT_ENTITY_NOT_ACTIVE` e snapshot integral intacto em ambos os casos; `:310-357` reativa explicitamente o mesmo cadastro, repete o amendment e exige lineage da substituição e posição OPEN com 5 unidades/custo 500/`closedOn` ausente. Memory 641→643 testes em 55 arquivos. Full Memory + Build verde com lint, tipos, builds e `git diff --check`. **Adequacy verdict:** PASS para INV-144; re-verificação independente pendente.
 
 **Tests**: integration (Memory command).
 **Gate**: Full Memory + Build
@@ -4309,7 +4311,7 @@ Mapeamento de planejamento, não evidência de implementação. Cada ID também 
 | INV-117        | T46, T59, T66, T67, T89, T90                                                                                                                                                                                                         | Planned |
 | INV-118        | T8, T51, T79, T88                                                                                                                                                                                                                    | Planned |
 | INV-119        | T8, T53, T55, T81, T83, T91                                                                                                                                                                                                          | T91 detail complete; remaining mapped work/validation pending |
-| INV-144        | T8, T43, T46, T56, T57, T85, T91                                                                                                                                                                                                     | In progress; T91 detail complete |
+| INV-144        | T8, T43, T46, T56, T57, T85, T91, T104                                                                                                                                                                                               | T104 archived-entity amendment and reactivation assertions complete; independent validation pending |
 
 ## Edge Case Coverage
 

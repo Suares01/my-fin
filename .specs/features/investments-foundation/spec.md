@@ -665,7 +665,7 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-141 | S5 | Tasks | T86 cards complete; remaining mapped work/validation pending | T14, T37, T38, T39, T62, T68, T69, T72, T86 |
 | INV-142 | S5 | Tasks | T84 form complete; remaining mapped work/validation pending | T10, T58, T84 |
 | INV-143 | S8 | Tasks | Planned | T75 |
-| INV-144 | S9 | Tasks | In progress: T8 position; T85 correction form complete; T91 detail complete | T8, T43, T46, T56, T57, T85, T91 |
+| INV-144 | S9 | Tasks | T104 archived-entity amendment and reactivation assertions complete; independent validation pending | T8, T43, T46, T56, T57, T85, T91, T104 |
 | INV-145 | S7 | Tasks | In progress: T79 purchase/application and T83 expense warning complete; T87 pending; T87 list complete | T12, T38, T39, T48, T49, T50, T51, T55, T56, T57, T60, T61, T62, T63, T73, T78, T79, T83, T87, T96 |
 | INV-146 | S5 | Tasks | T92 page complete; remaining mapped work/validation pending | T62, T63, T86, T87, T92 |
 | INV-147 | S5 | Tasks | T100 history and warning assertions complete; independent validation pending | T49, T60, T62, T86, T87, T92, T100 |
