@@ -3787,8 +3787,10 @@ Revisão reversa: os 6 cenários Memory novos cobrem read-only, journal opcional
 
 **Done when**:
 
-- [ ] Teste afirma soma exata de BANK_ACCOUNT, PAYMENT_ACCOUNT e CASH ativos com sinal preservado, excluindo tipos fora do disponível.
-- [ ] Gate `Full SQLite + Build` passa antes do commit atômico.
+- [x] Teste afirma soma exata de BANK_ACCOUNT, PAYMENT_ACCOUNT e CASH ativos com sinal preservado, excluindo tipos fora do disponível.
+- [x] Gate `Full SQLite + Build` passa antes do commit atômico.
+
+**Evidência T101 (2026-10-01):** `sqlite-investment-portfolio-summary.test.ts:73-84` semeia BANK +100, PAYMENT -250, CASH +25, CASH arquivado +500, OTHER_ASSET +1000 e carteira +700. `:86-91` exige `availableMinor: "-125"`, arquivado `500`, outros ativos `1000` e carteira `700`. Essa asserção prova a soma assinada e a exclusão dos três tipos fora do disponível; todos os campos mapeiam a INV-09/10. SQLite passou de 974 para 975 testes em 53 arquivos. Full SQLite + Build verde: builds Domain/Application/Memory/SQLite, 975/975 testes, migrações, lint, tipos e `git diff --check`. **Adequacy verdict:** PASS para INV-09 nesta tarefa; re-verificação independente pendente.
 
 **Tests**: integration (SQLite query).
 **Gate**: Full SQLite + Build
@@ -4164,7 +4166,7 @@ Mapeamento de planejamento, não evidência de implementação. Cada ID também 
 | INV-06         | T17, T23, T68, T99 | Implemented; T99 balance proof complete; validation pending |
 | INV-07         | T4, T23, T42, T68, T74                                                                                                                                                                                                               | Planned |
 | INV-08         | T42, T43, T74                                                                                                                                                                                                                        | Planned |
-| INV-09         | T14, T62, T63, T75, T86                                                                                                                                                                                                              | Planned |
+| INV-09         | T14, T62, T63, T75, T86, T101                                                                                                                                                                                                        | T101 signed account-type assertion complete; independent validation pending |
 | INV-10         | T14, T62, T63, T75, T86                                                                                                                                                                                                              | Planned |
 | INV-138        | T42, T74, T75, T78, T92                                                                                                                                                                                                              | T92 page complete; remaining mapped work/validation pending |
 | INV-11         | T3, T4, T23, T41, T42, T63, T74, T87                                                                                                                                                                                                 | Planned |

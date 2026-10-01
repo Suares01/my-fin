@@ -10,6 +10,7 @@ type Account = {
   readonly status?: "ACTIVE" | "ARCHIVED"
   readonly type?:
     | "BANK_ACCOUNT"
+    | "PAYMENT_ACCOUNT"
     | "CASH"
     | "OTHER_ASSET"
     | "INVESTMENT_ACCOUNT"
@@ -65,6 +66,28 @@ describe("SqliteInvestmentPortfolioSummary", () => {
       availableMinor: "100",
       archivedDailyAccountBalanceMinor: "40",
       bookNetWorthMinor: "140",
+    })
+  })
+
+  it("sums signed active daily balances without other assets or archived cash", async () => {
+    await account({ id: "bank", type: "BANK_ACCOUNT" })
+    await account({ id: "payment", type: "PAYMENT_ACCOUNT" })
+    await account({ id: "cash", type: "CASH" })
+    await account({ id: "old-cash", type: "CASH", status: "ARCHIVED" })
+    await account({ id: "other", type: "OTHER_ASSET" })
+    await investmentAccount("broker")
+    await posting("bank", "100")
+    await posting("payment", "-250")
+    await posting("cash", "25")
+    await posting("old-cash", "500")
+    await posting("other", "1000")
+    await posting("broker", "700")
+
+    await expect(summary()).resolves.toMatchObject({
+      availableMinor: "-125",
+      archivedDailyAccountBalanceMinor: "500",
+      otherAssetsMinor: "1000",
+      investmentLedgerMinor: "700",
     })
   })
 

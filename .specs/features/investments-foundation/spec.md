@@ -530,7 +530,7 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-06 | S1 | Tasks | Implemented; T99 balance proof complete; validation pending | T17, T23, T68, T99 |
 | INV-07 | S1 | Tasks | In progress: T4 aggregate | T4, T23, T42, T68, T74 |
 | INV-08 | S1 | Tasks | Planned | T42, T43, T74 |
-| INV-09 | S1 | Tasks | T86 cards complete; remaining mapped work/validation pending | T14, T62, T63, T75, T86 |
+| INV-09 | S1 | Tasks | T101 signed account-type assertion complete; independent validation pending | T14, T62, T63, T75, T86, T101 |
 | INV-10 | S1 | Tasks | T86 cards complete; remaining mapped work/validation pending | T14, T62, T63, T75, T86 |
 | INV-11 | S2 | Tasks | In progress: T3 profiles; T87 list complete | T3, T4, T23, T41, T42, T63, T74, T87 |
 | INV-12 | S2 | Tasks | In progress: T3 profiles | T3, T38, T39, T42, T43, T74 |
