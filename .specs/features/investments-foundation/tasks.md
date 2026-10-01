@@ -187,6 +187,12 @@ T89 -> T90 -> T91 -> T92 -> T93 -> T94
 T94 -> T98 -> T99 -> T100
 ```
 
+### Phase 18: Asserções parciais da segunda validação
+
+```text
+T100 -> T101 -> T102 -> T103 -> T104
+```
+
 ### Phase Execution Map
 
 Transições entre fases, também dependências explícitas:
@@ -3771,6 +3777,70 @@ Revisão reversa: os 6 cenários Memory novos cobrem read-only, journal opcional
 **Tests**: integration (Memory) e apresentação (React), conforme a costura.
 **Gate**: Full Memory + Build
 **Commit**: `test(investments): preservar histórico ao ajustar caixa`
+
+### T101: Provar soma assinada do disponível
+
+**What**: Completar a fixture do resumo SQLite para incluir PAYMENT_ACCOUNT ativo e saldo disponível negativo sem misturar carteira, outros ativos ou conta diária arquivada.
+**Where**: `packages/infrastructure-sqlite/tests/queries/sqlite-investment-portfolio-summary.test.ts`.
+**Depends on**: T100 e `validation.md` rodada 2 (INV-09 GAP).
+**Requirement**: INV-09.
+
+**Done when**:
+
+- [ ] Teste afirma soma exata de BANK_ACCOUNT, PAYMENT_ACCOUNT e CASH ativos com sinal preservado, excluindo tipos fora do disponível.
+- [ ] Gate `Full SQLite + Build` passa antes do commit atômico.
+
+**Tests**: integration (SQLite query).
+**Gate**: Full SQLite + Build
+**Commit**: `test(investments): provar soma assinada do disponível`
+
+### T102: Provar atomicidade da correção com journal
+
+**What**: Injetar falha tardia no amendment e afirmar que operação original, posição e journal permanecem idênticos após rollback.
+**Where**: `packages/infrastructure-memory/src/use-cases/amend-investment-operation.test.ts`.
+**Depends on**: T101 e `validation.md` rodada 2 (INV-65 GAP).
+**Requirement**: INV-65, INV-75.
+
+**Done when**:
+
+- [ ] Fixture com operação que possui journal falha após tentativa de persistência e compara operações, posição, journals e recibo com snapshots anteriores.
+- [ ] Gate `Full Memory + Build` passa antes do commit atômico.
+
+**Tests**: integration (Memory transaction).
+**Gate**: Full Memory + Build
+**Commit**: `test(investments): provar rollback da correção contábil`
+
+### T103: Provar publicação de fatos após commit
+
+**What**: Provar que um comando de investimento publica payload completo apenas depois do commit, inclusive quando o publisher falha.
+**Where**: testes de use case de investimento e executor transacional.
+**Depends on**: T102 e `validation.md` rodada 2 (INV-81 GAP).
+**Requirement**: INV-80, INV-81.
+
+**Done when**:
+
+- [ ] Teste observa no publisher o estado persistido e o payload de tipo, bookId, aggregateId e aggregateVersion; falha de publicação preserva resultado e retry sem duplicação.
+- [ ] Gate `Full Memory + Build` passa antes do commit atômico.
+
+**Tests**: integration (Memory command and dispatcher).
+**Gate**: Full Memory + Build
+**Commit**: `test(investments): provar publicação após commit`
+
+### T104: Provar correção após reativação explícita
+
+**What**: Cobrir a tentativa de correção que reabre posição com conta ou instrumento arquivado e repetir após reativação explícita.
+**Where**: `packages/infrastructure-memory/src/use-cases/amend-investment-operation.test.ts`.
+**Depends on**: T103 e `validation.md` rodada 2 (INV-144 GAP).
+**Requirement**: INV-144.
+
+**Done when**:
+
+- [ ] Teste afirma INVESTMENT_ENTITY_NOT_ACTIVE sem mudanças quando conta/instrumento está arquivado e sucesso após reativação, preservando o mesmo ID.
+- [ ] Gate `Full Memory + Build` passa antes do commit atômico.
+
+**Tests**: integration (Memory command).
+**Gate**: Full Memory + Build
+**Commit**: `test(investments): provar correção após reativação`
 
 ## Task Granularity Check
 
