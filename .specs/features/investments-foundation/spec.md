@@ -601,8 +601,8 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-77 | S7 | Tasks | Planned | T38, T39, T40, T48, T51, T60 |
 | INV-78 | S7 | Tasks | In progress: T5 identities | T5, T12, T13, T16, T22, T28, T35, T40, T48, T49, T50, T51, T52, T53, T54, T55, T56, T57, T58, T71, T73, T95 |
 | INV-79 | S7 | Tasks | Planned | T12, T22, T28, T35, T48, T73 |
-| INV-80 | S7 | Tasks | Planned | T16, T22, T28, T35, T40, T48, T71, T73 |
-| INV-81 | S7 | Tasks | In progress: T9 operation | T9, T15, T16, T40, T44, T45, T46, T48 |
+| INV-80 | S7 | Tasks | T103 post-commit failure and retry assertion complete; independent validation pending | T16, T22, T28, T35, T40, T48, T71, T73, T103 |
+| INV-81 | S7 | Tasks | T103 committed-state event assertion complete; independent validation pending | T9, T15, T16, T40, T44, T45, T46, T48, T103 |
 | INV-82 | S7 | Tasks | In progress: T1 Decimal; T2 values; T10 valuation | T1, T2, T10, T12, T29, T36, T37, T62, T68, T69, T70 |
 | INV-83 | S7 | Tasks | In progress: T1 Decimal; T2 values; T10 valuation | T1, T2, T6, T10, T12, T44, T45, T47 |
 | INV-84 | S7 | Tasks | In progress: T2 values; T10 valuation | T2, T10, T12, T48, T58 |

@@ -4,6 +4,7 @@ import {
   CreateFinancialBook,
   CreateIncomeCategory,
   CreateInvestmentInstrument,
+  DomainEventDispatcher,
   OpenInvestmentPosition,
   RecordInvestmentSale,
 } from "@workspace/application"
@@ -134,6 +135,56 @@ function sale(fixture: Awaited<ReturnType<typeof setup>>) {
 }
 
 describe("RecordInvestmentSale", () => {
+  it("publishes the operation fact after commit and preserves the result if publication fails", async () => {
+    const f = await setup()
+    const observed: unknown[] = []
+    const dispatcher = new DomainEventDispatcher(f.h.clock, f.h.ids, {
+      publish(event) {
+        if (event.type !== "InvestmentOperationRecorded") return
+        observed.push({
+          event,
+          operation: f.h.store.getInvestmentOperation("operation-2" as never),
+          position: f.h.store.listInvestmentPositions()[0],
+          journal: f.h.store.listJournalEntries()[0],
+          receipt: f.h.store.getInvestmentRequest("book-1" as never, "sale-1"),
+        })
+        throw new Error("publication failed")
+      },
+    })
+    const command = new RecordInvestmentSale(
+      f.h.transactionManager,
+      dispatcher,
+      f.h.ids,
+      f.h.clock
+    )
+
+    const first = await command.execute(sale(f))
+    expect(first).toMatchObject({
+      ok: true,
+      value: { operationId: "operation-2", journalEntryIds: ["entry-1"] },
+    })
+    expect(observed).toMatchObject([
+      {
+        event: {
+          type: "InvestmentOperationRecorded",
+          bookId: "book-1",
+          aggregateId: "operation-2",
+          aggregateVersion: 0,
+          payload: { id: "operation-2", bookId: "book-1", version: 0 },
+        },
+        operation: { id: "operation-2", journalEntryId: "entry-1" },
+        position: { id: "position-1", version: 1, bookCostMinor: "600" },
+        journal: { id: "entry-1" },
+        receipt: { result: { operationId: "operation-2" } },
+      },
+    ])
+
+    expect(await command.execute(sale(f))).toEqual(first)
+    expect(observed).toHaveLength(1)
+    expect(f.h.store.listInvestmentOperations()).toHaveLength(2)
+    expect(f.h.store.listJournalEntries()).toHaveLength(1)
+  })
+
   it("records an internal partial sale with its explicit cost, units and gain", async () => {
     const f = await setup()
     expect(await useCase(f).execute(sale(f))).toMatchObject({

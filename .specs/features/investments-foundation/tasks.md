@@ -3823,8 +3823,10 @@ Revisão reversa: os 6 cenários Memory novos cobrem read-only, journal opcional
 
 **Done when**:
 
-- [ ] Teste observa no publisher o estado persistido e o payload de tipo, bookId, aggregateId e aggregateVersion; falha de publicação preserva resultado e retry sem duplicação.
-- [ ] Gate `Full Memory + Build` passa antes do commit atômico.
+- [x] Teste observa no publisher o estado persistido e o payload de tipo, bookId, aggregateId e aggregateVersion; falha de publicação preserva resultado e retry sem duplicação.
+- [x] Gate `Full Memory + Build` passa antes do commit atômico.
+
+**Evidência T103 (2026-10-01):** `record-investment-sale.test.ts:141-151` captura operação, posição, journal e recibo persistidos dentro do callback do publisher e injeta falha; `:161-180` exige sucesso, envelope `InvestmentOperationRecorded` com bookId/aggregateId/aggregateVersion e estado committed completo; `:182-185` exige retry idêntico sem segunda publicação, operação ou journal. O teste mapeia INV-80/81 e exercita a costura real do comando, não apenas o executor genérico. Memory 640→641 testes em 55 arquivos. Full Memory + Build verde com lint, tipos, builds e `git diff --check`. **Adequacy verdict:** PASS para INV-80/81 nesta costura; re-verificação independente pendente.
 
 **Tests**: integration (Memory command and dispatcher).
 **Gate**: Full Memory + Build
@@ -4264,8 +4266,8 @@ Mapeamento de planejamento, não evidência de implementação. Cada ID também 
 | INV-77         | T38, T39, T40, T48, T51, T60                                                                                                                                                                                                         | Planned |
 | INV-78 | T5, T12, T13, T16, T22, T28, T35, T40, T48, T49, T50, T51, T52, T53, T54, T55, T56, T57, T58, T71, T73, T95 | Planned |
 | INV-79         | T12, T22, T28, T35, T48, T73                                                                                                                                                                                                         | Planned |
-| INV-80         | T16, T22, T28, T35, T40, T48, T71, T73                                                                                                                                                                                               | Planned |
-| INV-81         | T9, T15, T16, T40, T44, T45, T46, T48                                                                                                                                                                                                | Planned |
+| INV-80         | T16, T22, T28, T35, T40, T48, T71, T73, T103                                                                                                                                                                                         | T103 post-commit failure and retry assertion complete; independent validation pending |
+| INV-81         | T9, T15, T16, T40, T44, T45, T46, T48, T103                                                                                                                                                                                          | T103 committed-state event assertion complete; independent validation pending |
 | INV-82         | T1, T2, T10, T12, T29, T36, T37, T62, T68, T69, T70                                                                                                                                                                                  | Planned |
 | INV-83         | T1, T2, T6, T10, T12, T44, T45, T47                                                                                                                                                                                                  | Planned |
 | INV-84         | T2, T10, T12, T48, T58                                                                                                                                                                                                               | Planned |
