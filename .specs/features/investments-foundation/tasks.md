@@ -3745,8 +3745,10 @@ Revisão reversa: os 6 cenários Memory novos cobrem read-only, journal opcional
 
 **Done when**:
 
-- [ ] Teste demonstra saldos não zero antes/depois da migração, perfis corretos e postings históricos idênticos.
-- [ ] Gate `Full SQLite + Build` passa antes do commit atômico.
+- [x] Teste demonstra saldos não zero antes/depois da migração, perfis corretos e postings históricos idênticos.
+- [x] Gate `Full SQLite + Build` passa antes do commit atômico.
+
+**Evidência T99 (2026-10-01):** `investment-migrations.test.ts:88-149` insere journal histórico balanceado antes da v5 com ASSET ativo +1000, ASSET arquivado +200 e LIABILITY -300 minor, afirma saldos não zero, executa migração e compara os mesmos postings e saldos. O mesmo cenário exige perfis OTHER_ASSET/OTHER_LIABILITY e versão 7 preservada. Teste existente fortalecido, sem alteração de contagem: SQLite 53 arquivos/974 testes antes e depois. Full SQLite + Build verde: Domain/Application/Memory builds, SQLite 974/974, migrações, lint, tipos, SQLite build e `git diff --check`. **Adequacy verdict:** PASS para a cláusula de saldo em INV-05/06; re-verificação independente pendente.
 
 **Tests**: integration (SQLite migration).
 **Gate**: Full SQLite + Build
@@ -4086,8 +4088,8 @@ Mapeamento de planejamento, não evidência de implementação. Cada ID também 
 | INV-02         | T3, T4, T41                                                                                                                                                                                                                          | Planned |
 | INV-03         | T3, T4, T17, T23, T41                                                                                                                                                                                                                | Planned |
 | INV-04         | T4, T15, T23, T30, T41, T42                                                                                                                                                                                                          | Planned |
-| INV-05         | T17, T23, T68                                                                                                                                                                                                                        | Planned |
-| INV-06         | T17, T23, T68                                                                                                                                                                                                                        | Planned |
+| INV-05         | T17, T23, T68, T99 | Implemented; T99 balance proof complete; validation pending |
+| INV-06         | T17, T23, T68, T99 | Implemented; T99 balance proof complete; validation pending |
 | INV-07         | T4, T23, T42, T68, T74                                                                                                                                                                                                               | Planned |
 | INV-08         | T42, T43, T74                                                                                                                                                                                                                        | Planned |
 | INV-09         | T14, T62, T63, T75, T86                                                                                                                                                                                                              | Planned |

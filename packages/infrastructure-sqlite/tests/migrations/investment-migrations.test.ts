@@ -90,15 +90,63 @@ describe("investment migrations", () => {
     await database!.execute(
       "UPDATE ledger_accounts SET version = 7 WHERE id = 'asset-active'"
     )
+    await database!.execute(
+      "INSERT INTO journal_entries (id, book_id, occurred_on, recorded_at, sequence, description, currency, origin, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      [
+        "entry-1",
+        "book-1",
+        "2026-08-04",
+        "2026-08-04T12:00:00.000Z",
+        "1",
+        "Historical balance",
+        "BRL",
+        "MANUAL",
+        0,
+      ]
+    )
+    await database!.executeBatch(
+      "INSERT INTO postings (id, book_id, journal_entry_id, account_id, position, amount_minor, currency) VALUES " +
+        "('posting-1', 'book-1', 'entry-1', 'asset-active', 0, 1000, 'BRL')," +
+        "('posting-2', 'book-1', 'entry-1', 'asset-archived', 1, 200, 'BRL')," +
+        "('posting-3', 'book-1', 'entry-1', 'liability-active', 2, -300, 'BRL')," +
+        "('posting-4', 'book-1', 'entry-1', 'system-asset', 3, -900, 'BRL');"
+    )
+    const postings = await database!.query(
+      "SELECT id, account_id, amount_minor, position FROM postings ORDER BY position"
+    )
+    const balances = await database!.query(
+      "SELECT account_id, CAST(SUM(amount_minor) AS TEXT) AS balance_minor FROM postings WHERE account_id IN ('asset-active', 'asset-archived', 'liability-active') GROUP BY account_id ORDER BY account_id"
+    )
+    expect(balances).toEqual([
+      { account_id: "asset-active", balance_minor: "1000" },
+      { account_id: "asset-archived", balance_minor: "200" },
+      { account_id: "liability-active", balance_minor: "-300" },
+    ])
     await migrate()
     await expect(
       database!.query<{ version: number }>(
         "SELECT version FROM ledger_accounts WHERE id = 'asset-active'"
       )
     ).resolves.toEqual([{ version: 7 }])
-    await expect(database!.query("SELECT id FROM postings")).resolves.toEqual(
-      []
-    )
+    await expect(
+      database!.query(
+        "SELECT ledger_account_id, type FROM financial_accounts ORDER BY ledger_account_id"
+      )
+    ).resolves.toEqual([
+      { ledger_account_id: "asset-active", type: "OTHER_ASSET" },
+      { ledger_account_id: "asset-archived", type: "OTHER_ASSET" },
+      { ledger_account_id: "liability-active", type: "OTHER_LIABILITY" },
+    ])
+    await expect(
+      database!.query(
+        "SELECT id, account_id, amount_minor, position FROM postings ORDER BY position"
+      )
+    ).resolves.toEqual(postings)
+    await expect(
+      database!.query(
+        "SELECT account_id, CAST(SUM(amount_minor) AS TEXT) AS balance_minor FROM postings WHERE account_id IN ('asset-active', 'asset-archived', 'liability-active') GROUP BY account_id ORDER BY account_id"
+      )
+    ).resolves.toEqual(balances)
   })
 
   it("rejects a profile whose type does not match the parent ledger kind", async () => {
