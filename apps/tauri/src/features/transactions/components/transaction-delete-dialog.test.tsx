@@ -7,7 +7,7 @@ import {
   waitFor,
 } from "@testing-library/react"
 import { useState } from "react"
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 import type { JournalChainDetail } from "@workspace/application"
 import { toast } from "@workspace/ui/components/toast"
 import { TransactionDeleteDialog } from "./transaction-delete-dialog.js"
@@ -49,9 +49,14 @@ function FocusLifecycleHarness() {
   )
 }
 
-beforeEach(() => undefined)
+function showSeptember2026() {
+  vi.useFakeTimers({ toFake: ["Date"] })
+  vi.setSystemTime(new Date(2026, 8, 30, 12))
+}
+
 afterEach(() => {
   cleanup()
+  vi.useRealTimers()
   vi.restoreAllMocks()
 })
 describe("TransactionDeleteDialog", () => {
@@ -70,6 +75,7 @@ describe("TransactionDeleteDialog", () => {
     )
   })
   it("allows changing the cancellation date", () => {
+    showSeptember2026()
     renderDialog()
     fireEvent.click(screen.getByLabelText("Data de cancelamento"))
     fireEvent.click(
@@ -103,6 +109,7 @@ describe("TransactionDeleteDialog", () => {
     )
   })
   it("rejects a date before the presented transaction", async () => {
+    showSeptember2026()
     const { props } = renderDialog()
     fireEvent.click(screen.getByLabelText("Data de cancelamento"))
     fireEvent.click(
