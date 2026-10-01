@@ -193,6 +193,12 @@ T94 -> T98 -> T99 -> T100
 T100 -> T101 -> T102 -> T103 -> T104
 ```
 
+### Phase 19: Critérios remanescentes da auditoria
+
+```text
+T104 -> T105
+```
+
 ### Phase Execution Map
 
 Transições entre fases, também dependências explícitas:
@@ -3850,6 +3856,24 @@ Revisão reversa: os 6 cenários Memory novos cobrem read-only, journal opcional
 **Gate**: Full Memory + Build
 **Commit**: `test(investments): provar correção após reativação`
 
+### T105: Provar consolidação pelo bruto da avaliação
+
+**What**: Reproduzir o exemplo exato de INV-54 na consulta SQLite, com bruto, líquido e resgatável diferentes, e afirmar o total consolidado e o resultado não realizado.
+**Where**: `packages/infrastructure-sqlite/tests/queries/sqlite-investment-portfolio-summary.test.ts`.
+**Depends on**: T104 e `validation.md` rodada 2 (INV-54 NÃO ATESTADO).
+**Requirement**: INV-54.
+
+**Done when**:
+
+- [x] Posição de custo 5000 e avaliação bruto 5200/líquido 5180/resgatável 3000 consolida 5200 e resultado não realizado 200, sem substituir o bruto pelos campos opcionais.
+- [x] Gate `Full SQLite + Build` passa antes do commit atômico.
+
+**Evidência T105 (2026-10-01):** `sqlite-investment-portfolio-summary.test.ts:147-155` grava a avaliação do exemplo normativo com custo 5000, bruto 5200, líquido 5180 e resgatável 3000; `:157-162` exige custo 5000, valor consolidado 5200, resultado não realizado 200 e patrimônio avaliado 200 neste livro isolado. A fixture SQLite passa a aceitar valores opcionais sem afetar os demais casos. SQLite 975→976 testes em 53 arquivos. Full SQLite + Build verde com migrações, lint, tipos, builds e `git diff --check`. **Adequacy verdict:** PASS para INV-54 nesta tarefa; re-verificação independente pendente.
+
+**Tests**: integration (SQLite query).
+**Gate**: Full SQLite + Build
+**Commit**: `test(investments): provar consolidação pelo bruto`
+
 ## Task Granularity Check
 
 Um componente/caso de uso por tarefa, com testes e integrações mecânicas do mesmo contrato. Não usar o ponto principal como permissão para agregar funcionalidades adjacentes.
@@ -4227,7 +4251,7 @@ Mapeamento de planejamento, não evidência de implementação. Cada ID também 
 | INV-51         | T8, T52, T58, T62, T65, T67, T90                                                                                                                                                                                                     | Planned |
 | INV-52         | T14, T62, T65, T86, T88, T91                                                                                                                                                                                                         | T91 detail complete; remaining mapped work/validation pending |
 | INV-53         | T8, T52, T62, T65, T67, T86, T88, T90, T91                                                                                                                                                                                           | T91 detail complete; remaining mapped work/validation pending |
-| INV-54         | T14, T62, T86                                                                                                                                                                                                                        | Planned |
+| INV-54         | T14, T62, T86, T105                                                                                                                                                                                                                  | T105 exact gross/net/withdrawable fixture complete; independent validation pending |
 | INV-55         | T14, T37, T38, T39, T62, T63, T68, T69, T87                                                                                                                                                                                          | Planned |
 | INV-56         | T14, T37, T62, T69, T86                                                                                                                                                                                                              | Planned |
 | INV-57         | T14, T37, T62, T68, T69, T75                                                                                                                                                                                                         | Planned |

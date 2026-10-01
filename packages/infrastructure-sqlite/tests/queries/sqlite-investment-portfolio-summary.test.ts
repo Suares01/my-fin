@@ -144,6 +144,24 @@ describe("SqliteInvestmentPortfolioSummary", () => {
     })
   })
 
+  it("consolidates gross valuation instead of optional net or withdrawable values", async () => {
+    await investmentAccount("broker")
+    await position({ id: "position-1", accountId: "broker", cost: "5000" })
+    await valuation({
+      positionId: "position-1",
+      gross: "5200",
+      net: "5180",
+      withdrawable: "3000",
+    })
+
+    await expect(summary()).resolves.toMatchObject({
+      positionCostMinor: "5000",
+      investmentMarketValueMinor: "5200",
+      unrealizedResultMinor: "200",
+      marketNetWorthMinor: "200",
+    })
+  })
+
   it("falls back to cost when the current allocation revision has no valuation", async () => {
     await investmentAccount("broker")
     await position({
@@ -458,13 +476,15 @@ describe("SqliteInvestmentPortfolioSummary", () => {
     id?: string
     positionId: string
     gross: string
+    net?: string
+    withdrawable?: string
     revision?: number
     sequence?: number
     valuedOn?: string
   }) {
     const sequence = input.sequence ?? 1
     await database.execute(
-      "INSERT INTO investment_valuations (id, book_id, position_id, allocation_revision, valued_at, valued_on, recorded_at, record_sequence, source, quantity, unit_price, currency, gross_value_minor, net_value_minor, withdrawable_value_minor) VALUES (?, 'book-1', ?, ?, '2026-08-04T10:00:00.000Z', ?, '2026-08-04T11:00:00.000Z', ?, 'MANUAL', NULL, NULL, 'BRL', ?, NULL, NULL)",
+      "INSERT INTO investment_valuations (id, book_id, position_id, allocation_revision, valued_at, valued_on, recorded_at, record_sequence, source, quantity, unit_price, currency, gross_value_minor, net_value_minor, withdrawable_value_minor) VALUES (?, 'book-1', ?, ?, '2026-08-04T10:00:00.000Z', ?, '2026-08-04T11:00:00.000Z', ?, 'MANUAL', NULL, NULL, 'BRL', ?, ?, ?)",
       [
         input.id ?? `valuation-${sequence}`,
         input.positionId,
@@ -472,6 +492,8 @@ describe("SqliteInvestmentPortfolioSummary", () => {
         input.valuedOn ?? "2026-08-04",
         sequence,
         input.gross,
+        input.net ?? null,
+        input.withdrawable ?? null,
       ]
     )
   }
