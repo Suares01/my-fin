@@ -196,7 +196,7 @@ T100 -> T101 -> T102 -> T103 -> T104
 ### Phase 19: Critérios remanescentes da auditoria
 
 ```text
-T104 -> T105 -> T106 -> T107 -> T108 -> T109 -> T110 -> T111 -> T112 -> T113
+T104 -> T105 -> T106 -> T107 -> T108 -> T109 -> T110 -> T111 -> T112 -> T113 -> T114
 ```
 
 ### Phase Execution Map
@@ -4025,6 +4025,25 @@ Revisão reversa: os 6 cenários Memory novos cobrem read-only, journal opcional
 **Gate**: Full Cross + Build
 **Commit**: `fix(investments): anexar contexto seguro aos erros`
 
+### T114: Provar rejeição das categorias inválidas no comando
+
+**What**: Cobrir o comando real de venda com parcela de ganho não zero e categoria arquivada, de sistema, de outro livro ou do tipo errado.
+**Where**: `packages/infrastructure-memory/src/use-cases/record-investment-sale.test.ts`.
+**Depends on**: T113 e `validation.md` rodada 2 (INV-43 NÃO ATESTADO).
+**Requirement**: INV-43.
+
+**Done when**:
+
+- [x] Cada uma das quatro categorias inválidas retorna `INVALID_INVESTMENT_CATEGORY` sem alterar o snapshot.
+- [x] Rejeição da categoria ausente e de categorias necessárias para perda, taxa e imposto permanece coberta.
+- [x] Gate `Full Memory + Build` passa antes do commit atômico.
+
+**Evidência T114 (2026-10-01):** `record-investment-sale.test.ts` agora executa venda com ganho para categoria INCOME arquivada, conta de sistema UNCATEGORIZED_INCOME, categoria INCOME de outro livro e categoria EXPENSE. Os quatro casos exigem `INVALID_INVESTMENT_CATEGORY` e snapshot integral idêntico. Os testes existentes exigem o mesmo código para categoria ausente em ganho/perda/taxa/imposto. Memory 655→659 testes em 55 arquivos. Full Memory + Build verde: builds Domain/Application/Memory, 659/659 testes, lint, tipos e `git diff --check`. **Adequacy verdict:** PASS para INV-43 nesta costura; re-verificação independente pendente.
+
+**Tests**: integration (Memory sale).
+**Gate**: Full Memory + Build
+**Commit**: `test(investments): provar categorias inválidas na venda`
+
 ## Task Granularity Check
 
 Um componente/caso de uso por tarefa, com testes e integrações mecânicas do mesmo contrato. Não usar o ponto principal como permissão para agregar funcionalidades adjacentes.
@@ -4388,7 +4407,7 @@ Mapeamento de planejamento, não evidência de implementação. Cada ID também 
 | INV-40         | T8, T11, T52, T80                                                                                                                                                                                                                    | Planned |
 | INV-41         | T11, T52, T80                                                                                                                                                                                                                        | Planned |
 | INV-42         | T11, T53, T54, T69, T81, T82                                                                                                                                                                                                         | Planned |
-| INV-43         | T11, T55, T69, T83                                                                                                                                                                                                                   | Planned |
+| INV-43         | T11, T55, T69, T83, T114                                                                                                                                                                                                             | T114 invalid-category proof complete; final validation pending |
 | INV-44         | T11, T51, T52, T53, T54, T55, T69, T81, T82, T83                                                                                                                                                                                     | Planned |
 | INV-45         | T11, T51, T52, T70, T94                                                                                                                                                                                                              | Implemented; validation pending |
 | INV-46         | T8, T11, T52, T54, T82                                                                                                                                                                                                               | Planned |

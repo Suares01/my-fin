@@ -1,4 +1,5 @@
 import {
+  ArchiveLedgerAccount,
   CreateExpenseCategory,
   CreateFinancialAccount,
   CreateFinancialBook,
@@ -440,6 +441,56 @@ describe("RecordInvestmentSale", () => {
       error: { code: "INVALID_INVESTMENT_CATEGORY" },
     })
   })
+
+  it.each(["archived", "system", "other book", "wrong kind"] as const)(
+    "rejects a %s category for a nonzero gain without writes",
+    async (caseName) => {
+      const f = await setup()
+      let gainCategoryId = f.gain.id
+      if (caseName === "archived") {
+        expect(
+          await new ArchiveLedgerAccount(
+            f.h.transactionManager,
+            f.h.dispatcher
+          ).execute({
+            bookId: "book-1",
+            accountId: f.gain.id,
+            expectedVersion: 0,
+          })
+        ).toMatchObject({ ok: true })
+      } else if (caseName === "system") {
+        const systemIncome = f.h.store
+          .listAccounts()
+          .find((account) => account.systemPurpose === "UNCATEGORIZED_INCOME")
+        if (systemIncome === undefined) throw new Error("fixture failed")
+        gainCategoryId = systemIncome.id
+      } else if (caseName === "other book") {
+        const otherBook = await createBook(f.h)
+        const category = await new CreateIncomeCategory(
+          f.h.transactionManager,
+          f.h.dispatcher,
+          f.h.ids
+        ).execute({
+          bookId: otherBook.id,
+          name: "Foreign gain",
+          kind: "INCOME",
+          iconKey: "chart",
+          colorHex: "10b981",
+        })
+        if (!category.ok) throw new Error("fixture failed")
+        gainCategoryId = category.value.id
+      } else gainCategoryId = f.loss.id
+
+      const before = f.h.store.snapshot()
+      expect(
+        await useCase(f).execute({ ...sale(f), gainCategoryId })
+      ).toMatchObject({
+        ok: false,
+        error: { code: "INVALID_INVESTMENT_CATEGORY" },
+      })
+      expect(f.h.store.snapshot()).toEqual(before)
+    }
+  )
 
   it("requires a valid expense category for a loss", async () => {
     const f = await setup()
