@@ -1,6 +1,12 @@
 /* @vitest-environment jsdom */
 
-import { cleanup, fireEvent, render, screen } from "@testing-library/react"
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from "@testing-library/react"
 import type { JournalChainDetail } from "@workspace/application"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { MemoryRouter } from "react-router"
@@ -113,8 +119,53 @@ describe("TransactionRowDetails", () => {
     renderDetails()
     expect(screen.getByText(/Receita: Ganho/)).toBeTruthy()
     expect(screen.getByText(/Despesa: Taxa/)).toBeTruthy()
-    expect(screen.getByText(/US\$\s*10,00/).textContent).toBe("US$ 10,00")
-    expect(screen.getByText(/US\$\s*5,00/).textContent).toBe("US$ 5,00")
+    const categories = within(
+      screen.getByLabelText("Receitas e despesas da operação")
+    )
+    expect(categories.getByText(/US\$\s*10,00/).textContent).toBe("US$ 10,00")
+    expect(categories.getByText(/US\$\s*5,00/).textContent).toBe("US$ 5,00")
+  })
+
+  it("shows a redemption gain of 80 after income 100 and tax 20", () => {
+    mockDetail.mockReturnValue({
+      data: {
+        ...investmentDetail,
+        currency: "BRL",
+        investment: {
+          ...investmentDetail.investment,
+          grossAmountMinor: "510000",
+          bookCostDeltaMinor: "-500000",
+          netCashFlowMinor: "508000",
+        },
+        postings: [
+          {
+            id: "gain",
+            account: { id: "income", name: "Ganho", kind: "INCOME" },
+            amountMinor: "-10000",
+            currency: "BRL",
+            position: 0,
+          },
+          {
+            id: "tax",
+            account: { id: "tax", name: "Imposto", kind: "EXPENSE" },
+            amountMinor: "2000",
+            currency: "BRL",
+            position: 1,
+          },
+        ],
+      } as JournalChainDetail,
+    })
+    renderDetails()
+
+    expect(
+      screen.getByLabelText("Receitas e despesas da operação").textContent
+    ).toMatch(/Receita: Ganho R\$\s*100,00/)
+    expect(
+      screen.getByLabelText("Receitas e despesas da operação").textContent
+    ).toMatch(/Despesa: Imposto R\$\s*20,00/)
+    expect(
+      screen.getByText("Resultado líquido:").parentElement?.textContent
+    ).toMatch(/Resultado líquido: R\$\s*80,00/)
   })
 
   it("links the investment detail to the position", () => {

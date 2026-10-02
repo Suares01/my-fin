@@ -565,7 +565,7 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-41 | S4 | Tasks | Implemented: T11, T52 and T80 | T11, T52, T80 |
 | INV-42 | S4 | Tasks | Implemented: T11, T53, T54, T69, T81 and T82 | T11, T53, T54, T69, T81, T82 |
 | INV-43 | S4 | Tasks | T114 invalid-category proof complete; final validation pending | T11, T55, T69, T83, T114 |
-| INV-44 | S4 | Tasks | Implemented: T11, T51–T55, T69 and T81–T83 | T11, T51, T52, T53, T54, T55, T69, T81, T82, T83 |
+| INV-44 | S4 | Tasks | T123 same-sale result presentation complete; final validation pending | T11, T51, T52, T53, T54, T55, T69, T81, T82, T83, T123 |
 | INV-45 | S4 | Tasks | Implemented; validation pending | T11, T51, T52, T70, T94 |
 | INV-46 | S4 | Tasks | Implemented: T8, T11, T52, T54 and T82 | T8, T11, T52, T54, T82 |
 | INV-47 | S5 | Tasks | T84 form complete; remaining mapped work/validation pending; T90 valuation history complete | T10, T21, T27, T34, T58, T67, T84, T90 |

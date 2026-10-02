@@ -196,7 +196,7 @@ T100 -> T101 -> T102 -> T103 -> T104
 ### Phase 19: Critérios remanescentes da auditoria
 
 ```text
-T104 -> T105 -> T106 -> T107 -> T108 -> T109 -> T110 -> T111 -> T112 -> T113 -> T114 -> T115 -> T116 -> T117 -> T118 -> T119 -> T120 -> T121 -> T122
+T104 -> T105 -> T106 -> T107 -> T108 -> T109 -> T110 -> T111 -> T112 -> T113 -> T114 -> T115 -> T116 -> T117 -> T118 -> T119 -> T120 -> T121 -> T122 -> T123
 ```
 
 ### Phase Execution Map
@@ -4196,6 +4196,25 @@ Revisão reversa: os 6 cenários Memory novos cobrem read-only, journal opcional
 **Gate**: Full Application + Build
 **Commit**: `test(investments): impedir hard delete publico`
 
+### T123: Apresentar resultado líquido da venda junto às parcelas
+
+**What**: Mostrar resultado líquido calculado dos postings de receita e despesa no detalhe de transação de investimento.
+**Where**: `apps/tauri/src/features/transactions/components/transaction-row-details.*` (componente e teste co-localizado).
+**Depends on**: T122 e `validation.md` rodada 3 (INV-44 GAP).
+**Requirement**: INV-44.
+
+**Done when**:
+
+- [x] A mesma venda com ganho bruto 100 e imposto 20 exibe receita 100, despesa 20 e resultado líquido 80.
+- [x] Resultado usa os postings categóricos do detalhe, sem confundir fluxo de caixa com ganho.
+- [x] Gate `Full React + Build` passa antes do commit atômico.
+
+**Evidência T123 (2026-10-02):** `TransactionRowDetails` soma com bigint o inverso dos postings categóricos e apresenta “Resultado líquido” ao lado de Receita/Despesa. O teste de resgate usa bruto 5100, custo 5000, fluxo 5080, receita 100, imposto 20 e exige resultado 80 na mesma renderização. O teste anterior de valores USD foi escopado à lista após o novo número 5 também aparecer no resultado. Full React + Build verde: builds Domain/Application/Memory/SQLite/adapter Tauri, 1067/1067 testes React em 86 arquivos, lint/tipos do app, lint UI, build Vite e `git diff --check`. **Adequacy verdict:** PASS autoral para INV-44; verificação independente posterior pendente.
+
+**Tests**: React component (transaction detail).
+**Gate**: Full React + Build
+**Commit**: `fix(investments): apresentar resultado liquido da venda`
+
 ## Task Granularity Check
 
 Um componente/caso de uso por tarefa, com testes e integrações mecânicas do mesmo contrato. Não usar o ponto principal como permissão para agregar funcionalidades adjacentes.
@@ -4560,7 +4579,7 @@ Mapeamento de planejamento, não evidência de implementação. Cada ID também 
 | INV-41         | T11, T52, T80                                                                                                                                                                                                                        | Planned |
 | INV-42         | T11, T53, T54, T69, T81, T82                                                                                                                                                                                                         | Planned |
 | INV-43         | T11, T55, T69, T83, T114                                                                                                                                                                                                             | T114 invalid-category proof complete; final validation pending |
-| INV-44         | T11, T51, T52, T53, T54, T55, T69, T81, T82, T83                                                                                                                                                                                     | Planned |
+| INV-44         | T11, T51, T52, T53, T54, T55, T69, T81, T82, T83, T123                                                                                                                                                                               | T123 same-sale result presentation complete; final validation pending |
 | INV-45         | T11, T51, T52, T70, T94                                                                                                                                                                                                              | Implemented; validation pending |
 | INV-46         | T8, T11, T52, T54, T82                                                                                                                                                                                                               | Planned |
 | INV-125        | T11, T51, T79                                                                                                                                                                                                                        | Planned |

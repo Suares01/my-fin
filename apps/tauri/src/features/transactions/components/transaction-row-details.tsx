@@ -86,6 +86,9 @@ export function TransactionRowDetails({
           posting.account.kind === "EXPENSE"
       )
     : []
+  const investmentResultMinor = investmentCategories
+    .reduce((result, posting) => result - BigInt(posting.amountMinor), 0n)
+    .toString()
 
   return (
     <div
@@ -121,18 +124,27 @@ export function TransactionRowDetails({
             />
           </p>
           {investmentCategories.length > 0 && (
-            <ul aria-label="Receitas e despesas da operação">
-              {investmentCategories.map((posting) => (
-                <li key={posting.id}>
-                  {posting.account.kind === "INCOME" ? "Receita" : "Despesa"}:{" "}
-                  {posting.account.name}{" "}
-                  <FormattedMoney
-                    amountMinor={posting.amountMinor.replace(/^-/, "")}
-                    currency={posting.currency}
-                  />
-                </li>
-              ))}
-            </ul>
+            <>
+              <ul aria-label="Receitas e despesas da operação">
+                {investmentCategories.map((posting) => (
+                  <li key={posting.id}>
+                    {posting.account.kind === "INCOME" ? "Receita" : "Despesa"}:{" "}
+                    {posting.account.name}{" "}
+                    <FormattedMoney
+                      amountMinor={posting.amountMinor.replace(/^-/, "")}
+                      currency={posting.currency}
+                    />
+                  </li>
+                ))}
+              </ul>
+              <p>
+                <span className="font-medium">Resultado líquido:</span>{" "}
+                <FormattedMoney
+                  amountMinor={investmentResultMinor}
+                  currency={detail.currency}
+                />
+              </p>
+            </>
           )}
           <Link
             className="text-primary underline-offset-4 hover:underline focus-visible:underline"
