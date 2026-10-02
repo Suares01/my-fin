@@ -13,6 +13,7 @@ import {
 import { DomainEventDispatcher } from "../../core/event-dispatcher.js"
 import { ApplicationError } from "../../ports/errors.js"
 import { executeInvestmentRequest } from "../shared/execute-investment-request.js"
+import { assertOperationDateOrder } from "./assert-operation-date-order.js"
 import type {
   Clock,
   IdGenerator,
@@ -66,6 +67,12 @@ export class RecordInvestmentPurchase {
         const position = lookup.value
         if (position.version !== command.expectedPositionVersion)
           throw concurrency()
+        await assertOperationDateOrder(
+          repositories,
+          book.id,
+          position,
+          command.occurredOn
+        )
         const before = position.toSnapshot()
         const account = await repositories.accounts.findById(
           before.investmentAccountId

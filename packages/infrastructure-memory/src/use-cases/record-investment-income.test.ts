@@ -148,6 +148,18 @@ function saleToClose(fixture: Awaited<ReturnType<typeof setup>>) {
 }
 
 describe("RecordInvestmentIncome", () => {
+  it("rejects income before the opening operation without writes", async () => {
+    const f = await setup()
+    const before = f.h.store.snapshot()
+    expect(
+      await useCase(f).execute({ ...income(f), occurredOn: "2026-08-03" })
+    ).toMatchObject({
+      ok: false,
+      error: { code: "INVALID_INVESTMENT_OPERATION" },
+    })
+    expect(f.h.store.snapshot()).toEqual(before)
+  })
+
   it("records the normative retained income in one operation and journal", async () => {
     const f = await setup()
     expect(await useCase(f).execute(income(f))).toEqual({

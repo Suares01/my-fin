@@ -135,6 +135,18 @@ function sale(fixture: Awaited<ReturnType<typeof setup>>) {
 }
 
 describe("RecordInvestmentSale", () => {
+  it("rejects a sale before the opening operation without writes", async () => {
+    const f = await setup()
+    const before = f.h.store.snapshot()
+    expect(
+      await useCase(f).execute({ ...sale(f), occurredOn: "2026-08-03" })
+    ).toMatchObject({
+      ok: false,
+      error: { code: "INVALID_INVESTMENT_OPERATION" },
+    })
+    expect(f.h.store.snapshot()).toEqual(before)
+  })
+
   it("publishes the operation fact after commit and preserves the result if publication fails", async () => {
     const f = await setup()
     const observed: unknown[] = []

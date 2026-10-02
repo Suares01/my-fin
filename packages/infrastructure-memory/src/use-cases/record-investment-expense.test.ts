@@ -111,6 +111,18 @@ function close(f: Awaited<ReturnType<typeof setup>>) {
 }
 
 describe("RecordInvestmentExpense", () => {
+  it("rejects an expense before the opening operation without writes", async () => {
+    const f = await setup()
+    const before = f.h.store.snapshot()
+    expect(
+      await useCase(f).execute({ ...command(f), occurredOn: "2026-08-03" })
+    ).toMatchObject({
+      ok: false,
+      error: { code: "INVALID_INVESTMENT_OPERATION" },
+    })
+    expect(f.h.store.snapshot()).toEqual(before)
+  })
+
   it("records one internal fee operation and journal with its exact expense", async () => {
     const f = await setup()
     expect(await useCase(f).execute(command(f))).toEqual({

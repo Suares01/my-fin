@@ -8,7 +8,7 @@ import {
 import { describe, expect, it } from "vitest"
 import { createBook, createHarness } from "./test-helpers.js"
 
-async function setup() {
+async function setup(openedOn = "2026-08-04") {
   const h = createHarness()
   await createBook(h)
   for (const [name, type] of [
@@ -55,7 +55,7 @@ async function setup() {
     quantityMode: "UNITS",
     quantity: "10",
     bookCostMinor: "1000",
-    occurredOn: "2026-08-04",
+    occurredOn: openedOn,
   })
   if (!opening.ok) throw new Error("fixture failed")
   h.publisher.clear()
@@ -84,6 +84,48 @@ const internal = {
 } as const
 
 describe("RecordInvestmentPurchase", () => {
+  it("rejects a purchase before the opening operation without writes", async () => {
+    const h = await setup()
+    const before = h.store.snapshot()
+    expect(
+      await useCase(h).execute({ ...internal, occurredOn: "2026-08-03" })
+    ).toMatchObject({
+      ok: false,
+      error: { code: "INVALID_INVESTMENT_OPERATION" },
+    })
+    expect(h.store.snapshot()).toEqual(before)
+  })
+
+  it("uses the last effective date and orders same-day operations by persisted sequence", async () => {
+    const h = await setup("2026-08-01")
+    expect(await useCase(h).execute(internal)).toMatchObject({ ok: true })
+    const before = h.store.snapshot()
+    expect(
+      await useCase(h).execute({
+        ...internal,
+        requestId: "backdated",
+        expectedPositionVersion: 1,
+        occurredOn: "2026-08-03",
+      })
+    ).toMatchObject({
+      ok: false,
+      error: { code: "INVALID_INVESTMENT_OPERATION" },
+    })
+    expect(h.store.snapshot()).toEqual(before)
+
+    expect(
+      await useCase(h).execute({
+        ...internal,
+        requestId: "same-day",
+        expectedPositionVersion: 1,
+      })
+    ).toMatchObject({ ok: true, value: { operationId: "operation-3" } })
+    expect(h.store.listInvestmentOperations().slice(1)).toMatchObject([
+      { occurredOn: "2026-08-04", sequence: "2" },
+      { occurredOn: "2026-08-04", sequence: "3" },
+    ])
+  })
+
   it("records an internal purchase without a journal and increases only explicit cost and units", async () => {
     const h = await setup()
     expect(await useCase(h).execute(internal)).toMatchObject({
@@ -101,6 +143,10 @@ describe("RecordInvestmentPurchase", () => {
       bookCostMinor: "1200",
     })
     expect(h.store.listJournalEntries()).toEqual([])
+    expect(
+      BigInt(h.store.listInvestmentOperations()[1]!.sequence) >
+        BigInt(h.store.listInvestmentOperations()[0]!.sequence)
+    ).toBe(true)
   })
   it("records an external application in one journal with non-capitalized expenses", async () => {
     const h = await setup()

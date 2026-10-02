@@ -196,7 +196,7 @@ T100 -> T101 -> T102 -> T103 -> T104
 ### Phase 19: Critérios remanescentes da auditoria
 
 ```text
-T104 -> T105
+T104 -> T105 -> T106
 ```
 
 ### Phase Execution Map
@@ -3874,6 +3874,25 @@ Revisão reversa: os 6 cenários Memory novos cobrem read-only, journal opcional
 **Gate**: Full SQLite + Build
 **Commit**: `test(investments): provar consolidação pelo bruto`
 
+### T106: Impedir operações retrodatadas na posição
+
+**What**: Exigir data da nova operação igual ou posterior à última operação efetiva da posição dentro da transação, preservando empate por sequência persistida.
+**Where**: comandos de compra, venda, rendimento, despesa e amortização em `packages/application/src/investments/operations/` e testes Memory dos comandos afetados.
+**Depends on**: T105 e `validation.md` rodada 2 (INV-72 NÃO ATESTADO; defeito reproduzido na auditoria).
+**Requirement**: INV-72.
+
+**Done when**:
+
+- [x] Teste demonstra que os cinco comandos rejeitam data anterior à última operação efetiva sem qualquer gravação, enquanto data igual é aceita com sequência posterior.
+- [x] Guarda usa a leitura transacional da última operação efetiva, após CAS da posição e antes dos efeitos.
+- [x] Gate `Full Cross + Build` passa antes do commit atômico.
+
+**Evidência T106 (2026-10-01):** Antes da correção, cinco testes focados falharam porque compra, venda, rendimento, despesa e amortização retornavam `{ok:true}` para `occurredOn` anterior à abertura. Após a guarda, `record-investment-{purchase,sale,income,expense,amortization}.test.ts` exigem `INVALID_INVESTMENT_OPERATION` e snapshot integral intacto em cada caso; `record-investment-purchase.test.ts:99-126` prova também data posterior à abertura porém anterior à última operação efetiva, e empate no dia 04 com sequências persistidas 2 e 3. `assert-operation-date-order.ts:11-19` lê `findLastEffective` na transação após CAS e antes dos efeitos; os cinco comandos chamam a mesma guarda. Testes existentes de ordenação por sequência SQLite permanecem verdes. Memory 643→649 testes em 55 arquivos. Full Cross + Build verde: Domain 405, Application 261, Memory 649, SQLite 976, adapter Tauri 63; migrações, lint, tipos, builds e `git diff --check`. **Adequacy verdict:** PASS para INV-72 nesta tarefa; re-verificação independente pendente.
+
+**Tests**: integration (Memory), regressão de ordenação (SQLite existente).
+**Gate**: Full Cross + Build
+**Commit**: `fix(investments): rejeitar operação retrodatada`
+
 ## Task Granularity Check
 
 Um componente/caso de uso por tarefa, com testes e integrações mecânicas do mesmo contrato. Não usar o ponto principal como permissão para agregar funcionalidades adjacentes.
@@ -4279,7 +4298,7 @@ Mapeamento de planejamento, não evidência de implementação. Cada ID também 
 | INV-69         | T9, T20, T26, T33, T56, T57, T59, T66, T70, T85, T89, T94                                                                                                                                                                            | Implemented; validation pending |
 | INV-70         | T56, T57, T60, T85                                                                                                                                                                                                                   | In progress |
 | INV-71         | T8, T56                                                                                                                                                                                                                              | Planned |
-| INV-72         | T9, T20, T26, T29, T33, T36, T56, T57, T66, T85, T89                                                                                                                                                                                 | In progress |
+| INV-72         | T9, T20, T26, T29, T33, T36, T56, T57, T66, T85, T89, T106                                                                                                                                                                           | T106 transactional date-order guard complete; independent validation pending |
 | INV-73         | T9, T56, T57, T85, T89                                                                                                                                                                                                               | In progress |
 | INV-132        | T9, T11, T13, T20, T26, T30, T33, T56, T57, T66, T89                                                                                                                                                                                 | Planned |
 | INV-133        | T9, T20, T26, T56, T57, T66, T89                                                                                                                                                                                                     | Planned |

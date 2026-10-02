@@ -15,6 +15,7 @@ import {
   type ApplicationErrorCode,
 } from "../../ports/errors.js"
 import { executeInvestmentRequest } from "../shared/execute-investment-request.js"
+import { assertOperationDateOrder } from "./assert-operation-date-order.js"
 import type {
   Clock,
   IdGenerator,
@@ -77,6 +78,12 @@ export class RecordInvestmentIncome {
             "OPTIMISTIC_CONCURRENCY_FAILURE",
             "Investment position has a conflicting version"
           )
+        await assertOperationDateOrder(
+          repositories,
+          book.id,
+          position,
+          command.occurredOn
+        )
         const before = position.toSnapshot()
         const account = await repositories.accounts.findById(
           before.investmentAccountId
