@@ -196,7 +196,7 @@ T100 -> T101 -> T102 -> T103 -> T104
 ### Phase 19: Critérios remanescentes da auditoria
 
 ```text
-T104 -> T105 -> T106 -> T107 -> T108 -> T109 -> T110 -> T111 -> T112 -> T113 -> T114 -> T115
+T104 -> T105 -> T106 -> T107 -> T108 -> T109 -> T110 -> T111 -> T112 -> T113 -> T114 -> T115 -> T116
 ```
 
 ### Phase Execution Map
@@ -4063,6 +4063,25 @@ Revisão reversa: os 6 cenários Memory novos cobrem read-only, journal opcional
 **Gate**: Full Memory + Build
 **Commit**: `test(investments): bloquear aplicação em cadastro inativo`
 
+### T116: Preservar código de limite decimal no comando
+
+**What**: Fazer a posição propagar `INVALID_INVESTMENT_INPUT` para quantidade que excede precisão ou escala decimal normativa, antes de gravar compra.
+**Where**: parse decimal da posição em `packages/domain/src/investments/positions/investment-position.ts`, comprovado pelo teste co-localizado do comando de compra Memory.
+**Depends on**: T115 e `validation.md` rodada 2 (INV-83 NÃO ATESTADO; código incorreto reproduzido).
+**Requirement**: INV-83.
+
+**Done when**:
+
+- [x] Compra com quantidade acima de 38 dígitos ou 18 casas retorna `INVALID_INVESTMENT_INPUT` e snapshot integral intacto.
+- [x] A posição preserva o erro de `Decimal.parse`, sem converter limite de entrada em erro genérico de operação.
+- [x] Gate `Full Cross + Build` passa antes do commit atômico.
+
+**Evidência T116 (2026-10-01):** Antes da correção, dois testes de compra retornavam `INVALID_INVESTMENT_OPERATION` para quantidade de 39 dígitos e 19 casas. `investment-position.ts` passou a preservar `INVALID_INVESTMENT_INPUT` emitido por `Decimal.parse`. Os testes exigem o código normativo e snapshot integral sem gravações; limites de texto já são cobertos em `update-investment-position-metadata.test.ts`. Full Cross + Build verde: Domain 405, Application 261, Memory 667, SQLite 976, adapter Tauri 63; migrações, lint, tipos, builds e `git diff --check`. **Adequacy verdict:** PASS para INV-83 nesta costura; re-verificação independente pendente.
+
+**Tests**: integration (Memory purchase), Domain regressions.
+**Gate**: Full Cross + Build
+**Commit**: `fix(investments): preservar erro de limite decimal`
+
 ## Task Granularity Check
 
 Um componente/caso de uso por tarefa, com testes e integrações mecânicas do mesmo contrato. Não usar o ponto principal como permissão para agregar funcionalidades adjacentes.
@@ -4484,7 +4503,7 @@ Mapeamento de planejamento, não evidência de implementação. Cada ID também 
 | INV-80         | T16, T22, T28, T35, T40, T48, T71, T73, T103                                                                                                                                                                                         | T103 post-commit failure and retry assertion complete; independent validation pending |
 | INV-81         | T9, T15, T16, T40, T44, T45, T46, T48, T103                                                                                                                                                                                          | T103 committed-state event assertion complete; independent validation pending |
 | INV-82         | T1, T2, T10, T12, T29, T36, T37, T62, T68, T69, T70                                                                                                                                                                                  | Planned |
-| INV-83         | T1, T2, T6, T10, T12, T44, T45, T47                                                                                                                                                                                                  | Planned |
+| INV-83         | T1, T2, T6, T10, T12, T44, T45, T47, T116                                                                                                                                                                                            | T116 command decimal-limit proof complete; final validation pending |
 | INV-84         | T2, T10, T12, T48, T58                                                                                                                                                                                                               | Planned |
 | INV-85         | T17, T18, T19, T20, T21, T22, T112                                                                                                                                                                                                   | T112 prior-checksum and data proof complete; final validation pending |
 | INV-86         | T17, T18, T19, T20, T21, T22                                                                                                                                                                                                         | Planned |

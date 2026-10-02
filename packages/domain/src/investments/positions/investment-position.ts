@@ -444,11 +444,7 @@ function currentCost(snapshot: InvestmentPositionSnapshot): bigint {
 }
 
 function parseDecimal(value: string): Decimal {
-  try {
-    return Decimal.parse(value)
-  } catch {
-    throw invalidOperation()
-  }
+  return Decimal.parse(value)
 }
 
 function parseDate(value: string): LocalDate {

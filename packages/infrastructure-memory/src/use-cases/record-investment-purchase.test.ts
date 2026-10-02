@@ -161,6 +161,27 @@ describe("RecordInvestmentPurchase", () => {
     expect(h.store.snapshot()).toEqual(before)
   })
 
+  it.each([
+    ["precision", "123456789012345678901234567890123456789"],
+    ["scale", "1.1234567890123456789"],
+  ] as const)(
+    "rejects quantity beyond the decimal %s limit before writing",
+    async (_limit, quantityDelta) => {
+      const h = await setup()
+      const before = h.store.snapshot()
+      expect(
+        await useCase(h).execute({
+          ...internal,
+          quantityDelta,
+        })
+      ).toMatchObject({
+        ok: false,
+        error: { code: "INVALID_INVESTMENT_INPUT" },
+      })
+      expect(h.store.snapshot()).toEqual(before)
+    }
+  )
+
   it("uses the last effective date and orders same-day operations by persisted sequence", async () => {
     const h = await setup("2026-08-01")
     expect(await useCase(h).execute(internal)).toMatchObject({ ok: true })
