@@ -200,6 +200,56 @@ describe("RecordInvestmentPurchase", () => {
     })
     expect(h.store.listInvestmentOperations()).toHaveLength(1)
   })
+
+  it("recomputes cash warnings after competing purchases commit", async () => {
+    const h = await setup()
+    const first = { ...internal, requestId: "competing-purchase-1" }
+    const second = { ...internal, requestId: "competing-purchase-2" }
+    const [firstResult, secondResult] = await Promise.all([
+      useCase(h).execute(first),
+      useCase(h).execute(second),
+    ])
+    expect(firstResult).toMatchObject({
+      ok: true,
+      value: {
+        positionVersion: 1,
+        warnings: [
+          {
+            code: "INVESTMENT_CASH_NEGATIVE",
+            investmentAccountId: "account-5",
+            cashMinor: "-1200",
+          },
+        ],
+      },
+    })
+    expect(secondResult).toMatchObject({
+      ok: false,
+      error: { code: "OPTIMISTIC_CONCURRENCY_FAILURE" },
+    })
+    expect(h.store.listInvestmentOperations()).toHaveLength(2)
+
+    expect(
+      await useCase(h).execute({ ...second, expectedPositionVersion: 1 })
+    ).toMatchObject({
+      ok: true,
+      value: {
+        positionVersion: 2,
+        warnings: [
+          {
+            code: "INVESTMENT_CASH_NEGATIVE",
+            investmentAccountId: "account-5",
+            cashMinor: "-1400",
+          },
+        ],
+      },
+    })
+    expect(h.store.listInvestmentPositions()[0]).toMatchObject({
+      quantity: "14",
+      bookCostMinor: "1400",
+      version: 2,
+    })
+    expect(h.store.listInvestmentOperations()).toHaveLength(3)
+  })
   it("replays a matching request without a duplicate operation", async () => {
     const h = await setup()
     await useCase(h).execute(internal)

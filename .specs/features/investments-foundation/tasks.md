@@ -196,7 +196,7 @@ T100 -> T101 -> T102 -> T103 -> T104
 ### Phase 19: Critérios remanescentes da auditoria
 
 ```text
-T104 -> T105 -> T106 -> T107
+T104 -> T105 -> T106 -> T107 -> T108
 ```
 
 ### Phase Execution Map
@@ -3912,6 +3912,25 @@ Revisão reversa: os 6 cenários Memory novos cobrem read-only, journal opcional
 **Gate**: Full Memory + Build
 **Commit**: `test(investments): provar datas da correção contábil`
 
+### T108: Provar concorrência sobre quantidade e caixa
+
+**What**: Enviar dois comandos de venda e dois de compra simultaneamente com a mesma versão observada e verificar o estado resultante da posição e do caixa.
+**Where**: testes co-localizados dos comandos de compra e venda em `packages/infrastructure-memory/src/use-cases/`.
+**Depends on**: T107 e `validation.md` rodada 2 (INV-77 NÃO ATESTADO).
+**Requirement**: INV-77, INV-76, INV-145.
+
+**Done when**:
+
+- [x] Vendas concorrentes da mesma quantidade inicial não duplicam consumo; retry com versão atual rejeita quantidade/custo acima do remanescente sem gravar.
+- [x] Compras concorrentes recalculam o aviso de caixa sobre o saldo confirmado após retry com versão atual; conflito não cria operação.
+- [x] Gate `Full Memory + Build` passa antes do commit atômico.
+
+**Evidência T108 (2026-10-01):** `record-investment-sale.test.ts` disputa duas vendas de 6 unidades/custo 600 sobre posição 10/1000. A primeira confirma 4/400, a segunda retorna `OPTIMISTIC_CONCURRENCY_FAILURE`; retry com versão 1 retorna `INVALID_INVESTMENT_OPERATION` e conserva snapshot integral. `record-investment-purchase.test.ts` disputa duas compras de 2/200, exige conflito da segunda sem nova operação e, no retry com versão atual, confirma posição 14/1400 com aviso de caixa atualizado de -1200 para -1400, ambos contendo ID da carteira. Memory 650→652 testes em 55 arquivos. Full Memory + Build verde: builds Domain/Application/Memory, 652/652 testes, lint, tipos e `git diff --check`. **Adequacy verdict:** PASS para INV-77 nesta costura; re-verificação independente pendente.
+
+**Tests**: integration (Memory concurrent commands).
+**Gate**: Full Memory + Build
+**Commit**: `test(investments): provar concorrência de operações`
+
 ## Task Granularity Check
 
 Um componente/caso de uso por tarefa, com testes e integrações mecânicas do mesmo contrato. Não usar o ponto principal como permissão para agregar funcionalidades adjacentes.
@@ -4326,8 +4345,8 @@ Mapeamento de planejamento, não evidência de implementação. Cada ID também 
 | INV-136        | T26, T57, T59, T66, T70, T85, T89, T94                                                                                                                                                                                               | Implemented; validation pending |
 | INV-74         | T12, T13, T18, T19, T20, T21, T23, T24, T25, T26, T27, T28, T31, T32, T33, T34, T35, T40, T41, T42, T43, T44, T45, T46, T47, T48, T51, T52, T53, T54, T55, T56, T57, T58, T59, T61, T63, T64, T65, T66, T67, T71, T72, T73, T91, T93 | T91 detail and T93 native book isolation complete; final validation pending |
 | INV-75 | T13, T16, T22, T28, T29, T30, T35, T36, T40, T48, T50, T51, T52, T53, T54, T55, T56, T57, T58, T60, T95, T102 | T102 amendment rollback assertion complete; independent validation pending |
-| INV-76         | T4, T12, T13, T23, T24, T25, T26, T31, T32, T33, T40, T42, T45, T46, T47, T48, T51, T52, T53, T54, T55, T56, T57, T61, T73                                                                                                           | Planned |
-| INV-77         | T38, T39, T40, T48, T51, T60                                                                                                                                                                                                         | Planned |
+| INV-76         | T4, T12, T13, T23, T24, T25, T26, T31, T32, T33, T40, T42, T45, T46, T47, T48, T51, T52, T53, T54, T55, T56, T57, T61, T73, T108                                                                                                     | T108 competing-command CAS proof complete; final validation pending |
+| INV-77         | T38, T39, T40, T48, T51, T60, T108                                                                                                                                                                                                   | T108 concurrent quantity and cash proof complete; final validation pending |
 | INV-78 | T5, T12, T13, T16, T22, T28, T35, T40, T48, T49, T50, T51, T52, T53, T54, T55, T56, T57, T58, T71, T73, T95 | Planned |
 | INV-79         | T12, T22, T28, T35, T48, T73                                                                                                                                                                                                         | Planned |
 | INV-80         | T16, T22, T28, T35, T40, T48, T71, T73, T103                                                                                                                                                                                         | T103 post-commit failure and retry assertion complete; independent validation pending |
@@ -4341,7 +4360,7 @@ Mapeamento de planejamento, não evidência de implementação. Cada ID também 
 | INV-88         | T13, T17, T21, T23, T24, T25, T26, T27, T28, T29, T30, T34, T40                                                                                                                                                                      | Planned |
 | INV-89         | T5, T6, T12, T13, T40, T44, T71                                                                                                                                                                                                      | Planned |
 | INV-90         | T12, T15, T16, T48, T73                                                                                                                                                                                                              | Planned |
-| INV-145        | T12, T38, T39, T48, T49, T50, T51, T55, T56, T57, T60, T61, T62, T63, T73, T78, T79, T83, T87, T96 | Planned |
+| INV-145        | T12, T38, T39, T48, T49, T50, T51, T55, T56, T57, T60, T61, T62, T63, T73, T78, T79, T83, T87, T96, T108 | T108 resulting-cash proof complete; final validation pending |
 | INV-91         | T71, T92, T93                                                                                                                                                                                                                        | T92 page and T93 route/native navigation complete; final validation pending |
 | INV-92         | T71, T92, T93                                                                                                                                                                                                                        | T92 page and T93 book guard/native empty book complete; final validation pending |
 | INV-93         | T14, T62, T72, T75, T86, T92                                                                                                                                                                                                         | T92 page complete; remaining mapped work/validation pending |

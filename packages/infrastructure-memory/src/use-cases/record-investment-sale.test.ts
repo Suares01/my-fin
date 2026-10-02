@@ -517,6 +517,43 @@ describe("RecordInvestmentSale", () => {
     expect(f.h.store.listInvestmentOperations()).toHaveLength(1)
   })
 
+  it("serializes competing sales and rechecks remaining units and cost", async () => {
+    const f = await setup()
+    const first = {
+      ...sale(f),
+      requestId: "competing-sale-1",
+      quantityDelta: "6",
+      bookCostReductionMinor: "600",
+    }
+    const second = { ...first, requestId: "competing-sale-2" }
+    const [firstResult, secondResult] = await Promise.all([
+      useCase(f).execute(first),
+      useCase(f).execute(second),
+    ])
+    expect(firstResult).toMatchObject({
+      ok: true,
+      value: { positionVersion: 1 },
+    })
+    expect(secondResult).toMatchObject({
+      ok: false,
+      error: { code: "OPTIMISTIC_CONCURRENCY_FAILURE" },
+    })
+    expect(f.h.store.listInvestmentPositions()[0]).toMatchObject({
+      quantity: "4",
+      bookCostMinor: "400",
+      version: 1,
+    })
+    expect(f.h.store.listInvestmentOperations()).toHaveLength(2)
+    const beforeRetry = f.h.store.snapshot()
+    expect(
+      await useCase(f).execute({ ...second, expectedPositionVersion: 1 })
+    ).toMatchObject({
+      ok: false,
+      error: { code: "INVALID_INVESTMENT_OPERATION" },
+    })
+    expect(f.h.store.snapshot()).toEqual(beforeRetry)
+  })
+
   it("replays the same sale without another operation or journal", async () => {
     const f = await setup()
     await useCase(f).execute(sale(f))

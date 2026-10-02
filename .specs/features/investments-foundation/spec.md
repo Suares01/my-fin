@@ -597,8 +597,8 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-73 | S6 | Tasks | T107 date-order and reversal-date proof complete; final validation pending | T9, T56, T57, T85, T89, T107 |
 | INV-74 | S7 | Tasks | T91 detail and T93 native book isolation complete; final validation pending | T12, T13, T18, T19, T20, T21, T23, T24, T25, T26, T27, T28, T31, T32, T33, T34, T35, T40, T41, T42, T43, T44, T45, T46, T47, T48, T51, T52, T53, T54, T55, T56, T57, T58, T59, T61, T63, T64, T65, T66, T67, T71, T72, T73, T91, T93 |
 | INV-75 | S7 | Tasks | T102 amendment rollback assertion complete; independent validation pending | T13, T16, T22, T28, T29, T30, T35, T36, T40, T48, T50, T51, T52, T53, T54, T55, T56, T57, T58, T60, T95, T102 |
-| INV-76 | S7 | Tasks | In progress: T4 aggregate | T4, T12, T13, T23, T24, T25, T26, T31, T32, T33, T40, T42, T45, T46, T47, T48, T51, T52, T53, T54, T55, T56, T57, T61, T73 |
-| INV-77 | S7 | Tasks | Planned | T38, T39, T40, T48, T51, T60 |
+| INV-76 | S7 | Tasks | T108 competing-command CAS proof complete; final validation pending | T4, T12, T13, T23, T24, T25, T26, T31, T32, T33, T40, T42, T45, T46, T47, T48, T51, T52, T53, T54, T55, T56, T57, T61, T73, T108 |
+| INV-77 | S7 | Tasks | T108 concurrent quantity and cash proof complete; final validation pending | T38, T39, T40, T48, T51, T60, T108 |
 | INV-78 | S7 | Tasks | In progress: T5 identities | T5, T12, T13, T16, T22, T28, T35, T40, T48, T49, T50, T51, T52, T53, T54, T55, T56, T57, T58, T71, T73, T95 |
 | INV-79 | S7 | Tasks | Planned | T12, T22, T28, T35, T48, T73 |
 | INV-80 | S7 | Tasks | T103 post-commit failure and retry assertion complete; independent validation pending | T16, T22, T28, T35, T40, T48, T71, T73, T103 |
@@ -666,7 +666,7 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-142 | S5 | Tasks | T84 form complete; remaining mapped work/validation pending | T10, T58, T84 |
 | INV-143 | S8 | Tasks | Planned | T75 |
 | INV-144 | S9 | Tasks | T104 archived-entity amendment and reactivation assertions complete; independent validation pending | T8, T43, T46, T56, T57, T85, T91, T104 |
-| INV-145 | S7 | Tasks | In progress: T79 purchase/application and T83 expense warning complete; T87 pending; T87 list complete | T12, T38, T39, T48, T49, T50, T51, T55, T56, T57, T60, T61, T62, T63, T73, T78, T79, T83, T87, T96 |
+| INV-145 | S7 | Tasks | T108 resulting-cash proof complete; final validation pending | T12, T38, T39, T48, T49, T50, T51, T55, T56, T57, T60, T61, T62, T63, T73, T78, T79, T83, T87, T96, T108 |
 | INV-146 | S5 | Tasks | T92 page complete; remaining mapped work/validation pending | T62, T63, T86, T87, T92 |
 | INV-147 | S5 | Tasks | T100 history and warning assertions complete; independent validation pending | T49, T60, T62, T86, T87, T92, T100 |
 | INV-148 | S8 | Tasks | T92 page complete; remaining mapped work/validation pending | T61, T73, T78, T79, T80, T81, T82, T83, T85, T92, T96 |
