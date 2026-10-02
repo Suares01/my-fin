@@ -1,4 +1,4 @@
-;async (page) => {
+async function investmentsBrowserUat(page) {
   const actionName = "Ações da posição CDB A — Reserva 2028"
   const action = () => page.getByRole("button", { name: actionName })
   const assert = (condition, message) => {

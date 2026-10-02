@@ -631,9 +631,9 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-107 | S8 | Tasks | T92 page complete; remaining mapped work/validation pending | T63, T72, T75, T86, T87, T88, T92 |
 | INV-108 | S8 | Tasks | T92 page complete; remaining mapped work/validation pending | T72, T86, T87, T88, T89, T90, T91, T92 |
 | INV-109 | S8 | Tasks | Implemented; validation pending | T73, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T94 |
-| INV-110 | S8 | Tasks | T125 browser keyboard and focus proof complete; final validation pending | T74, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T88, T89, T91, T92, T93, T94, T125 |
+| INV-110 | S8 | Tasks | T126 direct browser UAT proof complete; final validation pending | T74, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T88, T89, T91, T92, T93, T94, T125, T126 |
 | INV-111 | S8 | Tasks | T92 page complete; remaining mapped work/validation pending | T73, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T92 |
-| INV-112 | S8 | Tasks | T125 browser viewport proof complete; final validation pending | T86, T87, T88, T89, T90, T91, T92, T93, T94, T125 |
+| INV-112 | S8 | Tasks | T126 direct browser UAT proof complete; final validation pending | T86, T87, T88, T89, T90, T91, T92, T93, T94, T125, T126 |
 | INV-113 | S9 | Tasks | T87 list complete; remaining mapped work/validation pending | T25, T32, T38, T39, T43, T63, T87 |
 | INV-114 | S9 | Tasks | Planned | T6, T24, T25, T31, T32, T46, T64, T76 |
 | INV-115 | S9 | Tasks | T87 list complete; remaining mapped work/validation pending | T38, T39, T42, T43, T74, T87 |

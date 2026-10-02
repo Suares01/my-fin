@@ -196,7 +196,7 @@ T100 -> T101 -> T102 -> T103 -> T104
 ### Phase 19: Critérios remanescentes da auditoria
 
 ```text
-T104 -> T105 -> T106 -> T107 -> T108 -> T109 -> T110 -> T111 -> T112 -> T113 -> T114 -> T115 -> T116 -> T117 -> T118 -> T119 -> T120 -> T121 -> T122 -> T123 -> T124 -> T125
+T104 -> T105 -> T106 -> T107 -> T108 -> T109 -> T110 -> T111 -> T112 -> T113 -> T114 -> T115 -> T116 -> T117 -> T118 -> T119 -> T120 -> T121 -> T122 -> T123 -> T124 -> T125 -> T126
 ```
 
 ### Phase Execution Map
@@ -4253,6 +4253,24 @@ Revisão reversa: os 6 cenários Memory novos cobrem read-only, journal opcional
 **Gate**: Full React + Build + Browser UAT
 **Commit**: `fix(investments): restaurar foco dos drawers`
 
+### T126: Tornar executável o roteiro Chromium versionado
+
+**What**: Corrigir a sintaxe do arquivo de UAT para que o `playwright-cli run-code --filename` execute diretamente a prova de INV-110/112.
+**Where**: `apps/tauri/tests/investments-browser-uat.js`.
+**Depends on**: T125 e `validation.md` rodada 4 (falha de invocação direta do roteiro).
+**Requirement**: INV-110, INV-112.
+
+**Done when**:
+
+- [x] Arquivo versionado executa diretamente por `playwright-cli run-code --filename`, sem cópia ou edição temporária, e todas as asserções passam em 360px e 1280px.
+- [x] `node --check`, Prettier e gate `Full React + Build` passam antes do commit atômico.
+
+**Evidência T126 (2026-10-02):** a expressão anônima que o Prettier iniciava com `;` virou função nomeada `async function investmentsBrowserUat(page)` (`investments-browser-uat.js:1`), preservando as mesmas asserções. O comando direto com o arquivo versionado retornou exit 0 após `playwright-cli open` e `snapshot`; o Verifier anterior obtivera `SyntaxError: Unexpected token ';'` antes desta mudança. `node --check` e Prettier passaram. Full React + Build verde: dependências Domain/Application/Memory/SQLite/adapter Tauri compilaram; 1067/1067 testes React em 86 arquivos, ESLint, tipos e Vite build passaram. O harness continua limitado a serviços locais; UAT Tauri/WebKitGTK independente permanece pendente.
+
+**Tests**: Browser UAT existente, sem alteração de asserções.
+**Gate**: Full React + Build + Browser UAT
+**Commit**: `test(investments): executar roteiro chromium diretamente`
+
 ## Task Granularity Check
 
 Um componente/caso de uso por tarefa, com testes e integrações mecânicas do mesmo contrato. Não usar o ponto principal como permissão para agregar funcionalidades adjacentes.
@@ -4702,9 +4720,9 @@ Mapeamento de planejamento, não evidência de implementação. Cada ID também 
 | INV-107        | T63, T72, T75, T86, T87, T88, T92                                                                                                                                                                                                    | T92 page complete; remaining mapped work/validation pending |
 | INV-108        | T72, T86, T87, T88, T89, T90, T91, T92                                                                                                                                                                                               | T92 page complete; remaining mapped work/validation pending |
 | INV-109        | T73, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T94                                                                                                                                                                           | Implemented; validation pending |
-| INV-110        | T74, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T88, T89, T91, T92, T93, T94, T125                                                                                                                                          | T125 browser keyboard and focus proof complete; final validation pending |
+| INV-110        | T74, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T88, T89, T91, T92, T93, T94, T125, T126                                                                                                                                    | T126 direct browser UAT proof complete; final validation pending |
 | INV-111        | T73, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T92                                                                                                                                                                           | T92 page complete; remaining mapped work/validation pending |
-| INV-112        | T86, T87, T88, T89, T90, T91, T92, T93, T94, T125                                                                                                                                                                                    | T125 browser viewport proof complete; final validation pending |
+| INV-112        | T86, T87, T88, T89, T90, T91, T92, T93, T94, T125, T126                                                                                                                                                                              | T126 direct browser UAT proof complete; final validation pending |
 | INV-143        | T75                                                                                                                                                                                                                                  | Planned |
 | INV-148        | T61, T73, T78, T79, T80, T81, T82, T83, T85, T92, T96 | T92 page complete; remaining mapped work/validation pending |
 | INV-113        | T25, T32, T38, T39, T43, T63, T87                                                                                                                                                                                                    | Planned |
