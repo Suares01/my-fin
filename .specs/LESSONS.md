@@ -38,6 +38,30 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: CAT-15 (categories/ui)
 - last seen: 2026-09-09T22:54:17Z
 
+### L-005 - Em resultados de investimento, teste receita, despesa e ganho líquido no mesmo cenário de venda.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `investments` · harmful: 0
+- features: investments-foundation
+- evidence: INV-44 (investments)
+- last seen: 2026-10-02T12:08:12Z
+
+### L-006 - Ao ampliar resumos patrimoniais, teste GetNetWorth com investimento no mesmo livro e datas asOf antes e depois do lançamento.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `investments` · harmful: 0
+- features: investments-foundation
+- evidence: INV-57 (investments)
+- last seen: 2026-10-02T12:08:12Z
+
+### L-007 - Para Drawer e menus de investimento, comprove operação por teclado e retorno de foco em ambiente de interface real.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `investments` · harmful: 0
+- features: investments-foundation
+- evidence: INV-110 (investments)
+- last seen: 2026-10-02T12:08:13Z
+
+### L-008 - Para layouts responsivos, meça overflow da página e acesso às ações em 360px e 1280px com navegador real.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `investments` · harmful: 0
+- features: investments-foundation
+- evidence: INV-112 (investments)
+- last seen: 2026-10-02T12:08:13Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

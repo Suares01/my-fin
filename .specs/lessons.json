@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 5,
+  "next_id": 9,
   "lessons": [
     {
       "id": "L-001",
@@ -76,6 +76,78 @@
       ],
       "created": "2026-09-09T22:54:17Z",
       "last_seen": "2026-09-09T22:54:17Z"
+    },
+    {
+      "id": "L-005",
+      "key": "ac_gap::em resultados de investimento teste receita despesa e ganho liquido no mesmo cenario de venda",
+      "text": "Em resultados de investimento, teste receita, despesa e ganho líquido no mesmo cenário de venda.",
+      "signal": "ac_gap",
+      "scope": "investments",
+      "status": "candidate",
+      "features": [
+        "investments-foundation"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "INV-44 (investments)"
+      ],
+      "created": "2026-10-02T12:08:12Z",
+      "last_seen": "2026-10-02T12:08:12Z"
+    },
+    {
+      "id": "L-006",
+      "key": "ac_gap::ao ampliar resumos patrimoniais teste getnetworth com investimento no mesmo livro e datas asof antes e depois do lancamento",
+      "text": "Ao ampliar resumos patrimoniais, teste GetNetWorth com investimento no mesmo livro e datas asOf antes e depois do lançamento.",
+      "signal": "ac_gap",
+      "scope": "investments",
+      "status": "candidate",
+      "features": [
+        "investments-foundation"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "INV-57 (investments)"
+      ],
+      "created": "2026-10-02T12:08:12Z",
+      "last_seen": "2026-10-02T12:08:12Z"
+    },
+    {
+      "id": "L-007",
+      "key": "ac_gap::para drawer e menus de investimento comprove operacao por teclado e retorno de foco em ambiente de interface real",
+      "text": "Para Drawer e menus de investimento, comprove operação por teclado e retorno de foco em ambiente de interface real.",
+      "signal": "ac_gap",
+      "scope": "investments",
+      "status": "candidate",
+      "features": [
+        "investments-foundation"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "INV-110 (investments)"
+      ],
+      "created": "2026-10-02T12:08:13Z",
+      "last_seen": "2026-10-02T12:08:13Z"
+    },
+    {
+      "id": "L-008",
+      "key": "ac_gap::para layouts responsivos meca overflow da pagina e acesso as acoes em 360px e 1280px com navegador real",
+      "text": "Para layouts responsivos, meça overflow da página e acesso às ações em 360px e 1280px com navegador real.",
+      "signal": "ac_gap",
+      "scope": "investments",
+      "status": "candidate",
+      "features": [
+        "investments-foundation"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "INV-112 (investments)"
+      ],
+      "created": "2026-10-02T12:08:13Z",
+      "last_seen": "2026-10-02T12:08:13Z"
     }
   ]
 }
