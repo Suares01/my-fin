@@ -87,6 +87,13 @@ describe("investment migrations", () => {
 
   it("leaves pre-existing account versions and postings unchanged", async () => {
     await createV4Database()
+    const priorMigrations = await database!.query<{
+      version: number
+      checksum: string
+    }>("SELECT version, checksum FROM schema_migrations ORDER BY version")
+    expect(priorMigrations).toEqual(
+      V4_MIGRATIONS.map(({ version, checksum }) => ({ version, checksum }))
+    )
     await database!.execute(
       "UPDATE ledger_accounts SET version = 7 WHERE id = 'asset-active'"
     )
@@ -123,6 +130,11 @@ describe("investment migrations", () => {
       { account_id: "liability-active", balance_minor: "-300" },
     ])
     await migrate()
+    await expect(
+      database!.query(
+        "SELECT version, checksum FROM schema_migrations WHERE version <= 4 ORDER BY version"
+      )
+    ).resolves.toEqual(priorMigrations)
     await expect(
       database!.query<{ version: number }>(
         "SELECT version FROM ledger_accounts WHERE id = 'asset-active'"

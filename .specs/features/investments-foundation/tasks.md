@@ -196,7 +196,7 @@ T100 -> T101 -> T102 -> T103 -> T104
 ### Phase 19: Critérios remanescentes da auditoria
 
 ```text
-T104 -> T105 -> T106 -> T107 -> T108 -> T109 -> T110 -> T111
+T104 -> T105 -> T106 -> T107 -> T108 -> T109 -> T110 -> T111 -> T112
 ```
 
 ### Phase Execution Map
@@ -3987,6 +3987,25 @@ Revisão reversa: os 6 cenários Memory novos cobrem read-only, journal opcional
 **Gate**: Full SQLite + Build
 **Commit**: `test(investments): descartar preço de revisão antiga`
 
+### T112: Provar checksums preservados no upgrade
+
+**What**: Comparar versões e checksums das migrations v1–v4 antes e depois do upgrade de investimentos, junto dos dados contábeis já verificados.
+**Where**: `packages/infrastructure-sqlite/tests/migrations/investment-migrations.test.ts`.
+**Depends on**: T111 e `validation.md` rodada 2 (INV-85 NÃO ATESTADO).
+**Requirement**: INV-85.
+
+**Done when**:
+
+- [x] O banco v4 contém os checksums planejados para v1–v4 e o upgrade conserva cada par versão/checksum.
+- [x] O mesmo cenário continua a provar contas, versões, postings e saldos anteriores idênticos após o upgrade.
+- [x] Gate `Full SQLite + Build` passa antes do commit atômico.
+
+**Evidência T112 (2026-10-01):** `investment-migrations.test.ts` agora lê pares `version/checksum` de `schema_migrations` antes da migração e compara com `V4_MIGRATIONS`; após o upgrade, exige os mesmos quatro pares. No mesmo caso permanecem asserções de versão 7 da conta, postings e saldos históricos +1000/+200/-300 idênticos. SQLite permanece 976 testes em 53 arquivos. Full SQLite + Build verde: builds Domain/Application/Memory/SQLite, 976/976 testes, migrações, lint, tipos e `git diff --check`. **Adequacy verdict:** PASS para INV-85 neste upgrade; re-verificação independente pendente.
+
+**Tests**: integration (SQLite migration).
+**Gate**: Full SQLite + Build
+**Commit**: `test(investments): preservar checksums no upgrade`
+
 ## Task Granularity Check
 
 Um componente/caso de uso por tarefa, com testes e integrações mecânicas do mesmo contrato. Não usar o ponto principal como permissão para agregar funcionalidades adjacentes.
@@ -4410,7 +4429,7 @@ Mapeamento de planejamento, não evidência de implementação. Cada ID também 
 | INV-82         | T1, T2, T10, T12, T29, T36, T37, T62, T68, T69, T70                                                                                                                                                                                  | Planned |
 | INV-83         | T1, T2, T6, T10, T12, T44, T45, T47                                                                                                                                                                                                  | Planned |
 | INV-84         | T2, T10, T12, T48, T58                                                                                                                                                                                                               | Planned |
-| INV-85         | T17, T18, T19, T20, T21, T22                                                                                                                                                                                                         | Planned |
+| INV-85         | T17, T18, T19, T20, T21, T22, T112                                                                                                                                                                                                   | T112 prior-checksum and data proof complete; final validation pending |
 | INV-86         | T17, T18, T19, T20, T21, T22                                                                                                                                                                                                         | Planned |
 | INV-87         | T17, T18, T22                                                                                                                                                                                                                        | Planned |
 | INV-88         | T13, T17, T21, T23, T24, T25, T26, T27, T28, T29, T30, T34, T40                                                                                                                                                                      | Planned |
