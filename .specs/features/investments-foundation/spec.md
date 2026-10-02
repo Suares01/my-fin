@@ -607,7 +607,7 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-83 | S7 | Tasks | T116 command decimal-limit proof complete; final validation pending | T1, T2, T6, T10, T12, T44, T45, T47, T116 |
 | INV-84 | S7 | Tasks | In progress: T2 values; T10 valuation | T2, T10, T12, T48, T58 |
 | INV-85 | S7 | Tasks | T112 prior-checksum and data proof complete; final validation pending | T17, T18, T19, T20, T21, T22, T112 |
-| INV-86 | S7 | Tasks | Planned | T17, T18, T19, T20, T21, T22 |
+| INV-86 | S7 | Tasks | T119 fresh/upgraded equivalence proof complete; final validation pending | T17, T18, T19, T20, T21, T22, T119 |
 | INV-87 | S7 | Tasks | Planned | T17, T18, T22 |
 | INV-88 | S7 | Tasks | Planned | T13, T17, T21, T23, T24, T25, T26, T27, T28, T29, T30, T34, T40 |
 | INV-89 | S7 | Tasks | In progress: T5 identities | T5, T6, T12, T13, T40, T44, T71 |

@@ -4,6 +4,7 @@ import {
   sqliteMigrations,
   SqliteMigrationRunner,
 } from "../../src/migrations/index.js"
+import { SqliteInvestmentPositionQueries } from "../../src/queries/investments/sqlite-investment-position-queries.js"
 import { BetterSqliteDatabase } from "../support/better-sqlite-database.js"
 
 const V4_MIGRATIONS = sqliteMigrations.filter(({ version }) => version <= 4)
@@ -59,6 +60,69 @@ describe("investment migrations", () => {
         sql: expect.stringContaining("STRICT"),
       }),
     ])
+  })
+
+  it("returns equivalent investment positions on fresh and v4-upgraded databases", async () => {
+    const upgraded = await createV4Database()
+    await migrate()
+    const fresh = new BetterSqliteDatabase()
+    try {
+      await configureSqliteConnection(fresh, { inMemory: true })
+      await new SqliteMigrationRunner(fresh, sqliteMigrations).migrate()
+      for (const candidate of [fresh, upgraded]) {
+        await candidate.execute(
+          "INSERT INTO financial_books VALUES ('compare','Comparison','BRL','UTC',0),('other','Other','BRL','UTC',0)"
+        )
+        await candidate.execute(
+          "INSERT INTO ledger_accounts (id,book_id,name,normalized_name,kind,status,system_purpose,version) VALUES ('portfolio','compare','Portfolio','portfolio','ASSET','ACTIVE',NULL,0),('foreign','other','Foreign','foreign','ASSET','ACTIVE',NULL,0)"
+        )
+        await candidate.execute(
+          "INSERT INTO financial_accounts (ledger_account_id,book_id,type) VALUES ('portfolio','compare','INVESTMENT_ACCOUNT'),('foreign','other','INVESTMENT_ACCOUNT')"
+        )
+        await candidate.execute(
+          "INSERT INTO investment_accounts (ledger_account_id,book_id) VALUES ('portfolio','compare'),('foreign','other')"
+        )
+        await candidate.execute(
+          "INSERT INTO investment_instruments (id,book_id,name,normalized_name,type,currency,status,version) VALUES ('instrument-compare','compare','CDB','cdb','CDB','BRL','ACTIVE',0)"
+        )
+        const positionInsert =
+          "INSERT INTO investment_positions (id,book_id,investment_account_id,instrument_id,normalized_label,quantity_mode,quantity,book_cost_minor,currency,opened_on,closed_on,status,allocation_revision,allocation_effective_on,version) VALUES (?, 'compare', ?, 'instrument-compare', '', 'UNITS', '10', 1000, 'BRL', '2026-08-01', NULL, 'OPEN', 1, '2026-08-01', 0)"
+        await candidate.execute(positionInsert, [
+          "position-compare",
+          "portfolio",
+        ])
+        await candidate.execute(
+          "INSERT INTO investment_fixed_income_terms (position_id,book_id,rate_kind,index_name,index_percentage) VALUES ('position-compare','compare','INDEXED','CDI','105')"
+        )
+        await expect(
+          candidate.execute(positionInsert, ["invalid-cross-book", "foreign"])
+        ).rejects.toThrow()
+      }
+
+      const freshView = await new SqliteInvestmentPositionQueries(
+        fresh
+      ).listPositions({ bookId: "compare", limit: 25 })
+      const upgradedView = await new SqliteInvestmentPositionQueries(
+        upgraded
+      ).listPositions({ bookId: "compare", limit: 25 })
+      expect(upgradedView).toEqual(freshView)
+      expect(upgradedView.items).toMatchObject([
+        {
+          id: "position-compare",
+          investmentAccountId: "portfolio",
+          instrumentId: "instrument-compare",
+          quantity: "10",
+          bookCostMinor: "1000",
+          fixedIncomeTerms: {
+            rateKind: "INDEXED",
+            index: "CDI",
+            indexPercentage: "105",
+          },
+        },
+      ])
+    } finally {
+      await fresh.close()
+    }
   })
 
   it("backfills active and archived non-system asset and liability accounts", async () => {
