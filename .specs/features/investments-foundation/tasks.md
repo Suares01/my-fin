@@ -196,7 +196,7 @@ T100 -> T101 -> T102 -> T103 -> T104
 ### Phase 19: Critérios remanescentes da auditoria
 
 ```text
-T104 -> T105 -> T106 -> T107 -> T108 -> T109 -> T110 -> T111 -> T112
+T104 -> T105 -> T106 -> T107 -> T108 -> T109 -> T110 -> T111 -> T112 -> T113
 ```
 
 ### Phase Execution Map
@@ -4006,6 +4006,25 @@ Revisão reversa: os 6 cenários Memory novos cobrem read-only, journal opcional
 **Gate**: Full SQLite + Build
 **Commit**: `test(investments): preservar checksums no upgrade`
 
+### T113: Anexar contexto local seguro aos erros de investimento
+
+**What**: Fazer erros de mutação de investimento devolverem o requestId e o ID local da operação ou posição, sem copiar descrições e valores financeiros ao contexto.
+**Where**: `packages/application/src/investments/shared/execute-investment-request.ts`; testes co-localizados dos comandos de venda e correção em `packages/infrastructure-memory/src/use-cases/`.
+**Depends on**: T112 e `validation.md` rodada 2 (INV-90 NÃO ATESTADO; defeito de contrato reproduzido).
+**Requirement**: INV-90.
+
+**Done when**:
+
+- [x] Venda inválida retorna código estável, requestId e positionId; correção inválida retorna código estável, requestId e operationId.
+- [x] Contexto de diagnóstico contém somente IDs permitidos, sem descrição ou valores da entrada.
+- [x] Gate `Full Cross + Build` passa antes do commit atômico.
+
+**Evidência T113 (2026-10-01):** Dois testes focados falharam antes da correção porque `error.details` era `undefined`. `record-investment-sale.test.ts` agora exige `INVALID_INVESTMENT_OPERATION` com `{requestId,positionId}` e ausência de descrição/valor privado; `amend-investment-operation.test.ts` exige `{requestId,operationId}` com a mesma proteção. `execute-investment-request.ts` mantém o código/mensagem do erro e acrescenta apenas esses IDs. Auditoria de `packages/application/src/investments` e `packages/domain/src/investments` não encontrou chamadas de console/logger. Full Cross + Build verde: Domain 405, Application 261, Memory 655, SQLite 976, adapter Tauri 63; migrações, lint, tipos, builds e `git diff --check`. **Adequacy verdict:** PASS para INV-90 nesta costura; re-verificação independente pendente.
+
+**Tests**: integration (Memory commands).
+**Gate**: Full Cross + Build
+**Commit**: `fix(investments): anexar contexto seguro aos erros`
+
 ## Task Granularity Check
 
 Um componente/caso de uso por tarefa, com testes e integrações mecânicas do mesmo contrato. Não usar o ponto principal como permissão para agregar funcionalidades adjacentes.
@@ -4434,7 +4453,7 @@ Mapeamento de planejamento, não evidência de implementação. Cada ID também 
 | INV-87         | T17, T18, T22                                                                                                                                                                                                                        | Planned |
 | INV-88         | T13, T17, T21, T23, T24, T25, T26, T27, T28, T29, T30, T34, T40                                                                                                                                                                      | Planned |
 | INV-89         | T5, T6, T12, T13, T40, T44, T71                                                                                                                                                                                                      | Planned |
-| INV-90         | T12, T15, T16, T48, T73                                                                                                                                                                                                              | Planned |
+| INV-90         | T12, T15, T16, T48, T73, T113                                                                                                                                                                                                        | T113 safe error-context proof complete; final validation pending |
 | INV-145        | T12, T38, T39, T48, T49, T50, T51, T55, T56, T57, T60, T61, T62, T63, T73, T78, T79, T83, T87, T96, T108 | T108 resulting-cash proof complete; final validation pending |
 | INV-91         | T71, T92, T93                                                                                                                                                                                                                        | T92 page and T93 route/native navigation complete; final validation pending |
 | INV-92         | T71, T92, T93                                                                                                                                                                                                                        | T92 page and T93 book guard/native empty book complete; final validation pending |

@@ -135,6 +135,33 @@ function sale(fixture: Awaited<ReturnType<typeof setup>>) {
 }
 
 describe("RecordInvestmentSale", () => {
+  it("returns local diagnostic IDs without financial input in a failed command", async () => {
+    const f = await setup()
+    const result = await useCase(f).execute({
+      ...sale(f),
+      requestId: "diagnostic-sale",
+      description: "Private sale label",
+      grossProceedsMinor: "987654321",
+      quantityDelta: "11",
+    })
+    expect(result).toMatchObject({
+      ok: false,
+      error: {
+        code: "INVALID_INVESTMENT_OPERATION",
+        details: { requestId: "diagnostic-sale", positionId: "position-1" },
+      },
+    })
+    if (result.ok) throw new Error("failed command unexpectedly succeeded")
+    expect(result.error.details).toEqual({
+      requestId: "diagnostic-sale",
+      positionId: "position-1",
+    })
+    expect(JSON.stringify(result.error.details)).not.toContain(
+      "Private sale label"
+    )
+    expect(JSON.stringify(result.error.details)).not.toContain("987654321")
+  })
+
   it("rejects a sale before the opening operation without writes", async () => {
     const f = await setup()
     const before = f.h.store.snapshot()

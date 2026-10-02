@@ -1,4 +1,4 @@
-import { bookIdFromString } from "@workspace/domain"
+import { bookIdFromString, Result } from "@workspace/domain"
 import { DomainEventDispatcher } from "../../core/event-dispatcher.js"
 import { executeUseCase } from "../../core/use-case-executor.js"
 import { ApplicationError } from "../../ports/errors.js"
@@ -22,7 +22,7 @@ export async function executeInvestmentRequest<
   ) => Promise<InvestmentMutationResult>
 }) {
   const canonicalCommand = canonicalize(input.command)
-  return executeUseCase({
+  const result = await executeUseCase({
     transactionManager: input.transactionManager,
     eventDispatcher: input.eventDispatcher,
     preserveCommitted: true,
@@ -52,6 +52,21 @@ export async function executeInvestmentRequest<
       return result
     },
   })
+  if (result.ok) return result
+  const context: Record<string, string> = { requestId: input.command.requestId }
+  if (
+    "operationId" in input.command &&
+    typeof input.command.operationId === "string"
+  )
+    context.operationId = input.command.operationId
+  else if (
+    "positionId" in input.command &&
+    typeof input.command.positionId === "string"
+  )
+    context.positionId = input.command.positionId
+  return Result.fail(
+    new ApplicationError(result.error.code, result.error.message, context)
+  )
 }
 
 export async function getInvestmentRequestResult(input: {

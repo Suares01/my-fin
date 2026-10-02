@@ -144,6 +144,39 @@ async function amend(
 }
 
 describe("AmendInvestmentOperation", () => {
+  it("returns the request and target operation IDs when correction fails", async () => {
+    const f = await setup()
+    expect(await sale(f)).toMatchObject({ ok: true })
+    const result = await amend(f, {
+      requestId: "diagnostic-amend",
+      reason: "Private correction reason",
+      replacement: {
+        ...(await amendment(f)),
+        occurredOn: "2026-08-05",
+        grossProceedsMinor: "987654321",
+      },
+    })
+    expect(result).toMatchObject({
+      ok: false,
+      error: {
+        code: "INVALID_INVESTMENT_OPERATION",
+        details: {
+          requestId: "diagnostic-amend",
+          operationId: "operation-2",
+        },
+      },
+    })
+    if (result.ok) throw new Error("failed correction unexpectedly succeeded")
+    expect(result.error.details).toEqual({
+      requestId: "diagnostic-amend",
+      operationId: "operation-2",
+    })
+    expect(JSON.stringify(result.error.details)).not.toContain(
+      "Private correction reason"
+    )
+    expect(JSON.stringify(result.error.details)).not.toContain("987654321")
+  })
+
   it("keeps the original accounting date and records the actual correction time", async () => {
     const f = await setup("2026-08-01")
     expect(await sale(f, { occurredOn: "2026-08-03" })).toMatchObject({
