@@ -17,9 +17,10 @@ import {
   RecordInvestmentSale,
 } from "@workspace/application"
 import { describe, expect, it } from "vitest"
+import { FixedClock } from "../index.js"
 import { createBook, createHarness } from "./test-helpers.js"
 
-async function setup() {
+async function setup(openedOn = "2026-08-04") {
   const h = createHarness()
   await createBook(h)
   const broker = await account(h, "Broker", "INVESTMENT_ACCOUNT")
@@ -44,7 +45,7 @@ async function setup() {
     quantityMode: "UNITS",
     quantity: "10",
     bookCostMinor: "1000",
-    occurredOn: "2026-08-04",
+    occurredOn: openedOn,
   })
   if (!opening.ok) throw new Error("fixture failed")
   return { h, broker, gain, expense, instrument: instrument.value }
@@ -106,12 +107,16 @@ async function sale(f: Awaited<ReturnType<typeof setup>>, patch = {}) {
     ...patch,
   })
 }
-async function amend(f: Awaited<ReturnType<typeof setup>>, patch = {}) {
+async function amend(
+  f: Awaited<ReturnType<typeof setup>>,
+  patch = {},
+  clock = f.h.clock
+) {
   return new AmendInvestmentOperation(
     f.h.transactionManager,
     f.h.dispatcher,
     f.h.ids,
-    f.h.clock
+    clock
   ).execute({
     bookId: "book-1",
     requestId: "amend",
@@ -139,6 +144,81 @@ async function amend(f: Awaited<ReturnType<typeof setup>>, patch = {}) {
 }
 
 describe("AmendInvestmentOperation", () => {
+  it("keeps the original accounting date and records the actual correction time", async () => {
+    const f = await setup("2026-08-01")
+    expect(await sale(f, { occurredOn: "2026-08-03" })).toMatchObject({
+      ok: true,
+    })
+    const before = f.h.store.snapshot()
+    const correctionClock = new FixedClock(
+      "2026-08-05T09:30:00.000Z",
+      "2026-08-05"
+    )
+
+    expect(
+      await amend(
+        f,
+        {
+          replacement: {
+            ...(await amendment(f)),
+            occurredOn: "2026-07-31",
+          },
+        },
+        correctionClock
+      )
+    ).toMatchObject({
+      ok: false,
+      error: { code: "INVALID_INVESTMENT_OPERATION" },
+    })
+    expect(f.h.store.snapshot()).toEqual(before)
+
+    expect(
+      await amend(
+        f,
+        {
+          replacement: {
+            ...(await amendment(f)),
+            occurredOn: "2026-08-02",
+          },
+        },
+        correctionClock
+      )
+    ).toMatchObject({ ok: true })
+    expect(f.h.store.listInvestmentOperations()).toMatchObject([
+      expect.objectContaining({ id: "operation-1", occurredOn: "2026-08-01" }),
+      expect.objectContaining({ id: "operation-2", occurredOn: "2026-08-03" }),
+      expect.objectContaining({
+        id: "operation-3",
+        role: "REVERSAL",
+        occurredOn: "2026-08-03",
+        recordedAt: "2026-08-05T09:30:00.000Z",
+      }),
+      expect.objectContaining({
+        id: "operation-4",
+        occurredOn: "2026-08-02",
+        recordedAt: "2026-08-05T09:30:00.000Z",
+      }),
+    ])
+    expect(f.h.store.listJournalEntries()).toMatchObject([
+      expect.objectContaining({
+        id: "entry-1",
+        occurredOn: "2026-08-03",
+      }),
+      expect.objectContaining({
+        id: "entry-3",
+        reversalOf: "entry-1",
+        occurredOn: "2026-08-03",
+        recordedAt: "2026-08-05T09:30:00.000Z",
+      }),
+      expect.objectContaining({
+        id: "entry-2",
+        replacementOf: "entry-1",
+        occurredOn: "2026-08-02",
+        recordedAt: "2026-08-05T09:30:00.000Z",
+      }),
+    ])
+  })
+
   it("keeps the original, appends inverse and replacement operations, and applies only the replacement state", async () => {
     const f = await setup()
     await sale(f)

@@ -196,7 +196,7 @@ T100 -> T101 -> T102 -> T103 -> T104
 ### Phase 19: Critérios remanescentes da auditoria
 
 ```text
-T104 -> T105 -> T106
+T104 -> T105 -> T106 -> T107
 ```
 
 ### Phase Execution Map
@@ -3893,6 +3893,25 @@ Revisão reversa: os 6 cenários Memory novos cobrem read-only, journal opcional
 **Gate**: Full Cross + Build
 **Commit**: `fix(investments): rejeitar operação retrodatada`
 
+### T107: Provar datas distintas na correção contábil
+
+**What**: Exercitar a data da operação anterior, do original, da substituta e o instante real da correção no mesmo fluxo de amendment.
+**Where**: `packages/infrastructure-memory/src/use-cases/amend-investment-operation.test.ts`.
+**Depends on**: T106 e `validation.md` rodada 2 (INV-73 NÃO ATESTADO).
+**Requirement**: INV-73, INV-134.
+
+**Done when**:
+
+- [x] Substituta anterior à operação efetiva precedente é rejeitada sem gravar; substituta na janela válida é aceita.
+- [x] Reversões da operação e do journal conservam a data do original; `recordedAt` da correção conserva o instante real distinto.
+- [x] Gate `Full Memory + Build` passa antes do commit atômico.
+
+**Evidência T107 (2026-10-01):** `amend-investment-operation.test.ts` abre em 01/08, vende em 03/08 e tenta substituir em 31/07: o comando retorna `INVALID_INVESTMENT_OPERATION` e o snapshot integral fica idêntico. A substituição válida em 02/08 gera reversões da operação e do journal com `occurredOn` de 03/08 e `recordedAt` de 05/08 09:30Z; operação e journal substitutos ficam em 02/08 com o mesmo instante de gravação. Memory 649→650 testes em 55 arquivos. Full Memory + Build verde: builds Domain/Application/Memory, 650/650 testes, lint, tipos e `git diff --check`. **Adequacy verdict:** PASS para INV-73/134 nesta tarefa; re-verificação independente pendente.
+
+**Tests**: integration (Memory command).
+**Gate**: Full Memory + Build
+**Commit**: `test(investments): provar datas da correção contábil`
+
 ## Task Granularity Check
 
 Um componente/caso de uso por tarefa, com testes e integrações mecânicas do mesmo contrato. Não usar o ponto principal como permissão para agregar funcionalidades adjacentes.
@@ -4299,10 +4318,10 @@ Mapeamento de planejamento, não evidência de implementação. Cada ID também 
 | INV-70         | T56, T57, T60, T85                                                                                                                                                                                                                   | In progress |
 | INV-71         | T8, T56                                                                                                                                                                                                                              | Planned |
 | INV-72         | T9, T20, T26, T29, T33, T36, T56, T57, T66, T85, T89, T106                                                                                                                                                                           | T106 transactional date-order guard complete; independent validation pending |
-| INV-73         | T9, T56, T57, T85, T89                                                                                                                                                                                                               | In progress |
+| INV-73         | T9, T56, T57, T85, T89, T107                                                                                                                                                                                                         | T107 date-order and reversal-date proof complete; final validation pending |
 | INV-132        | T9, T11, T13, T20, T26, T30, T33, T56, T57, T66, T89                                                                                                                                                                                 | Planned |
 | INV-133        | T9, T20, T26, T56, T57, T66, T89                                                                                                                                                                                                     | Planned |
-| INV-134        | T9, T20, T26, T56, T57, T66, T85, T89                                                                                                                                                                                                | In progress |
+| INV-134        | T9, T20, T26, T56, T57, T66, T85, T89, T107                                                                                                                                                                                          | T107 reversal-date proof complete; final validation pending |
 | INV-135        | T26, T57, T59, T66, T70, T85, T89, T94                                                                                                                                                                                               | Implemented; validation pending |
 | INV-136        | T26, T57, T59, T66, T70, T85, T89, T94                                                                                                                                                                                               | Implemented; validation pending |
 | INV-74         | T12, T13, T18, T19, T20, T21, T23, T24, T25, T26, T27, T28, T31, T32, T33, T34, T35, T40, T41, T42, T43, T44, T45, T46, T47, T48, T51, T52, T53, T54, T55, T56, T57, T58, T59, T61, T63, T64, T65, T66, T67, T71, T72, T73, T91, T93 | T91 detail and T93 native book isolation complete; final validation pending |

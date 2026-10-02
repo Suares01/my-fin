@@ -594,7 +594,7 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-70 | S6 | Tasks | Planned; T85 correction form complete | T56, T57, T60, T85 |
 | INV-71 | S6 | Tasks | In progress: T8 position | T8, T56 |
 | INV-72 | S6 | Tasks | T106 transactional date-order guard complete; independent validation pending | T9, T20, T26, T29, T33, T36, T56, T57, T66, T85, T89, T106 |
-| INV-73 | S6 | Tasks | In progress: T9 operation; T85 correction form complete; T89 history complete | T9, T56, T57, T85, T89 |
+| INV-73 | S6 | Tasks | T107 date-order and reversal-date proof complete; final validation pending | T9, T56, T57, T85, T89, T107 |
 | INV-74 | S7 | Tasks | T91 detail and T93 native book isolation complete; final validation pending | T12, T13, T18, T19, T20, T21, T23, T24, T25, T26, T27, T28, T31, T32, T33, T34, T35, T40, T41, T42, T43, T44, T45, T46, T47, T48, T51, T52, T53, T54, T55, T56, T57, T58, T59, T61, T63, T64, T65, T66, T67, T71, T72, T73, T91, T93 |
 | INV-75 | S7 | Tasks | T102 amendment rollback assertion complete; independent validation pending | T13, T16, T22, T28, T29, T30, T35, T36, T40, T48, T50, T51, T52, T53, T54, T55, T56, T57, T58, T60, T95, T102 |
 | INV-76 | S7 | Tasks | In progress: T4 aggregate | T4, T12, T13, T23, T24, T25, T26, T31, T32, T33, T40, T42, T45, T46, T47, T48, T51, T52, T53, T54, T55, T56, T57, T61, T73 |
@@ -655,7 +655,7 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-131 | S5 | Tasks | T84 form complete; remaining mapped work/validation pending | T12, T58, T73, T84 |
 | INV-132 | S6 | Tasks | T89 history complete; remaining mapped work/validation pending | T9, T11, T13, T20, T26, T30, T33, T56, T57, T66, T89 |
 | INV-133 | S6 | Tasks | T89 history complete; remaining mapped work/validation pending | T9, T20, T26, T56, T57, T66, T89 |
-| INV-134 | S6 | Tasks | Planned; T85 correction form complete; T89 history complete | T9, T20, T26, T56, T57, T66, T85, T89 |
+| INV-134 | S6 | Tasks | T107 reversal-date proof complete; final validation pending | T9, T20, T26, T56, T57, T66, T85, T89, T107 |
 | INV-135 | S6 | Tasks | Implemented; validation pending | T26, T57, T59, T66, T70, T85, T89, T94 |
 | INV-136 | S6 | Tasks | Implemented; validation pending | T26, T57, T59, T66, T70, T85, T89, T94 |
 | INV-137 | S3 | Tasks | Planned | T49, T50, T78 |
