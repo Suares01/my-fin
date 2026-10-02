@@ -1,7 +1,16 @@
+import { GetNetWorth } from "@workspace/application"
+import {
+  InvestmentOperation,
+  investmentOperationIdFromString,
+  investmentPositionIdFromString,
+} from "@workspace/domain"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import { initializeSqliteDatabase } from "../../src/database/initialize-sqlite-database.js"
 import { SqliteInvestmentPortfolioSummary } from "../../src/queries/investments/sqlite-investment-portfolio-summary.js"
 import { SqliteInvestmentAccountQueries } from "../../src/queries/investments/sqlite-investment-account-queries.js"
+import { SqliteInsightQueries } from "../../src/queries/sqlite-insight-queries.js"
+import { SqliteFinancialBookRepository } from "../../src/repositories/sqlite-financial-book-repository.js"
+import { SqliteInvestmentOperationRepository } from "../../src/repositories/sqlite-investment-operation-repository.js"
 import { BetterSqliteDatabase } from "../support/better-sqlite-database.js"
 
 type Account = {
@@ -159,6 +168,85 @@ describe("SqliteInvestmentPortfolioSummary", () => {
       investmentMarketValueMinor: "5200",
       unrealizedResultMinor: "200",
       marketNetWorthMinor: "200",
+    })
+  })
+
+  it("preserves GetNetWorth asOf when the book has investments and valuations", async () => {
+    await account({ id: "bank", type: "BANK_ACCOUNT" })
+    await investmentAccount("broker")
+    await position({ id: "position-1", accountId: "broker", cost: "5000" })
+    await valuation({ positionId: "position-1", gross: "5200" })
+    await posting("bank", "1000", "2026-08-01")
+    await posting("broker", "5000", "2026-08-01")
+    const incomeJournalId = await posting("bank", "200", "2026-08-05")
+    await database.execute(
+      "INSERT INTO ledger_accounts (id, book_id, name, normalized_name, kind, status, system_purpose, version, icon_key, color_hex) VALUES ('income', 'book-1', 'Income', 'income', 'INCOME', 'ACTIVE', NULL, 0, 'label-dollar', '10b981')"
+    )
+    await database.execute(
+      "INSERT INTO postings (id, book_id, journal_entry_id, account_id, position, amount_minor, currency) VALUES ('posting-income', 'book-1', ?, 'income', 1, -200, 'BRL')",
+      [incomeJournalId]
+    )
+    await new SqliteInvestmentOperationRepository(database).add(
+      InvestmentOperation.restore({
+        id: investmentOperationIdFromString("income-operation"),
+        bookId: "book-1" as never,
+        positionId: investmentPositionIdFromString("position-1"),
+        type: "INCOME",
+        role: "BUSINESS",
+        occurredOn: "2026-08-05",
+        recordedAt: "2026-08-05T12:00:00.000Z",
+        sequence: "1",
+        description: "Income",
+        currency: "BRL",
+        bookCostDeltaMinor: "0",
+        grossAmountMinor: "200",
+        feesMinor: "0",
+        taxesMinor: "0",
+        netCashFlowMinor: "200",
+        cashMode: "INTERNAL_CASH",
+        categories: { incomeCategoryId: "income" },
+        positionBefore: {
+          kind: "EXISTING",
+          bookCostMinor: "5000",
+          status: "OPEN",
+          openedOn: "2026-08-01",
+          allocationEffectiveOn: "2026-08-01",
+        },
+        journalEntryId: incomeJournalId as never,
+        version: 0,
+      })
+    )
+    const netWorth = new GetNetWorth(
+      new SqliteFinancialBookRepository(database),
+      new SqliteInsightQueries(database)
+    )
+
+    await expect(
+      netWorth.execute({ bookId: "book-1", asOf: "2026-08-04" })
+    ).resolves.toMatchObject({
+      ok: true,
+      value: {
+        assetMinor: "6000",
+        liabilityMinor: "0",
+        netWorthMinor: "6000",
+        asOf: "2026-08-04",
+      },
+    })
+    await expect(
+      netWorth.execute({ bookId: "book-1", asOf: "2026-08-05" })
+    ).resolves.toMatchObject({
+      ok: true,
+      value: {
+        assetMinor: "6200",
+        liabilityMinor: "0",
+        netWorthMinor: "6200",
+        asOf: "2026-08-05",
+      },
+    })
+    await expect(summary()).resolves.toMatchObject({
+      bookNetWorthMinor: "6000",
+      unrealizedResultMinor: "200",
+      marketNetWorthMinor: "6200",
     })
   })
 
@@ -529,5 +617,6 @@ describe("SqliteInvestmentPortfolioSummary", () => {
       "INSERT INTO postings (id, book_id, journal_entry_id, account_id, position, amount_minor, currency) VALUES (?, 'book-1', ?, ?, 0, ?, 'BRL')",
       [`posting-${entryId}`, entryId, accountId, amount]
     )
+    return entryId
   }
 })

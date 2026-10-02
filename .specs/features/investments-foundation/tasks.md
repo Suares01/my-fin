@@ -196,7 +196,7 @@ T100 -> T101 -> T102 -> T103 -> T104
 ### Phase 19: Critérios remanescentes da auditoria
 
 ```text
-T104 -> T105 -> T106 -> T107 -> T108 -> T109 -> T110 -> T111 -> T112 -> T113 -> T114 -> T115 -> T116 -> T117 -> T118 -> T119 -> T120 -> T121 -> T122 -> T123
+T104 -> T105 -> T106 -> T107 -> T108 -> T109 -> T110 -> T111 -> T112 -> T113 -> T114 -> T115 -> T116 -> T117 -> T118 -> T119 -> T120 -> T121 -> T122 -> T123 -> T124
 ```
 
 ### Phase Execution Map
@@ -4215,6 +4215,25 @@ Revisão reversa: os 6 cenários Memory novos cobrem read-only, journal opcional
 **Gate**: Full React + Build
 **Commit**: `fix(investments): apresentar resultado liquido da venda`
 
+### T124: Provar GetNetWorth asOf com investimento no livro
+
+**What**: Consultar patrimônio contábil antes e depois de operação de investimento, com posição e avaliação no mesmo livro.
+**Where**: `packages/infrastructure-sqlite/tests/queries/sqlite-investment-portfolio-summary.test.ts`.
+**Depends on**: T123 e `validation.md` rodada 3 (INV-57 GAP).
+**Requirement**: INV-57.
+
+**Done when**:
+
+- [x] `GetNetWorth` em 04/08 preserva patrimônio contábil 6000 apesar de avaliação bruta 5200 para custo 5000.
+- [x] Operação INCOME de 200 em 05/08 eleva o patrimônio contábil asOf a 6200; resumo de 04/08 separa book 6000 de market 6200.
+- [x] Gate `Full SQLite + Build` passa antes do commit atômico.
+
+**Evidência T124 (2026-10-02):** fixture SQLite tem conta bancária, carteira, posição de custo 5000, avaliação 5200 e operação INCOME de 200 vinculada a journal balanceado em 05/08. `GetNetWorth` retorna 6000 em 04/08 e 6200 em 05/08; o resumo de investimento em 04/08 retorna book 6000, resultado não realizado 200 e market 6200. Full SQLite + Build verde: builds Domain/Application/Memory/SQLite, 979/979 testes em 54 arquivos, lint, tipos, `check:migrations` e `git diff --check`. **Adequacy verdict:** PASS autoral para INV-57; verificação independente posterior pendente.
+
+**Tests**: SQLite integration (existing GetNetWorth and investment summary).
+**Gate**: Full SQLite + Build
+**Commit**: `test(investments): preservar get net worth com investimento`
+
 ## Task Granularity Check
 
 Um componente/caso de uso por tarefa, com testes e integrações mecânicas do mesmo contrato. Não usar o ponto principal como permissão para agregar funcionalidades adjacentes.
@@ -4595,7 +4614,7 @@ Mapeamento de planejamento, não evidência de implementação. Cada ID também 
 | INV-54         | T14, T62, T86, T105                                                                                                                                                                                                                  | T105 exact gross/net/withdrawable fixture complete; independent validation pending |
 | INV-55         | T14, T37, T38, T39, T62, T63, T68, T69, T87                                                                                                                                                                                          | Planned |
 | INV-56         | T14, T37, T62, T69, T86                                                                                                                                                                                                              | Planned |
-| INV-57         | T14, T37, T62, T68, T69, T75                                                                                                                                                                                                         | Planned |
+| INV-57         | T14, T37, T62, T68, T69, T75, T124                                                                                                                                                                                                   | T124 investment/asOf accounting proof complete; final validation pending |
 | INV-58         | T14, T62, T65, T72, T84, T86, T88, T90                                                                                                                                                                                               | Planned |
 | INV-59         | T10, T14, T58, T62, T65, T67, T84, T86, T88, T90, T91                                                                                                                                                                                | T91 detail complete; remaining mapped work/validation pending |
 | INV-60         | T14, T38, T39, T60, T62, T63, T86, T87                                                                                                                                                                                               | Planned |

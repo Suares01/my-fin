@@ -578,7 +578,7 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-54 | S5 | Tasks | T105 exact gross/net/withdrawable fixture complete; independent validation pending | T14, T62, T86, T105 |
 | INV-55 | S5 | Tasks | T87 list complete; remaining mapped work/validation pending | T14, T37, T38, T39, T62, T63, T68, T69, T87 |
 | INV-56 | S5 | Tasks | T86 cards complete; remaining mapped work/validation pending | T14, T37, T62, T69, T86 |
-| INV-57 | S5 | Tasks | Planned | T14, T37, T62, T68, T69, T75 |
+| INV-57 | S5 | Tasks | T124 investment/asOf accounting proof complete; final validation pending | T14, T37, T62, T68, T69, T75, T124 |
 | INV-58 | S5 | Tasks | T84 form and T86 cards complete; remaining mapped work/validation pending; T88 table complete; T90 valuation history complete | T14, T62, T65, T72, T84, T86, T88, T90 |
 | INV-59 | S5 | Tasks | T84 form and T86 cards complete; remaining mapped work/validation pending; T88 table complete; T90 valuation history complete; T91 detail complete | T10, T14, T58, T62, T65, T67, T84, T86, T88, T90, T91 |
 | INV-60 | S5 | Tasks | T86 cards complete; remaining mapped work/validation pending; T87 list complete | T14, T38, T39, T60, T62, T63, T86, T87 |
