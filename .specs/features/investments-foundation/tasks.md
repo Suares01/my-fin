@@ -196,7 +196,7 @@ T100 -> T101 -> T102 -> T103 -> T104
 ### Phase 19: Critérios remanescentes da auditoria
 
 ```text
-T104 -> T105 -> T106 -> T107 -> T108 -> T109
+T104 -> T105 -> T106 -> T107 -> T108 -> T109 -> T110
 ```
 
 ### Phase Execution Map
@@ -3949,6 +3949,25 @@ Revisão reversa: os 6 cenários Memory novos cobrem read-only, journal opcional
 **Gate**: Full Memory + Build
 **Commit**: `test(investments): provar transferência sem alocação`
 
+### T110: Provar despesas opcionais da compra interna
+
+**What**: Exercitar a linha da matriz contábil de compra com caixa interno e taxa/imposto informados no comando real.
+**Where**: `packages/infrastructure-memory/src/use-cases/record-investment-purchase.test.ts`.
+**Depends on**: T109 e `validation.md` rodada 2 (INV-29 NÃO ATESTADO).
+**Requirement**: INV-29.
+
+**Done when**:
+
+- [x] Compra interna de 200 com taxa 10 e imposto 5 eleva custo e unidades apenas pelo principal, grava journal de despesas -15/+10/+5 e fluxo líquido -215.
+- [x] Compra interna sem despesas continua sem journal; aviso de caixa usa estado resultante.
+- [x] Gate `Full Memory + Build` passa antes do commit atômico.
+
+**Evidência T110 (2026-10-01):** `record-investment-purchase.test.ts` agora afirma no comando real compra interna de 200, taxa 10 e imposto 5: custo 1200 e 12 unidades, operação com `bookCostDeltaMinor: "200"` e `netCashFlowMinor: "-215"`, journal único com postings -15 na carteira, +10/+5 nas categorias e aviso de caixa -1215. O caso anterior sem despesas continua a exigir `journalEntryIds: []`. Memory 652→653 testes em 55 arquivos. Full Memory + Build verde: builds Domain/Application/Memory, 653/653 testes, lint, tipos e `git diff --check`. **Adequacy verdict:** PASS para a linha interna de INV-29; re-verificação independente pendente.
+
+**Tests**: integration (Memory purchase).
+**Gate**: Full Memory + Build
+**Commit**: `test(investments): provar despesas da compra interna`
+
 ## Task Granularity Check
 
 Um componente/caso de uso por tarefa, com testes e integrações mecânicas do mesmo contrato. Não usar o ponto principal como permissão para agregar funcionalidades adjacentes.
@@ -4292,7 +4311,7 @@ Mapeamento de planejamento, não evidência de implementação. Cada ID também 
 | INV-26         | T6, T7, T8, T24, T25, T31, T45, T47, T64, T65, T76, T77, T88, T91                                                                                                                                                                    | T91 detail complete; remaining mapped work/validation pending |
 | INV-27 | T11, T50, T78, T95, T96 | Planned |
 | INV-28         | T38, T39, T50, T60, T78, T96 | Planned |
-| INV-29         | T11, T50, T51, T79                                                                                                                                                                                                                   | Planned |
+| INV-29         | T11, T50, T51, T79, T110                                                                                                                                                                                                             | T110 optional-expense proof complete; final validation pending |
 | INV-30 | T11, T50, T51, T79, T95, T96 | Planned |
 | INV-31         | T60, T68, T70, T94, T109                                                                                                                                                                                                             | T109 transfer-without-allocation proof complete; final validation pending |
 | INV-32 | T38, T39, T50, T51, T55, T60, T79, T83, T95 | Planned |

@@ -550,7 +550,7 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-26 | S2 | Tasks | In progress: T6 instrument; T7 fixed-income terms; T8 position; T88 table complete; T91 detail complete | T6, T7, T8, T24, T25, T31, T45, T47, T64, T65, T76, T77, T88, T91 |
 | INV-27 | S3 | Tasks | Planned | T11, T50, T78, T95, T96 |
 | INV-28 | S3 | Tasks | Planned | T38, T39, T50, T60, T78, T96 |
-| INV-29 | S3 | Tasks | Implemented: T11, T50, T51 and T79 | T11, T50, T51, T79 |
+| INV-29 | S3 | Tasks | T110 optional-expense proof complete; final validation pending | T11, T50, T51, T79, T110 |
 | INV-30 | S3 | Tasks | Implemented: T11, T50, T51, T79, T95 and T96 | T11, T50, T51, T79, T95, T96 |
 | INV-31 | S3 | Tasks | T109 transfer-without-allocation proof complete; final validation pending | T60, T68, T70, T94, T109 |
 | INV-32 | S3 | Tasks | Implemented: T38, T39, T50, T51, T55, T60, T79, T83 and T95 | T38, T39, T50, T51, T55, T60, T79, T83, T95 |

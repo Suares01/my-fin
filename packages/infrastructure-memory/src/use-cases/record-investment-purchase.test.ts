@@ -148,6 +148,51 @@ describe("RecordInvestmentPurchase", () => {
         BigInt(h.store.listInvestmentOperations()[0]!.sequence)
     ).toBe(true)
   })
+  it("records only informed expenses for an internal purchase", async () => {
+    const h = await setup()
+    expect(
+      await useCase(h).execute({
+        ...internal,
+        requestId: "internal-with-expenses",
+        feesMinor: "10",
+        taxesMinor: "5",
+        feeCategoryId: "account-7",
+        taxCategoryId: "account-8",
+      })
+    ).toMatchObject({
+      ok: true,
+      value: {
+        operationId: "operation-2",
+        journalEntryIds: ["entry-1"],
+        warnings: [
+          {
+            code: "INVESTMENT_CASH_NEGATIVE",
+            investmentAccountId: "account-5",
+            cashMinor: "-1215",
+          },
+        ],
+      },
+    })
+    expect(h.store.listInvestmentPositions()[0]).toMatchObject({
+      quantity: "12",
+      bookCostMinor: "1200",
+    })
+    expect(h.store.listInvestmentOperations()[1]).toMatchObject({
+      bookCostDeltaMinor: "200",
+      netCashFlowMinor: "-215",
+      feesMinor: "10",
+      taxesMinor: "5",
+    })
+    expect(h.store.listJournalEntries()).toMatchObject([
+      {
+        postings: [
+          { accountId: "account-5", amountMinor: -15n },
+          { accountId: "account-7", amountMinor: 10n },
+          { accountId: "account-8", amountMinor: 5n },
+        ],
+      },
+    ])
+  })
   it("records an external application in one journal with non-capitalized expenses", async () => {
     const h = await setup()
     const result = await useCase(h).execute({
