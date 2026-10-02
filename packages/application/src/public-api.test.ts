@@ -1,5 +1,6 @@
 import { readdirSync, readFileSync } from "node:fs"
 import { join } from "node:path"
+import { fileURLToPath } from "node:url"
 import * as api from "./index.js"
 import { describe, expect, it } from "vitest"
 import type {
@@ -95,5 +96,31 @@ describe("application public query API", () => {
       .join("\n")
 
     expect(applicationSource).not.toContain(forbiddenPackage)
+  })
+
+  it("keeps investment domain and application contracts free of external providers", () => {
+    const packageRoot = new URL("../", import.meta.url)
+    const domainRoot = new URL("../../domain/", import.meta.url)
+    const applicationManifest = JSON.parse(
+      readFileSync(new URL("package.json", packageRoot), "utf8")
+    ) as { dependencies?: Record<string, string> }
+    const domainManifest = JSON.parse(
+      readFileSync(new URL("package.json", domainRoot), "utf8")
+    ) as { dependencies?: Record<string, string> }
+    expect(Object.keys(domainManifest.dependencies ?? {})).toEqual([])
+    expect(Object.keys(applicationManifest.dependencies ?? {})).toEqual([
+      "@workspace/domain",
+    ])
+
+    const sources = [
+      ...sourceFiles(fileURLToPath(new URL("src/", domainRoot))),
+      ...sourceFiles(fileURLToPath(new URL("src/", packageRoot))),
+    ]
+    for (const path of sources) {
+      const content = readFileSync(path, "utf8")
+      expect(content, path).not.toMatch(
+        /\b(?:pluggy|belvo|provider(?:Id|Token|Credential)?|credentials?|accessToken|apiKey|clientSecret)\b/i
+      )
+    }
   })
 })

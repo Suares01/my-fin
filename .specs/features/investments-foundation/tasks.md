@@ -196,7 +196,7 @@ T100 -> T101 -> T102 -> T103 -> T104
 ### Phase 19: Critérios remanescentes da auditoria
 
 ```text
-T104 -> T105 -> T106 -> T107 -> T108 -> T109 -> T110 -> T111 -> T112 -> T113 -> T114 -> T115 -> T116 -> T117 -> T118 -> T119 -> T120
+T104 -> T105 -> T106 -> T107 -> T108 -> T109 -> T110 -> T111 -> T112 -> T113 -> T114 -> T115 -> T116 -> T117 -> T118 -> T119 -> T120 -> T121
 ```
 
 ### Phase Execution Map
@@ -4158,6 +4158,25 @@ Revisão reversa: os 6 cenários Memory novos cobrem read-only, journal opcional
 **Gate**: Full SQLite + Build
 **Commit**: `test(investments): reconstruir registros após reinício`
 
+### T121: Proteger a fronteira local do domínio e aplicação
+
+**What**: Impedir dependências de provedores externos e marcadores de credencial/ID de provedor no código de domínio e aplicação.
+**Where**: `packages/application/src/public-api.test.ts`.
+**Depends on**: T120 e `validation.md` rodada 2 (INV-89 NÃO ATESTADO).
+**Requirement**: INV-89.
+
+**Done when**:
+
+- [x] Dependências de produção são vazias em Domain e somente `@workspace/domain` em Application.
+- [x] Código de produção de ambos os pacotes não contém identificadores conhecidos de provedor, credencial ou chave de API.
+- [x] Gate `Full Domain/Application + Build` passa antes do commit atômico.
+
+**Evidência T121 (2026-10-02):** o teste de fronteira lê os manifests de produção e todos os arquivos fonte não-testes de Domain/Application; exige a dependência local exclusiva da aplicação e ausência de marcadores de provider/credenciais/IDs externos. Domínio 405/405 e aplicação 262/262 testes; builds, lint, tipos e `git diff --check` verdes. **Adequacy verdict:** PASS para a fronteira estrutural INV-89 no código atual; re-verificação independente pendente.
+
+**Tests**: architecture contract (production dependencies and source graph).
+**Gate**: Full Domain/Application + Build
+**Commit**: `test(investments): proteger fronteira sem provedor`
+
 ## Task Granularity Check
 
 Um componente/caso de uso por tarefa, com testes e integrações mecânicas do mesmo contrato. Não usar o ponto principal como permissão para agregar funcionalidades adjacentes.
@@ -4585,7 +4604,7 @@ Mapeamento de planejamento, não evidência de implementação. Cada ID também 
 | INV-86         | T17, T18, T19, T20, T21, T22, T119                                                                                                                                                                                                   | T119 fresh/upgraded equivalence proof complete; final validation pending |
 | INV-87         | T17, T18, T22                                                                                                                                                                                                                        | Planned |
 | INV-88         | T13, T17, T21, T23, T24, T25, T26, T27, T28, T29, T30, T34, T40, T120                                                                                                                                                                | T120 file-backed restart proof complete; final validation pending |
-| INV-89         | T5, T6, T12, T13, T40, T44, T71                                                                                                                                                                                                      | Planned |
+| INV-89         | T5, T6, T12, T13, T40, T44, T71, T121                                                                                                                                                                                               | T121 provider-free boundary proof complete; final validation pending |
 | INV-90         | T12, T15, T16, T48, T73, T113                                                                                                                                                                                                        | T113 safe error-context proof complete; final validation pending |
 | INV-145        | T12, T38, T39, T48, T49, T50, T51, T55, T56, T57, T60, T61, T62, T63, T73, T78, T79, T83, T87, T96, T108 | T108 resulting-cash proof complete; final validation pending |
 | INV-91         | T71, T92, T93                                                                                                                                                                                                                        | T92 page and T93 route/native navigation complete; final validation pending |
