@@ -196,7 +196,7 @@ T100 -> T101 -> T102 -> T103 -> T104
 ### Phase 19: Critérios remanescentes da auditoria
 
 ```text
-T104 -> T105 -> T106 -> T107 -> T108 -> T109 -> T110 -> T111 -> T112 -> T113 -> T114 -> T115 -> T116 -> T117
+T104 -> T105 -> T106 -> T107 -> T108 -> T109 -> T110 -> T111 -> T112 -> T113 -> T114 -> T115 -> T116 -> T117 -> T118
 ```
 
 ### Phase Execution Map
@@ -4101,6 +4101,25 @@ Revisão reversa: os 6 cenários Memory novos cobrem read-only, journal opcional
 **Gate**: Full Memory + Build
 **Commit**: `test(investments): preservar histórico após metadados`
 
+### T118: Provar alocação pelas operações efetivas
+
+**What**: Compor abertura, compra, venda, substituição e cancelamento para comparar operações efetivas com a alocação persistida.
+**Where**: `packages/infrastructure-memory/src/use-cases/amend-investment-operation.test.ts`.
+**Depends on**: T117 e `validation.md` rodada 2 (INV-68 NÃO ATESTADO).
+**Requirement**: INV-68.
+
+**Done when**:
+
+- [x] Após substituir a venda, só abertura, compra e substituta compõem quantidade/custo 7/700; original e reversão ficam fora.
+- [x] Após cancelar a substituta, só abertura e compra compõem quantidade/custo 12/1200; reversões e negócios cancelados ficam fora.
+- [x] Gate `Full Memory + Build` passa antes do commit atômico.
+
+**Evidência T118 (2026-10-01):** `amend-investment-operation.test.ts` cria cadeia real abertura 10/1000, compra +2/+200 e venda -4/-400; amendment substitui venda por -5/-500. O teste exige IDs efetivos abertura, compra e substituta, soma assinada 7/700 e posição 7/700. Cancela a substituta e exige somente abertura+compra efetivas, soma 12/1200 e posição 12/1200. Originais substituídos/cancelados e reversões são excluídos explicitamente. Memory 668→669 testes em 55 arquivos. Full Memory + Build verde: builds Domain/Application/Memory, 669/669 testes, lint, tipos e `git diff --check`. **Adequacy verdict:** PASS para INV-68 nesta cadeia; re-verificação independente pendente.
+
+**Tests**: integration (Memory correction and cancellation).
+**Gate**: Full Memory + Build
+**Commit**: `test(investments): recompor alocação efetiva`
+
 ## Task Granularity Check
 
 Um componente/caso de uso por tarefa, com testes e integrações mecânicas do mesmo contrato. Não usar o ponto principal como permissão para agregar funcionalidades adjacentes.
@@ -4502,7 +4521,7 @@ Mapeamento de planejamento, não evidência de implementação. Cada ID também 
 | INV-65         | T9, T26, T33, T56, T57, T66, T85, T89, T102                                                                                                                                                                                          | T102 complete atomic rollback assertion; independent validation pending |
 | INV-66         | T9, T56, T57                                                                                                                                                                                                                         | Planned |
 | INV-67         | T56, T57, T59, T70, T85, T94                                                                                                                                                                                                         | Implemented; validation pending |
-| INV-68         | T9, T20, T26, T57, T59, T66, T70, T85, T89, T94                                                                                                                                                                                      | Implemented; validation pending |
+| INV-68         | T9, T20, T26, T57, T59, T66, T70, T85, T89, T94, T118                                                                                                                                                                                | T118 effective-allocation proof complete; final validation pending |
 | INV-69         | T9, T20, T26, T33, T56, T57, T59, T66, T70, T85, T89, T94                                                                                                                                                                            | Implemented; validation pending |
 | INV-70         | T56, T57, T60, T85                                                                                                                                                                                                                   | In progress |
 | INV-71         | T8, T56                                                                                                                                                                                                                              | Planned |

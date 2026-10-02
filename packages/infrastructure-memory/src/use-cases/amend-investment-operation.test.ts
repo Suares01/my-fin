@@ -10,6 +10,7 @@ import {
   RecordInvestmentExpense,
   RecordInvestmentIncome,
   RecordInvestmentPurchase,
+  ReverseInvestmentOperation,
   ReactivateLedgerAccount,
   SetInvestmentInstrumentStatus,
   type RepositoryContext,
@@ -144,6 +145,72 @@ async function amend(
 }
 
 describe("AmendInvestmentOperation", () => {
+  it("reconstructs allocation from effective business operations after replacement and cancellation", async () => {
+    const f = await setup()
+    expect(
+      await new RecordInvestmentPurchase(
+        f.h.transactionManager,
+        f.h.dispatcher,
+        f.h.ids,
+        f.h.clock
+      ).execute({
+        bookId: "book-1",
+        requestId: "purchase-before-sale",
+        positionId: "position-1",
+        expectedPositionVersion: 0,
+        type: "PURCHASE",
+        occurredOn: "2026-08-04",
+        description: "Purchase",
+        currency: "BRL",
+        quantityDelta: "2",
+        capitalMinor: "200",
+        funding: { mode: "INTERNAL_CASH" },
+      })
+    ).toMatchObject({ ok: true })
+    expect(
+      await sale(f, {
+        requestId: "sale-after-purchase",
+        expectedPositionVersion: 1,
+      })
+    ).toMatchObject({ ok: true })
+    expect(
+      await amend(f, {
+        operationId: "operation-3",
+        expectedPositionVersion: 2,
+        replacement: {
+          ...(await amendment(f)),
+          expectedPositionVersion: 2,
+        },
+      })
+    ).toMatchObject({
+      ok: true,
+      value: { replacementOperationId: "operation-5" },
+    })
+    expectEffectiveAllocation(
+      f,
+      ["operation-1", "operation-2", "operation-5"],
+      "7",
+      "700"
+    )
+
+    expect(
+      await new ReverseInvestmentOperation(
+        f.h.transactionManager,
+        f.h.dispatcher,
+        f.h.ids,
+        f.h.clock
+      ).execute({
+        bookId: "book-1",
+        requestId: "reverse-replacement",
+        operationId: "operation-5",
+        expectedOperationVersion: 0,
+        expectedPositionVersion: 3,
+        reason: "Cancel corrected sale",
+      })
+    ).toMatchObject({ ok: true, value: { reversalOperationId: "operation-6" } })
+    expectEffectiveAllocation(f, ["operation-1", "operation-2"], "12", "1200")
+  })
+
   it("returns the request and target operation IDs when correction fails", async () => {
     const f = await setup()
     expect(await sale(f)).toMatchObject({ ok: true })
@@ -950,6 +1017,43 @@ describe("AmendInvestmentOperation", () => {
     }
   )
 })
+
+function expectEffectiveAllocation(
+  f: Awaited<ReturnType<typeof setup>>,
+  expectedIds: readonly string[],
+  quantity: string,
+  bookCostMinor: string
+) {
+  const effective = f.h.store
+    .listInvestmentOperations()
+    .filter(
+      (operation) =>
+        operation.role === "BUSINESS" &&
+        operation.reversedBy === undefined &&
+        operation.replacedBy === undefined
+    )
+  expect(effective.map((operation) => operation.id)).toEqual(expectedIds)
+  expect(
+    effective
+      .reduce(
+        (sum, operation) => sum + BigInt(operation.quantityDelta ?? "0"),
+        0n
+      )
+      .toString()
+  ).toBe(quantity)
+  expect(
+    effective
+      .reduce(
+        (sum, operation) => sum + BigInt(operation.bookCostDeltaMinor),
+        0n
+      )
+      .toString()
+  ).toBe(bookCostMinor)
+  expect(f.h.store.listInvestmentPositions()[0]).toMatchObject({
+    quantity,
+    bookCostMinor,
+  })
+}
 
 async function amendment(f: Awaited<ReturnType<typeof setup>>) {
   return {

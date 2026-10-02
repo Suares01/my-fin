@@ -589,7 +589,7 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-65 | S6 | Tasks | T102 atomic rollback assertion complete; independent validation pending | T9, T26, T33, T56, T57, T66, T85, T89, T102 |
 | INV-66 | S6 | Tasks | In progress: T9 operation | T9, T56, T57 |
 | INV-67 | S6 | Tasks | Implemented; validation pending | T56, T57, T59, T70, T85, T94 |
-| INV-68 | S6 | Tasks | Implemented; validation pending | T9, T20, T26, T57, T59, T66, T70, T85, T89, T94 |
+| INV-68 | S6 | Tasks | T118 effective-allocation proof complete; final validation pending | T9, T20, T26, T57, T59, T66, T70, T85, T89, T94, T118 |
 | INV-69 | S6 | Tasks | Implemented; validation pending | T9, T20, T26, T33, T56, T57, T59, T66, T70, T85, T89, T94 |
 | INV-70 | S6 | Tasks | Planned; T85 correction form complete | T56, T57, T60, T85 |
 | INV-71 | S6 | Tasks | In progress: T8 position | T8, T56 |
