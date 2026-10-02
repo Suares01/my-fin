@@ -547,7 +547,7 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-23 | S2 | Tasks | In progress: T7 fixed-income terms | T7, T19, T25, T78, T96 |
 | INV-24 | S2 | Tasks | In progress: T2 values; T7 fixed-income terms | T2, T7 |
 | INV-25 | S2 | Tasks | In progress: T7 fixed-income terms; T8 position; T88 table complete; T91 detail complete | T7, T8, T65, T88, T91 |
-| INV-26 | S2 | Tasks | In progress: T6 instrument; T7 fixed-income terms; T8 position; T88 table complete; T91 detail complete | T6, T7, T8, T24, T25, T31, T45, T47, T64, T65, T76, T77, T88, T91 |
+| INV-26 | S2 | Tasks | T117 metadata/history proof complete; final validation pending | T6, T7, T8, T24, T25, T31, T45, T47, T64, T65, T76, T77, T88, T91, T117 |
 | INV-27 | S3 | Tasks | Planned | T11, T50, T78, T95, T96 |
 | INV-28 | S3 | Tasks | Planned | T38, T39, T50, T60, T78, T96 |
 | INV-29 | S3 | Tasks | T110 optional-expense proof complete; final validation pending | T11, T50, T51, T79, T110 |

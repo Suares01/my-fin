@@ -1,7 +1,10 @@
 import {
+  CreateFinancialAccount,
   CreateFinancialBook,
   CreateInvestmentInstrument,
+  OpenInvestmentPosition,
   UpdateInvestmentInstrument,
+  UpdateInvestmentPositionMetadata,
 } from "@workspace/application"
 import { describe, expect, it } from "vitest"
 import { createBook, createHarness } from "./test-helpers.js"
@@ -155,6 +158,82 @@ describe("UpdateInvestmentInstrument", () => {
     expect(harness.store.getInvestmentPosition("position-1" as never)).toEqual(
       beforePosition
     )
+  })
+
+  it("preserves the opening operation and contracted terms after metadata edits", async () => {
+    const h = createHarness()
+    await createBook(h)
+    expect(await create(h).execute(createCommand)).toMatchObject({ ok: true })
+    expect(
+      await new CreateFinancialAccount(
+        h.transactionManager,
+        h.dispatcher,
+        h.ids
+      ).execute({
+        bookId: "book-1",
+        name: "Broker",
+        type: "INVESTMENT_ACCOUNT",
+      })
+    ).toMatchObject({ ok: true })
+    const terms = {
+      rateKind: "INDEXED",
+      index: "CDI",
+      indexPercentage: "105",
+      maturityDate: "2028-08-04",
+    } as const
+    expect(
+      await new OpenInvestmentPosition(
+        h.transactionManager,
+        h.dispatcher,
+        h.ids,
+        h.clock
+      ).execute({
+        bookId: "book-1",
+        requestId: "open-with-terms",
+        investmentAccountId: "account-5",
+        instrumentId: "instrument-1",
+        label: "Reserve",
+        quantityMode: "UNITS",
+        quantity: "10",
+        bookCostMinor: "1000",
+        occurredOn: "2026-08-04",
+        fixedIncomeTerms: terms,
+      })
+    ).toMatchObject({ ok: true })
+    const operationsBefore = h.store.listInvestmentOperations()
+    const positionBefore = h.store.listInvestmentPositions()[0]
+    expect(positionBefore?.fixedIncomeTerms).toEqual(terms)
+
+    expect(await update(h).execute(updateCommand)).toMatchObject({
+      ok: true,
+      value: { version: 1 },
+    })
+    expect(
+      await new UpdateInvestmentPositionMetadata(
+        h.transactionManager,
+        h.dispatcher
+      ).execute({
+        bookId: "book-1",
+        positionId: "position-1",
+        expectedVersion: 0,
+        label: "Travel",
+      })
+    ).toMatchObject({ ok: true, value: { version: 1, label: "Travel" } })
+    expect(h.store.listInvestmentOperations()).toEqual(operationsBefore)
+    expect(h.store.listInvestmentPositions()[0]).toMatchObject({
+      ...positionBefore,
+      label: "Travel",
+      normalizedLabel: "travel",
+      version: 1,
+      fixedIncomeTerms: terms,
+    })
+    expect(h.store.listInvestmentInstruments()[0]).toMatchObject({
+      name: "CDB Banco Novo",
+      issuerName: "Banco Novo",
+      identifiers: [{ scheme: "TICKER", value: "CDBN", market: "B3" }],
+      type: "CDB",
+      currency: "BRL",
+    })
   })
 
   it("rejects currency distinct from the book base currency", async () => {

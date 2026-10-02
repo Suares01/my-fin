@@ -196,7 +196,7 @@ T100 -> T101 -> T102 -> T103 -> T104
 ### Phase 19: Critérios remanescentes da auditoria
 
 ```text
-T104 -> T105 -> T106 -> T107 -> T108 -> T109 -> T110 -> T111 -> T112 -> T113 -> T114 -> T115 -> T116
+T104 -> T105 -> T106 -> T107 -> T108 -> T109 -> T110 -> T111 -> T112 -> T113 -> T114 -> T115 -> T116 -> T117
 ```
 
 ### Phase Execution Map
@@ -4082,6 +4082,25 @@ Revisão reversa: os 6 cenários Memory novos cobrem read-only, journal opcional
 **Gate**: Full Cross + Build
 **Commit**: `fix(investments): preservar erro de limite decimal`
 
+### T117: Provar histórico preservado ao editar metadados
+
+**What**: Criar posição e operação iniciais por comando real, editar metadados do instrumento e rótulo da posição, e comparar histórico e termos contratados.
+**Where**: `packages/infrastructure-memory/src/use-cases/update-investment-instrument.test.ts`.
+**Depends on**: T116 e `validation.md` rodada 2 (INV-26 NÃO ATESTADO).
+**Requirement**: INV-26.
+
+**Done when**:
+
+- [x] Edição de nome, emissor, identificador e rótulo conserva snapshot integral da operação inicial e termos INDEXED 105% CDI da posição.
+- [x] Tipo e moeda permanecem CDB/BRL; rejeições já existentes de mudança de tipo após uso e moeda divergente seguem verdes.
+- [x] Gate `Full Memory + Build` passa antes do commit atômico.
+
+**Evidência T117 (2026-10-01):** `update-investment-instrument.test.ts` agora abre posição real com 10 unidades, custo 1000 e termos INDEXED CDI 105%, guarda a operação inicial e edita nome, emissor, TICKER e rótulo. A operação histórica fica integralmente idêntica; termos e demais campos econômicos da posição permanecem, enquanto rótulo/version e metadados mudam como esperado. Os testes anteriores continuam a rejeitar alteração de tipo após posição e moeda diferente do livro. A primeira tentativa de gate revelou `currency` inválido no fixture do comando de abertura; removido esse campo, sem alterar asserções, o gate final passou. Memory 667→668 testes em 55 arquivos; builds Domain/Application/Memory, lint, tipos e `git diff --check` verdes. **Adequacy verdict:** PASS para INV-26 nesta costura; re-verificação independente pendente.
+
+**Tests**: integration (Memory metadata commands).
+**Gate**: Full Memory + Build
+**Commit**: `test(investments): preservar histórico após metadados`
+
 ## Task Granularity Check
 
 Um componente/caso de uso por tarefa, com testes e integrações mecânicas do mesmo contrato. Não usar o ponto principal como permissão para agregar funcionalidades adjacentes.
@@ -4422,7 +4441,7 @@ Mapeamento de planejamento, não evidência de implementação. Cada ID também 
 | INV-23         | T7, T19, T25, T78, T96 | Planned |
 | INV-24         | T2, T7                                                                                                                                                                                                                               | Planned |
 | INV-25         | T7, T8, T65, T88, T91                                                                                                                                                                                                                | T91 detail complete; remaining mapped work/validation pending |
-| INV-26         | T6, T7, T8, T24, T25, T31, T45, T47, T64, T65, T76, T77, T88, T91                                                                                                                                                                    | T91 detail complete; remaining mapped work/validation pending |
+| INV-26         | T6, T7, T8, T24, T25, T31, T45, T47, T64, T65, T76, T77, T88, T91, T117                                                                                                                                                              | T117 metadata/history proof complete; final validation pending |
 | INV-27 | T11, T50, T78, T95, T96 | Planned |
 | INV-28         | T38, T39, T50, T60, T78, T96 | Planned |
 | INV-29         | T11, T50, T51, T79, T110                                                                                                                                                                                                             | T110 optional-expense proof complete; final validation pending |
