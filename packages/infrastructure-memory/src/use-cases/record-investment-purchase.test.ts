@@ -4,6 +4,7 @@ import {
   CreateInvestmentInstrument,
   OpenInvestmentPosition,
   RecordInvestmentPurchase,
+  RecordInvestmentSale,
 } from "@workspace/application"
 import { describe, expect, it } from "vitest"
 import { createBook, createHarness } from "./test-helpers.js"
@@ -84,6 +85,70 @@ const internal = {
 } as const
 
 describe("RecordInvestmentPurchase", () => {
+  it.each([
+    ["PURCHASE", "closed"],
+    ["PURCHASE", "archived account"],
+    ["PURCHASE", "archived instrument"],
+    ["APPLICATION", "closed"],
+    ["APPLICATION", "archived account"],
+    ["APPLICATION", "archived instrument"],
+  ] as const)(
+    "rejects %s on a %s allocation without writes",
+    async (type, state) => {
+      const h = await setup()
+      let expectedPositionVersion = 0
+      if (state === "closed") {
+        expect(
+          await new RecordInvestmentSale(
+            h.transactionManager,
+            h.dispatcher,
+            h.ids,
+            h.clock
+          ).execute({
+            bookId: "book-1",
+            requestId: "close-position",
+            positionId: "position-1",
+            expectedPositionVersion: 0,
+            type: "SALE",
+            occurredOn: "2026-08-04",
+            description: "Close at cost",
+            currency: "BRL",
+            quantityDelta: "10",
+            bookCostReductionMinor: "1000",
+            grossProceedsMinor: "1000",
+            destination: { mode: "INTERNAL_CASH" },
+          })
+        ).toMatchObject({ ok: true })
+        expectedPositionVersion = 1
+      } else if (state === "archived account") {
+        const account = h.store.getAccount("account-5" as never)
+        if (account === undefined) throw new Error("fixture failed")
+        h.store.putAccount({ ...account, status: "ARCHIVED", version: 1 })
+      } else {
+        const instrument = h.store.listInvestmentInstruments()[0]
+        if (instrument === undefined) throw new Error("fixture failed")
+        h.store.putInvestmentInstrument({
+          ...instrument,
+          status: "ARCHIVED",
+          version: 1,
+        })
+      }
+      const before = h.store.snapshot()
+      expect(
+        await useCase(h).execute({
+          ...internal,
+          type,
+          requestId: `inactive-${type}-${state}`,
+          expectedPositionVersion,
+        })
+      ).toMatchObject({
+        ok: false,
+        error: { code: "INVESTMENT_ENTITY_NOT_ACTIVE" },
+      })
+      expect(h.store.snapshot()).toEqual(before)
+    }
+  )
+
   it("rejects a purchase before the opening operation without writes", async () => {
     const h = await setup()
     const before = h.store.snapshot()

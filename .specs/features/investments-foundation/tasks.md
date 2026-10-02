@@ -196,7 +196,7 @@ T100 -> T101 -> T102 -> T103 -> T104
 ### Phase 19: Critérios remanescentes da auditoria
 
 ```text
-T104 -> T105 -> T106 -> T107 -> T108 -> T109 -> T110 -> T111 -> T112 -> T113 -> T114
+T104 -> T105 -> T106 -> T107 -> T108 -> T109 -> T110 -> T111 -> T112 -> T113 -> T114 -> T115
 ```
 
 ### Phase Execution Map
@@ -4044,6 +4044,25 @@ Revisão reversa: os 6 cenários Memory novos cobrem read-only, journal opcional
 **Gate**: Full Memory + Build
 **Commit**: `test(investments): provar categorias inválidas na venda`
 
+### T115: Provar bloqueio de compra e aplicação em cadastro inativo
+
+**What**: Exercitar compra e aplicação sobre posição fechada, carteira arquivada e instrumento arquivado, isolando cada guarda.
+**Where**: `packages/infrastructure-memory/src/use-cases/record-investment-purchase.test.ts`.
+**Depends on**: T114 e `validation.md` rodada 2 (INV-118 NÃO ATESTADO).
+**Requirement**: INV-118.
+
+**Done when**:
+
+- [x] Os dois tipos de operação rejeitam posição CLOSED e cada cadastro ARCHIVED com `INVESTMENT_ENTITY_NOT_ACTIVE`.
+- [x] Cada rejeição deixa o snapshot integral intacto; fixtures de cadastro arquivado mantêm posição OPEN para não mascarar a guarda.
+- [x] Gate `Full Memory + Build` passa antes do commit atômico.
+
+**Evidência T115 (2026-10-01):** `record-investment-purchase.test.ts` executa seis casos (PURCHASE/APPLICATION × CLOSED/conta arquivada/instrumento arquivado), todos com `INVESTMENT_ENTITY_NOT_ACTIVE` e snapshot integral idêntico. A posição CLOSED nasce de venda total a custo por comando; os cadastros arquivados são fixtures persistidos diretamente enquanto a posição permanece OPEN, isolando a guarda. Memory 659→665 testes em 55 arquivos. Full Memory + Build verde: builds Domain/Application/Memory, 665/665 testes, lint, tipos e `git diff --check`. **Adequacy verdict:** PASS para INV-118 nesta costura; re-verificação independente pendente.
+
+**Tests**: integration (Memory purchase/application).
+**Gate**: Full Memory + Build
+**Commit**: `test(investments): bloquear aplicação em cadastro inativo`
+
 ## Task Granularity Check
 
 Um componente/caso de uso por tarefa, com testes e integrações mecânicas do mesmo contrato. Não usar o ponto principal como permissão para agregar funcionalidades adjacentes.
@@ -4503,7 +4522,7 @@ Mapeamento de planejamento, não evidência de implementação. Cada ID também 
 | INV-115        | T38, T39, T42, T43, T74, T87                                                                                                                                                                                                         | Planned |
 | INV-116        | T6, T24, T31, T43, T46, T64, T76, T87                                                                                                                                                                                                | Planned |
 | INV-117        | T46, T59, T66, T67, T89, T90                                                                                                                                                                                                         | Planned |
-| INV-118        | T8, T51, T79, T88                                                                                                                                                                                                                    | Planned |
+| INV-118        | T8, T51, T79, T88, T115                                                                                                                                                                                                              | T115 inactive-command proof complete; final validation pending |
 | INV-119        | T8, T53, T55, T81, T83, T91                                                                                                                                                                                                          | T91 detail complete; remaining mapped work/validation pending |
 | INV-144        | T8, T43, T46, T56, T57, T85, T91, T104                                                                                                                                                                                               | T104 archived-entity amendment and reactivation assertions complete; independent validation pending |
 

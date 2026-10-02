@@ -639,7 +639,7 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-115 | S9 | Tasks | T87 list complete; remaining mapped work/validation pending | T38, T39, T42, T43, T74, T87 |
 | INV-116 | S9 | Tasks | T87 list complete; remaining mapped work/validation pending | T6, T24, T31, T43, T46, T64, T76, T87 |
 | INV-117 | S9 | Tasks | T89 history complete; remaining mapped work/validation pending; T90 valuation history complete | T46, T59, T66, T67, T89, T90 |
-| INV-118 | S9 | Tasks | In progress: T8 position; T79 purchase/application UI complete; T88 table complete | T8, T51, T79, T88 |
+| INV-118 | S9 | Tasks | T115 inactive-command proof complete; final validation pending | T8, T51, T79, T88, T115 |
 | INV-119 | S9 | Tasks | In progress: T8 position, T81 income and T83 expense on closed position complete; T91 detail complete | T8, T53, T55, T81, T83, T91 |
 | INV-120 | S3 | Tasks | Planned | T49, T50, T78, T96 |
 | INV-121 | S3 | Tasks | Planned | T49, T50, T78 |
