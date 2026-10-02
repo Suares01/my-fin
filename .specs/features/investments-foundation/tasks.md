@@ -196,7 +196,7 @@ T100 -> T101 -> T102 -> T103 -> T104
 ### Phase 19: Critérios remanescentes da auditoria
 
 ```text
-T104 -> T105 -> T106 -> T107 -> T108 -> T109 -> T110 -> T111 -> T112 -> T113 -> T114 -> T115 -> T116 -> T117 -> T118 -> T119
+T104 -> T105 -> T106 -> T107 -> T108 -> T109 -> T110 -> T111 -> T112 -> T113 -> T114 -> T115 -> T116 -> T117 -> T118 -> T119 -> T120
 ```
 
 ### Phase Execution Map
@@ -4139,6 +4139,25 @@ Revisão reversa: os 6 cenários Memory novos cobrem read-only, journal opcional
 **Gate**: Full SQLite + Build
 **Commit**: `test(investments): comparar bancos novo e migrado`
 
+### T120: Provar reconstrução após reinício do SQLite
+
+**What**: Persistir uma fixture completa em arquivo SQLite, fechar a conexão, reabrir e reconstruir os registros pelos adaptadores de leitura.
+**Where**: `packages/infrastructure-sqlite/tests/database/investment-restart.test.ts`.
+**Depends on**: T119 e `validation.md` rodada 2 (INV-88 NÃO ATESTADO).
+**Requirement**: INV-88.
+
+**Done when**:
+
+- [x] Perfil financeiro, instrumento, posição e termos são reconstruídos com snapshots completos idênticos após reinício.
+- [x] Avaliação mantém todos os campos e IDs; operação original e reversão mantêm seus snapshots e vínculos de lineage.
+- [x] Gate `Full SQLite + Build` passa antes do commit atômico.
+
+**Evidência T120 (2026-10-02):** teste com arquivo temporário executa inicialização/migração, grava registros pelos repositórios, fecha o arquivo e cria nova conexão com nova inicialização. Repositórios reconstroem snapshots completos de perfil, instrumento, posição com CDI 105%, operação de venda e reversão vinculadas. A avaliação antes/depois é idêntica e os valores 10.5/130/136500/136000/135000 e IDs são exigidos. Full SQLite + Build verde: builds Domain/Application/Memory/SQLite, 978/978 testes em 54 arquivos, lint, tipos, `check:migrations` e `git diff --check`. **Adequacy verdict:** PASS para INV-88 nesta fixture; re-verificação independente pendente.
+
+**Tests**: integration (file-backed SQLite restart).
+**Gate**: Full SQLite + Build
+**Commit**: `test(investments): reconstruir registros após reinício`
+
 ## Task Granularity Check
 
 Um componente/caso de uso por tarefa, com testes e integrações mecânicas do mesmo contrato. Não usar o ponto principal como permissão para agregar funcionalidades adjacentes.
@@ -4565,7 +4584,7 @@ Mapeamento de planejamento, não evidência de implementação. Cada ID também 
 | INV-85         | T17, T18, T19, T20, T21, T22, T112                                                                                                                                                                                                   | T112 prior-checksum and data proof complete; final validation pending |
 | INV-86         | T17, T18, T19, T20, T21, T22, T119                                                                                                                                                                                                   | T119 fresh/upgraded equivalence proof complete; final validation pending |
 | INV-87         | T17, T18, T22                                                                                                                                                                                                                        | Planned |
-| INV-88         | T13, T17, T21, T23, T24, T25, T26, T27, T28, T29, T30, T34, T40                                                                                                                                                                      | Planned |
+| INV-88         | T13, T17, T21, T23, T24, T25, T26, T27, T28, T29, T30, T34, T40, T120                                                                                                                                                                | T120 file-backed restart proof complete; final validation pending |
 | INV-89         | T5, T6, T12, T13, T40, T44, T71                                                                                                                                                                                                      | Planned |
 | INV-90         | T12, T15, T16, T48, T73, T113                                                                                                                                                                                                        | T113 safe error-context proof complete; final validation pending |
 | INV-145        | T12, T38, T39, T48, T49, T50, T51, T55, T56, T57, T60, T61, T62, T63, T73, T78, T79, T83, T87, T96, T108 | T108 resulting-cash proof complete; final validation pending |

@@ -609,7 +609,7 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-85 | S7 | Tasks | T112 prior-checksum and data proof complete; final validation pending | T17, T18, T19, T20, T21, T22, T112 |
 | INV-86 | S7 | Tasks | T119 fresh/upgraded equivalence proof complete; final validation pending | T17, T18, T19, T20, T21, T22, T119 |
 | INV-87 | S7 | Tasks | Planned | T17, T18, T22 |
-| INV-88 | S7 | Tasks | Planned | T13, T17, T21, T23, T24, T25, T26, T27, T28, T29, T30, T34, T40 |
+| INV-88 | S7 | Tasks | T120 file-backed restart proof complete; final validation pending | T13, T17, T21, T23, T24, T25, T26, T27, T28, T29, T30, T34, T40, T120 |
 | INV-89 | S7 | Tasks | In progress: T5 identities | T5, T6, T12, T13, T40, T44, T71 |
 | INV-90 | S7 | Tasks | T113 safe error-context proof complete; final validation pending | T12, T15, T16, T48, T73, T113 |
 | INV-91 | S8 | Tasks | T92 page and T93 route/native navigation complete; final validation pending | T71, T92, T93 |
