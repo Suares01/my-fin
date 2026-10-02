@@ -196,7 +196,7 @@ T100 -> T101 -> T102 -> T103 -> T104
 ### Phase 19: Critérios remanescentes da auditoria
 
 ```text
-T104 -> T105 -> T106 -> T107 -> T108 -> T109 -> T110 -> T111 -> T112 -> T113 -> T114 -> T115 -> T116 -> T117 -> T118 -> T119 -> T120 -> T121 -> T122 -> T123 -> T124
+T104 -> T105 -> T106 -> T107 -> T108 -> T109 -> T110 -> T111 -> T112 -> T113 -> T114 -> T115 -> T116 -> T117 -> T118 -> T119 -> T120 -> T121 -> T122 -> T123 -> T124 -> T125
 ```
 
 ### Phase Execution Map
@@ -4234,6 +4234,25 @@ Revisão reversa: os 6 cenários Memory novos cobrem read-only, journal opcional
 **Gate**: Full SQLite + Build
 **Commit**: `test(investments): preservar get net worth com investimento`
 
+### T125: Restaurar foco do Drawer e provar teclado e layout no navegador
+
+**What**: Reproduzir INV-110/112 com a página e o shell reais em Chromium, corrigindo a perda de foco após editar um campo do Drawer.
+**Where**: `apps/tauri/src/features/investments/components/investments-page.tsx`.
+**Depends on**: T124 e `validation.md` rodada 3 (INV-110/112 GAP).
+**Requirement**: INV-110, INV-112.
+
+**Done when**:
+
+- [x] Em 360px e 1280px, menu de posição abre e navega por teclado; Escape devolve foco ao botão, inclusive após digitar no Drawer controlado. O Drawer aberto diretamente também devolve foco ao acionador.
+- [x] Nas duas larguras, a página não transborda horizontalmente, a tabela rola dentro do contêiner e o botão de ação fica visível e operável após a rolagem.
+- [x] Gate `Full React + Build` e UAT Chromium passam antes do commit atômico.
+
+**Evidência T125 (2026-10-02):** o harness monta `ApplicationShell` e `InvestmentsPage` reais com leituras locais determinísticas; usa `playwright-cli open http://127.0.0.1:1420/uat-investments.html`, `snapshot` e `run-code --filename apps/tauri/tests/investments-browser-uat.js`. A primeira execução, antes do reparo, falhou em retorno de foco após preencher “Rótulo da posição”: `document.activeElement` era `<body>`. Depois do reparo, o roteiro completo passou em 360px e 1280px: `documentWidth <= width` (`investments-browser-uat.js:23-24`), tabela com `scrollWidth > clientWidth` (`:25-28`), ação alcançável após rolagem interna (`:41-52`), menu por Escape/Enter/End (`:54-70`), campo controlado retendo “Rótulo conferido” (`:73-78`) e foco de volta após fechar Drawer de posição e Drawer direto (`:79-98`). Medidas observadas: 360px, página 360px, tabela 328/1101px, rolagem 773px, botão à direita em 326px; 1280px, página 1280px, tabela 968/1101px, rolagem 133px, botão à direita em 1230px. Full React + Build verde: dependências Domain/Application/Memory/SQLite/adapter Tauri compilaram; 1067/1067 testes React em 86 arquivos, ESLint, tipos e Vite build passaram. O harness usa serviços locais, então não atesta IPC, banco nem WebKitGTK nativo. **Adequacy verdict:** PASS autoral para interação e layout em Chromium; verificação independente pendente.
+
+**Tests**: Browser UAT com asserções de DOM, teclado, foco e geometria em `apps/tauri/tests/investments-browser-uat.js`, servido pela fixture `apps/tauri/uat-investments.html` e `apps/tauri/src/uat-investments.tsx`.
+**Gate**: Full React + Build + Browser UAT
+**Commit**: `fix(investments): restaurar foco dos drawers`
+
 ## Task Granularity Check
 
 Um componente/caso de uso por tarefa, com testes e integrações mecânicas do mesmo contrato. Não usar o ponto principal como permissão para agregar funcionalidades adjacentes.
@@ -4683,9 +4702,9 @@ Mapeamento de planejamento, não evidência de implementação. Cada ID também 
 | INV-107        | T63, T72, T75, T86, T87, T88, T92                                                                                                                                                                                                    | T92 page complete; remaining mapped work/validation pending |
 | INV-108        | T72, T86, T87, T88, T89, T90, T91, T92                                                                                                                                                                                               | T92 page complete; remaining mapped work/validation pending |
 | INV-109        | T73, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T94                                                                                                                                                                           | Implemented; validation pending |
-| INV-110        | T74, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T88, T89, T91, T92, T93, T94                                                                                                                                                  | Implemented; validation pending |
+| INV-110        | T74, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T88, T89, T91, T92, T93, T94, T125                                                                                                                                          | T125 browser keyboard and focus proof complete; final validation pending |
 | INV-111        | T73, T76, T77, T78, T79, T80, T81, T82, T83, T84, T85, T92                                                                                                                                                                           | T92 page complete; remaining mapped work/validation pending |
-| INV-112        | T86, T87, T88, T89, T90, T91, T92, T93, T94                                                                                                                                                                                          | Implemented; validation pending |
+| INV-112        | T86, T87, T88, T89, T90, T91, T92, T93, T94, T125                                                                                                                                                                                    | T125 browser viewport proof complete; final validation pending |
 | INV-143        | T75                                                                                                                                                                                                                                  | Planned |
 | INV-148        | T61, T73, T78, T79, T80, T81, T82, T83, T85, T92, T96 | T92 page complete; remaining mapped work/validation pending |
 | INV-113        | T25, T32, T38, T39, T43, T63, T87                                                                                                                                                                                                    | Planned |

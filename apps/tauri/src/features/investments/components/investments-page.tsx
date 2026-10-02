@@ -161,6 +161,7 @@ function InvestmentBookPage({
   )
   const [localPositionId, setLocalPositionId] = useState<string | null>(null)
   const [action, setAction] = useState<DrawerAction | null>(null)
+  const actionTrigger = useRef<HTMLElement | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
   const [accountPendingId, setAccountPendingId] = useState<string | undefined>()
   const detailId = action === null ? (positionId ?? localPositionId) : null
@@ -170,11 +171,30 @@ function InvestmentBookPage({
     else setLocalPositionId(id)
   }
   function openAction(next: DrawerAction): void {
+    const focused = document.activeElement
+    const menu = focused?.closest('[role="menu"]')
+    actionTrigger.current =
+      menu?.id === undefined
+        ? focused instanceof HTMLElement
+          ? focused
+          : null
+        : (Array.from(
+            document.querySelectorAll<HTMLElement>("[aria-controls]")
+          ).find(
+            (element) => element.getAttribute("aria-controls") === menu.id
+          ) ?? null)
     navigatePosition(null)
     setAction(next)
   }
-  async function finishAction(): Promise<void> {
+  function closeAction(): void {
+    const trigger = actionTrigger.current
     setAction(null)
+    window.setTimeout(() => {
+      if (trigger?.isConnected) trigger.focus()
+    }, 0)
+  }
+  async function finishAction(): Promise<void> {
+    closeAction()
     await invalidateInvestmentQueries(queryClient, bookId)
   }
   function accountBalance(id: string): FinancialAccountBalance | undefined {
@@ -513,7 +533,7 @@ function InvestmentBookPage({
         modal={false}
         open={action !== null}
         onOpenChange={(open) => {
-          if (!open) setAction(null)
+          if (!open) closeAction()
         }}
       >
         {action !== null && (
@@ -532,7 +552,7 @@ function InvestmentBookPage({
                   bookId={bookId}
                   settlementAccounts={settlementAccounts}
                   onSuccess={() => void finishAction()}
-                  onCancel={() => setAction(null)}
+                  onCancel={closeAction}
                 />
               </div>
             </DrawerContent>
