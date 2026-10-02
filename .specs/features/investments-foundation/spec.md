@@ -651,7 +651,7 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-127 | S5 | Tasks | In progress: T8 position; T90 valuation history complete | T8, T19, T21, T25, T27, T30, T32, T47, T50, T58, T67, T90 |
 | INV-128 | S5 | Tasks | Implemented; T98 repair complete; validation pending | T8, T25, T51, T52, T54, T56, T57, T85, T98 |
 | INV-129 | S5 | Tasks | Implemented; T98 repair complete; validation pending | T8, T47, T53, T55, T57, T77, T85, T98 |
-| INV-130 | S5 | Tasks | T84 form complete; remaining mapped work/validation pending; T90 valuation history complete | T58, T62, T65, T67, T84, T90 |
+| INV-130 | S5 | Tasks | T111 stale-unit-price proof complete; final validation pending | T58, T62, T65, T67, T84, T90, T111 |
 | INV-131 | S5 | Tasks | T84 form complete; remaining mapped work/validation pending | T12, T58, T73, T84 |
 | INV-132 | S6 | Tasks | T89 history complete; remaining mapped work/validation pending | T9, T11, T13, T20, T26, T30, T33, T56, T57, T66, T89 |
 | INV-133 | S6 | Tasks | T89 history complete; remaining mapped work/validation pending | T9, T20, T26, T56, T57, T66, T89 |

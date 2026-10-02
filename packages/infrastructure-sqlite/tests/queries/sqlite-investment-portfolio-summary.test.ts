@@ -168,9 +168,16 @@ describe("SqliteInvestmentPortfolioSummary", () => {
       id: "position-1",
       accountId: "broker",
       cost: "1000",
+      quantity: "20",
       revision: 2,
     })
-    await valuation({ positionId: "position-1", gross: "1200", revision: 1 })
+    await valuation({
+      positionId: "position-1",
+      gross: "1200",
+      quantity: "10",
+      unitPrice: "120",
+      revision: 1,
+    })
 
     await expect(summary()).resolves.toMatchObject({
       investmentMarketValueMinor: "1000",
@@ -451,6 +458,7 @@ describe("SqliteInvestmentPortfolioSummary", () => {
     id: string
     accountId: string
     cost: string
+    quantity?: string
     revision?: number
     status?: "OPEN" | "CLOSED"
   }) {
@@ -460,11 +468,13 @@ describe("SqliteInvestmentPortfolioSummary", () => {
       [`instrument-${input.id}`, input.id, input.id]
     )
     await database.execute(
-      "INSERT INTO investment_positions (id, book_id, investment_account_id, instrument_id, label, normalized_label, quantity_mode, quantity, book_cost_minor, currency, opened_on, closed_on, status, allocation_revision, allocation_effective_on, version) VALUES (?, 'book-1', ?, ?, NULL, '', 'AMOUNT', NULL, ?, 'BRL', '2026-08-01', ?, ?, ?, '2026-08-01', 0)",
+      "INSERT INTO investment_positions (id, book_id, investment_account_id, instrument_id, label, normalized_label, quantity_mode, quantity, book_cost_minor, currency, opened_on, closed_on, status, allocation_revision, allocation_effective_on, version) VALUES (?, 'book-1', ?, ?, NULL, '', ?, ?, ?, 'BRL', '2026-08-01', ?, ?, ?, '2026-08-01', 0)",
       [
         input.id,
         input.accountId,
         `instrument-${input.id}`,
+        input.quantity === undefined ? "AMOUNT" : "UNITS",
+        input.quantity ?? null,
         input.cost,
         status === "CLOSED" ? "2026-08-04" : null,
         status,
@@ -476,6 +486,8 @@ describe("SqliteInvestmentPortfolioSummary", () => {
     id?: string
     positionId: string
     gross: string
+    quantity?: string
+    unitPrice?: string
     net?: string
     withdrawable?: string
     revision?: number
@@ -484,13 +496,15 @@ describe("SqliteInvestmentPortfolioSummary", () => {
   }) {
     const sequence = input.sequence ?? 1
     await database.execute(
-      "INSERT INTO investment_valuations (id, book_id, position_id, allocation_revision, valued_at, valued_on, recorded_at, record_sequence, source, quantity, unit_price, currency, gross_value_minor, net_value_minor, withdrawable_value_minor) VALUES (?, 'book-1', ?, ?, '2026-08-04T10:00:00.000Z', ?, '2026-08-04T11:00:00.000Z', ?, 'MANUAL', NULL, NULL, 'BRL', ?, ?, ?)",
+      "INSERT INTO investment_valuations (id, book_id, position_id, allocation_revision, valued_at, valued_on, recorded_at, record_sequence, source, quantity, unit_price, currency, gross_value_minor, net_value_minor, withdrawable_value_minor) VALUES (?, 'book-1', ?, ?, '2026-08-04T10:00:00.000Z', ?, '2026-08-04T11:00:00.000Z', ?, 'MANUAL', ?, ?, 'BRL', ?, ?, ?)",
       [
         input.id ?? `valuation-${sequence}`,
         input.positionId,
         input.revision ?? 1,
         input.valuedOn ?? "2026-08-04",
         sequence,
+        input.quantity ?? null,
+        input.unitPrice ?? null,
         input.gross,
         input.net ?? null,
         input.withdrawable ?? null,

@@ -196,7 +196,7 @@ T100 -> T101 -> T102 -> T103 -> T104
 ### Phase 19: Critérios remanescentes da auditoria
 
 ```text
-T104 -> T105 -> T106 -> T107 -> T108 -> T109 -> T110
+T104 -> T105 -> T106 -> T107 -> T108 -> T109 -> T110 -> T111
 ```
 
 ### Phase Execution Map
@@ -3968,6 +3968,25 @@ Revisão reversa: os 6 cenários Memory novos cobrem read-only, journal opcional
 **Gate**: Full Memory + Build
 **Commit**: `test(investments): provar despesas da compra interna`
 
+### T111: Provar descarte de preço unitário de revisão antiga
+
+**What**: Fortalecer o fallback da consulta patrimonial com uma avaliação anterior que contenha preço unitário e quantidade distintos da posição atual.
+**Where**: `packages/infrastructure-sqlite/tests/queries/sqlite-investment-portfolio-summary.test.ts`.
+**Depends on**: T110 e `validation.md` rodada 2 (INV-130 NÃO ATESTADO).
+**Requirement**: INV-130.
+
+**Done when**:
+
+- [x] Posição na revisão 2 com quantidade 20 e custo 1000 ignora avaliação da revisão 1 com quantidade 10, unitPrice 120 e bruto 1200.
+- [x] Sem avaliação aplicável à revisão 2, o resumo permanece em custo 1000, resultado não realizado 0 e zero posições avaliadas.
+- [x] Gate `Full SQLite + Build` passa antes do commit atômico.
+
+**Evidência T111 (2026-10-01):** `sqlite-investment-portfolio-summary.test.ts` agora grava posição UNITS com 20 unidades na revisão 2 e avaliação antiga da revisão 1 com 10 unidades, `unit_price=120` e bruto 1200. A consulta retorna valor consolidado 1000, resultado não realizado 0, `valuedPositionCount=0` e intervalo de avaliação nulo. O helper permite quantidade/preço apenas quando informados. SQLite permanece 976 testes em 53 arquivos. Full SQLite + Build verde: builds Domain/Application/Memory/SQLite, 976/976 testes, migrações, lint, tipos e `git diff --check`. **Adequacy verdict:** PASS para INV-130 nesta costura; re-verificação independente pendente.
+
+**Tests**: integration (SQLite portfolio query).
+**Gate**: Full SQLite + Build
+**Commit**: `test(investments): descartar preço de revisão antiga`
+
 ## Task Granularity Check
 
 Um componente/caso de uso por tarefa, com testes e integrações mecânicas do mesmo contrato. Não usar o ponto principal como permissão para agregar funcionalidades adjacentes.
@@ -4355,7 +4374,7 @@ Mapeamento de planejamento, não evidência de implementação. Cada ID também 
 | INV-127        | T8, T19, T21, T25, T27, T30, T32, T47, T50, T58, T67, T90                                                                                                                                                                            | Planned |
 | INV-128        | T8, T25, T51, T52, T54, T56, T57, T85, T98 | Implemented; T98 repair complete; validation pending |
 | INV-129        | T8, T47, T53, T55, T57, T77, T85, T98 | Implemented; T98 repair complete; validation pending |
-| INV-130        | T58, T62, T65, T67, T84, T90                                                                                                                                                                                                         | Planned |
+| INV-130        | T58, T62, T65, T67, T84, T90, T111                                                                                                                                                                                                   | T111 stale-unit-price proof complete; final validation pending |
 | INV-131        | T12, T58, T73, T84                                                                                                                                                                                                                   | Planned |
 | INV-140        | T14, T37, T38, T39, T62, T68, T69, T72, T86                                                                                                                                                                                          | Planned |
 | INV-141        | T14, T37, T38, T39, T62, T68, T69, T72, T86                                                                                                                                                                                          | Planned |
