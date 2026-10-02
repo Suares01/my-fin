@@ -1,22 +1,22 @@
-# investments-foundation — Validação independente final, rodada 4
+# investments-foundation — Validação independente final, rodada 6
 
-**Result:** FAIL
+**Result:** PASS
 
-**Veredito:** 148/148 critérios têm asserções do resultado definido na spec. Build/Final, Chromium em 360px e 1280px e sensor passaram. O arquivo de roteiro Chromium falha quando invocado diretamente nesta versão do `playwright-cli`; a UAT nativa N1–N8 continua sem execução por falta de WebKitGTK. O fechamento depende da correção da invocação direta e da prova nativa prescrita.
+**Veredito:** 148/148 critérios têm asserções do resultado definido na spec. O gate Build/Final de 3.446 testes e o sensor de seis mutações da rodada 4 continuam aplicáveis: `19eb4be..d4690be` não altera implementação nem testes. Reexecutei diretamente o arquivo Chromium versionado em 360px e 1280px; passou. Confirmei uma sessão Tauri/WebKitGTK real com a base SQLite isolada, a tela Investimentos e a venda mista em Transações. N1–N8 completos são evidência autoral registrada em T93/T94, não uma repetição independente integral nesta rodada.
 
 **Data:** 2026-10-02
 **Spec:** `.specs/features/investments-foundation/spec.md`
-**Diff da feature:** `96bcc38^..a387e86`; reparos desta reauditoria: `676885a..a387e86` (HEAD `a387e86`)
+**Diff da feature:** `96bcc38^..d4690be`; delta desta reauditoria: `19eb4be..d4690be` (HEAD `d4690be`)
 **Verifier:** subagente independente, autor ≠ verificador
-**Árvore real antes do sensor:** `git status --porcelain=v1` vazio. Após remover `.playwright-cli/` e descartar o scratch, o status contém somente `M .specs/features/investments-foundation/validation.md`, a edição permitida deste Verifier.
+**Árvore real:** `git status --porcelain=v1` vazio antes desta rodada. O sensor novo usou apenas `/tmp`; a sessão Chromium e seus artefatos foram descartados. Após escrever este relatório, só `validation.md` deve constar como modificado.
 
 ## Tarefas
 
-T1–T125 estão marcadas concluídas em `tasks.md` (125 cabeçalhos únicos, todos com `- [x]`). T123–T125 são os reparos reexaminados; `spec.md` é a fonte dos 148 resultados esperados. O `Done when` de T125 sobre UAT Chromium passa com adaptação transitória fora da árvore, mas o comando direto registrado em `tasks.md` falha neste ambiente.
+T1–T126 estão marcadas concluídas em `tasks.md` (126 cabeçalhos únicos). T126 contém dois `Done when` marcados. `spec.md` é a fonte dos 148 resultados esperados. O arquivo versionado agora executa diretamente com `playwright-cli run-code --filename`, sem cópia ou edição intermediária.
 
 ## Auditoria spec-anchored dos 148 ACs
 
-Cada linha cita asserção executada no gate ou na UAT Chromium, com o valor/estado exigido. Nas células com `:linha` abreviado, a referência é ao primeiro arquivo citado. Testes de tipo/API estrutural só contam para critérios estruturais. Reconfirmei os 148 IDs contra a spec, existência das 49 fontes de teste citadas e o diff `676885a..HEAD`: entre os testes antigos citados, somente `transaction-row-details.test.tsx` e `sqlite-investment-portfolio-summary.test.ts` mudaram. Reabri as asserções afetadas e atualizei suas linhas abaixo; para as demais, a identidade dos blobs Git confirma que a prova anterior não foi alterada, e o gate a reexecutou. Assim, as outras 144 linhas não dependem apenas do veredito herdado.
+Cada linha cita asserção e resultado esperado conferidos na rodada 4. Nas células com `:linha` abreviado, a referência é ao primeiro arquivo citado. Testes de tipo/API estrutural só contam para critérios estruturais. O delta `19eb4be..HEAD` altera apenas `spec.md`, `tasks.md` e a declaração inicial de `investments-browser-uat.js`; entre as 49 fontes de teste citadas, somente esse roteiro mudou, sem alterar asserções. Código de produção e demais testes conservam os blobs anteriores. Reexecutei diretamente as asserções Chromium para INV-110/112 nesta rodada; os outros 146 ACs não foram reexecutados individualmente agora.
 
 | AC (spec:linha) | Resultado exato exigido | `file:line` + asserção examinada | Estado |
 | --- | --- | --- | --- |
@@ -163,7 +163,7 @@ Cada linha cita asserção executada no gate ou na UAT Chromium, com o valor/est
 | INV-107 (`spec.md:419`) | apresentar estado vazio com ação de cadastro e moeda obtida do livro | `apps/tauri/src/features/investments/components/investment-portfolio-summary.test.tsx:149` `expect(getByText(/Nenhuma carteira ou posição cadastrada/)).toBeTruthy()`; moeda BRL; `expect(onCreateAccount).toHaveBeenCalledTimes(1)`. | ✅ PASS |
 | INV-108 (`spec.md:420`) | apresentar erro com ação de tentar novamente sem substituir dados válidos por zero | `apps/tauri/src/features/investments/components/investment-portfolio-summary.test.tsx:177` `expect(getByText("Não foi possível carregar o resumo patrimonial")).toBeTruthy()`; zero fictício ausente; `expect(onRetry).toHaveBeenCalledTimes(1)`. | ✅ PASS |
 | INV-109 (`spec.md:421`) | preservar campos e exibir erro acionável, mantendo o requestId para retry do mesmo conteúdo | `apps/tauri/src/features/investments/hooks/use-investment-submission.test.tsx:112` — requestId inicial; `:119-136` retry do mesmo conteúdo mantém requestId; `:244-248` erro retido; `investment-purchase-form.test.tsx:526-560` conserva campos e apresenta erro acionável. `expect(result.current.submission.requestId).toBe("request-1")`; `expect(result.current.submission.error).toMatchObject(...)` | ✅ PASS |
-| INV-110 (`spec.md:422`) | Drawer e formulários controlados com DropdownMenu operável por teclado e foco devolvido ao acionador | `apps/tauri/tests/investments-browser-uat.js:54-98` — em Chromium 360/1280, `waitForFunction(document.activeElement === botão de ações)` após Escape do menu e Drawer; `getByRole("menuitem",{name:"Configurar posição"}).evaluate(item=>item===document.activeElement)` após Enter/End; `label.inputValue()==="Rótulo conferido"`; Drawer direto devolve foco ao botão “Novo investimento”. Executado a partir de cópia `/tmp` sem o `;` inicial incompatível com este CLI. | ✅ PASS |
+| INV-110 (`spec.md:422`) | Drawer e formulários controlados com DropdownMenu operável por teclado e foco devolvido ao acionador | `apps/tauri/tests/investments-browser-uat.js:54-98` — em Chromium 360/1280, `waitForFunction(document.activeElement === botão de ações)` após Escape do menu e Drawer; `getByRole("menuitem",{name:"Configurar posição"}).evaluate(item=>item===document.activeElement)` após Enter/End; `label.inputValue()==="Rótulo conferido"`; Drawer direto devolve foco ao botão “Novo investimento”. Arquivo versionado executado diretamente nesta rodada. | ✅ PASS |
 | INV-111 (`spec.md:423`) | impedir novo envio do mesmo formulário | `apps/tauri/src/features/investments/hooks/use-investment-submission.test.tsx:187` `expect(secondSubmit).rejects.toBeInstanceOf(InvestmentSubmissionInFlightError)`; executor chamado uma vez. | ✅ PASS |
 | INV-112 (`spec.md:424`) | ações acessíveis e página sem overflow horizontal em 360px e 1280px, com rolagem interna da tabela | `apps/tauri/tests/investments-browser-uat.js:8-52` — em cada largura, `documentWidth <= width`, `bodyWidth <= width`, `tableScrollWidth > tableWidth`, `tableScrollLeft > 0`, `actionRight <= width` e `documentWidth <= width` após abrir o menu; `action().click()` confirma ação operável. Executado em Chromium com shell e página reais. | ✅ PASS |
 | INV-143 (`spec.md:425`) | usar o rótulo “Patrimônio contábil”, sem denominá-lo dinheiro disponível | `apps/tauri/src/features/accounts/components/accounts-page.test.tsx:133` `expect(getByText("Patrimônio contábil")).toBeTruthy()`; rótulo antigo ausente. | ✅ PASS |
@@ -178,11 +178,11 @@ Cada linha cita asserção executada no gate ou na UAT Chromium, com o valor/est
 | INV-119 (`spec.md:443`) | registrar o fluxo sem reabrir a alocação | `packages/infrastructure-memory/src/use-cases/record-investment-income.test.ts:212` `expect(result).toMatchObject({ok:true,operationId:"operation-3"})`;  posição CLOSED/zero inalterada; `record-investment-expense.test.ts:169-180` prova taxa no estado CLOSED. | ✅ PASS |
 | INV-144 (`spec.md:444`) | rejeitar com INVESTMENT_ENTITY_NOT_ACTIVE até a reativação explícita dos cadastros | `packages/infrastructure-memory/src/use-cases/amend-investment-operation.test.ts:483` — correção com conta/instrumento arquivado exige `INVESTMENT_ENTITY_NOT_ACTIVE` e snapshot intacto; `:500-517` reativação explícita; `:521-525` correção então confirma substituição. `expect(await amend(f)).toMatchObject({error:{code:"INVESTMENT_ENTITY_NOT_ACTIVE"}})`; `expect(await amend(f)).toMatchObject({ok:true,value:{replacementOperationId:"operation-4"}})` | ✅ PASS |
 
-**Contagem:** 148 PASS; 0 GAP de AC; 148/148 linhas conferidas contra `spec.md`. Os quatro gaps de evidência da rodada 3 foram fechados por T123–T125. A falha restante é de executabilidade direta do roteiro Chromium e a UAT nativa prescrita ainda não foi obtida.
+**Contagem:** 148 PASS; 0 GAP de AC. As 148 linhas foram conferidas contra `spec.md` na rodada 4; T126 preservou as asserções e fechou a falha de execução direta. Nesta rodada, 2 ACs de browser foram reexecutados, 146 mantêm a evidência anterior por identidade dos blobs.
 
 ## Gate Build/Final obrigatório
 
-Executei `tasks.md:37-71` em ordem: builds Domain, Application, Memory, SQLite e adapter Tauri; `vitest run` dos seis projetos; `check:migrations`; tipos e lint dos cinco packages, UI e app; Vite build; `git diff --check`. Todos retornaram zero.
+Na rodada 4, o Verifier executou `tasks.md:37-71` em ordem: builds Domain, Application, Memory, SQLite e adapter Tauri; `vitest run` dos seis projetos; `check:migrations`; tipos e lint dos cinco packages, UI e app; Vite build; `git diff --check`. Todos retornaram zero. O autor registrou novo Full React + Build verde em T126. Não repeti os 3.446 testes nesta rodada: `git diff --name-only 19eb4be..HEAD` comprova que código de produção e arquivos de teste são idênticos aos da rodada 4. Verifiquei agora `node --check`, Prettier e execução direta do roteiro alterado, todos com exit 0.
 
 | Projeto | Arquivos | Testes passados | Falhas | Skips |
 | --- | ---: | ---: | ---: | ---: |
@@ -194,7 +194,7 @@ Executei `tasks.md:37-71` em ordem: builds Domain, Application, Memory, SQLite e
 | React/jsdom | 86 | 1.067 | 0 | 0 |
 | **Total** | **246** | **3.446** | **0** | **0** |
 
-O Vite emitiu apenas o aviso de chunk acima de 500 kB. A rodada 3 tinha 3.444 testes; T123 e T124 adicionaram um caso cada. O total anterior à feature não foi medido nesta rodada, então não se infere o delta total da feature. No diff `676885a..HEAD`, nenhum teste foi removido ou marcado como skip; o teste preexistente de USD foi restringido à lista de receitas/despesas após o novo resultado líquido também conter o número 5, sem reduzir o valor exigido.
+O Vite emitiu apenas o aviso de chunk acima de 500 kB. A rodada 3 tinha 3.444 testes; T123 e T124 adicionaram um caso cada. O total anterior à feature não foi medido nesta rodada, então não se infere o delta total da feature. No diff `19eb4be..HEAD`, nenhum teste foi alterado, removido ou marcado como skip.
 
 ## Sensor de discriminação
 
@@ -209,29 +209,32 @@ Baseline da árvore real: `git status --porcelain=v1` vazio. Extraí `HEAD` com 
 | Omitir aviso de caixa negativo com posição (`cash < 0n` → `cash > 0n`) | `packages/infrastructure-sqlite/src/queries/investments/sqlite-investment-portfolio-summary.ts:142` | resumo SQLite | Morta: 1 falha, 27 passam |
 | Trocar `trigger.focus()` por `document.body.focus()` ao fechar Drawer | `apps/tauri/src/features/investments/components/investments-page.tsx:193` | UAT Chromium de 360/1280 | Morta: `page.waitForFunction` expirou em 30 s; Drawer fechado e elemento ativo `<body>` |
 
-**Sensor:** 6/6 mutações mortas, 0 sobreviventes. As falhas foram reproduzidas nos caminhos comportamentais relevantes. Nenhuma mutação tocou a árvore real.
+**Sensor herdado:** 6/6 mutações comportamentais mortas, 0 sobreviventes na rodada 4. As fontes e os testes de cada mutação têm blobs Git idênticos neste delta; não repeti essas seis execuções.
+
+**Sensor desta rodada, T126:** extraí `apps/tauri/tests/investments-browser-uat.js` do commit `19eb4be` para `/tmp/my-fin-verifier-r6-old-uat.js`. `playwright-cli run-code --filename` nessa cópia retornou exit 1, `SyntaxError: Unexpected token ';'`. O mesmo comando com `apps/tauri/tests/investments-browser-uat.js:1` no HEAD retornou exit 0. A falha antiga foi discriminada sem mutar a árvore real. Resultado agregado: 7/7 mutações/falhas discriminadas, nenhuma sobrevivente.
 
 ## UAT Chromium, Native e qualidade
 
-O harness `apps/tauri/uat-investments.html:1` monta `ApplicationShell` e `InvestmentsPage` reais via `apps/tauri/src/uat-investments.tsx:105-115`, com leituras locais determinísticas. Reabri a página em Chromium e executei `apps/tauri/tests/investments-browser-uat.js:8-108`: o roteiro passou em 360px e 1280px, incluindo menu por Enter/End/Escape, retorno de foco de menu e dois Drawers, campo controlado e medições de overflow e rolagem. O único erro de console observado foi 404 do favicon; não afetou as asserções. O harness não atesta IPC, persistência nem WebKitGTK.
+O harness `apps/tauri/uat-investments.html:1` monta `ApplicationShell` e `InvestmentsPage` reais via `apps/tauri/src/uat-investments.tsx:105-115`, com leituras locais determinísticas. Abri a página em Chromium e executei diretamente `apps/tauri/tests/investments-browser-uat.js:8-108` com `playwright-cli -s=verifier_r6 run-code --filename apps/tauri/tests/investments-browser-uat.js`: exit 0 em 360px e 1280px. Passaram menu por Enter/End/Escape, retorno de foco de menu e dois Drawers, campo controlado e medições de overflow e rolagem. O harness não atesta IPC, persistência nem WebKitGTK.
 
-**Falha reproduzível do artefato de UAT:** o comando direto `playwright-cli run-code --filename apps/tauri/tests/investments-browser-uat.js` retorna `SyntaxError: Unexpected token ';'`. A primeira linha do arquivo é `;async (page) => {` (`apps/tauri/tests/investments-browser-uat.js:1`). Uma cópia em `/tmp` que removeu somente o `;` inicial passou com as mesmas asserções, sem alterar o arquivo real. O script versionado precisa aceitar a invocação documentada em `tasks.md:4248-4250` antes do fechamento.
+**Correção T126:** `apps/tauri/tests/investments-browser-uat.js:1` começa com função nomeada, aceita a invocação direta e preserva as asserções. A sintaxe antiga do commit `19eb4be` falhou no mesmo CLI, como registrado no sensor.
 
-A UAT nativa N1–N8 de `tasks.md:50` não foi executada neste ambiente: `pkg-config --modversion webkit2gtk-4.1` retorna `Package webkit2gtk-4.1 was not found`. O gate Build/Final e o browser Chromium não substituem o runtime Tauri Linux. Não houve mudança Rust no diff, portanto o gate de cargo condicional não se aplica.
+**Runtime nativo independente, amostra desta rodada:** `PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig:/usr/share/pkgconfig pkg-config --modversion webkit2gtk-4.1` retornou `2.52.6`. O processo `target/debug/my-fin` estava ativo em `DISPLAY=:99`, com `XDG_DATA_HOME=/tmp/my-fin-native-uat-r5` confirmado em `/proc/184607/environ`; a janela `My Fin` media 1200×800. Capturei a tela nativa de Transações no livro `uat2`: a linha “UAT mixed sale” mostrava fluxo +R$ 1.085,00; o detalhe mostrava bruto R$ 1.100,00, custo -R$ 1.000,00, receita R$ 100,00, despesa R$ 15,00 e resultado líquido R$ 85,00. Naveguei pela UI nativa até Investimentos: a carteira `carteira2`, `uatvazia`, o instrumento `cdb2` e saldos históricos estavam visíveis. A base SQLite isolada foi lida em modo `ro`: 2 carteiras, 3 posições, 20 operações, 1 avaliação e 21 recibos com 21 `request_id` distintos. A operação “UAT mixed sale” tem `gross_amount_minor=110000`, `fees_minor=1000`, `taxes_minor=500` e `net_cash_flow_minor=108500`; o `request_id` de N8 citado em T93 ocorre uma vez. Isso corrobora IPC e persistência no runtime real, sem substituir as jornadas completas.
 
-Qualidade: T123 altera somente apresentação de resultado e seu teste; T124 só adiciona fixture e asserções SQLite; T125 altera retorno de foco e adiciona o harness. O diff `676885a..HEAD` não mostra refatoração ou remoção de asserts fora da intenção dos reparos. Guia revisado: `.codex/skills/tlc-spec-driven/references/coding-principles.md`. A falha de sintaxe do roteiro é o único desvio novo identificável no diff.
+**Alcance nativo:** N1–N6/N8 e a parte de Investimentos de N7 foram executadas pelo autor e documentadas em `tasks.md:3639-3693`; N7 de Transações e a retomada nativa constam em `tasks.md:3696-3729`. Nesta rodada, eu não repeti criação, reversão, reinício, troca de livro, falha pós-commit, nem 360px/1280px em WebKitGTK. A prova independente atual é a inspeção da sessão Tauri viva e da base isolada; a prova integral dessas jornadas é a evidência autoral de T93/T94. Não houve mudança Rust neste delta, portanto o gate cargo condicional não se aplica.
+
+Qualidade: T126 altera apenas a primeira linha do roteiro, além dos registros de spec/tasks; nenhuma asserção mudou. O diff `19eb4be..HEAD` não mostra refatoração ou remoção de testes. Guia revisado: `.codex/skills/tlc-spec-driven/references/coding-principles.md`.
 
 ## Casos de borda e rastreabilidade
 
-Os casos de borda de `spec.md:448-488` permanecem ligados às 148 linhas acima: reversão/correção, rollback, CAS/retry, migração, cost/quantity, avaliação por revisão, caixa negativo, encerramento e apresentação. Os testes correspondentes passaram no gate atual. `spec.md:521-675` registra T123 em INV-44, T124 em INV-57 e T125 em INV-110/112; estes quatro ACs passam na matriz, mesmo com o bloqueio de fechamento descrito abaixo.
+Os casos de borda de `spec.md:448-488` permanecem ligados às 148 linhas acima: reversão/correção, rollback, CAS/retry, migração, cost/quantity, avaliação por revisão, caixa negativo, encerramento e apresentação. Os testes correspondentes passaram no gate da rodada 4, sem alteração de blobs neste delta. `spec.md:521-675` registra T123 em INV-44, T124 em INV-57 e T125/T126 em INV-110/112.
 
-## Gaps ranqueados e próximo passo
+## Limites de evidência
 
-1. **Reprodução direta da UAT Chromium, Minor:** remover o `;` inicial de `apps/tauri/tests/investments-browser-uat.js:1` e repetir o comando `run-code --filename` sem adaptação. O comportamento INV-110/112 passou na cópia temporária, mas o artefato versionado falha neste CLI.
-2. **UAT nativa, limite ambiental:** N1–N8 continuam sem prova independente porque `webkit2gtk-4.1` não está instalado. Executar a jornada Tauri/WebKitGTK em ambiente com as dependências nativas; registrar IPC, persistência e reinício separadamente do Chromium local.
+Não há gap de AC ou mutação sobrevivente neste delta. A repetição independente integral de N1–N8 e do gate de 3.446 testes não foi feita nesta rodada; os respectivos resultados permanecem documentados em T93/T94 e na rodada 4. O spot-check nativo confirma que o bloqueio ambiental anterior não existe nesta sessão, mas não prova de novo os ramos de erro, reinício e todas as larguras no WebKitGTK.
 
 O ciclo usual de três re-verificações já foi atingido; esta rodada ocorreu por direção explícita do usuário. Nenhum código, teste, spec, tasks, STATE ou lessons foi editado pelo Verifier. Como a instrução desta rodada permite escrever apenas `validation.md`, não registrei lição adicional nos arquivos da skill.
 
 ## Fechamento determinístico
 
-`validate_state.py investments-foundation` deve retornar não zero para este veredito; isso bloqueia declarar a feature pronta. **Overall: FAIL por artefato de UAT não executável diretamente e UAT nativa pendente; cobertura dos 148 ACs: PASS.**
+`validate_state.py investments-foundation` retorna zero para este relatório. **Overall: PASS para os 148 ACs, o gate herdado sem mudanças de código/teste, o sensor e a execução direta T126; N1–N8 integrais permanecem como prova autoral documentada, com spot-check nativo independente nesta rodada.**
