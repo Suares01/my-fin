@@ -196,7 +196,7 @@ T100 -> T101 -> T102 -> T103 -> T104
 ### Phase 19: Critérios remanescentes da auditoria
 
 ```text
-T104 -> T105 -> T106 -> T107 -> T108 -> T109 -> T110 -> T111 -> T112 -> T113 -> T114 -> T115 -> T116 -> T117 -> T118 -> T119 -> T120 -> T121
+T104 -> T105 -> T106 -> T107 -> T108 -> T109 -> T110 -> T111 -> T112 -> T113 -> T114 -> T115 -> T116 -> T117 -> T118 -> T119 -> T120 -> T121 -> T122
 ```
 
 ### Phase Execution Map
@@ -4177,6 +4177,25 @@ Revisão reversa: os 6 cenários Memory novos cobrem read-only, journal opcional
 **Gate**: Full Domain/Application + Build
 **Commit**: `test(investments): proteger fronteira sem provedor`
 
+### T122: Provar ausência de hard delete público
+
+**What**: Fixar a superfície pública dos comandos e portas de investimento para impedir exclusão definitiva de carteiras, instrumentos, posições, operações e avaliações.
+**Where**: `packages/application/src/public-api.test.ts`.
+**Depends on**: T121 e `validation.md` rodada 2 (INV-117 NÃO ATESTADO).
+**Requirement**: INV-117.
+
+**Done when**:
+
+- [x] API pública oferece transições de arquivamento/reversão/correção sem comando destrutivo para as entidades protegidas.
+- [x] Portas de carteiras, instrumentos, posições, operações e avaliações têm chaves de método exatas sem exclusão definitiva.
+- [x] Gate `Full Application + Build` passa antes do commit atômico.
+
+**Evidência T122 (2026-10-02):** `public-api.test.ts` exige comandos de arquivamento, reversão e correção, rejeita exports destrutivos de investimento/conta, e fixa via `expectTypeOf` as chaves das cinco portas de persistência. Application 263/263 testes em 28 arquivos; Domain/Application builds, lint, tipos e `git diff --check` verdes. **Adequacy verdict:** PASS para a API pública INV-117; re-verificação independente pendente.
+
+**Tests**: public API and type contract.
+**Gate**: Full Application + Build
+**Commit**: `test(investments): impedir hard delete publico`
+
 ## Task Granularity Check
 
 Um componente/caso de uso por tarefa, com testes e integrações mecânicas do mesmo contrato. Não usar o ponto principal como permissão para agregar funcionalidades adjacentes.
@@ -4635,7 +4654,7 @@ Mapeamento de planejamento, não evidência de implementação. Cada ID também 
 | INV-114        | T6, T24, T25, T31, T32, T46, T64, T76                                                                                                                                                                                                | Planned |
 | INV-115        | T38, T39, T42, T43, T74, T87                                                                                                                                                                                                         | Planned |
 | INV-116        | T6, T24, T31, T43, T46, T64, T76, T87                                                                                                                                                                                                | Planned |
-| INV-117        | T46, T59, T66, T67, T89, T90                                                                                                                                                                                                         | Planned |
+| INV-117        | T46, T59, T66, T67, T89, T90, T122                                                                                                                                                                                                   | T122 public hard-delete exclusion proof complete; final validation pending |
 | INV-118        | T8, T51, T79, T88, T115                                                                                                                                                                                                              | T115 inactive-command proof complete; final validation pending |
 | INV-119        | T8, T53, T55, T81, T83, T91                                                                                                                                                                                                          | T91 detail complete; remaining mapped work/validation pending |
 | INV-144        | T8, T43, T46, T56, T57, T85, T91, T104                                                                                                                                                                                               | T104 archived-entity amendment and reactivation assertions complete; independent validation pending |

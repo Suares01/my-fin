@@ -2,11 +2,16 @@ import { readdirSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 import { fileURLToPath } from "node:url"
 import * as api from "./index.js"
-import { describe, expect, it } from "vitest"
+import { describe, expect, expectTypeOf, it } from "vitest"
 import type {
   ApplicationEventType,
   CategoryDto,
   CreateCategoryCommand,
+  InvestmentInstrumentRepository,
+  InvestmentOperationRepository,
+  InvestmentPositionRepository,
+  InvestmentValuationStore,
+  LedgerAccountRepository,
 } from "./index.js"
 
 function sourceFiles(directory: string): readonly string[] {
@@ -122,5 +127,42 @@ describe("application public query API", () => {
         /\b(?:pluggy|belvo|provider(?:Id|Token|Credential)?|credentials?|accessToken|apiKey|clientSecret)\b/i
       )
     }
+  })
+
+  it("exposes investment lifecycle commands without public hard-delete paths", () => {
+    expect(api.SetInvestmentInstrumentStatus).toBeTypeOf("function")
+    expect(api.ArchiveLedgerAccount).toBeTypeOf("function")
+    expect(api.ReverseInvestmentOperation).toBeTypeOf("function")
+    expect(api.AmendInvestmentOperation).toBeTypeOf("function")
+    expect(
+      Object.keys(api).filter(
+        (name) =>
+          /^(?:delete|remove|destroy|erase|purge)/i.test(name) &&
+          /(?:investment|position|valuation|instrument|account)/i.test(name)
+      )
+    ).toEqual([])
+    expectTypeOf<keyof LedgerAccountRepository>().toEqualTypeOf<
+      "findById" | "findBySystemPurpose" | "existsWithName" | "add" | "save"
+    >()
+    expectTypeOf<keyof InvestmentInstrumentRepository>().toEqualTypeOf<
+      "findById" | "existsWithIdentifier" | "add" | "save"
+    >()
+    expectTypeOf<keyof InvestmentPositionRepository>().toEqualTypeOf<
+      | "findById"
+      | "hasAnyForAccount"
+      | "hasAnyForInstrument"
+      | "hasOpenForAccount"
+      | "hasOpenForInstrument"
+      | "add"
+      | "save"
+    >()
+    expectTypeOf<keyof InvestmentOperationRepository>().toEqualTypeOf<
+      | "findById"
+      | "findLastEffective"
+      | "findOwnerOfJournal"
+      | "add"
+      | "saveLineage"
+    >()
+    expectTypeOf<keyof InvestmentValuationStore>().toEqualTypeOf<"append">()
   })
 })
