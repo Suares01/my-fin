@@ -552,7 +552,7 @@ O Design deverá concretizar os contratos abaixo sem ampliar o recorte de produt
 | INV-28 | S3 | Tasks | Planned | T38, T39, T50, T60, T78, T96 |
 | INV-29 | S3 | Tasks | Implemented: T11, T50, T51 and T79 | T11, T50, T51, T79 |
 | INV-30 | S3 | Tasks | Implemented: T11, T50, T51, T79, T95 and T96 | T11, T50, T51, T79, T95, T96 |
-| INV-31 | S3 | Tasks | Implemented; validation pending | T60, T68, T70, T94 |
+| INV-31 | S3 | Tasks | T109 transfer-without-allocation proof complete; final validation pending | T60, T68, T70, T94, T109 |
 | INV-32 | S3 | Tasks | Implemented: T38, T39, T50, T51, T55, T60, T79, T83 and T95 | T38, T39, T50, T51, T55, T60, T79, T83, T95 |
 | INV-33 | S3 | Tasks | T95 atomic command, T96 preview and T78 opening UI complete | T50, T95, T96, T78 |
 | INV-34 | S3 | Tasks | In progress: T9 operation | T9, T50, T51, T95 |

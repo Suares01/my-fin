@@ -196,7 +196,7 @@ T100 -> T101 -> T102 -> T103 -> T104
 ### Phase 19: Critérios remanescentes da auditoria
 
 ```text
-T104 -> T105 -> T106 -> T107 -> T108
+T104 -> T105 -> T106 -> T107 -> T108 -> T109
 ```
 
 ### Phase Execution Map
@@ -3931,6 +3931,24 @@ Revisão reversa: os 6 cenários Memory novos cobrem read-only, journal opcional
 **Gate**: Full Memory + Build
 **Commit**: `test(investments): provar concorrência de operações`
 
+### T109: Provar transferência sem alocação ou categoria
+
+**What**: Fortalecer a transferência entre carteiras para demonstrar que só os saldos financeiros mudam.
+**Where**: `packages/infrastructure-memory/src/use-cases/investment-cash-warnings.test.ts`.
+**Depends on**: T108 e `validation.md` rodada 2 (INV-31 NÃO ATESTADO).
+**Requirement**: INV-31.
+
+**Done when**:
+
+- [x] Transferência de 100 entre duas carteiras preserva posições e operações, com apenas dois postings financeiros opostos e caixas resultantes exatos.
+- [x] Gate `Full Memory + Build` passa antes do commit atômico.
+
+**Evidência T109 (2026-10-01):** `investment-cash-warnings.test.ts` já exige caixa -1100 na origem e -900 no destino após transferência de 100. O teste agora compara posições e operações antes/depois e exige um único journal com postings -100/+100 apenas nas duas contas de investimento; não há categoria de receita/despesa. Memory permanece 652 testes em 55 arquivos. Full Memory + Build verde: builds Domain/Application/Memory, 652/652 testes, lint, tipos e `git diff --check`. **Adequacy verdict:** PASS para INV-31 nesta costura; re-verificação independente pendente.
+
+**Tests**: integration (Memory transfer).
+**Gate**: Full Memory + Build
+**Commit**: `test(investments): provar transferência sem alocação`
+
 ## Task Granularity Check
 
 Um componente/caso de uso por tarefa, com testes e integrações mecânicas do mesmo contrato. Não usar o ponto principal como permissão para agregar funcionalidades adjacentes.
@@ -4276,7 +4294,7 @@ Mapeamento de planejamento, não evidência de implementação. Cada ID também 
 | INV-28         | T38, T39, T50, T60, T78, T96 | Planned |
 | INV-29         | T11, T50, T51, T79                                                                                                                                                                                                                   | Planned |
 | INV-30 | T11, T50, T51, T79, T95, T96 | Planned |
-| INV-31         | T60, T68, T70, T94                                                                                                                                                                                                                   | Implemented; validation pending |
+| INV-31         | T60, T68, T70, T94, T109                                                                                                                                                                                                             | T109 transfer-without-allocation proof complete; final validation pending |
 | INV-32 | T38, T39, T50, T51, T55, T60, T79, T83, T95 | Planned |
 | INV-33         | T50, T95, T78, T96 | Planned |
 | INV-34 | T9, T50, T51, T95 | Planned |

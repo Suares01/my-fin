@@ -241,6 +241,8 @@ describe("investment cash warnings for common journal commands", () => {
 
   it("warns every affected investment account in a transfer", async () => {
     const f = await setup(true)
+    const positionsBefore = f.h.store.listInvestmentPositions()
+    const operationsBefore = f.h.store.listInvestmentOperations()
     const result = await new TransferMoney(
       f.h.transactionManager,
       f.h.dispatcher,
@@ -264,6 +266,16 @@ describe("investment cash warnings for common journal commands", () => {
         ],
       },
     })
+    expect(f.h.store.listInvestmentPositions()).toEqual(positionsBefore)
+    expect(f.h.store.listInvestmentOperations()).toEqual(operationsBefore)
+    expect(f.h.store.listJournalEntries()).toMatchObject([
+      {
+        postings: [
+          { accountId: f.broker.id, amountMinor: -100n },
+          { accountId: f.second!.id, amountMinor: 100n },
+        ],
+      },
+    ])
   })
 
   it("warns only the affected investment side of a transfer", async () => {
