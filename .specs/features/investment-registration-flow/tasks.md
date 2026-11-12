@@ -68,12 +68,14 @@ T3 → T4 → T5 → T6
 **Requirement**: IRF-01–IRF-08, IRF-14, IRF-24
 **Tools**: Skill `ui-ux-pro-max`
 **Done when**:
-- [ ] Busca filtra nome, tipo, emissor e identificadores.
-- [ ] Campos essenciais e avançados são separados.
-- [ ] Opções contábeis têm linguagem simples e descrição de efeito.
-- [ ] Testes de integração focais passam.
+- [x] Busca filtra nome, tipo, emissor e identificadores.
+- [x] Campos essenciais e avançados são separados.
+- [x] Opções contábeis têm linguagem simples e descrição de efeito.
+- [x] Testes de integração focais passam.
 **Tests**: integration
 **Gate**: quick
+
+**Execution evidence (2026-11-12)**: 5/5 testes focais passaram. Cobertura suficiente: busca por emissor/identificador em `investment-registration-steps.test.tsx:109-114`, densidade inicial em `:119-122`, seleção em `:130-138`, revelação avançada e aviso de avaliação separada em `:142-147`, e patrimônio ausente em `:152-159`. Cobertura necessária: assertions mapeiam IRF-01, IRF-03, IRF-07, IRF-08, IRF-11 e IRF-16. Adequacy verdict: PASS.
 
 ### T3: Criar revisão contábil reutilizável
 
