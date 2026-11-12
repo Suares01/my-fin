@@ -20,8 +20,7 @@ import type { OpeningFormValues } from "./open-investment-position-form-model"
 
 function originLabel(values: OpeningFormValues): string {
   if (values.origin === "EXTERNAL_ACCOUNT") return "Outra conta do My Fin"
-  if (values.origin === "NOT_RECORDED")
-    return "Patrimônio ainda não registrado"
+  if (values.origin === "NOT_RECORDED") return "Patrimônio ainda não registrado"
   return values.mode === "BUY" ? "Caixa da carteira" : "Já está na carteira"
 }
 
@@ -76,7 +75,10 @@ export function InvestmentRegistrationReview({
     values.mode === "BUY" ? "Valor principal" : "Custo contábil"
 
   return (
-    <section className="flex flex-col gap-6" aria-labelledby="review-step-title">
+    <section
+      className="flex flex-col gap-6"
+      aria-labelledby="review-step-title"
+    >
       <div className="space-y-1">
         <div className="flex flex-wrap items-center gap-2">
           <h2 id="review-step-title" className="text-lg font-medium">

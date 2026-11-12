@@ -27,6 +27,7 @@ import type {
   OpeningFormValues,
   OpeningRegistrationStep,
 } from "./open-investment-position-form-model"
+import { filterInvestmentInstruments } from "./investment-registration-search"
 
 const registrationSteps: readonly {
   readonly id: OpeningRegistrationStep
@@ -43,7 +44,9 @@ export function InvestmentRegistrationProgress({
 }: {
   readonly current: OpeningRegistrationStep
 }) {
-  const currentIndex = registrationSteps.findIndex((step) => step.id === current)
+  const currentIndex = registrationSteps.findIndex(
+    (step) => step.id === current
+  )
   return (
     <ol
       className="grid grid-cols-4 gap-2"
@@ -74,32 +77,6 @@ export function InvestmentRegistrationProgress({
         </li>
       ))}
     </ol>
-  )
-}
-
-function normalizeSearch(value: string): string {
-  return value.trim().toLocaleLowerCase("pt-BR")
-}
-
-export function filterInvestmentInstruments(
-  instruments: readonly InvestmentInstrumentView[],
-  search: string
-): readonly InvestmentInstrumentView[] {
-  const query = normalizeSearch(search)
-  if (!query) return instruments
-  return instruments.filter((instrument) =>
-    [
-      instrument.name,
-      instrument.type,
-      instrument.issuerName ?? "",
-      ...instrument.identifiers.flatMap((identifier) => [
-        identifier.value,
-        identifier.market ?? "",
-      ]),
-    ]
-      .join(" ")
-      .toLocaleLowerCase("pt-BR")
-      .includes(query)
   )
 }
 
@@ -134,9 +111,11 @@ function InstrumentPicker({
               className="pointer-events-none absolute top-2.5 left-3 size-4 text-muted-foreground"
             />
             <Input
+              ref={field.ref}
               id={inputId}
               value={search}
               onChange={(event) => setSearch(event.target.value)}
+              onBlur={field.onBlur}
               placeholder="Busque por nome, tipo ou código"
               autoComplete="off"
               disabled={disabled}
@@ -227,7 +206,10 @@ export function InvestmentRegistrationChoiceStep({
   readonly onCreateInstrument: () => void
 }) {
   return (
-    <section className="flex flex-col gap-6" aria-labelledby="choice-step-title">
+    <section
+      className="flex flex-col gap-6"
+      aria-labelledby="choice-step-title"
+    >
       <div className="space-y-1">
         <h2 id="choice-step-title" className="text-lg font-medium">
           O que você quer registrar?
@@ -252,8 +234,7 @@ export function InvestmentRegistrationChoiceStep({
           control={control}
           instruments={instruments.filter(
             (instrument) =>
-              instrument.status === "ACTIVE" &&
-              instrument.currency === currency
+              instrument.status === "ACTIVE" && instrument.currency === currency
           )}
           disabled={disabled}
           onCreate={onCreateInstrument}
@@ -361,14 +342,14 @@ export function InvestmentRegistrationPositionStep({
         <ControlledInput
           control={control}
           name="occurredOn"
-          label={mode === "BUY" ? "Data da compra ou aplicação" : "Data da abertura"}
+          label={
+            mode === "BUY" ? "Data da compra ou aplicação" : "Data da abertura"
+          }
           type="date"
           disabled={disabled}
         />
         <Collapsible>
-          <CollapsibleTrigger
-            className="flex min-h-11 w-full items-center justify-between rounded-2xl border border-border px-4 py-2 text-left text-sm font-medium hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/30 focus-visible:outline-none"
-          >
+          <CollapsibleTrigger className="flex min-h-11 w-full items-center justify-between rounded-2xl border border-border px-4 py-2 text-left text-sm font-medium hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/30 focus-visible:outline-none">
             Detalhes avançados
             <ChevronDown aria-hidden="true" className="size-4" />
           </CollapsibleTrigger>

@@ -11,8 +11,8 @@ import {
   InvestmentRegistrationAccountingStep,
   InvestmentRegistrationChoiceStep,
   InvestmentRegistrationPositionStep,
-  filterInvestmentInstruments,
 } from "./investment-registration-steps"
+import { filterInvestmentInstruments } from "./investment-registration-search"
 import {
   openingFormDefaults,
   type OpeningFormValues,
@@ -57,7 +57,9 @@ const accounts: readonly InvestmentAccountView[] = [
 ]
 
 function ChoiceHarness() {
-  const form = useForm<OpeningFormValues>({ defaultValues: openingFormDefaults })
+  const form = useForm<OpeningFormValues>({
+    defaultValues: openingFormDefaults,
+  })
   return (
     <InvestmentRegistrationChoiceStep
       control={form.control}
@@ -72,7 +74,9 @@ function ChoiceHarness() {
 }
 
 function PositionHarness() {
-  const form = useForm<OpeningFormValues>({ defaultValues: openingFormDefaults })
+  const form = useForm<OpeningFormValues>({
+    defaultValues: openingFormDefaults,
+  })
   return (
     <InvestmentRegistrationPositionStep
       control={form.control}
@@ -131,18 +135,16 @@ describe("investment registration steps", () => {
     expect(screen.queryByRole("option", { name: /CDB Liquidez/ })).toBeNull()
     fireEvent.click(screen.getByRole("option", { name: /Empresa/ }))
     expect(
-      screen.getByRole("option", { name: /Empresa/ }).getAttribute(
-        "aria-selected"
-      )
+      screen
+        .getByRole("option", { name: /Empresa/ })
+        .getAttribute("aria-selected")
     ).toBe("true")
   })
 
   it("keeps optional fixed-income terms behind advanced disclosure", () => {
     render(<PositionHarness />)
     expect(screen.queryByText("Termos de renda fixa")).toBeNull()
-    fireEvent.click(
-      screen.getByRole("button", { name: "Detalhes avançados" })
-    )
+    fireEvent.click(screen.getByRole("button", { name: "Detalhes avançados" }))
     expect(screen.getByText("Termos de renda fixa")).toBeTruthy()
     expect(screen.getByText(/valor atual poderá ser registrado/)).toBeTruthy()
   })

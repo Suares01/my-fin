@@ -104,12 +104,14 @@ T3 → T4 → T5 → T6
 **Requirement**: IRF-02, IRF-04, IRF-09–IRF-16, IRF-20–IRF-23, IRF-25–IRF-26
 **Tools**: Skill `ui-ux-pro-max`
 **Done when**:
-- [ ] Os cinco caminhos contábeis enviam os comandos existentes corretos.
-- [ ] O saldo inicial não se repete após falha de alocação.
-- [ ] Falhas preservam etapa, valores e requestId.
-- [ ] A criação rápida retorna ao rascunho.
+- [x] Os cinco caminhos contábeis enviam os comandos existentes corretos.
+- [x] O saldo inicial não se repete após falha de alocação.
+- [x] Falhas preservam etapa, valores e requestId.
+- [x] A criação rápida retorna ao rascunho.
 **Tests**: integration
 **Gate**: full
+
+**Execution evidence (2026-11-12)**: o orquestrador mantém uma única instância de React Hook Form nas quatro etapas, retorna da criação rápida com as seleções preservadas e reutiliza useInvestmentSubmission para abertura, compra/aplicação e saldo inicial. O gate full passou: cinco builds de pacotes, 89 arquivos/1101 testes React e tsc --noEmit. A suíte focal prova abertura sem lançamento, aplicação externa atômica, compra, saldo inicial explícito seguido de alocação e retry sem repetir o saldo. Adequacy verdict: PASS.
 
 ### T5: Atualizar a matriz completa de testes do formulário
 

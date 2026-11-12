@@ -2,47 +2,47 @@ import type {
   InvestmentMutationResult,
   OpenInvestmentPositionCommand,
   OpenInvestmentPositionWithPurchaseCommand,
-  PreviewInvestmentPositionOpeningCommand,
   SetInvestmentOpeningBalanceCommand,
 } from "@workspace/application"
-import { useQuery } from "@tanstack/react-query"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { useQuery } from "@tanstack/react-query"
 import {
   Alert,
   AlertDescription,
   AlertTitle,
 } from "@workspace/ui/components/alert"
 import { Button } from "@workspace/ui/components/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@workspace/ui/components/card"
-import { FieldGroup } from "@workspace/ui/components/field"
 import { Spinner } from "@workspace/ui/components/spinner"
-import { formatMinorAmount } from "@workspace/ui/money"
 import { toast } from "@workspace/ui/components/toast"
 import { useEffect, useMemo, useState } from "react"
 import { useForm, useWatch } from "react-hook-form"
-import { ControlledInput } from "../../../components/forms/controlled-input"
-import { ControlledSelect } from "../../../components/forms/controlled-select"
-import { ControlledToggleGroup } from "../../../components/forms/controlled-toggle-group"
 import { useActiveBook, useMyFin } from "../../../providers"
-import { useAccountBalances } from "../../accounts/hooks"
 import { AccountForm } from "../../accounts/components/account-form"
+import { useAccountBalances } from "../../accounts/hooks"
 import { useBookDetail } from "../../books/hooks"
 import { useInvestmentAccounts, useInvestmentInstruments } from "../hooks"
 import { useInvestmentSubmission } from "../hooks/use-investment-submission"
 import { InvestmentInstrumentForm } from "./investment-instrument-form"
+import { InvestmentRegistrationReview } from "./investment-registration-review"
 import {
+  InvestmentRegistrationAccountingStep,
+  InvestmentRegistrationChoiceStep,
+  InvestmentRegistrationPositionStep,
+  InvestmentRegistrationProgress,
+} from "./investment-registration-steps"
+import {
+  isFixedIncome,
+  isUnitsRequired,
   openingErrorMessage,
   openingFormDefaults,
   openingFormSchema,
+  openingPreviewCommand,
+  openingStepErrors,
   parseOpeningMoney,
   parseOpeningQuantity,
+  selectedOpeningTerms,
   type OpeningFormValues,
+  type OpeningRegistrationStep,
 } from "./open-investment-position-form-model"
 
 type Props = {
@@ -50,170 +50,15 @@ type Props = {
   readonly onCancel?: () => void
 }
 
-const UNIT_REQUIRED_TYPES = new Set([
-  "STOCK",
-  "BDR",
-  "ETF",
-  "REAL_ESTATE_FUND",
-  "MUTUAL_FUND",
-  "CRYPTO_ASSET",
-])
+const stepOrder: readonly OpeningRegistrationStep[] = [
+  "CHOICE",
+  "POSITION",
+  "ACCOUNTING",
+  "REVIEW",
+]
 
 function optional(value: string): string | undefined {
   return value.trim() || undefined
-}
-
-function selectedTerms(values: OpeningFormValues) {
-  const terms = {
-    ...(values.rateKind ? { rateKind: values.rateKind } : {}),
-    ...(values.index ? { index: values.index } : {}),
-    ...(values.annualRate
-      ? { annualRate: values.annualRate.replace(",", ".") }
-      : {}),
-    ...(values.indexPercentage
-      ? { indexPercentage: values.indexPercentage.replace(",", ".") }
-      : {}),
-    ...(values.annualSpreadRate
-      ? { annualSpreadRate: values.annualSpreadRate.replace(",", ".") }
-      : {}),
-    ...(values.issueDate ? { issueDate: values.issueDate } : {}),
-    ...(values.gracePeriodDate
-      ? { gracePeriodDate: values.gracePeriodDate }
-      : {}),
-    ...(values.maturityDate ? { maturityDate: values.maturityDate } : {}),
-  }
-  return Object.keys(terms).length > 0 ? terms : undefined
-}
-
-function validTerms(values: OpeningFormValues): string | null {
-  if (
-    values.rateKind === "PREFIXED" &&
-    !/^\d+(?:[.,]\d+)?$/.test(values.annualRate)
-  )
-    return "Informe a taxa anual."
-  if (
-    (values.rateKind === "INDEXED" || values.rateKind === "HYBRID") &&
-    (!values.index || !/^\d+(?:[.,]\d+)?$/.test(values.indexPercentage))
-  )
-    return "Informe índice e percentual."
-  if (
-    values.rateKind === "HYBRID" &&
-    !/^\d+(?:[.,]\d+)?$/.test(values.annualSpreadRate)
-  )
-    return "Informe o spread anual."
-  if (
-    values.rateKind === "" &&
-    (values.index ||
-      values.annualRate ||
-      values.indexPercentage ||
-      values.annualSpreadRate)
-  )
-    return "Escolha o tipo de taxa."
-  const dates = [
-    values.issueDate,
-    values.gracePeriodDate,
-    values.maturityDate,
-  ].filter(Boolean)
-  if (
-    dates.some(
-      (date) =>
-        !/^\d{4}-\d{2}-\d{2}$/.test(date) ||
-        Number.isNaN(Date.parse(`${date}T00:00:00Z`))
-    )
-  )
-    return "Informe datas válidas."
-  if (dates.some((date, index) => index > 0 && date < dates[index - 1]!))
-    return "Informe os termos em ordem cronológica."
-  return null
-}
-
-function openingPreviewCommand(input: {
-  readonly values: OpeningFormValues
-  readonly bookId: string | null
-  readonly currency: string | undefined
-  readonly walletId: string | undefined
-  readonly instrumentId: string | undefined
-  readonly fixedIncome: boolean
-  readonly unitsRequired: boolean
-  readonly confirmedBalance: boolean
-  readonly externalAccountIds: readonly string[]
-}): PreviewInvestmentPositionOpeningCommand | null {
-  const {
-    values,
-    bookId,
-    currency,
-    walletId,
-    instrumentId,
-    fixedIncome,
-    unitsRequired,
-    confirmedBalance,
-    externalAccountIds,
-  } = input
-  if (!bookId || !currency || !walletId || !instrumentId) return null
-  if (unitsRequired && values.quantityMode !== "UNITS") return null
-  const amount = parseOpeningMoney(values.costDisplay)
-  if (
-    amount === null ||
-    (values.mode === "BUY" && amount === "0") ||
-    !/^\d{4}-\d{2}-\d{2}$/.test(values.occurredOn) ||
-    (fixedIncome && validTerms(values) !== null)
-  )
-    return null
-  const quantity =
-    values.quantityMode === "UNITS"
-      ? parseOpeningQuantity(values.quantity)
-      : undefined
-  if (quantity === null) return null
-  const common = {
-    bookId,
-    investmentAccountId: walletId,
-    instrumentId,
-    quantityMode: values.quantityMode,
-    occurredOn: values.occurredOn,
-    ...(optional(values.label) ? { label: optional(values.label) } : {}),
-    ...(fixedIncome && selectedTerms(values)
-      ? { fixedIncomeTerms: selectedTerms(values) }
-      : {}),
-  } as const
-  if (values.mode === "OWNED" && values.origin !== "EXTERNAL_ACCOUNT") {
-    const initialCash =
-      values.origin === "NOT_RECORDED"
-        ? parseOpeningMoney(values.initialCashDisplay)
-        : undefined
-    if (initialCash === null) return null
-    return {
-      ...common,
-      kind: "ALLOCATION",
-      bookCostMinor: amount,
-      ...(quantity === undefined ? {} : { quantity }),
-      ...(values.origin === "NOT_RECORDED" && !confirmedBalance
-        ? {
-            proposedOpeningBalanceMinor: (
-              BigInt(amount) + BigInt(initialCash ?? "0")
-            ).toString(),
-          }
-        : {}),
-    }
-  }
-  if (values.origin === "NOT_RECORDED") return null
-  if (
-    values.origin === "EXTERNAL_ACCOUNT" &&
-    !externalAccountIds.includes(values.externalAccountId)
-  )
-    return null
-  return {
-    ...common,
-    kind: "PURCHASE",
-    type: values.mode === "BUY" ? "PURCHASE" : "APPLICATION",
-    currency,
-    capitalMinor: amount,
-    description: values.description.trim() || "Abertura de investimento",
-    funding:
-      values.origin === "EXTERNAL_ACCOUNT"
-        ? { mode: "EXTERNAL_ACCOUNT", accountId: values.externalAccountId }
-        : { mode: "INTERNAL_CASH" },
-    ...(quantity === undefined ? {} : { quantityDelta: quantity }),
-  }
 }
 
 export function OpenInvestmentPositionForm({ onSuccess, onCancel }: Props) {
@@ -224,15 +69,21 @@ export function OpenInvestmentPositionForm({ onSuccess, onCancel }: Props) {
   const accounts = useInvestmentAccounts()
   const instruments = useInvestmentInstruments("ACTIVE")
   const balances = useAccountBalances()
+  const [step, setStep] = useState<OpeningRegistrationStep>("CHOICE")
   const [catalog, setCatalog] = useState<"account" | "instrument" | null>(null)
   const [confirmedBalance, setConfirmedBalance] = useState(false)
+  const [acknowledgedBalanceKey, setAcknowledgedBalanceKey] = useState<
+    string | null
+  >(null)
   const [failure, setFailure] = useState<string | null>(null)
   const form = useForm<OpeningFormValues>({
     resolver: zodResolver(openingFormSchema),
+    mode: "onSubmit",
+    reValidateMode: "onChange",
     defaultValues: openingFormDefaults,
   })
   const values = useWatch({ control: form.control }) as OpeningFormValues
-  const currency = book.data?.baseCurrency ?? "BRL"
+  const currency = book.data?.baseCurrency
   const wallet = accounts.data?.find(
     (account) => account.id === values.investmentAccountId
   )
@@ -253,24 +104,18 @@ export function OpenInvestmentPositionForm({ onSuccess, onCancel }: Props) {
       ) ?? [],
     [balances.data, currency]
   )
-  const fixedIncome =
-    instrument !== undefined &&
-    [
-      "CDB",
-      "RDB",
-      "LCI",
-      "LCA",
-      "LC",
-      "CRI",
-      "CRA",
-      "DEBENTURE",
-      "LF",
-      "LIG",
-      "TREASURY",
-    ].includes(instrument.type)
-  const unitsRequired = Boolean(
-    instrument && UNIT_REQUIRED_TYPES.has(instrument.type)
+  const fixedIncome = isFixedIncome(instrument?.type)
+  const unitsRequired = isUnitsRequired(instrument?.type)
+  const externalAccountIds = externalAccounts.map(
+    (account) => account.accountId
   )
+  const balanceIntentKey = [
+    values.investmentAccountId,
+    values.costDisplay,
+    values.initialCashDisplay,
+    values.occurredOn,
+  ].join(":")
+  const openingBalanceAcknowledged = acknowledgedBalanceKey === balanceIntentKey
 
   const intentKey = `${bookId ?? "none"}:${JSON.stringify(values)}`
   const opening = useInvestmentSubmission<OpenInvestmentPositionCommand>({
@@ -337,16 +182,17 @@ export function OpenInvestmentPositionForm({ onSuccess, onCancel }: Props) {
     if (unitsRequired && values.quantityMode !== "UNITS")
       form.setValue("quantityMode", "UNITS")
   }, [form, unitsRequired, values.quantityMode])
+
   const previewCommand = openingPreviewCommand({
     values,
     bookId,
-    currency: book.data?.baseCurrency,
+    currency,
     walletId: wallet?.id,
     instrumentId: instrument?.id,
-    fixedIncome: Boolean(fixedIncome),
+    fixedIncome,
     unitsRequired,
     confirmedBalance,
-    externalAccountIds: externalAccounts.map((account) => account.accountId),
+    externalAccountIds,
   })
   const previewQuery = useQuery({
     queryKey: ["investments", bookId, "opening-preview", previewCommand],
@@ -354,88 +200,117 @@ export function OpenInvestmentPositionForm({ onSuccess, onCancel }: Props) {
       previewCommand === null
         ? Promise.reject(new Error("Opening preview is unavailable"))
         : services.investments.positions.previewOpening.execute(previewCommand),
-    enabled: previewCommand !== null,
+    enabled: step === "REVIEW" && previewCommand !== null,
     retry: false,
   })
   const preview = previewQuery.data?.ok ? previewQuery.data.value : null
-  const previewError =
+  const previewApplicationError =
     previewQuery.data && !previewQuery.data.ok ? previewQuery.data.error : null
-  const negativeCash = preview?.warnings.some(
-    (warning) => warning.code === "INVESTMENT_CASH_NEGATIVE"
-  )
+  const previewError =
+    previewApplicationError !== null
+      ? openingErrorMessage(previewApplicationError)
+      : previewQuery.isError
+        ? "Não foi possível calcular a prévia. Tente novamente."
+        : null
+  const needsOpeningBalanceConfirmation =
+    values.mode === "OWNED" &&
+    values.origin === "NOT_RECORDED" &&
+    !confirmedBalance
+
+  function showErrorSummary(): void {
+    window.requestAnimationFrame(() =>
+      document.getElementById("investment-registration-errors")?.focus()
+    )
+  }
+
+  function validateStep(target: OpeningRegistrationStep): boolean {
+    form.clearErrors()
+    const errors = openingStepErrors(target, values, {
+      fixedIncome,
+      unitsRequired,
+      externalAccountIds,
+    })
+    const entries = Object.entries(errors) as [
+      keyof OpeningFormValues,
+      string,
+    ][]
+    if (entries.length === 0) return true
+    for (const [field, message] of entries)
+      form.setError(field, { type: "manual", message })
+    setFailure(null)
+    showErrorSummary()
+    return false
+  }
+
+  function nextStep(): void {
+    if (pending || confirmedBalance || !validateStep(step)) return
+    const index = stepOrder.indexOf(step)
+    const next = stepOrder[index + 1]
+    if (next) {
+      setFailure(null)
+      setStep(next)
+    }
+  }
+
+  function previousStep(): void {
+    if (pending || confirmedBalance) return
+    const index = stepOrder.indexOf(step)
+    const previous = stepOrder[index - 1]
+    if (previous) {
+      form.clearErrors()
+      setFailure(null)
+      setStep(previous)
+    }
+  }
 
   const submit = form.handleSubmit(async (draft) => {
     setFailure(null)
-    if (!bookId || !book.data || !wallet || !instrument) {
-      if (!wallet)
-        form.setError("investmentAccountId", { message: "Escolha a carteira." })
-      if (!instrument)
-        form.setError("instrumentId", { message: "Escolha o instrumento." })
+    if (
+      step !== "REVIEW" ||
+      !validateStep("CHOICE") ||
+      !validateStep("POSITION") ||
+      !validateStep("ACCOUNTING")
+    )
+      return
+    if (!bookId || !currency || !wallet || !instrument) {
+      setFailure("Atualize os cadastros e revise a carteira e o instrumento.")
+      showErrorSummary()
       return
     }
-    if (unitsRequired && draft.quantityMode !== "UNITS") {
-      form.setError("quantityMode", { message: "Informe a quantidade." })
+    if (preview === null || previewError !== null || previewQuery.isFetching) {
+      setFailure("Aguarde uma prévia válida antes de confirmar.")
+      showErrorSummary()
       return
     }
+    if (needsOpeningBalanceConfirmation && !openingBalanceAcknowledged) {
+      setFailure("Confirme o registro do saldo inicial antes de continuar.")
+      showErrorSummary()
+      return
+    }
+
     const amount = parseOpeningMoney(draft.costDisplay)
-    if (amount === null || (draft.mode === "BUY" && amount === "0")) {
-      form.setError("costDisplay", {
-        message:
-          draft.mode === "OWNED"
-            ? "Informe o custo contábil."
-            : "Informe o valor principal.",
-      })
-      return
-    }
-    if (draft.mode === "BUY" && draft.origin === "NOT_RECORDED") {
-      form.setError("origin", { message: "Escolha a origem do dinheiro." })
-      return
-    }
     const cash = parseOpeningMoney(draft.initialCashDisplay)
-    if (draft.origin === "NOT_RECORDED" && cash === null) {
-      form.setError("initialCashDisplay", {
-        message: "Informe o caixa inicial real.",
-      })
-      return
-    }
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(draft.occurredOn)) {
-      form.setError("occurredOn", { message: "Informe a data da abertura." })
-      return
-    }
     const quantity =
       draft.quantityMode === "UNITS"
         ? parseOpeningQuantity(draft.quantity)
         : undefined
-    if (draft.quantityMode === "UNITS" && quantity === null) {
-      form.setError("quantity", { message: "Informe a quantidade." })
+    if (amount === null || cash === null || quantity === null) {
+      setFailure("Revise os valores antes de confirmar.")
+      showErrorSummary()
       return
     }
-    if (
-      draft.origin === "EXTERNAL_ACCOUNT" &&
-      !externalAccounts.some(
-        (account) => account.accountId === draft.externalAccountId
-      )
-    ) {
-      form.setError("externalAccountId", {
-        message: "Escolha a conta de origem.",
-      })
-      return
-    }
-    const termsError = fixedIncome ? validTerms(draft) : null
-    if (termsError !== null) {
-      setFailure(termsError)
-      return
-    }
+
     const common = {
       bookId,
       investmentAccountId: wallet.id,
       instrumentId: instrument.id,
       quantityMode: draft.quantityMode,
       ...(optional(draft.label) ? { label: optional(draft.label) } : {}),
-      ...(fixedIncome && selectedTerms(draft)
-        ? { fixedIncomeTerms: selectedTerms(draft) }
+      ...(fixedIncome && selectedOpeningTerms(draft)
+        ? { fixedIncomeTerms: selectedOpeningTerms(draft) }
         : {}),
     } as const
+
     try {
       let result: InvestmentMutationResult
       if (draft.mode === "OWNED" && draft.origin !== "EXTERNAL_ACCOUNT") {
@@ -444,7 +319,7 @@ export function OpenInvestmentPositionForm({ onSuccess, onCancel }: Props) {
             bookId,
             requestId: balance.requestId,
             accountId: wallet.id,
-            amountMinor: (BigInt(amount) + BigInt(cash ?? "0")).toString(),
+            amountMinor: (BigInt(amount) + BigInt(cash)).toString(),
             currency,
             occurredOn: draft.occurredOn,
             description: "Saldo inicial explícito da carteira",
@@ -457,7 +332,7 @@ export function OpenInvestmentPositionForm({ onSuccess, onCancel }: Props) {
           requestId: opening.requestId,
           bookCostMinor: amount,
           occurredOn: draft.occurredOn,
-          ...(quantity === undefined || quantity === null ? {} : { quantity }),
+          ...(quantity === undefined ? {} : { quantity }),
         })
       } else {
         const external = draft.origin === "EXTERNAL_ACCOUNT"
@@ -473,15 +348,14 @@ export function OpenInvestmentPositionForm({ onSuccess, onCancel }: Props) {
           funding: external
             ? { mode: "EXTERNAL_ACCOUNT", accountId: draft.externalAccountId }
             : { mode: "INTERNAL_CASH" },
-          ...(quantity === undefined || quantity === null
-            ? {}
-            : { quantityDelta: quantity }),
+          ...(quantity === undefined ? {} : { quantityDelta: quantity }),
         })
       }
       onSuccess?.(result)
     } catch (error) {
       const message = openingErrorMessage(error)
       setFailure(message)
+      showErrorSummary()
       toast.add({
         type: "error",
         title: "Não foi possível salvar o investimento",
@@ -505,7 +379,7 @@ export function OpenInvestmentPositionForm({ onSuccess, onCancel }: Props) {
         <AlertTitle>Carregando moeda do livro</AlertTitle>
       </Alert>
     )
-  if (book.isError || book.data === undefined)
+  if (book.isError || currency === undefined)
     return (
       <Alert>
         <AlertTitle>Não foi possível carregar a moeda do livro</AlertTitle>
@@ -514,17 +388,28 @@ export function OpenInvestmentPositionForm({ onSuccess, onCancel }: Props) {
         </AlertDescription>
       </Alert>
     )
+
   if (catalog === "account")
     return (
       <section className="flex flex-col gap-4">
-        <p className="text-sm text-muted-foreground">
-          Cadastre uma carteira de investimento. O cadastro é independente da
-          abertura.
-        </p>
+        <div>
+          <h2 className="text-lg font-medium">Nova carteira</h2>
+          <p className="text-sm text-muted-foreground">
+            Ao concluir, você voltará ao cadastro com a nova carteira
+            selecionada.
+          </p>
+        </div>
         <AccountForm
           lockedType="INVESTMENT_ACCOUNT"
+          settlementAccounts={externalAccounts.map((account) => ({
+            id: account.accountId,
+            name: account.accountName,
+          }))}
           onSuccess={(id) => {
-            form.setValue("investmentAccountId", id)
+            form.setValue("investmentAccountId", id, {
+              shouldDirty: true,
+              shouldValidate: true,
+            })
             setCatalog(null)
           }}
           onCancel={() => setCatalog(null)}
@@ -533,354 +418,165 @@ export function OpenInvestmentPositionForm({ onSuccess, onCancel }: Props) {
     )
   if (catalog === "instrument")
     return (
-      <InvestmentInstrumentForm
-        onSuccess={(created) => {
-          form.setValue("instrumentId", created.id)
-          setCatalog(null)
-        }}
-        onCancel={() => setCatalog(null)}
-      />
+      <section className="flex flex-col gap-4">
+        <div>
+          <h2 className="text-lg font-medium">Novo instrumento</h2>
+          <p className="text-sm text-muted-foreground">
+            Ao concluir, você voltará ao cadastro com o novo instrumento
+            selecionado.
+          </p>
+        </div>
+        <InvestmentInstrumentForm
+          onSuccess={(created) => {
+            form.setValue("instrumentId", created.id, {
+              shouldDirty: true,
+              shouldValidate: true,
+            })
+            setCatalog(null)
+          }}
+          onCancel={() => setCatalog(null)}
+        />
+      </section>
     )
 
+  const errors = Object.values(form.formState.errors)
+  const canSubmit =
+    step === "REVIEW" &&
+    preview !== null &&
+    previewError === null &&
+    !previewQuery.isFetching &&
+    (!needsOpeningBalanceConfirmation || openingBalanceAcknowledged) &&
+    !pending
+
   return (
-    <form className="flex w-full min-w-0 flex-col gap-6" onSubmit={submit}>
-      <FieldGroup>
-        <ControlledToggleGroup
-          control={form.control}
-          name="mode"
-          label="Modo de abertura"
-          options={[
-            { value: "OWNED", label: "Já possuo" },
-            { value: "BUY", label: "Comprar/Aplicar" },
-          ]}
-          disabled={pending || confirmedBalance}
-        />
-        <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
-          <ControlledSelect
-            control={form.control}
-            name="investmentAccountId"
-            label="Carteira"
-            options={(accounts.data ?? [])
-              .filter(
-                (account) =>
-                  account.status === "ACTIVE" && account.currency === currency
-              )
-              .map((account) => ({ value: account.id, label: account.name }))}
-            disabled={pending || confirmedBalance}
-          />
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setCatalog("account")}
-            disabled={pending || confirmedBalance}
-          >
-            Cadastrar carteira
-          </Button>
+    <form
+      className="flex w-full min-w-0 flex-col gap-6"
+      noValidate
+      aria-busy={pending}
+      onSubmit={submit}
+    >
+      <InvestmentRegistrationProgress current={step} />
+
+      {(errors.length > 0 || failure) && (
+        <div
+          id="investment-registration-errors"
+          role="alert"
+          tabIndex={-1}
+          className="rounded-2xl border border-destructive/30 bg-destructive/5 p-4 outline-none focus-visible:ring-3 focus-visible:ring-destructive/20"
+        >
+          <h2 className="font-medium">Revise antes de continuar</h2>
+          {errors.map((issue, index) => (
+            <p key={index} className="mt-1 text-sm">
+              {String(issue?.message ?? "")}
+            </p>
+          ))}
+          {failure && <p className="mt-1 text-sm">{failure}</p>}
         </div>
-        <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
-          <ControlledSelect
-            control={form.control}
-            name="instrumentId"
-            label="Instrumento"
-            options={(instruments.data ?? [])
-              .filter(
-                (item) => item.status === "ACTIVE" && item.currency === currency
-              )
-              .map((item) => ({ value: item.id, label: item.name }))}
-            disabled={pending || confirmedBalance}
-          />
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setCatalog("instrument")}
-            disabled={pending || confirmedBalance}
-          >
-            Cadastrar instrumento
-          </Button>
-        </div>
-        <ControlledToggleGroup
+      )}
+
+      {step === "CHOICE" && (
+        <InvestmentRegistrationChoiceStep
           control={form.control}
-          name="origin"
-          label="Origem contábil"
-          options={[
-            { value: "INTERNAL_CASH", label: "Na carteira" },
-            { value: "EXTERNAL_ACCOUNT", label: "Em outra conta" },
-            ...(values.mode === "OWNED"
-              ? [{ value: "NOT_RECORDED", label: "Não consta" }]
-              : []),
-          ]}
+          accounts={accounts.data ?? []}
+          instruments={instruments.data ?? []}
+          currency={currency}
+          disabled={pending || confirmedBalance}
+          onCreateWallet={() => setCatalog("account")}
+          onCreateInstrument={() => setCatalog("instrument")}
+        />
+      )}
+      {step === "POSITION" && (
+        <InvestmentRegistrationPositionStep
+          control={form.control}
+          mode={values.mode}
+          currency={currency}
+          fixedIncome={fixedIncome}
+          unitsRequired={unitsRequired}
+          rateKind={values.rateKind}
+          quantityMode={values.quantityMode}
           disabled={pending || confirmedBalance}
         />
-        {values.origin === "EXTERNAL_ACCOUNT" && (
-          <ControlledSelect
-            control={form.control}
-            name="externalAccountId"
-            label="Conta de origem"
-            options={externalAccounts.map((account) => ({
-              value: account.accountId,
-              label: account.accountName,
-            }))}
-            disabled={pending || confirmedBalance}
-            description="Confirme a conta de origem externa antes de salvar."
-          />
-        )}
-        <ControlledInput
+      )}
+      {step === "ACCOUNTING" && (
+        <InvestmentRegistrationAccountingStep
           control={form.control}
-          name="label"
-          label="Rótulo da posição"
-          disabled={pending || confirmedBalance}
-          maxLength={120}
-        />
-        <ControlledToggleGroup
-          control={form.control}
-          name="quantityMode"
-          label="Controle de quantidade"
-          options={[
-            ...(unitsRequired ? [] : [{ value: "AMOUNT", label: "Por valor" }]),
-            { value: "UNITS", label: "Por unidades" },
-          ]}
+          mode={values.mode}
+          origin={values.origin}
+          externalAccounts={externalAccounts}
           disabled={pending || confirmedBalance}
         />
-        {values.quantityMode === "UNITS" && (
-          <ControlledInput
-            control={form.control}
-            name="quantity"
-            label="Quantidade"
-            disabled={pending || confirmedBalance}
-          />
-        )}
-        <ControlledInput
-          control={form.control}
-          name="costDisplay"
-          label={values.mode === "BUY" ? "Valor principal" : "Custo contábil"}
-          disabled={pending || confirmedBalance}
-          description={`Em ${currency}; valor atual não substitui custo.`}
-        />
-        {values.mode === "OWNED" && (
-          <ControlledInput
-            control={form.control}
-            name="valuationDisplay"
-            label="Valor atual estimado"
-            disabled={pending || confirmedBalance}
-            description="Opcional e informativo; a avaliação é registrada depois, em ação separada."
-          />
-        )}
-        {values.mode === "OWNED" && values.origin === "NOT_RECORDED" && (
-          <ControlledInput
-            control={form.control}
-            name="initialCashDisplay"
-            label="Caixa inicial real"
-            disabled={pending || confirmedBalance}
-            description="Soma-se ao custo no saldo inicial explícito; não inclui valorização."
-          />
-        )}
-        <ControlledInput
-          control={form.control}
-          name="occurredOn"
-          label="Data da abertura"
-          type="date"
-          disabled={pending || confirmedBalance}
-        />
-        {values.mode === "BUY" && (
-          <ControlledInput
-            control={form.control}
-            name="description"
-            label="Descrição"
-            disabled={pending || confirmedBalance}
-            maxLength={500}
-          />
-        )}
-        {fixedIncome && (
-          <section
-            className="grid gap-4 rounded-2xl border border-border p-4"
-            aria-label="Termos de renda fixa"
-          >
-            <h3 className="text-sm font-medium">
-              Termos de renda fixa, opcionais
-            </h3>
-            <ControlledSelect
-              control={form.control}
-              name="rateKind"
-              label="Tipo de taxa"
-              options={[
-                { value: "PREFIXED", label: "Prefixada" },
-                { value: "INDEXED", label: "Indexada" },
-                { value: "HYBRID", label: "Híbrida" },
-              ]}
-              disabled={pending || confirmedBalance}
-            />
-            {(values.rateKind === "INDEXED" ||
-              values.rateKind === "HYBRID") && (
-              <>
-                <ControlledSelect
-                  control={form.control}
-                  name="index"
-                  label="Índice"
-                  options={["CDI", "SELIC", "IPCA", "IGPM", "OTHER"].map(
-                    (value) => ({ value, label: value })
-                  )}
-                  disabled={pending || confirmedBalance}
-                />
-                <ControlledInput
-                  control={form.control}
-                  name="indexPercentage"
-                  label="Percentual do índice"
-                  disabled={pending || confirmedBalance}
-                />
-              </>
-            )}
-            {values.rateKind === "PREFIXED" && (
-              <ControlledInput
-                control={form.control}
-                name="annualRate"
-                label="Taxa anual"
-                disabled={pending || confirmedBalance}
-              />
-            )}
-            {values.rateKind === "HYBRID" && (
-              <ControlledInput
-                control={form.control}
-                name="annualSpreadRate"
-                label="Spread anual"
-                disabled={pending || confirmedBalance}
-              />
-            )}
-            <div className="grid gap-4 sm:grid-cols-3">
-              <ControlledInput
-                control={form.control}
-                name="issueDate"
-                label="Data de emissão"
-                type="date"
-                disabled={pending || confirmedBalance}
-              />
-              <ControlledInput
-                control={form.control}
-                name="gracePeriodDate"
-                label="Data de carência"
-                type="date"
-                disabled={pending || confirmedBalance}
-              />
-              <ControlledInput
-                control={form.control}
-                name="maturityDate"
-                label="Data de vencimento"
-                type="date"
-                disabled={pending || confirmedBalance}
-              />
-            </div>
-          </section>
-        )}
-      </FieldGroup>
-      <Card size="sm" aria-label="Prévia da abertura">
-        <CardHeader>
-          <CardTitle>Prévia da abertura</CardTitle>
-          <CardDescription>
-            Calculada com o estado atual; a confirmação revalida os dados.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-2" aria-live="polite">
-          {previewCommand === null && (
-            <p>Preencha os dados da abertura para calcular a prévia.</p>
+      )}
+      {step === "REVIEW" && (
+        <InvestmentRegistrationReview
+          values={values}
+          walletName={wallet?.name ?? "Carteira indisponível"}
+          instrumentName={instrument?.name ?? "Instrumento indisponível"}
+          externalAccountNames={Object.fromEntries(
+            externalAccounts.map((account) => [
+              account.accountId,
+              account.accountName,
+            ])
           )}
-          {previewQuery.isFetching && <p>Calculando prévia...</p>}
-          {(previewError || previewQuery.isError) && (
-            <Alert variant="destructive">
-              <AlertTitle>Prévia indisponível</AlertTitle>
-              <AlertDescription>
-                {previewError
-                  ? openingErrorMessage(previewError)
-                  : "Não foi possível calcular a prévia. Tente novamente."}
-              </AlertDescription>
-            </Alert>
-          )}
-          {preview && (
-            <>
-              <p>
-                Custo: {formatMinorAmount(preview.bookCostDeltaMinor, currency)}
-              </p>
-              <p>
-                Fluxo líquido:{" "}
-                {formatMinorAmount(preview.netCashFlowMinor, currency)}
-              </p>
-              <p>
-                Caixa da carteira:{" "}
-                {formatMinorAmount(preview.projectedCashMinor, currency)}
-              </p>
-              {preview.openingBalanceMinor !== undefined && (
-                <p>
-                  Saldo inicial proposto:{" "}
-                  {formatMinorAmount(preview.openingBalanceMinor, currency)}
-                </p>
-              )}
-              {preview.postings.length > 0 && (
-                <div>
-                  <p>Efeito em contas:</p>
-                  <ul className="list-inside list-disc">
-                    {preview.postings.map((posting, index) => (
-                      <li key={posting.accountId + ":" + index}>
-                        {posting.accountId === wallet?.id
-                          ? wallet.name
-                          : (externalAccounts.find(
-                              (account) =>
-                                account.accountId === posting.accountId
-                            )?.accountName ?? posting.accountId)}
-                        : {formatMinorAmount(posting.amountMinor, currency)}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              {negativeCash && (
-                <Alert>
-                  <AlertTitle>Possível caixa negativo</AlertTitle>
-                  <AlertDescription>
-                    O registro pode ser salvo com aviso; complete o ledger
-                    quando necessário.
-                  </AlertDescription>
-                </Alert>
-              )}
-            </>
-          )}
-        </CardContent>
-      </Card>
+          currency={currency}
+          preview={preview}
+          previewPending={previewQuery.isFetching}
+          previewError={previewError}
+          onRetryPreview={() => void previewQuery.refetch()}
+          needsOpeningBalanceConfirmation={needsOpeningBalanceConfirmation}
+          openingBalanceConfirmed={openingBalanceAcknowledged}
+          onConfirmOpeningBalance={() =>
+            setAcknowledgedBalanceKey(
+              openingBalanceAcknowledged ? null : balanceIntentKey
+            )
+          }
+        />
+      )}
+
       {confirmedBalance && (
         <Alert>
-          <AlertTitle>Saldo inicial confirmado</AlertTitle>
+          <AlertTitle>Saldo inicial já registrado</AlertTitle>
           <AlertDescription>
-            A alocação pode ser tentada novamente sem registrar outro saldo
-            inicial.
+            A alocação pode ser tentada novamente sem criar outro saldo inicial.
+            Os dados que alterariam esse saldo permanecem bloqueados.
           </AlertDescription>
         </Alert>
       )}
-      {Object.values(form.formState.errors).length > 0 && (
-        <Alert>
-          <AlertTitle>Revise os campos</AlertTitle>
-          <AlertDescription>
-            {Object.values(form.formState.errors).map((issue, index) => (
-              <p key={index}>{String(issue?.message ?? "")}</p>
-            ))}
-          </AlertDescription>
-        </Alert>
-      )}
-      {failure && (
-        <Alert>
-          <AlertTitle>Não foi possível concluir</AlertTitle>
-          <AlertDescription>{failure}</AlertDescription>
-        </Alert>
-      )}
-      <div className="flex flex-wrap justify-end gap-3">
+
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-5">
         <Button
           type="button"
-          variant="outline"
+          variant="ghost"
           disabled={pending}
           onClick={onCancel}
         >
           Cancelar
         </Button>
-        <Button type="submit" disabled={pending}>
-          {pending && <Spinner aria-hidden="true" />}
-          {pending ? "Salvando investimento" : "Salvar investimento"}
-        </Button>
+        <div className="flex flex-wrap justify-end gap-3">
+          {step !== "CHOICE" && (
+            <Button
+              type="button"
+              variant="outline"
+              disabled={pending || confirmedBalance}
+              onClick={previousStep}
+            >
+              Voltar
+            </Button>
+          )}
+          {step !== "REVIEW" ? (
+            <Button
+              type="button"
+              disabled={pending || confirmedBalance}
+              onClick={nextStep}
+            >
+              Continuar
+            </Button>
+          ) : (
+            <Button type="submit" disabled={!canSubmit}>
+              {pending && <Spinner aria-hidden="true" />}
+              {pending ? "Salvando investimento" : "Confirmar investimento"}
+            </Button>
+          )}
+        </div>
       </div>
     </form>
   )
