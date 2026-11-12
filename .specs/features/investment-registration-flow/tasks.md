@@ -86,12 +86,14 @@ T3 → T4 → T5 → T6
 **Requirement**: IRF-11, IRF-17–IRF-19, IRF-29
 **Tools**: Skill `ui-ux-pro-max`
 **Done when**:
-- [ ] Valores e efeitos têm rótulos legíveis e nomes de contas.
-- [ ] Falha de prévia oferece retry e não permite confirmação.
-- [ ] Patrimônio ausente exige confirmação dedicada.
-- [ ] Testes de integração focais passam.
+- [x] Valores e efeitos têm rótulos legíveis e nomes de contas.
+- [x] Falha de prévia oferece retry e não permite confirmação.
+- [x] Patrimônio ausente exige confirmação dedicada.
+- [x] Testes de integração focais passam.
 **Tests**: integration
 **Gate**: quick
+
+**Execution evidence (2026-11-12)**: 4/4 testes focais passaram após fortalecer a assertion do saldo inicial para exigir suas duas apresentações intencionais. Cobertura suficiente: resumo e valores em `investment-registration-review.test.tsx:49-53`, confirmação separada em `:79`, falha sem valor obsoleto e retry em `:100-103`, postings nomeados e aviso de caixa negativo em `:144-145`. Cada assertion mapeia IRF-11, IRF-17–IRF-19 ou IRF-29. Adequacy verdict: PASS.
 
 ### T4: Integrar o orquestrador progressivo
 
