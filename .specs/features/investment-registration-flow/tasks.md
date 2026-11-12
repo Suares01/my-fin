@@ -122,12 +122,14 @@ T3 → T4 → T5 → T6
 **Requirement**: IRF-01–IRF-29
 **Tools**: Skill `tlc-spec-driven`
 **Done when**:
-- [ ] Nenhum cenário financeiro existente perde cobertura.
-- [ ] Busca/criação rápida, review obrigatório e ausência de avaliação são provados.
-- [ ] Erro, retry, requestId e pending têm assertions de estado e payload.
-- [ ] Full React passa sem teste pulado.
+- [x] Nenhum cenário financeiro existente perde cobertura.
+- [x] Busca/criação rápida, review obrigatório e ausência de avaliação são provados.
+- [x] Erro, retry, requestId e pending têm assertions de estado e payload.
+- [x] Full React passa sem teste pulado.
 **Tests**: integration
 **Gate**: full
+
+**Execution evidence (2026-11-12)**: 35/35 testes do orquestrador e 69/69 testes focais do fluxo passaram. A matriz cobre as seis classes por unidade, modo por valor, renda fixa parcial/inválida, abertura existente nas três origens, compra interna/externa, confirmação patrimonial separada, ausência de valuationDisplay, prévia, falha após saldo confirmado, conflito, pending e retry com o mesmo requestId. O full React passou com 89 arquivos e 1101 testes, sem skips reportados. Adequacy verdict: PASS.
 
 ### T6: Validar layout e runtime
 

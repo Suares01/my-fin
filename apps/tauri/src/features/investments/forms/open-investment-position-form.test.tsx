@@ -37,6 +37,7 @@ const state = vi.hoisted(() => ({
       type: "CDB",
       currency: "BRL",
       status: "ACTIVE",
+      identifiers: [],
     },
   ] as Array<Record<string, unknown>>,
   balances: [
@@ -226,6 +227,7 @@ vi.mock("./investment-instrument-form", () => ({
           type: "CDB",
           currency: "BRL",
           status: "ACTIVE",
+          identifiers: [],
         }
         state.instruments.push(item)
         onSuccess(item)
@@ -261,11 +263,68 @@ function choose(label: string, value: string) {
   }
 }
 
-function basicAlreadyOwned() {
+function selectInstrument(name = "CDB") {
+  fill("Instrumento", name)
+  fireEvent.click(screen.getByRole("option", { name: new RegExp(name, "i") }))
+}
+
+function continueFlow() {
+  fireEvent.click(screen.getByRole("button", { name: "Continuar" }))
+}
+
+function startPosition(mode: "OWNED" | "BUY" = "OWNED", instrument = "CDB") {
+  if (mode === "BUY") choose("Modo de abertura", "BUY")
+  selectInstrument(instrument)
   choose("Carteira", "wallet-1")
-  choose("Instrumento", "instrument-1")
-  fill("Custo contábil", "100,00")
-  fill("Data da abertura", "2026-09-01")
+  continueFlow()
+}
+
+function fillPosition(mode: "OWNED" | "BUY" = "OWNED", value = "100,00") {
+  fill(mode === "BUY" ? "Valor principal" : "Custo contábil", value)
+  fill(
+    mode === "BUY" ? "Data da compra ou aplicação" : "Data da abertura",
+    "2026-09-01"
+  )
+}
+
+function reachAccounting(mode: "OWNED" | "BUY" = "OWNED", instrument = "CDB") {
+  startPosition(mode, instrument)
+  fillPosition(mode)
+  continueFlow()
+}
+
+async function reachReview(
+  mode: "OWNED" | "BUY" = "OWNED",
+  origin:
+    | "INTERNAL_CASH"
+    | "EXTERNAL_ACCOUNT"
+    | "NOT_RECORDED" = "INTERNAL_CASH"
+) {
+  reachAccounting(mode)
+  choose(mode === "BUY" ? "Origem do dinheiro" : "Situação atual", origin)
+  continueFlow()
+  await waitFor(() => expect(state.preview).toHaveBeenCalled())
+}
+
+async function submitInvestment() {
+  const button = screen.getByRole("button", { name: "Confirmar investimento" })
+  await waitFor(() => expect(button).not.toHaveProperty("disabled", true))
+  fireEvent.click(button)
+}
+
+function successfulOpeningBalancePreview(amount = "10000", cash = "0") {
+  state.preview.mockResolvedValue({
+    ok: true,
+    value: {
+      bookCostDeltaMinor: "10000",
+      netCashFlowMinor: "0",
+      postings: [],
+      categories: {},
+      openingBalanceMinor: amount,
+      projectedCashMinor: cash,
+      warnings: [],
+    },
+  })
 }
 
 function success() {
@@ -336,6 +395,7 @@ describe("OpenInvestmentPositionForm", () => {
         type: "CDB",
         currency: "BRL",
         status: "ACTIVE",
+        identifiers: [],
       },
     ]
     state.balances = [
@@ -350,18 +410,22 @@ describe("OpenInvestmentPositionForm", () => {
     ]
   })
 
-  it("offers Já possuo and Comprar/Aplicar", () => {
+  it("starts with the two scenarios and hides later decisions", () => {
     success()
     renderForm()
     expect(screen.getByRole("group", { name: "Modo de abertura" })).toBeTruthy()
-    expect(screen.getByText("Comprar/Aplicar")).toBeTruthy()
+    expect(screen.getByText("Já tenho este investimento")).toBeTruthy()
+    expect(screen.getByText("Estou comprando ou aplicando")).toBeTruthy()
+    expect(screen.queryByText("Situação atual")).toBeNull()
+    expect(screen.queryByLabelText("Custo contábil")).toBeNull()
   })
   it("offers three accounting origins for existing holdings", () => {
     success()
     renderForm()
-    expect(screen.getByText("Na carteira")).toBeTruthy()
-    expect(screen.getByText("Em outra conta")).toBeTruthy()
-    expect(screen.getByText("Não consta")).toBeTruthy()
+    reachAccounting()
+    expect(screen.getByText("Já está no caixa da carteira")).toBeTruthy()
+    expect(screen.getByText("Saiu de outra conta")).toBeTruthy()
+    expect(screen.getByText("Ainda não aparece no My Fin")).toBeTruthy()
   })
   it("requires an active book", () => {
     state.session = { status: "INACTIVE" }
@@ -381,32 +445,39 @@ describe("OpenInvestmentPositionForm", () => {
   it("allows a separately created wallet", () => {
     success()
     renderForm()
-    fireEvent.click(screen.getByRole("button", { name: "Cadastrar carteira" }))
+    choose("Modo de abertura", "BUY")
+    fireEvent.click(screen.getByRole("button", { name: "Nova carteira" }))
     fireEvent.click(screen.getByRole("button", { name: "Confirmar carteira" }))
     expect(screen.getByLabelText("Carteira")).toHaveProperty(
       "value",
       "wallet-2"
     )
+    expect(
+      screen
+        .getByRole("group", { name: "Modo de abertura" })
+        .querySelector('input[value="BUY"]')
+    ).toHaveProperty("checked", true)
   })
   it("allows a separately created instrument", () => {
     success()
     renderForm()
     fireEvent.click(
-      screen.getByRole("button", { name: "Cadastrar instrumento" })
+      screen.getByRole("button", { name: "Cadastrar novo instrumento" })
     )
     fireEvent.click(
       screen.getByRole("button", { name: "Confirmar instrumento" })
     )
-    expect(screen.getByLabelText("Instrumento")).toHaveProperty(
-      "value",
-      "instrument-2"
-    )
+    expect(
+      screen
+        .getByRole("option", { name: /Novo CDB/i })
+        .getAttribute("aria-selected")
+    ).toBe("true")
   })
   it("opens already-owned holdings without a journal when cash is in wallet", async () => {
     success()
     renderForm()
-    basicAlreadyOwned()
-    fireEvent.click(screen.getByRole("button", { name: "Salvar investimento" }))
+    await reachReview()
+    await submitInvestment()
     await waitFor(() =>
       expect(state.open).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -423,10 +494,8 @@ describe("OpenInvestmentPositionForm", () => {
   it("routes an existing holding in another account through atomic external application", async () => {
     success()
     renderForm()
-    basicAlreadyOwned()
-    choose("Origem contábil", "EXTERNAL_ACCOUNT")
-    choose("Conta de origem", "bank-1")
-    fireEvent.click(screen.getByRole("button", { name: "Salvar investimento" }))
+    await reachReview("OWNED", "EXTERNAL_ACCOUNT")
+    await submitInvestment()
     await waitFor(() =>
       expect(state.purchase).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -445,9 +514,9 @@ describe("OpenInvestmentPositionForm", () => {
       defaultSettlementAccountId: undefined,
     }
     renderForm()
-    basicAlreadyOwned()
-    choose("Origem contábil", "EXTERNAL_ACCOUNT")
-    fireEvent.click(screen.getByRole("button", { name: "Salvar investimento" }))
+    reachAccounting()
+    choose("Situação atual", "EXTERNAL_ACCOUNT")
+    continueFlow()
     await waitFor(() =>
       expect(screen.getByText(/Escolha a conta de origem/)).toBeTruthy()
     )
@@ -455,10 +524,19 @@ describe("OpenInvestmentPositionForm", () => {
   })
   it("confirms missing wealth as opening balance before allocation", async () => {
     success()
+    successfulOpeningBalancePreview()
     renderForm()
-    basicAlreadyOwned()
-    choose("Origem contábil", "NOT_RECORDED")
-    fireEvent.click(screen.getByRole("button", { name: "Salvar investimento" }))
+    await reachReview("OWNED", "NOT_RECORDED")
+    expect(state.openingBalance).not.toHaveBeenCalled()
+    expect(
+      screen.getByRole("button", { name: "Confirmar investimento" })
+    ).toHaveProperty("disabled", true)
+    fireEvent.click(
+      await screen.findByRole("button", {
+        name: "Confirmar registro do saldo inicial",
+      })
+    )
+    await submitInvestment()
     await waitFor(() =>
       expect(state.openingBalance).toHaveBeenCalledWith(
         expect.objectContaining({ accountId: "wallet-1", amountMinor: "10000" })
@@ -472,11 +550,19 @@ describe("OpenInvestmentPositionForm", () => {
   })
   it("adds real initial cash, not valuation, to opening balance", async () => {
     success()
+    successfulOpeningBalancePreview("10500", "500")
     renderForm()
-    basicAlreadyOwned()
-    choose("Origem contábil", "NOT_RECORDED")
-    fill("Caixa inicial real", "5,00")
-    fireEvent.click(screen.getByRole("button", { name: "Salvar investimento" }))
+    reachAccounting()
+    choose("Situação atual", "NOT_RECORDED")
+    fill("Caixa real que já existe na carteira", "5,00")
+    continueFlow()
+    await waitFor(() => expect(state.preview).toHaveBeenCalled())
+    fireEvent.click(
+      await screen.findByRole("button", {
+        name: "Confirmar registro do saldo inicial",
+      })
+    )
+    await submitInvestment()
     await waitFor(() =>
       expect(state.openingBalance).toHaveBeenCalledWith(
         expect.objectContaining({ amountMinor: "10500" })
@@ -485,6 +571,7 @@ describe("OpenInvestmentPositionForm", () => {
   })
   it("never repeats confirmed balance after failed allocation", async () => {
     success()
+    successfulOpeningBalancePreview()
     state.open
       .mockResolvedValueOnce({ ok: false, error: { code: "TEMPORARY" } })
       .mockResolvedValueOnce({
@@ -497,24 +584,33 @@ describe("OpenInvestmentPositionForm", () => {
         },
       })
     renderForm()
-    basicAlreadyOwned()
-    choose("Origem contábil", "NOT_RECORDED")
-    fireEvent.click(screen.getByRole("button", { name: "Salvar investimento" }))
+    await reachReview("OWNED", "NOT_RECORDED")
+    fireEvent.click(
+      await screen.findByRole("button", {
+        name: "Confirmar registro do saldo inicial",
+      })
+    )
+    await submitInvestment()
     await waitFor(() => expect(state.open).toHaveBeenCalledTimes(1))
-    fireEvent.click(screen.getByRole("button", { name: "Salvar investimento" }))
+    await submitInvestment()
     await waitFor(() => expect(state.open).toHaveBeenCalledTimes(2))
     expect(state.openingBalance).toHaveBeenCalledTimes(1)
   })
   it("preserves the existing-opening-balance conflict and directs correction", async () => {
     success()
+    successfulOpeningBalancePreview()
     state.openingBalance.mockResolvedValue({
       ok: false,
       error: { code: "OPENING_BALANCE_ALREADY_SET" },
     })
     renderForm()
-    basicAlreadyOwned()
-    choose("Origem contábil", "NOT_RECORDED")
-    fireEvent.click(screen.getByRole("button", { name: "Salvar investimento" }))
+    await reachReview("OWNED", "NOT_RECORDED")
+    fireEvent.click(
+      await screen.findByRole("button", {
+        name: "Confirmar registro do saldo inicial",
+      })
+    )
+    await submitInvestment()
     await waitFor(() =>
       expect(
         screen.getByText(/corrija o saldo inicial existente/i)
@@ -525,10 +621,9 @@ describe("OpenInvestmentPositionForm", () => {
   it("requires known book cost instead of substituting valuation", async () => {
     success()
     renderForm()
-    choose("Carteira", "wallet-1")
-    choose("Instrumento", "instrument-1")
-    fill("Valor atual estimado", "200,00")
-    fireEvent.click(screen.getByRole("button", { name: "Salvar investimento" }))
+    startPosition()
+    expect(screen.queryByLabelText("Valor atual estimado")).toBeNull()
+    continueFlow()
     await waitFor(() =>
       expect(screen.getByText(/Informe o custo contábil/)).toBeTruthy()
     )
@@ -543,14 +638,17 @@ describe("OpenInvestmentPositionForm", () => {
         type: "STOCK",
         currency: "BRL",
         status: "ACTIVE",
+        identifiers: [],
       },
     ]
     renderForm()
-    basicAlreadyOwned()
-    fill("Custo contábil", "0")
-    choose("Controle de quantidade", "UNITS")
+    startPosition("OWNED", "Ação")
+    fillPosition("OWNED", "0")
     fill("Quantidade", "10")
-    fireEvent.click(screen.getByRole("button", { name: "Salvar investimento" }))
+    continueFlow()
+    continueFlow()
+    await waitFor(() => expect(state.preview).toHaveBeenCalled())
+    await submitInvestment()
     await waitFor(() =>
       expect(state.open).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -572,24 +670,29 @@ describe("OpenInvestmentPositionForm", () => {
     success()
     state.instruments[0] = { ...state.instruments[0], type }
     renderForm()
-    basicAlreadyOwned()
-    expect(screen.queryByText("Por valor")).toBeNull()
+    startPosition()
+    fillPosition()
+    expect(screen.queryByText("Somente pelo valor")).toBeNull()
     expect(screen.getByLabelText("Quantidade")).toBeTruthy()
     expect(state.preview).not.toHaveBeenCalled()
 
-    fireEvent.click(screen.getByRole("button", { name: "Salvar investimento" }))
+    continueFlow()
     await waitFor(() =>
-      expect(screen.getByText(/Informe a quantidade/)).toBeTruthy()
+      expect(
+        screen.getAllByText(/Informe a quantidade/).length
+      ).toBeGreaterThan(0)
     )
     expect(state.open).not.toHaveBeenCalled()
 
     fill("Quantidade", "10")
+    continueFlow()
+    continueFlow()
     await waitFor(() =>
       expect(state.preview).toHaveBeenCalledWith(
         expect.objectContaining({ quantityMode: "UNITS", quantity: "10" })
       )
     )
-    fireEvent.click(screen.getByRole("button", { name: "Salvar investimento" }))
+    await submitInvestment()
     await waitFor(() =>
       expect(state.open).toHaveBeenCalledWith(
         expect.objectContaining({ quantityMode: "UNITS", quantity: "10" })
@@ -599,9 +702,10 @@ describe("OpenInvestmentPositionForm", () => {
   it("requires quantity in units mode", async () => {
     success()
     renderForm()
-    basicAlreadyOwned()
-    choose("Controle de quantidade", "UNITS")
-    fireEvent.click(screen.getByRole("button", { name: "Salvar investimento" }))
+    startPosition()
+    fillPosition()
+    choose("Como você acompanha este investimento?", "UNITS")
+    continueFlow()
     await waitFor(() =>
       expect(screen.getByText(/Informe a quantidade/)).toBeTruthy()
     )
@@ -610,17 +714,22 @@ describe("OpenInvestmentPositionForm", () => {
   it("does not invent a quantity in amount mode", async () => {
     success()
     renderForm()
-    basicAlreadyOwned()
-    fireEvent.click(screen.getByRole("button", { name: "Salvar investimento" }))
+    await reachReview()
+    await submitInvestment()
     await waitFor(() => expect(state.open).toHaveBeenCalled())
     expect(state.open.mock.calls[0][0]).not.toHaveProperty("quantity")
   })
   it("accepts partial fixed-income terms", async () => {
     success()
     renderForm()
-    basicAlreadyOwned()
+    startPosition()
+    fillPosition()
+    fireEvent.click(screen.getByRole("button", { name: "Detalhes avançados" }))
     fill("Data de vencimento", "2028-09-01")
-    fireEvent.click(screen.getByRole("button", { name: "Salvar investimento" }))
+    continueFlow()
+    continueFlow()
+    await waitFor(() => expect(state.preview).toHaveBeenCalled())
+    await submitInvestment()
     await waitFor(() =>
       expect(state.open).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -632,9 +741,11 @@ describe("OpenInvestmentPositionForm", () => {
   it("requires rate components together", async () => {
     success()
     renderForm()
-    basicAlreadyOwned()
+    startPosition()
+    fillPosition()
+    fireEvent.click(screen.getByRole("button", { name: "Detalhes avançados" }))
     choose("Tipo de taxa", "INDEXED")
-    fireEvent.click(screen.getByRole("button", { name: "Salvar investimento" }))
+    continueFlow()
     await waitFor(() =>
       expect(screen.getByText(/Informe índice e percentual/)).toBeTruthy()
     )
@@ -643,10 +754,12 @@ describe("OpenInvestmentPositionForm", () => {
   it("rejects reversed fixed-income dates", async () => {
     success()
     renderForm()
-    basicAlreadyOwned()
+    startPosition()
+    fillPosition()
+    fireEvent.click(screen.getByRole("button", { name: "Detalhes avançados" }))
     fill("Data de emissão", "2028-01-01")
     fill("Data de vencimento", "2027-01-01")
-    fireEvent.click(screen.getByRole("button", { name: "Salvar investimento" }))
+    continueFlow()
     await waitFor(() =>
       expect(screen.getByText(/ordem cronológica/)).toBeTruthy()
     )
@@ -655,12 +768,8 @@ describe("OpenInvestmentPositionForm", () => {
   it("buys through the atomic purchase path", async () => {
     success()
     renderForm()
-    choose("Modo de abertura", "BUY")
-    choose("Carteira", "wallet-1")
-    choose("Instrumento", "instrument-1")
-    fill("Valor principal", "100,00")
-    fill("Data da abertura", "2026-09-01")
-    fireEvent.click(screen.getByRole("button", { name: "Salvar investimento" }))
+    await reachReview("BUY")
+    await submitInvestment()
     await waitFor(() =>
       expect(state.purchase).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -674,11 +783,7 @@ describe("OpenInvestmentPositionForm", () => {
   it("renders the read-only purchase preview returned by the service", async () => {
     success()
     renderForm()
-    choose("Modo de abertura", "BUY")
-    choose("Carteira", "wallet-1")
-    choose("Instrumento", "instrument-1")
-    fill("Valor principal", "100,00")
-    fill("Data da abertura", "2026-09-01")
+    await reachReview("BUY")
     await waitFor(() =>
       expect(state.preview).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -709,10 +814,10 @@ describe("OpenInvestmentPositionForm", () => {
       },
     })
     renderForm()
-    basicAlreadyOwned()
-    choose("Origem contábil", "NOT_RECORDED")
-    fill("Caixa inicial real", "5,00")
-    fill("Valor atual estimado", "200,00")
+    reachAccounting()
+    choose("Situação atual", "NOT_RECORDED")
+    fill("Caixa real que já existe na carteira", "5,00")
+    continueFlow()
     await waitFor(() =>
       expect(state.preview).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -726,10 +831,11 @@ describe("OpenInvestmentPositionForm", () => {
       "valuationMinor"
     )
     await waitFor(() =>
-      expect(screen.getByText(/Saldo inicial proposto:/).textContent).toMatch(
-        /R\$\s*105,00/
-      )
+      expect(
+        screen.getByText("Saldo inicial a registrar").parentElement?.textContent
+      ).toMatch(/R\$\s*105,00/)
     )
+    expect(screen.queryByLabelText("Valor atual estimado")).toBeNull()
   })
   it("uses an external account only after explicit funding mode selection", async () => {
     success()
@@ -748,18 +854,15 @@ describe("OpenInvestmentPositionForm", () => {
       },
     })
     renderForm()
-    choose("Modo de abertura", "BUY")
-    choose("Carteira", "wallet-1")
-    choose("Instrumento", "instrument-1")
-    fill("Valor principal", "100,00")
-    fill("Data da abertura", "2026-09-01")
-    choose("Origem contábil", "EXTERNAL_ACCOUNT")
+    reachAccounting("BUY")
+    choose("Origem do dinheiro", "EXTERNAL_ACCOUNT")
     await waitFor(() =>
       expect(screen.getByLabelText("Conta de origem")).toHaveProperty(
         "value",
         "bank-1"
       )
     )
+    continueFlow()
     await waitFor(() =>
       expect(state.preview).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -769,10 +872,17 @@ describe("OpenInvestmentPositionForm", () => {
       )
     )
     await waitFor(() =>
-      expect(screen.getByText(/Banco:/).textContent).toMatch(/-R\$\s*100,00/)
+      expect(screen.getByText("Banco").parentElement?.textContent).toMatch(
+        /-R\$\s*100,00/
+      )
     )
-    expect(screen.getByText(/Carteira:/).textContent).toMatch(/R\$\s*100,00/)
-    fireEvent.click(screen.getByRole("button", { name: "Salvar investimento" }))
+    expect(
+      screen
+        .getAllByText("Carteira")
+        .find((element) => element.tagName === "SPAN")?.parentElement
+        ?.textContent
+    ).toMatch(/R\$\s*100,00/)
+    await submitInvestment()
     await waitFor(() =>
       expect(state.purchase).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -781,7 +891,7 @@ describe("OpenInvestmentPositionForm", () => {
       )
     )
   })
-  it("shows a valid negative-cash preview without disabling Save", async () => {
+  it("shows a valid negative-cash preview without disabling confirmation", async () => {
     success()
     state.preview.mockResolvedValue({
       ok: true,
@@ -803,12 +913,12 @@ describe("OpenInvestmentPositionForm", () => {
       },
     })
     renderForm()
-    basicAlreadyOwned()
+    await reachReview()
     await waitFor(() =>
-      expect(screen.getByText(/caixa negativo/i)).toBeTruthy()
+      expect(screen.getByText(/ficará negativo/i)).toBeTruthy()
     )
     expect(
-      screen.getByRole("button", { name: "Salvar investimento" })
+      screen.getByRole("button", { name: "Confirmar investimento" })
     ).not.toHaveProperty("disabled", true)
   })
   it("blocks a second submission while the opening is pending", async () => {
@@ -821,8 +931,11 @@ describe("OpenInvestmentPositionForm", () => {
         })
     )
     renderForm()
-    basicAlreadyOwned()
-    const save = screen.getByRole("button", { name: "Salvar investimento" })
+    await reachReview()
+    const save = screen.getByRole("button", {
+      name: "Confirmar investimento",
+    })
+    await waitFor(() => expect(save).not.toHaveProperty("disabled", true))
     fireEvent.click(save)
     await waitFor(() => expect(save).toHaveProperty("disabled", true))
     fireEvent.click(save)
@@ -852,14 +965,11 @@ describe("OpenInvestmentPositionForm", () => {
         },
       })
     renderForm()
-    basicAlreadyOwned()
-    fireEvent.click(screen.getByRole("button", { name: "Salvar investimento" }))
+    await reachReview()
+    await submitInvestment()
     await waitFor(() => expect(state.open).toHaveBeenCalledTimes(1))
-    expect(screen.getByLabelText("Custo contábil")).toHaveProperty(
-      "value",
-      "100,00"
-    )
-    fireEvent.click(screen.getByRole("button", { name: "Salvar investimento" }))
+    expect(screen.getByText("100,00")).toBeTruthy()
+    await submitInvestment()
     await waitFor(() => expect(state.open).toHaveBeenCalledTimes(2))
     expect(state.open.mock.calls[1][0].requestId).toBe(
       state.open.mock.calls[0][0].requestId
@@ -868,8 +978,8 @@ describe("OpenInvestmentPositionForm", () => {
   it("calls success with the created position", async () => {
     success()
     const onSuccess = renderForm()
-    basicAlreadyOwned()
-    fireEvent.click(screen.getByRole("button", { name: "Salvar investimento" }))
+    await reachReview()
+    await submitInvestment()
     await waitFor(() =>
       expect(onSuccess).toHaveBeenCalledWith(
         expect.objectContaining({ positionId: "position-1" })
