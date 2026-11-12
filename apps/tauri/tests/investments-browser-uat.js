@@ -88,8 +88,67 @@ async function investmentsBrowserUat(page) {
 
     const create = page.getByRole("button", { name: "Novo investimento" })
     await create.click()
-    await page.getByRole("dialog", { name: "Novo investimento" }).waitFor()
-    await page.keyboard.press("Escape")
+    const createDialog = page.getByRole("dialog", {
+      name: "Novo investimento",
+    })
+    await createDialog.waitFor()
+    assert(
+      (await createDialog.getByLabel("Valor atual estimado").count()) === 0,
+      `${width}px: valuation field is still exposed`
+    )
+
+    const instrumentSearch = createDialog.getByRole("textbox", {
+      name: "Instrumento",
+    })
+    await instrumentSearch.fill("CDB")
+    await createDialog.getByRole("option", { name: /CDB A/ }).click()
+    await createDialog.getByRole("combobox", { name: "Carteira" }).click()
+    await page.getByRole("option", { name: "Corretora A" }).click()
+    await createDialog.getByRole("button", { name: "Continuar" }).click()
+
+    const cost = createDialog.getByRole("textbox", {
+      name: "Custo contábil",
+    })
+    await cost.fill("100,00")
+    await createDialog.getByLabel("Data da abertura").fill("2026-10-02")
+    await createDialog
+      .getByRole("button", { name: "Detalhes avançados" })
+      .click()
+    const positionLabel = createDialog.getByRole("textbox", {
+      name: "Rótulo da posição",
+    })
+    await positionLabel.fill("Reserva progressiva")
+    await createDialog.getByRole("button", { name: "Continuar" }).click()
+    await createDialog.getByRole("button", { name: "Continuar" }).click()
+
+    await createDialog
+      .getByRole("heading", { name: "Revise antes de confirmar" })
+      .waitFor()
+    await createDialog.getByText("Custo alocado").waitFor()
+    assert(
+      await createDialog
+        .getByRole("button", { name: "Confirmar investimento" })
+        .isEnabled(),
+      `${width}px: confirmation is not enabled after a valid preview`
+    )
+
+    await createDialog.getByRole("button", { name: "Voltar" }).click()
+    await createDialog.getByRole("button", { name: "Voltar" }).click()
+    await createDialog
+      .getByRole("button", { name: "Detalhes avançados" })
+      .click()
+    assert(
+      (await cost.inputValue()) === "100,00" &&
+        (await createDialog
+          .getByRole("textbox", { name: "Rótulo da posição" })
+          .inputValue()) === "Reserva progressiva",
+      `${width}px: progressive form did not retain the draft`
+    )
+    await createDialog.getByRole("button", { name: "Continuar" }).click()
+    await createDialog.getByRole("button", { name: "Continuar" }).click()
+    await createDialog
+      .getByRole("button", { name: "Confirmar investimento" })
+      .click()
     await page
       .getByRole("dialog", { name: "Novo investimento" })
       .waitFor({ state: "hidden" })
@@ -102,6 +161,9 @@ async function investmentsBrowserUat(page) {
         width,
         ...before,
         ...afterScroll,
+        progressiveRegistration: "PASS",
+        draftRetention: "PASS",
+        accountingReview: "PASS",
         keyboardAndFocus: "PASS",
       })
     )

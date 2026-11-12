@@ -74,7 +74,15 @@ const summary = {
 const ok = <T,>(value: T) => Promise.resolve({ ok: true as const, value })
 const services = {
   books: {
-    get: { execute: () => ok({ id: "book-1", timezone: "America/Sao_Paulo" }) },
+    get: {
+      execute: () =>
+        ok({
+          id: "book-1",
+          name: "Livro UAT",
+          baseCurrency: "BRL",
+          timezone: "America/Sao_Paulo",
+        }),
+    },
     list: {
       execute: () =>
         ok([
@@ -90,11 +98,47 @@ const services = {
   accounts: { listBalances: { execute: () => ok({ items: [] }) } },
   investments: {
     portfolio: { summary: { execute: () => ok(summary) } },
-    accounts: { list: { execute: () => ok([account]) } },
+    accounts: {
+      list: { execute: () => ok([account]) },
+      setOpeningBalance: {
+        execute: () =>
+          ok({ requestId: "uat-balance", journalEntryIds: [], warnings: [] }),
+      },
+    },
     instruments: { list: { execute: () => ok([instrument]) } },
     positions: {
       list: { execute: () => ok({ items: [position], nextCursor: null }) },
+      previewOpening: {
+        execute: () =>
+          ok({
+            bookCostDeltaMinor: "10000",
+            netCashFlowMinor: "0",
+            postings: [],
+            categories: {},
+            projectedCashMinor: "10000",
+            warnings: [],
+          }),
+      },
+      open: {
+        execute: () =>
+          ok({
+            requestId: "uat-open",
+            positionId: "position-uat",
+            journalEntryIds: [],
+            warnings: [],
+          }),
+      },
+      openWithPurchase: {
+        execute: () =>
+          ok({
+            requestId: "uat-purchase",
+            positionId: "position-uat",
+            journalEntryIds: [],
+            warnings: [],
+          }),
+      },
     },
+    requests: { get: { execute: () => ok(null) } },
   },
 } as unknown as MyFinServices
 

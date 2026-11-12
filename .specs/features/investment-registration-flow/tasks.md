@@ -5,7 +5,7 @@
 Implement these tasks with the `tlc-spec-driven` skill: **activate it by name and follow its Execute flow and Critical Rules.**
 
 **Design**: `.specs/features/investment-registration-flow/design.md`
-**Status**: In Progress
+**Status**: Complete
 
 ## Test Coverage Matrix
 
@@ -140,11 +140,13 @@ T3 → T4 → T5 → T6
 **Requirement**: IRF-01, IRF-02, IRF-17–IRF-24
 **Tools**: Skill `ui-ux-pro-max`
 **Done when**:
-- [ ] Roteiro cobre navegação por teclado, retenção e ausência de overflow em 360/1280.
-- [ ] Build gate passa.
-- [ ] Tauri é inspecionado quando o runtime estiver disponível; limitações são registradas.
+- [x] Roteiro cobre navegação por teclado, retenção e ausência de overflow em 360/1280.
+- [x] Build gate passa.
+- [x] Tauri é inspecionado quando o runtime estiver disponível; limitações são registradas.
 **Tests**: integration
 **Gate**: build
+
+**Execution evidence (2026-11-12)**: o roteiro Playwright versionado passou diretamente em Chromium real a 360px e 1280px. Em ambas as larguras, provou ausência de overflow da página, rolagem interna da tabela, menu por teclado e retorno de foco; no novo Drawer, selecionou instrumento/carteira, percorreu as quatro etapas, confirmou a ausência de valuationDisplay, recebeu a prévia, voltou duas etapas e reencontrou custo e rótulo, então concluiu a abertura e devolveu foco ao acionador. ESLint dos formulários, build Vite e git diff --check passaram; o build manteve apenas o aviso preexistente de chunk acima de 500 kB. O Tauri/WebKitGTK 2.52.6 iniciou em Xvfb com banco isolado e janela nativa My Fin de 1200x800 confirmada/capturada. Como o banco isolado abriu no onboarding e o ambiente não dispõe de automação de entrada X11, a jornada nativa do Drawer não foi repetida; IPC/persistência dessa jornada não são alegados. Adequacy verdict: PASS para layout/interação Chromium e boot nativo; limite nativo registrado.
 
 ## Phase Execution Map
 
