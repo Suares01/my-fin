@@ -104,35 +104,35 @@ O cadastro atual apresenta todas as decisões de abertura ao mesmo tempo e mistu
 
 | Requirement ID | Story | Phase | Status |
 | --- | --- | --- | --- |
-| IRF-01 | Cadastro progressivo | Execute | Implementing |
-| IRF-02 | Cadastro progressivo | Execute | Implementing |
-| IRF-03 | Cadastro progressivo | Execute | Implementing |
-| IRF-04 | Cadastro progressivo | Execute | Implementing |
-| IRF-05 | Cadastro progressivo | Execute | Implementing |
-| IRF-06 | Cadastro progressivo | Execute | Implementing |
-| IRF-07 | Cadastro progressivo | Execute | Implementing |
-| IRF-08 | Cadastro progressivo | Execute | Implementing |
-| IRF-09 | Origem contábil | Execute | Implementing |
-| IRF-10 | Origem contábil | Execute | Implementing |
-| IRF-11 | Origem contábil | Execute | Implementing |
-| IRF-12 | Origem contábil | Execute | Implementing |
-| IRF-13 | Origem contábil | Execute | Implementing |
-| IRF-14 | Origem contábil | Execute | Implementing |
-| IRF-15 | Origem contábil | Execute | Implementing |
-| IRF-16 | Origem contábil | Execute | Implementing |
-| IRF-17 | Revisão e recuperação | Execute | Implementing |
-| IRF-18 | Revisão e recuperação | Execute | Implementing |
-| IRF-19 | Revisão e recuperação | Execute | Implementing |
-| IRF-20 | Revisão e recuperação | Execute | Implementing |
-| IRF-21 | Revisão e recuperação | Execute | Implementing |
-| IRF-22 | Revisão e recuperação | Execute | Implementing |
-| IRF-23 | Revisão e recuperação | Execute | Implementing |
-| IRF-24 | Revisão e recuperação | Execute | Implementing |
-| IRF-25 | Edge cases | Execute | Implementing |
-| IRF-26 | Edge cases | Execute | Implementing |
-| IRF-27 | Edge cases | Execute | Implementing |
-| IRF-28 | Edge cases | Execute | Implementing |
-| IRF-29 | Edge cases | Execute | Implementing |
+| IRF-01 | Cadastro progressivo | Execute | ✅ Verified |
+| IRF-02 | Cadastro progressivo | Execute | ✅ Verified |
+| IRF-03 | Cadastro progressivo | Execute | ✅ Verified |
+| IRF-04 | Cadastro progressivo | Execute | ✅ Verified |
+| IRF-05 | Cadastro progressivo | Execute | ✅ Verified |
+| IRF-06 | Cadastro progressivo | Execute | ✅ Verified |
+| IRF-07 | Cadastro progressivo | Execute | ✅ Verified |
+| IRF-08 | Cadastro progressivo | Execute | ✅ Verified |
+| IRF-09 | Origem contábil | Execute | ✅ Verified |
+| IRF-10 | Origem contábil | Execute | ✅ Verified |
+| IRF-11 | Origem contábil | Execute | ✅ Verified |
+| IRF-12 | Origem contábil | Execute | ✅ Verified |
+| IRF-13 | Origem contábil | Execute | ✅ Verified |
+| IRF-14 | Origem contábil | Execute | ✅ Verified |
+| IRF-15 | Origem contábil | Execute | ✅ Verified |
+| IRF-16 | Origem contábil | Execute | ✅ Verified |
+| IRF-17 | Revisão e recuperação | Execute | ✅ Verified |
+| IRF-18 | Revisão e recuperação | Execute | ✅ Verified |
+| IRF-19 | Revisão e recuperação | Execute | ✅ Verified |
+| IRF-20 | Revisão e recuperação | Execute | ✅ Verified |
+| IRF-21 | Revisão e recuperação | Execute | ✅ Verified |
+| IRF-22 | Revisão e recuperação | Execute | ✅ Verified |
+| IRF-23 | Revisão e recuperação | Execute | ✅ Verified |
+| IRF-24 | Revisão e recuperação | Execute | ✅ Verified |
+| IRF-25 | Edge cases | Execute | ✅ Verified |
+| IRF-26 | Edge cases | Execute | ✅ Verified |
+| IRF-27 | Edge cases | Execute | ✅ Verified |
+| IRF-28 | Edge cases | Execute | ✅ Verified |
+| IRF-29 | Edge cases | Execute | ✅ Verified |
 
 **Coverage:** 29 total, 29 mapped to tasks, 0 unmapped.
 

@@ -62,6 +62,24 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: INV-112 (investments)
 - last seen: 2026-10-02T12:08:13Z
 
+### L-009 - Assert every observable state named by a compound UI criterion, including labels, values, loading, errors, and disabled actions.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `investments-ui` · harmful: 0
+- features: investment-registration-flow
+- evidence: IRF-17,IRF-18,IRF-19 (investments-ui)
+- last seen: 2026-11-20T20:19:52Z
+
+### L-010 - Test hook invariants through the consuming form whenever wiring, navigation, focus, or intent changes affect the user outcome.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `investments-ui` · harmful: 0
+- features: investment-registration-flow
+- evidence: IRF-20,IRF-21,IRF-22,IRF-24 (investments-ui)
+- last seen: 2026-11-20T20:19:52Z
+
+### L-011 - For conditional UI criteria, assert every branch and prove that forbidden commands and fallback values remain absent.
+- signal: `ac_gap` · recurrence: 1 feature(s) · scope: `investments-ui` · harmful: 0
+- features: investment-registration-flow
+- evidence: IRF-03,IRF-08,IRF-26 (investments-ui)
+- last seen: 2026-11-20T20:19:52Z
+
 ## Quarantined (failed when applied - ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.
