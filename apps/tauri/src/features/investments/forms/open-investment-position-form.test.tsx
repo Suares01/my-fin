@@ -173,26 +173,44 @@ vi.mock("../../../components/forms/controlled-toggle-group", () => ({
     </fieldset>
   ),
 }))
-vi.mock("../../../components/forms/controlled-input", () => ({
-  ControlledInput: ({
-    name,
-    label,
-    control,
-    disabled,
-    type,
-  }: MockFieldProps) => (
-    <label>
-      {label}
-      <input
-        aria-label={label}
-        type={type ?? "text"}
-        disabled={disabled}
-        value={control._formValues[name] ?? ""}
-        onChange={(event) => changeValue(control, name, event.target.value)}
+vi.mock("../../../components/forms/controlled-input", async () => {
+  const { Controller } = await import("react-hook-form")
+  return {
+    ControlledInput: ({
+      name,
+      label,
+      control,
+      disabled,
+      type,
+    }: MockFieldProps) => (
+      <Controller
+        control={control as never}
+        name={name}
+        render={({ field, fieldState }) => (
+          <label>
+            {label}
+            <input
+              ref={field.ref}
+              aria-label={label}
+              aria-invalid={fieldState.invalid}
+              aria-describedby={
+                fieldState.error ? `mock-${name}-error` : undefined
+              }
+              type={type ?? "text"}
+              disabled={disabled}
+              value={String(field.value ?? "")}
+              onBlur={field.onBlur}
+              onChange={field.onChange}
+            />
+            {fieldState.error && (
+              <span id={`mock-${name}-error`}>{fieldState.error.message}</span>
+            )}
+          </label>
+        )}
       />
-    </label>
-  ),
-}))
+    ),
+  }
+})
 vi.mock("../../accounts/components/account-form", () => ({
   AccountForm: ({ onSuccess }: { onSuccess: (id: string) => void }) => (
     <button
@@ -441,6 +459,11 @@ describe("OpenInvestmentPositionForm", () => {
     state.book = { data: undefined, isPending: false, isError: true }
     renderForm()
     expect(screen.getByText(/Não foi possível carregar a moeda/)).toBeTruthy()
+    expect(document.body.textContent).not.toContain("BRL")
+    expect(state.preview).not.toHaveBeenCalled()
+    expect(state.open).not.toHaveBeenCalled()
+    expect(state.purchase).not.toHaveBeenCalled()
+    expect(state.openingBalance).not.toHaveBeenCalled()
   })
   it("allows a separately created wallet", () => {
     success()
@@ -624,9 +647,18 @@ describe("OpenInvestmentPositionForm", () => {
     startPosition()
     expect(screen.queryByLabelText("Valor atual estimado")).toBeNull()
     continueFlow()
+    const input = screen.getByLabelText("Custo contábil")
     await waitFor(() =>
-      expect(screen.getByText(/Informe o custo contábil/)).toBeTruthy()
+      expect(screen.getAllByText(/Informe o custo contábil/)).toHaveLength(2)
     )
+    expect(input.getAttribute("aria-invalid")).toBe("true")
+    const errorId = input.getAttribute("aria-describedby")
+    expect(errorId).toBeTruthy()
+    expect(document.getElementById(errorId!)?.textContent).toMatch(
+      /Informe o custo contábil/
+    )
+    const summary = screen.getByText("Revise antes de continuar").parentElement
+    await waitFor(() => expect(document.activeElement).toBe(summary))
     expect(state.open).not.toHaveBeenCalled()
   })
   it("permits zero cost with positive units", async () => {
@@ -707,7 +739,7 @@ describe("OpenInvestmentPositionForm", () => {
     choose("Como você acompanha este investimento?", "UNITS")
     continueFlow()
     await waitFor(() =>
-      expect(screen.getByText(/Informe a quantidade/)).toBeTruthy()
+      expect(screen.getAllByText(/Informe a quantidade/)).toHaveLength(2)
     )
     expect(state.open).not.toHaveBeenCalled()
   })
@@ -747,7 +779,9 @@ describe("OpenInvestmentPositionForm", () => {
     choose("Tipo de taxa", "INDEXED")
     continueFlow()
     await waitFor(() =>
-      expect(screen.getByText(/Informe índice e percentual/)).toBeTruthy()
+      expect(
+        screen.getAllByText(/Informe índice e percentual/).length
+      ).toBeGreaterThan(0)
     )
     expect(state.open).not.toHaveBeenCalled()
   })
@@ -921,6 +955,44 @@ describe("OpenInvestmentPositionForm", () => {
       screen.getByRole("button", { name: "Confirmar investimento" })
     ).not.toHaveProperty("disabled", true)
   })
+  it("keeps confirmation disabled while the preview is loading", async () => {
+    success()
+    state.preview.mockImplementation(() => new Promise(() => undefined))
+    renderForm()
+    await reachReview()
+    expect(screen.getByText(/Calculando valores e saldos/)).toBeTruthy()
+    expect(
+      screen.getByRole("button", { name: "Confirmar investimento" })
+    ).toHaveProperty("disabled", true)
+  })
+  it("keeps confirmation disabled after preview failure and retries it", async () => {
+    success()
+    state.preview
+      .mockRejectedValueOnce(new Error("offline"))
+      .mockResolvedValueOnce({
+        ok: true,
+        value: {
+          bookCostDeltaMinor: "10000",
+          netCashFlowMinor: "0",
+          postings: [],
+          categories: {},
+          projectedCashMinor: "90000",
+          warnings: [],
+        },
+      })
+    renderForm()
+    await reachReview()
+    expect(
+      await screen.findByText("Não foi possível calcular a prévia")
+    ).toBeTruthy()
+    const save = screen.getByRole("button", {
+      name: "Confirmar investimento",
+    })
+    expect(save).toHaveProperty("disabled", true)
+    fireEvent.click(screen.getByRole("button", { name: "Tentar novamente" }))
+    await waitFor(() => expect(state.preview).toHaveBeenCalledTimes(2))
+    await waitFor(() => expect(save).not.toHaveProperty("disabled", true))
+  })
   it("blocks a second submission while the opening is pending", async () => {
     success()
     let complete: ((value: unknown) => void) | undefined
@@ -938,6 +1010,14 @@ describe("OpenInvestmentPositionForm", () => {
     await waitFor(() => expect(save).not.toHaveProperty("disabled", true))
     fireEvent.click(save)
     await waitFor(() => expect(save).toHaveProperty("disabled", true))
+    expect(screen.getByRole("button", { name: "Voltar" })).toHaveProperty(
+      "disabled",
+      true
+    )
+    expect(screen.getByRole("button", { name: "Cancelar" })).toHaveProperty(
+      "disabled",
+      true
+    )
     fireEvent.click(save)
     expect(state.open).toHaveBeenCalledTimes(1)
     complete?.({
@@ -969,11 +1049,45 @@ describe("OpenInvestmentPositionForm", () => {
     await submitInvestment()
     await waitFor(() => expect(state.open).toHaveBeenCalledTimes(1))
     expect(screen.getByText("100,00")).toBeTruthy()
+    const summary = screen.getByText("Revise antes de continuar").parentElement
+    await waitFor(() => expect(document.activeElement).toBe(summary))
     await submitInvestment()
     await waitFor(() => expect(state.open).toHaveBeenCalledTimes(2))
     expect(state.open.mock.calls[1][0].requestId).toBe(
       state.open.mock.calls[0][0].requestId
     )
+  })
+  it("uses a new requestId after a failed intent is edited", async () => {
+    success()
+    state.open
+      .mockResolvedValueOnce({ ok: false, error: { code: "TEMPORARY" } })
+      .mockResolvedValueOnce({
+        ok: true,
+        value: {
+          requestId: "open",
+          positionId: "position-1",
+          journalEntryIds: [],
+          warnings: [],
+        },
+      })
+    renderForm()
+    await reachReview()
+    await submitInvestment()
+    await waitFor(() => expect(state.open).toHaveBeenCalledTimes(1))
+    const firstRequestId = state.open.mock.calls[0][0].requestId
+
+    fireEvent.click(screen.getByRole("button", { name: "Voltar" }))
+    fireEvent.click(screen.getByRole("button", { name: "Voltar" }))
+    fill("Custo contábil", "200,00")
+    continueFlow()
+    continueFlow()
+    await waitFor(() => expect(state.preview).toHaveBeenCalledTimes(2))
+    await submitInvestment()
+    await waitFor(() => expect(state.open).toHaveBeenCalledTimes(2))
+    expect(state.open.mock.calls[1][0]).toEqual(
+      expect.objectContaining({ bookCostMinor: "20000" })
+    )
+    expect(state.open.mock.calls[1][0].requestId).not.toBe(firstRequestId)
   })
   it("calls success with the created position", async () => {
     success()

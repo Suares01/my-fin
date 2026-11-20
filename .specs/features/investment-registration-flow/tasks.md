@@ -148,11 +148,29 @@ T3 → T4 → T5 → T6
 
 **Execution evidence (2026-11-12)**: o roteiro Playwright versionado passou diretamente em Chromium real a 360px e 1280px. Em ambas as larguras, provou ausência de overflow da página, rolagem interna da tabela, menu por teclado e retorno de foco; no novo Drawer, selecionou instrumento/carteira, percorreu as quatro etapas, confirmou a ausência de valuationDisplay, recebeu a prévia, voltou duas etapas e reencontrou custo e rótulo, então concluiu a abertura e devolveu foco ao acionador. ESLint dos formulários, build Vite e git diff --check passaram; o build manteve apenas o aviso preexistente de chunk acima de 500 kB. O Tauri/WebKitGTK 2.52.6 iniciou em Xvfb com banco isolado e janela nativa My Fin de 1200x800 confirmada/capturada. Como o banco isolado abriu no onboarding e o ambiente não dispõe de automação de entrada X11, a jornada nativa do Drawer não foi repetida; IPC/persistência dessa jornada não são alegados. Adequacy verdict: PASS para layout/interação Chromium e boot nativo; limite nativo registrado.
 
+### T7: Fechar gaps evidence-or-zero da validação independente
+
+**What**: Fortalecer as asserções de busca, campos condicionais, revisão, prévia, recuperação, requestId, pending, erros inline e ausência de fallback de moeda.
+**Where**: suítes focais em `apps/tauri/src/features/investments/forms`
+**Depends on**: T6
+**Reuses**: harnesses e mocks existentes; sem alteração de produção ou domínio.
+**Requirement**: IRF-03, IRF-08, IRF-17–IRF-22, IRF-24, IRF-26
+**Tools**: Skill `tlc-spec-driven`
+**Done when**:
+- [x] Busca e campos avançados condicionais têm todos os ramos relevantes afirmados.
+- [x] Revisão e prévia provam conteúdo, bloqueios e retry.
+- [x] Falha, edição, requestId, pending, erro inline e foco são cobertos no formulário.
+- [x] Moeda ausente prova zero comandos e ausência de fallback BRL.
+**Tests**: integration
+**Gate**: build
+
+**Execution evidence (2026-11-20)**: a validação independente inicial encontrou 10 critérios com prova parcial. A correção ampliou as suítes sem alterar produção ou domínio: busca por nome/tipo/emissor/identificador e filtro ativo/moeda; campos avançados exclusivos; resumo completo e valores da prévia; estados ausente/loading/falha com retry; foco no resumo e erro inline associado; novo requestId após editar o intent; navegação bloqueada durante pending; e moeda ausente sem comandos nem fallback BRL. As três suítes focais passaram com 51/51 testes. O gate completo passou com cinco builds de pacotes, 89 arquivos/1.108 testes React, tsc, ESLint e Vite; permanece apenas o aviso preexistente de chunk acima de 500 kB. Adequacy verdict: PASS, pendente revalidação independente.
+
 ## Phase Execution Map
 
 ```
 Phase 1: T1 → T2 → T3
-Phase 2: T3 → T4 → T5 → T6
+Phase 2: T3 → T4 → T5 → T6 → T7
 ```
 
 ## Task Granularity Check
@@ -165,6 +183,7 @@ Phase 2: T3 → T4 → T5 → T6
 | T4 | 1 orquestrador | ✅ Granular |
 | T5 | 1 suíte de integração | ✅ Granular |
 | T6 | 1 roteiro UAT | ✅ Granular |
+| T7 | 3 suítes de evidência | ✅ Cohesive |
 
 ## Diagram-Definition Cross-Check
 
@@ -176,6 +195,7 @@ Phase 2: T3 → T4 → T5 → T6
 | T4 | T3 | T3 → T4 | ✅ |
 | T5 | T4 | T4 → T5 | ✅ |
 | T6 | T5 | T5 → T6 | ✅ |
+| T7 | T6 | T6 → T7 | ✅ |
 
 ## Test Co-location Validation
 
@@ -187,3 +207,4 @@ Phase 2: T3 → T4 → T5 → T6
 | T4 | React form | integration | integration | ✅ |
 | T5 | tests | integration | integration | ✅ |
 | T6 | UAT | UAT/integration | integration | ✅ |
+| T7 | tests | integration | integration | ✅ |

@@ -40,6 +40,26 @@ const instruments: readonly InvestmentInstrumentView[] = [
     status: "ACTIVE",
     identifiers: [{ scheme: "TICKER", value: "ABCD3", market: "B3" }],
   },
+  {
+    id: "inactive-1",
+    instrumentClass: "EQUITY",
+    version: 0,
+    name: "Empresa inativa",
+    type: "STOCK",
+    currency: "BRL",
+    status: "ARCHIVED",
+    identifiers: [],
+  },
+  {
+    id: "usd-1",
+    instrumentClass: "EQUITY",
+    version: 0,
+    name: "Empresa em dólar",
+    type: "STOCK",
+    currency: "USD",
+    status: "ACTIVE",
+    identifiers: [],
+  },
 ]
 
 const accounts: readonly InvestmentAccountView[] = [
@@ -73,18 +93,26 @@ function ChoiceHarness() {
   )
 }
 
-function PositionHarness() {
+function PositionHarness({
+  mode = "OWNED",
+  fixedIncome = true,
+  rateKind = "",
+}: {
+  readonly mode?: OpeningFormValues["mode"]
+  readonly fixedIncome?: boolean
+  readonly rateKind?: OpeningFormValues["rateKind"]
+}) {
   const form = useForm<OpeningFormValues>({
-    defaultValues: openingFormDefaults,
+    defaultValues: { ...openingFormDefaults, mode, rateKind },
   })
   return (
     <InvestmentRegistrationPositionStep
       control={form.control}
-      mode="OWNED"
+      mode={mode}
       currency="BRL"
-      fixedIncome
+      fixedIncome={fixedIncome}
       unitsRequired={false}
-      rateKind=""
+      rateKind={rateKind}
       quantityMode="AMOUNT"
       disabled={false}
     />
@@ -109,7 +137,13 @@ function AccountingHarness() {
 describe("investment registration steps", () => {
   afterEach(cleanup)
 
-  it("filters instruments by issuer and identifier", () => {
+  it("filters instruments by name, type, issuer and identifier", () => {
+    expect(filterInvestmentInstruments(instruments, "liquidez")).toEqual([
+      instruments[0],
+    ])
+    expect(filterInvestmentInstruments(instruments, "cdb")).toEqual([
+      instruments[0],
+    ])
     expect(filterInvestmentInstruments(instruments, "banco")).toEqual([
       instruments[0],
     ])
@@ -141,12 +175,43 @@ describe("investment registration steps", () => {
     ).toBe("true")
   })
 
+  it("offers only active instruments in the book currency", () => {
+    render(<ChoiceHarness />)
+    expect(screen.queryByRole("option", { name: /Empresa inativa/ })).toBeNull()
+    expect(
+      screen.queryByRole("option", { name: /Empresa em dólar/ })
+    ).toBeNull()
+    expect(screen.getByRole("option", { name: /CDB Liquidez/ })).toBeTruthy()
+    expect(screen.getByRole("option", { name: /Empresa/ })).toBeTruthy()
+  })
+
   it("keeps optional fixed-income terms behind advanced disclosure", () => {
     render(<PositionHarness />)
     expect(screen.queryByText("Termos de renda fixa")).toBeNull()
     fireEvent.click(screen.getByRole("button", { name: "Detalhes avançados" }))
     expect(screen.getByText("Termos de renda fixa")).toBeTruthy()
+    expect(screen.getByLabelText("Rótulo da posição")).toBeTruthy()
+    expect(screen.queryByLabelText("Descrição")).toBeNull()
     expect(screen.getByText(/valor atual poderá ser registrado/)).toBeTruthy()
+  })
+
+  it("shows only the advanced fields applicable to a purchase", () => {
+    render(<PositionHarness mode="BUY" fixedIncome={false} />)
+    expect(screen.getByLabelText("Valor principal")).toBeTruthy()
+    expect(screen.getByText(/Valor que será alocado, em BRL/)).toBeTruthy()
+    fireEvent.click(screen.getByRole("button", { name: "Detalhes avançados" }))
+    expect(screen.getByLabelText("Rótulo da posição")).toBeTruthy()
+    expect(screen.getByLabelText("Descrição")).toBeTruthy()
+    expect(screen.queryByText("Termos de renda fixa")).toBeNull()
+  })
+
+  it("shows only the fixed-income fields for the selected rate kind", () => {
+    render(<PositionHarness rateKind="PREFIXED" />)
+    fireEvent.click(screen.getByRole("button", { name: "Detalhes avançados" }))
+    expect(screen.getByLabelText("Taxa anual")).toBeTruthy()
+    expect(screen.queryByLabelText("Índice")).toBeNull()
+    expect(screen.queryByLabelText("Percentual do índice")).toBeNull()
+    expect(screen.queryByLabelText("Spread anual")).toBeNull()
   })
 
   it("explains missing wealth without hiding its accounting effect", () => {
