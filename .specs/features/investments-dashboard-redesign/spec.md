@@ -6,10 +6,10 @@ A página principal de investimentos dilui as informações de acompanhamento en
 
 ## Goals
 
-- [ ] Priorizar o patrimônio em investimentos, o custo alocado e o resultado não realizado.
-- [ ] Tornar posições, filtros e ações mais claros em janelas desktop redimensionáveis.
-- [ ] Manter carteiras, instrumentos e classificação acessíveis fora do fluxo principal.
-- [ ] Comunicar carregamento, falha, ausência de avaliação e dados desatualizados sem fabricar valores.
+- [x] Priorizar o patrimônio em investimentos, o custo alocado e o resultado não realizado.
+- [x] Tornar posições, filtros e ações mais claros em janelas desktop redimensionáveis.
+- [x] Manter carteiras, instrumentos e classificação acessíveis fora do fluxo principal.
+- [x] Comunicar carregamento, falha, ausência de avaliação e dados desatualizados sem fabricar valores.
 
 ## Out of Scope
 
@@ -114,19 +114,19 @@ interface InvestmentAssetClassAllocation {
 
 ## Requirement Traceability
 
-| Requirement ID | Story                               | Status       |
-| -------------- | ----------------------------------- | ------------ |
-| IDR-01         | Compreender o patrimônio investido  | Implementing |
-| IDR-02         | Acompanhar e operar posições        | Implementing |
-| IDR-03         | Manter ações e cadastros acessíveis | Implementing |
-| IDR-04         | Estados e responsividade            | Implementing |
-| IDR-05         | Contrato futuro de alocação         | Verified     |
+| Requirement ID | Story                               | Status   |
+| -------------- | ----------------------------------- | -------- |
+| IDR-01         | Compreender o patrimônio investido  | Verified |
+| IDR-02         | Acompanhar e operar posições        | Verified |
+| IDR-03         | Manter ações e cadastros acessíveis | Verified |
+| IDR-04         | Estados e responsividade            | Verified |
+| IDR-05         | Contrato futuro de alocação         | Verified |
 
 **Coverage:** 5 total, 5 mapped, 0 unmapped.
 
 ## Success Criteria
 
-- [ ] A primeira viewport prioriza patrimônio em investimentos, custo, resultado e qualidade da avaliação.
-- [ ] Posições e ações permanecem utilizáveis por teclado em 360, 800 e 1280 px.
-- [ ] Nenhum total financeiro é derivado da página de posições.
-- [ ] Testes focados, suíte React, typecheck, lint e build passam sem regressões.
+- [x] A primeira viewport prioriza patrimônio em investimentos, custo, resultado e qualidade da avaliação.
+- [x] Posições e ações permanecem utilizáveis por teclado em 360, 800 e 1280 px.
+- [x] Nenhum total financeiro é derivado da página de posições.
+- [x] Testes focados, suíte React, typecheck, lint e build passam sem regressões.
