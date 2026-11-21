@@ -347,6 +347,10 @@ function table() {
   }
 }
 
+function openManagement() {
+  fireEvent.click(screen.getByRole("button", { name: "Gerenciar" }))
+}
+
 beforeEach(() => {
   state.session = { status: "ACTIVE", bookId: "book-1" }
   state.summaryQuery = query({ bookNetWorthMinor: "200000", currency: "BRL" })
@@ -379,13 +383,13 @@ describe("InvestmentsPage", () => {
 
   it("composes independent summary, wallets, instruments and positions", () => {
     show()
-    expect(
-      screen.getByRole("heading", { name: "Seus investimentos." })
-    ).toBeTruthy()
+    expect(screen.getByRole("heading", { name: "Investimentos" })).toBeTruthy()
     expect(screen.getByTestId("summary").textContent).toContain("200000")
+    expect(screen.getByTestId("positions")).toBeTruthy()
+    expect(screen.queryByTestId("wallets")).toBeNull()
+    openManagement()
     expect(screen.getByTestId("wallets").textContent).toContain("Corretora A")
     expect(screen.getByRole("heading", { name: "Instrumentos" })).toBeTruthy()
-    expect(screen.getByTestId("positions")).toBeTruthy()
   })
 
   it("keeps summary loading separate from position data", () => {
@@ -405,6 +409,7 @@ describe("InvestmentsPage", () => {
     expect(
       (state.summaryQuery as ReturnType<typeof query>).refetch
     ).toHaveBeenCalledTimes(1)
+    openManagement()
     expect(screen.getByTestId("wallets").textContent).toContain("Corretora A")
   })
 
@@ -418,6 +423,7 @@ describe("InvestmentsPage", () => {
   it("keeps cached instruments visible with retry after refresh failure", () => {
     state.instrumentsQuery = { ...query([instrument]), isError: true }
     show()
+    openManagement()
     expect(screen.getByText("CDB A")).toBeTruthy()
     expect(
       screen.getByText("Dados anteriores; atualização dos instrumentos falhou")
@@ -445,6 +451,7 @@ describe("InvestmentsPage", () => {
 
   it("filters positions by a selected wallet without changing the portfolio total", () => {
     show()
+    openManagement()
     fireEvent.click(screen.getByRole("button", { name: "Selecionar carteira" }))
     expect(accounts().selectedAccountId).toBe("wallet-1")
     expect(table().accountIdFilter).toBe("wallet-1")
@@ -453,6 +460,7 @@ describe("InvestmentsPage", () => {
 
   it("clears the selected wallet from the table filter", () => {
     show()
+    openManagement()
     fireEvent.click(screen.getByRole("button", { name: "Selecionar carteira" }))
     fireEvent.click(screen.getByRole("button", { name: "Limpar carteira" }))
     expect(table().accountIdFilter).toBeNull()
@@ -468,6 +476,7 @@ describe("InvestmentsPage", () => {
 
   it("creates a wallet with its type locked to investment", () => {
     show()
+    openManagement()
     fireEvent.click(screen.getByRole("button", { name: "Cadastrar carteira" }))
     expect(screen.getByTestId("form-wallet")).toBeTruthy()
     expect(form().props.lockedType).toBe("INVESTMENT_ACCOUNT")
@@ -484,6 +493,7 @@ describe("InvestmentsPage", () => {
       },
     ])
     show()
+    openManagement()
     fireEvent.click(screen.getByRole("button", { name: "Configurar da lista" }))
     expect(form().props.mode).toBe("edit")
     expect(
@@ -506,6 +516,7 @@ describe("InvestmentsPage", () => {
       },
     ])
     show()
+    openManagement()
 
     expect(screen.getByText("Contas a classificar")).toBeTruthy()
     expect(screen.getByText(/fora do dinheiro disponível/)).toBeTruthy()
@@ -539,6 +550,7 @@ describe("InvestmentsPage", () => {
       },
     ])
     show()
+    openManagement()
 
     expect(
       screen.getByText("Atualize as contas antes de classificar.")
@@ -554,6 +566,7 @@ describe("InvestmentsPage", () => {
 
   it("archives a wallet with book and expected version", async () => {
     show()
+    openManagement()
     fireEvent.click(screen.getByRole("button", { name: "Arquivar da lista" }))
     await waitFor(() =>
       expect(state.archive).toHaveBeenCalledWith({
@@ -567,6 +580,7 @@ describe("InvestmentsPage", () => {
 
   it("reactivates a wallet with book and expected version", async () => {
     show()
+    openManagement()
     fireEvent.click(screen.getByRole("button", { name: "Reativar da lista" }))
     await waitFor(() =>
       expect(state.reactivate).toHaveBeenCalledWith({
@@ -580,6 +594,7 @@ describe("InvestmentsPage", () => {
   it("does not guess a missing account version", () => {
     state.balancesQuery = query([{ ...balance, version: undefined }])
     show()
+    openManagement()
     fireEvent.click(screen.getByRole("button", { name: "Arquivar da lista" }))
     expect(state.archive).not.toHaveBeenCalled()
     expect(
@@ -590,6 +605,7 @@ describe("InvestmentsPage", () => {
   it("shows a scoped error when wallet archival fails", async () => {
     state.archive.mockRejectedValue(new Error("offline"))
     show()
+    openManagement()
     fireEvent.click(screen.getByRole("button", { name: "Arquivar da lista" }))
     await waitFor(() =>
       expect(
@@ -608,6 +624,7 @@ describe("InvestmentsPage", () => {
       })
     )
     show()
+    openManagement()
     fireEvent.click(screen.getByRole("button", { name: "Arquivar da lista" }))
     await waitFor(() =>
       expect(
@@ -621,6 +638,7 @@ describe("InvestmentsPage", () => {
 
   it("opens instrument creation and edit with persisted class/version", () => {
     show()
+    openManagement()
     fireEvent.click(
       screen.getByRole("button", { name: "Cadastrar instrumento" })
     )
@@ -704,6 +722,7 @@ describe("InvestmentsPage", () => {
 
   it("closes an action drawer and clears selected wallet on book change", () => {
     const page = show()
+    openManagement()
     fireEvent.click(screen.getByRole("button", { name: "Selecionar carteira" }))
     fireEvent.click(screen.getByRole("button", { name: "Novo investimento" }))
     state.session = { status: "ACTIVE", bookId: "book-2" }

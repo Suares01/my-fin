@@ -23,6 +23,10 @@
     --color-chart-3: var(--chart-3);
     --color-chart-2: var(--chart-2);
     --color-chart-1: var(--chart-1);
+    --color-investment-hero-muted: var(--investment-hero-muted);
+    --color-investment-hero-foreground: var(--investment-hero-foreground);
+    --color-investment-hero: var(--investment-hero);
+    --color-investment-accent: var(--investment-accent);
     --color-ring: var(--ring);
     --color-input: var(--input);
     --color-border: var(--border);
@@ -75,6 +79,10 @@
     --chart-3: oklch(0.648 0.2 131.684);
     --chart-4: oklch(0.532 0.157 131.589);
     --chart-5: oklch(0.453 0.124 130.933);
+    --investment-hero: oklch(0.225 0.045 147);
+    --investment-hero-foreground: oklch(0.985 0.012 130);
+    --investment-hero-muted: oklch(0.82 0.03 145);
+    --investment-accent: oklch(0.86 0.205 128.5);
     --radius: 0.875rem;
     --sidebar: oklch(0.985 0 0);
     --sidebar-foreground: oklch(0.141 0.005 285.823);
@@ -110,6 +118,10 @@
     --chart-3: oklch(0.648 0.2 131.684);
     --chart-4: oklch(0.532 0.157 131.589);
     --chart-5: oklch(0.453 0.124 130.933);
+    --investment-hero: oklch(0.19 0.04 147);
+    --investment-hero-foreground: oklch(0.985 0.012 130);
+    --investment-hero-muted: oklch(0.8 0.028 145);
+    --investment-accent: oklch(0.8 0.19 129);
     --sidebar: oklch(0.21 0.006 285.885);
     --sidebar-foreground: oklch(0.985 0 0);
     --sidebar-primary: oklch(0.768 0.233 130.85);

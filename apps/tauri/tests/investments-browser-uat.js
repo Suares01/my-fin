@@ -5,49 +5,64 @@ async function investmentsBrowserUat(page) {
     if (!condition) throw new Error(message)
   }
 
-  for (const width of [360, 1280]) {
+  for (const width of [360, 800, 1280]) {
     await page.setViewportSize({ width, height: 800 })
     await page.reload()
     await action().waitFor()
 
     const before = await page.evaluate(() => {
       const table = document.querySelector('[data-slot="table-container"]')
+      const responsiveList = document.querySelector(
+        '[data-layout="responsive"]'
+      )
+      const button = document.querySelector('[aria-label^="Ações da posição"]')
       return {
         viewport: innerWidth,
         documentWidth: document.documentElement.scrollWidth,
         bodyWidth: document.body.scrollWidth,
         tableWidth: table?.clientWidth,
         tableScrollWidth: table?.scrollWidth,
+        responsiveList: responsiveList !== null,
+        actionRight: button?.getBoundingClientRect().right,
       }
     })
     assert(before.documentWidth <= width, `${width}px: page overflows`)
     assert(before.bodyWidth <= width, `${width}px: body overflows`)
+    assert(before.responsiveList, `${width}px: responsive list is missing`)
     assert(
-      before.tableScrollWidth > before.tableWidth,
-      `${width}px: table cannot scroll internally`
+      before.tableScrollWidth <= before.tableWidth + 1,
+      `${width}px: position list still requires horizontal scrolling`
     )
+    assert(
+      before.actionRight <= width,
+      `${width}px: position action is outside the viewport`
+    )
+
+    const management = page.getByRole("button", { name: "Gerenciar" })
+    await management.click()
+    await page
+      .getByRole("heading", { name: "Carteiras e instrumentos" })
+      .waitFor()
+    await management.click()
+    await page
+      .getByRole("heading", { name: "Carteiras e instrumentos" })
+      .waitFor({ state: "hidden" })
 
     await action().click()
     await page.getByRole("menu", { name: actionName }).waitFor()
-    const afterScroll = await page.evaluate(() => {
-      const table = document.querySelector('[data-slot="table-container"]')
-      const button = document.querySelector('[aria-label^="Ações da posição"]')
-      return {
-        tableScrollLeft: table?.scrollLeft,
-        actionRight: button?.getBoundingClientRect().right,
-        documentWidth: document.documentElement.scrollWidth,
-      }
-    })
+    const afterAction = await page.evaluate(() => ({
+      documentWidth: document.documentElement.scrollWidth,
+      activeActionVisible:
+        document
+          .querySelector('[aria-label^="Ações da posição"]')
+          ?.getBoundingClientRect().right ?? Infinity,
+    }))
     assert(
-      afterScroll.tableScrollLeft > 0,
-      `${width}px: action was not reached by table scrolling`
-    )
-    assert(
-      afterScroll.actionRight <= width,
+      afterAction.activeActionVisible <= width,
       `${width}px: position action remains offscreen`
     )
     assert(
-      afterScroll.documentWidth <= width,
+      afterAction.documentWidth <= width,
       `${width}px: menu causes page overflow`
     )
 
@@ -160,7 +175,8 @@ async function investmentsBrowserUat(page) {
       JSON.stringify({
         width,
         ...before,
-        ...afterScroll,
+        ...afterAction,
+        managementProgressiveDisclosure: "PASS",
         progressiveRegistration: "PASS",
         draftRetention: "PASS",
         accountingReview: "PASS",

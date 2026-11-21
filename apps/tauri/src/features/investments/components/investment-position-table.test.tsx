@@ -142,13 +142,14 @@ describe("InvestmentPositionTable", () => {
     expect(row.getByText(/R\$\s*5\.000,00/)).toBeTruthy()
     expect(row.getByText(/R\$\s*5\.200,00/)).toBeTruthy()
     expect(row.getByText("Avaliação de 20/09/2026")).toBeTruthy()
+    expect(row.getByText(/\+R\$\s*200,00/)).toBeTruthy()
   })
 
-  it("shows distinct optional net and withdrawable valuations", () => {
+  it("keeps optional net and withdrawable valuations in the detail flow", () => {
     show()
     const row = within(screen.getByTestId("position-position-1"))
-    expect(row.getByText(/Líquido: R\$\s*5\.180,00/)).toBeTruthy()
-    expect(row.getByText(/resgatável: R\$\s*3\.000,00/)).toBeTruthy()
+    expect(row.queryByText(/Líquido:/)).toBeNull()
+    expect(row.queryByText(/resgatável:/)).toBeNull()
   })
 
   it("leaves absent quantity and optional valuations unknown", () => {
@@ -166,8 +167,6 @@ describe("InvestmentPositionTable", () => {
     show()
     const row = within(screen.getByTestId("position-position-1"))
     expect(row.getByText("Desconhecida")).toBeTruthy()
-    expect(row.getByText(/Líquido: desconhecido/)).toBeTruthy()
-    expect(row.getByText(/resgatável: desconhecido/)).toBeTruthy()
   })
 
   it("labels book-cost fallback rather than old quoted value", () => {
@@ -181,6 +180,7 @@ describe("InvestmentPositionTable", () => {
     const row = within(screen.getByTestId("position-position-1"))
     expect(row.getByText("Sem avaliação atual; usando custo")).toBeTruthy()
     expect(row.getAllByText(/R\$\s*5\.000,00/)).toHaveLength(2)
+    expect(row.getByText("Resultado indisponível")).toBeTruthy()
   })
 
   it("shows a closed position as zero while keeping its row and history action", () => {
@@ -364,12 +364,16 @@ describe("InvestmentPositionTable", () => {
     expect(props.onCreate).not.toHaveBeenCalled()
   })
 
-  it("confines horizontal overflow to the table container", () => {
+  it("uses responsive rows instead of a fixed-width table", () => {
     show()
     const table = screen.getByRole("table")
     expect(table.parentElement?.getAttribute("data-slot")).toBe(
       "table-container"
     )
-    expect(table.className).toContain("min-w-240")
+    expect(table.className).toContain("xl:table")
+    expect(table.className).not.toContain("min-w-240")
+    expect(screen.getByTestId("position-position-1").className).toContain(
+      "grid-cols-2"
+    )
   })
 })

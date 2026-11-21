@@ -53,6 +53,30 @@ const show = (
 afterEach(cleanup)
 
 describe("InvestmentPortfolioSummary", () => {
+  it("prioritizes invested wealth as positions plus real wallet cash", () => {
+    show()
+    expect(
+      within(screen.getByTestId("invested-net-worth")).getByText(
+        /R\$\s*1\.200,00/
+      )
+    ).toBeTruthy()
+    expect(
+      within(screen.getByTestId("position-cost-metric")).getByText(
+        /R\$\s*900,00/
+      )
+    ).toBeTruthy()
+    expect(
+      within(screen.getByTestId("unrealized-result-metric")).getByText(
+        /\+R\$\s*200,00/
+      )
+    ).toBeTruthy()
+    expect(
+      within(screen.getByTestId("investment-cash-metric")).getByText(
+        /R\$\s*100,00/
+      )
+    ).toBeTruthy()
+  })
+
   it("shows available money in book currency", () => {
     show()
     expect(
@@ -90,6 +114,14 @@ describe("InvestmentPortfolioSummary", () => {
       screen.getByText(/não representa uma cotação sincronizada/)
     ).toBeTruthy()
   })
+  it("distinguishes complete valuation coverage from cost fallback", () => {
+    show({ ...base, valuedPositionCount: 2 })
+    expect(
+      screen.getByText(/Todas as 2 posições abertas têm avaliação/)
+    ).toBeTruthy()
+    expect(screen.queryByText(/usando custo/)).toBeNull()
+  })
+
   it("labels missing valuation as cost fallback", () => {
     show({ ...base, valuedPositionCount: 0, valuationDateRange: null })
     expect(screen.getByText(/Sem avaliação atual; usando custo/)).toBeTruthy()

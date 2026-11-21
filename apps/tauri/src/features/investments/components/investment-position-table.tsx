@@ -44,7 +44,7 @@ import {
   TableRow,
 } from "@workspace/ui/components/table"
 import { formatMinorAmount } from "@workspace/ui/money"
-import { MoreHorizontalIcon } from "lucide-react"
+import { MoreHorizontalIcon, SearchIcon, XIcon } from "lucide-react"
 import { useState } from "react"
 import { useInvestmentPositions } from "../hooks"
 
@@ -118,6 +118,14 @@ function PositionFilter({
   )
 }
 
+function MobileLabel({ children }: { readonly children: React.ReactNode }) {
+  return (
+    <span className="text-xs font-medium text-muted-foreground xl:hidden">
+      {children}
+    </span>
+  )
+}
+
 export function InvestmentPositionTable({
   accounts,
   accountIdFilter,
@@ -153,6 +161,12 @@ export function InvestmentPositionTable({
     assetClass !== "ALL" ||
     status !== "ALL" ||
     search.trim().length > 0
+  const activeFilterCount = [
+    accountId !== "ALL",
+    assetClass !== "ALL",
+    status !== "ALL",
+    search.trim().length > 0,
+  ].filter(Boolean).length
   const names = new Map(accounts.map((account) => [account.id, account.name]))
   const activeAccounts = new Set(
     accounts
@@ -166,6 +180,8 @@ export function InvestmentPositionTable({
   )
   const money = (minor: string, currency: string) =>
     formatMinorAmount(minor, currency)
+  const signedMoney = (minor: string, currency: string) =>
+    `${BigInt(minor) > 0n ? "+" : ""}${money(minor, currency)}`
 
   function clearFilters(): void {
     setAccountId("ALL")
@@ -179,51 +195,72 @@ export function InvestmentPositionTable({
       aria-label="Posições de investimento"
       className="flex min-w-0 flex-col gap-4"
     >
-      <FieldGroup className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <PositionFilter
-          id="position-account-filter"
-          label="Carteira"
-          value={accountId}
-          options={[
-            { value: "ALL", label: "Todas as carteiras" },
-            ...accounts.map((account) => ({
-              value: account.id,
-              label: account.name,
-            })),
-          ]}
-          onChange={setAccountId}
-        />
-        <PositionFilter
-          id="position-class-filter"
-          label="Classe"
-          value={assetClass}
-          options={[
-            { value: "ALL", label: "Todas as classes" },
-            ...assetClasses,
-          ]}
-          onChange={setAssetClass}
-        />
-        <PositionFilter
-          id="position-status-filter"
-          label="Estado"
-          value={status}
-          options={[
-            { value: "ALL", label: "Todos os estados" },
-            { value: "OPEN", label: "Abertas" },
-            { value: "CLOSED", label: "Encerradas" },
-          ]}
-          onChange={setStatus}
-        />
-        <Field>
-          <FieldLabel htmlFor="position-search">Nome ou rótulo</FieldLabel>
-          <Input
-            id="position-search"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Buscar posições"
+      <div className="rounded-2xl border bg-muted/25 p-4">
+        <FieldGroup className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(16rem,2fr)_repeat(3,minmax(9rem,1fr))]">
+          <Field className="sm:col-span-2 xl:col-span-1">
+            <FieldLabel htmlFor="position-search">Nome ou rótulo</FieldLabel>
+            <div className="relative">
+              <SearchIcon
+                aria-hidden="true"
+                className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
+              />
+              <Input
+                id="position-search"
+                className="pl-9"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Buscar posições"
+              />
+            </div>
+          </Field>
+          <PositionFilter
+            id="position-account-filter"
+            label="Carteira"
+            value={accountId}
+            options={[
+              { value: "ALL", label: "Todas as carteiras" },
+              ...accounts.map((account) => ({
+                value: account.id,
+                label: account.name,
+              })),
+            ]}
+            onChange={setAccountId}
           />
-        </Field>
-      </FieldGroup>
+          <PositionFilter
+            id="position-class-filter"
+            label="Classe"
+            value={assetClass}
+            options={[
+              { value: "ALL", label: "Todas as classes" },
+              ...assetClasses,
+            ]}
+            onChange={setAssetClass}
+          />
+          <PositionFilter
+            id="position-status-filter"
+            label="Estado"
+            value={status}
+            options={[
+              { value: "ALL", label: "Todos os estados" },
+              { value: "OPEN", label: "Abertas" },
+              { value: "CLOSED", label: "Encerradas" },
+            ]}
+            onChange={setStatus}
+          />
+        </FieldGroup>
+        {activeFilterCount > 0 && (
+          <div className="mt-3 flex items-center justify-between gap-3 border-t pt-3">
+            <p className="text-sm text-muted-foreground">
+              {activeFilterCount}{" "}
+              {activeFilterCount === 1 ? "filtro ativo" : "filtros ativos"}
+            </p>
+            <Button variant="ghost" size="sm" onClick={clearFilters}>
+              <XIcon aria-hidden="true" />
+              Limpar todos os filtros
+            </Button>
+          </div>
+        )}
+      </div>
 
       {query.isError && positions !== undefined && (
         <Alert variant="destructive">
@@ -239,9 +276,13 @@ export function InvestmentPositionTable({
       )}
 
       {query.isPending && positions === undefined ? (
-        <div aria-label="Carregando posições" className="flex flex-col gap-2">
-          <Skeleton className="h-12" />
-          <Skeleton className="h-12" />
+        <div
+          aria-label="Carregando posições"
+          aria-busy="true"
+          className="flex flex-col gap-2"
+        >
+          <Skeleton className="h-24 rounded-2xl xl:h-14" />
+          <Skeleton className="h-24 rounded-2xl xl:h-14" />
         </div>
       ) : positions === undefined ? (
         <ErrorState
@@ -273,105 +314,133 @@ export function InvestmentPositionTable({
       ) : (
         <>
           <div
-            className="max-w-full min-w-0"
-            aria-label="Tabela com rolagem horizontal"
+            className="min-w-0 xl:overflow-hidden xl:rounded-2xl xl:border xl:bg-card"
+            aria-label="Lista responsiva de posições"
+            data-layout="responsive"
           >
-            <Table className="min-w-240">
-              <TableHeader>
+            <Table className="block min-w-0 xl:table">
+              <TableHeader className="hidden bg-muted/40 xl:table-header-group">
                 <TableRow>
-                  <TableHead>Instrumento</TableHead>
-                  <TableHead>Carteira</TableHead>
-                  <TableHead>Classe</TableHead>
-                  <TableHead>Quantidade</TableHead>
-                  <TableHead>Custo</TableHead>
-                  <TableHead>Valor atual</TableHead>
-                  <TableHead>Base da avaliação</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead>Ações</TableHead>
+                  <TableHead className="w-[32%] whitespace-normal">
+                    Investimento
+                  </TableHead>
+                  <TableHead className="whitespace-normal">
+                    Quantidade
+                  </TableHead>
+                  <TableHead className="whitespace-normal">Custo</TableHead>
+                  <TableHead className="whitespace-normal">
+                    Valor atual
+                  </TableHead>
+                  <TableHead className="whitespace-normal">Resultado</TableHead>
+                  <TableHead className="w-16 text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
-              <TableBody>
+              <TableBody className="block space-y-3 xl:table-row-group xl:space-y-0">
                 {positions.map((position) => {
                   const tradable =
                     position.status === "OPEN" &&
                     activeAccounts.has(position.investmentAccountId) &&
                     activeInstruments.has(position.instrumentId)
                   const valuation = position.valuation
+                  const classLabel =
+                    assetClasses.find(
+                      (item) => item.value === position.assetClass
+                    )?.label ?? position.assetClass
+                  const resultMinor =
+                    valuation.basis === "VALUATION" &&
+                    position.status === "OPEN"
+                      ? (
+                          BigInt(valuation.currentValueMinor) -
+                          BigInt(position.bookCostMinor)
+                        ).toString()
+                      : null
+
                   return (
                     <TableRow
                       key={position.id}
                       data-testid={`position-${position.id}`}
+                      className="grid grid-cols-2 gap-x-4 gap-y-3 rounded-2xl border bg-card p-4 hover:bg-muted/30 xl:table-row xl:rounded-none xl:border-x-0 xl:bg-transparent xl:p-0"
                     >
-                      <TableCell>
-                        <div className="flex flex-col gap-1">
-                          <span className="font-medium">
-                            {position.instrumentName}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            {position.label ?? "Sem rótulo"}
+                      <TableCell className="col-span-2 block p-0 whitespace-normal xl:table-cell xl:p-3">
+                        <div className="flex min-w-0 flex-col gap-2">
+                          <div className="flex min-w-0 flex-wrap items-center gap-2">
+                            <span className="font-semibold break-words">
+                              {position.instrumentName}
+                            </span>
+                            <Badge variant="secondary">{classLabel}</Badge>
+                            <Badge
+                              variant={
+                                position.status === "OPEN"
+                                  ? "outline"
+                                  : "secondary"
+                              }
+                            >
+                              {position.status === "OPEN"
+                                ? "Aberta"
+                                : "Encerrada"}
+                            </Badge>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-1 text-xs leading-relaxed text-muted-foreground">
+                            <span>{position.label ?? "Sem rótulo"}</span>
+                            <span aria-hidden="true">·</span>
+                            <span>
+                              {names.get(position.investmentAccountId) ??
+                                "Carteira indisponível"}
+                            </span>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="block p-0 whitespace-normal xl:table-cell xl:p-3">
+                        <div className="flex min-w-0 flex-col gap-1">
+                          <MobileLabel>Quantidade</MobileLabel>
+                          <span className="break-words tabular-nums">
+                            {position.quantity ?? "Desconhecida"}
                           </span>
                         </div>
                       </TableCell>
-                      <TableCell>
-                        {names.get(position.investmentAccountId) ??
-                          "Carteira indisponível"}
+                      <TableCell className="block p-0 whitespace-normal xl:table-cell xl:p-3">
+                        <div className="flex min-w-0 flex-col gap-1">
+                          <MobileLabel>Custo</MobileLabel>
+                          <span className="break-words tabular-nums">
+                            {money(position.bookCostMinor, position.currency)}
+                          </span>
+                        </div>
                       </TableCell>
-                      <TableCell>
-                        {assetClasses.find(
-                          (item) => item.value === position.assetClass
-                        )?.label ?? position.assetClass}
-                      </TableCell>
-                      <TableCell>
-                        {position.quantity ?? "Desconhecida"}
-                      </TableCell>
-                      <TableCell>
-                        {money(position.bookCostMinor, position.currency)}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col gap-1">
-                          <span>
+                      <TableCell className="block p-0 whitespace-normal xl:table-cell xl:p-3">
+                        <div className="flex min-w-0 flex-col gap-1">
+                          <MobileLabel>Valor atual</MobileLabel>
+                          <span className="font-medium break-words tabular-nums">
                             {money(
                               valuation.currentValueMinor,
                               position.currency
                             )}
                           </span>
-                          {position.status === "OPEN" && (
-                            <span className="text-xs text-muted-foreground">
-                              Líquido:{" "}
-                              {valuation.netValueMinor === undefined
-                                ? "desconhecido"
-                                : money(
-                                    valuation.netValueMinor,
-                                    position.currency
-                                  )}
-                              ; resgatável:{" "}
-                              {valuation.withdrawableValueMinor === undefined
-                                ? "desconhecido"
-                                : money(
-                                    valuation.withdrawableValueMinor,
-                                    position.currency
-                                  )}
+                          <span className="text-xs leading-relaxed text-muted-foreground">
+                            {valuation.basis === "VALUATION"
+                              ? `Avaliação de ${valuation.valuedAt ? date(valuation.valuedAt) : "data desconhecida"}`
+                              : valuation.basis === "BOOK_COST"
+                                ? "Sem avaliação atual; usando custo"
+                                : "Posição encerrada"}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="block p-0 whitespace-normal xl:table-cell xl:p-3">
+                        <div className="flex min-w-0 flex-col gap-1">
+                          <MobileLabel>Resultado</MobileLabel>
+                          {resultMinor === null ? (
+                            <span className="text-sm text-muted-foreground">
+                              {valuation.basis === "BOOK_COST"
+                                ? "Resultado indisponível"
+                                : "—"}
+                            </span>
+                          ) : (
+                            <span className="font-medium break-words tabular-nums">
+                              {signedMoney(resultMinor, position.currency)}
                             </span>
                           )}
                         </div>
                       </TableCell>
-                      <TableCell>
-                        {valuation.basis === "VALUATION"
-                          ? `Avaliação de ${valuation.valuedAt ? date(valuation.valuedAt) : "data desconhecida"}`
-                          : valuation.basis === "BOOK_COST"
-                            ? "Sem avaliação atual; usando custo"
-                            : "Posição encerrada"}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            position.status === "OPEN" ? "outline" : "secondary"
-                          }
-                        >
-                          {position.status === "OPEN" ? "Aberta" : "Encerrada"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
+                      <TableCell className="col-span-2 block p-0 text-right xl:table-cell xl:p-3">
                         <DropdownMenu>
                           <DropdownMenuTrigger
                             render={

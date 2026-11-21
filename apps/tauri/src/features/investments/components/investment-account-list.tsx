@@ -75,8 +75,8 @@ export function InvestmentAccountList({
         aria-label="Carregando carteiras"
         className="grid min-w-0 grid-cols-1 gap-3 lg:grid-cols-2"
       >
-        <Skeleton className="h-72" />
-        <Skeleton className="h-72" />
+        <Skeleton className="h-72 rounded-2xl" />
+        <Skeleton className="h-72 rounded-2xl" />
       </div>
     )
 
@@ -144,7 +144,7 @@ export function InvestmentAccountList({
                 key={account.id}
                 size="sm"
                 data-testid={`investment-account-${account.id}`}
-                className="min-w-0"
+                className="min-w-0 rounded-2xl border shadow-none ring-0"
               >
                 <CardHeader>
                   <CardTitle className="break-words">{account.name}</CardTitle>

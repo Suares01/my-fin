@@ -19,6 +19,11 @@ import {
   CardTitle,
 } from "@workspace/ui/components/card"
 import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@workspace/ui/components/collapsible"
+import {
   Drawer,
   DrawerBackdrop,
   DrawerContent,
@@ -34,6 +39,7 @@ import {
 } from "@workspace/ui/components/empty"
 import { ErrorState } from "@workspace/ui/components/error-state"
 import { Skeleton } from "@workspace/ui/components/skeleton"
+import { ChevronDownIcon, PlusIcon, Settings2Icon } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { AccountForm } from "../../accounts/components/account-form"
 import type { FinancialAccountBalance } from "../../accounts/components/account-card"
@@ -164,6 +170,8 @@ function InvestmentBookPage({
   const actionTrigger = useRef<HTMLElement | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
   const [accountPendingId, setAccountPendingId] = useState<string | undefined>()
+  const [managementOpen, setManagementOpen] = useState(false)
+  const managementPanelRef = useRef<HTMLDivElement | null>(null)
   const detailId = action === null ? (positionId ?? localPositionId) : null
 
   function navigatePosition(id: string | null): void {
@@ -192,6 +200,15 @@ function InvestmentBookPage({
     window.setTimeout(() => {
       if (trigger?.isConnected) trigger.focus()
     }, 0)
+  }
+  function changeManagementOpen(open: boolean): void {
+    setManagementOpen(open)
+    if (open)
+      window.setTimeout(() => {
+        const panel = managementPanelRef.current
+        if (typeof panel?.scrollIntoView === "function")
+          panel.scrollIntoView({ block: "start" })
+      }, 0)
   }
   async function finishAction(): Promise<void> {
     closeAction()
@@ -258,26 +275,52 @@ function InvestmentBookPage({
       .map((item) => ({ id: item.accountId, name: item.accountName })) ?? []
 
   return (
-    <section
-      aria-label="Investimentos"
-      className="motion-reveal flex min-w-0 flex-col gap-8"
+    <Collapsible
+      className="group/collapsible"
+      render={
+        <section
+          aria-label="Investimentos"
+          className="motion-reveal flex min-w-0 flex-col gap-10"
+        />
+      }
+      open={managementOpen}
+      onOpenChange={changeManagementOpen}
     >
-      <header className="flex flex-wrap items-end justify-between gap-4">
+      <header className="flex flex-col gap-5 border-b pb-6 lg:flex-row lg:items-end lg:justify-between">
         <div className="flex min-w-0 flex-col gap-2">
-          <p className="text-xs font-medium tracking-[0.16em] text-muted-foreground uppercase">
-            Livro ativo
-          </p>
-          <h1 className="font-display text-4xl font-normal tracking-tight text-balance sm:text-5xl">
-            Seus investimentos.
+          <h1 className="font-display text-4xl font-semibold tracking-[-0.035em] text-balance sm:text-5xl">
+            Investimentos
           </h1>
-          <p className="max-w-xl text-base leading-relaxed text-muted-foreground">
-            Carteiras e posições com valores contábeis e avaliações
-            identificados separadamente.
+          <p className="max-w-2xl text-base leading-relaxed text-muted-foreground">
+            Acompanhe posições, custo e avaliações sem misturar o patrimônio
+            investido com o patrimônio total do livro.
           </p>
         </div>
-        <Button onClick={() => openAction({ kind: "open-position" })}>
-          Novo investimento
-        </Button>
+        <div className="flex w-full flex-col-reverse gap-2 sm:flex-row lg:w-auto">
+          <CollapsibleTrigger
+            render={
+              <Button
+                variant="outline"
+                className="w-full sm:w-auto"
+                aria-label="Gerenciar"
+              />
+            }
+          >
+            <Settings2Icon aria-hidden="true" />
+            Gerenciar
+            <ChevronDownIcon
+              aria-hidden="true"
+              className="transition-transform group-data-[state=open]/collapsible:rotate-180"
+            />
+          </CollapsibleTrigger>
+          <Button
+            className="w-full sm:w-auto"
+            onClick={() => openAction({ kind: "open-position" })}
+          >
+            <PlusIcon aria-hidden="true" />
+            Novo investimento
+          </Button>
+        </div>
       </header>
 
       <InvestmentPortfolioSummary
@@ -289,172 +332,16 @@ function InvestmentBookPage({
         onCreateAccount={() => openAction({ kind: "create-wallet" })}
       />
 
-      {otherAssets.length > 0 && (
-        <div className="flex min-w-0 flex-col gap-4">
-          <div>
-            <h2 className="font-heading text-xl font-medium">
-              Contas a classificar
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              Outros ativos ficam fora do dinheiro disponível. Classifique a
-              conta como carteira para usá-la em investimentos, sem gerar
-              lançamentos.
-            </p>
-          </div>
-          <div className="grid min-w-0 gap-3 sm:grid-cols-2">
-            {otherAssets.map((account) => (
-              <Card key={account.accountId} className="min-w-0">
-                <CardHeader>
-                  <CardTitle className="truncate text-base">
-                    {account.accountName}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="flex flex-col items-start gap-2">
-                  <Button
-                    variant="outline"
-                    disabled={account.version === undefined}
-                    onClick={() =>
-                      openAction({
-                        kind: "classify-wallet",
-                        account: account as FinancialAccountBalance,
-                      })
-                    }
-                  >
-                    Classificar {account.accountName} como carteira
-                  </Button>
-                  {account.version === undefined && (
-                    <p className="text-sm text-muted-foreground">
-                      Atualize as contas antes de classificar.
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
-
       <div className="flex min-w-0 flex-col gap-4">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="font-heading text-xl font-medium">Carteiras</h2>
-          <Button
-            variant="outline"
-            onClick={() => openAction({ kind: "create-wallet" })}
-          >
-            Cadastrar carteira
-          </Button>
+        <div className="flex flex-col gap-1">
+          <h2 className="font-heading text-2xl font-semibold tracking-tight">
+            Posições
+          </h2>
+          <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
+            Compare custo e valor atual. Quando não há avaliação aplicável, o
+            custo aparece identificado como base do valor.
+          </p>
         </div>
-        <InvestmentAccountList
-          accounts={accounts.data}
-          selectedAccountId={selectedAccountId ?? undefined}
-          isPending={accounts.isPending}
-          isError={accounts.isError}
-          actionError={actionError}
-          actionPendingId={accountPendingId}
-          onRetry={() => void accounts.refetch()}
-          onCreate={() => openAction({ kind: "create-wallet" })}
-          onSelect={(id) =>
-            setSelectedAccountId((current) => (current === id ? null : id))
-          }
-          onConfigure={(account) => {
-            const balance = accountBalance(account.id)
-            if (balance === undefined || balance.version === undefined) {
-              setActionError("Atualize a carteira antes de configurar.")
-              return
-            }
-            openAction({ kind: "edit-wallet", account: balance })
-          }}
-          onArchive={(account) =>
-            void changeAccountStatus(account.id, "ARCHIVED")
-          }
-          onReactivate={(account) =>
-            void changeAccountStatus(account.id, "ACTIVE")
-          }
-        />
-      </div>
-
-      <div className="flex min-w-0 flex-col gap-4">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="font-heading text-xl font-medium">Instrumentos</h2>
-          <Button
-            variant="outline"
-            onClick={() => openAction({ kind: "create-instrument" })}
-          >
-            Cadastrar instrumento
-          </Button>
-        </div>
-        {instruments.isError && instruments.data !== undefined && (
-          <Alert variant="destructive">
-            <AlertTitle>
-              Dados anteriores; atualização dos instrumentos falhou
-            </AlertTitle>
-            <AlertDescription>
-              <Button
-                variant="outline"
-                onClick={() => void instruments.refetch()}
-              >
-                Recarregar instrumentos
-              </Button>
-            </AlertDescription>
-          </Alert>
-        )}
-        {instruments.isPending && instruments.data === undefined ? (
-          <Skeleton aria-label="Carregando instrumentos" className="h-28" />
-        ) : instruments.data === undefined ? (
-          <ErrorState
-            variant="load-error"
-            title="Não foi possível carregar os instrumentos"
-            actionLabel="Tentar novamente"
-            onAction={() => void instruments.refetch()}
-          />
-        ) : instruments.data.length === 0 ? (
-          <Empty>
-            <EmptyHeader>
-              <EmptyTitle>Nenhum instrumento cadastrado.</EmptyTitle>
-            </EmptyHeader>
-            <EmptyContent>
-              <Button onClick={() => openAction({ kind: "create-instrument" })}>
-                Cadastrar instrumento
-              </Button>
-            </EmptyContent>
-          </Empty>
-        ) : (
-          <div className="grid min-w-0 grid-cols-1 gap-3 lg:grid-cols-2">
-            {instruments.data.map((instrument) => (
-              <Card key={instrument.id} size="sm" className="min-w-0">
-                <CardHeader>
-                  <CardTitle className="break-words">
-                    {instrument.name}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex flex-wrap gap-2">
-                    <Badge variant="secondary">{instrument.type}</Badge>
-                    <Badge
-                      variant={
-                        instrument.status === "ACTIVE" ? "outline" : "secondary"
-                      }
-                    >
-                      {instrument.status === "ACTIVE" ? "Ativo" : "Arquivado"}
-                    </Badge>
-                  </div>
-                  <Button
-                    variant="outline"
-                    onClick={() =>
-                      openAction({ kind: "edit-instrument", instrument })
-                    }
-                  >
-                    Configurar {instrument.name}
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <div className="flex min-w-0 flex-col gap-4">
-        <h2 className="font-heading text-xl font-medium">Posições</h2>
         {accounts.data === undefined || instruments.data === undefined ? (
           accounts.isError || instruments.isError ? (
             <Alert variant="destructive">
@@ -491,6 +378,217 @@ function InvestmentBookPage({
           />
         )}
       </div>
+
+      <CollapsibleContent
+        ref={managementPanelRef}
+        className="scroll-mt-6 rounded-2xl border bg-muted/20 p-4 sm:p-6"
+      >
+        <div className="flex min-w-0 flex-col gap-8">
+          <div className="flex flex-col gap-1">
+            <h2 className="font-heading text-2xl font-semibold tracking-tight">
+              Carteiras e instrumentos
+            </h2>
+            <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
+              Cadastros auxiliares e classificação de contas ficam reunidos
+              aqui, fora do acompanhamento diário das posições.
+            </p>
+          </div>
+
+          {otherAssets.length > 0 && (
+            <div className="flex min-w-0 flex-col gap-4">
+              <div>
+                <h3 className="font-heading text-lg font-semibold">
+                  Contas a classificar
+                </h3>
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  Outros ativos ficam fora do dinheiro disponível. Classifique a
+                  conta como carteira para usá-la em investimentos, sem gerar
+                  lançamentos.
+                </p>
+              </div>
+              <div className="grid min-w-0 gap-3 sm:grid-cols-2">
+                {otherAssets.map((account) => (
+                  <Card
+                    key={account.accountId}
+                    className="min-w-0 rounded-2xl border py-4 shadow-none ring-0"
+                  >
+                    <CardHeader>
+                      <CardTitle className="truncate text-base">
+                        {account.accountName}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex flex-col items-start gap-2">
+                      <Button
+                        variant="outline"
+                        disabled={account.version === undefined}
+                        onClick={() =>
+                          openAction({
+                            kind: "classify-wallet",
+                            account: account as FinancialAccountBalance,
+                          })
+                        }
+                      >
+                        Classificar {account.accountName} como carteira
+                      </Button>
+                      {account.version === undefined && (
+                        <p className="text-sm text-muted-foreground">
+                          Atualize as contas antes de classificar.
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="flex min-w-0 flex-col gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h3 className="font-heading text-lg font-semibold">
+                  Carteiras
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Saldos, caixa e contas de liquidação.
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => openAction({ kind: "create-wallet" })}
+              >
+                Cadastrar carteira
+              </Button>
+            </div>
+            <InvestmentAccountList
+              accounts={accounts.data}
+              selectedAccountId={selectedAccountId ?? undefined}
+              isPending={accounts.isPending}
+              isError={accounts.isError}
+              actionError={actionError}
+              actionPendingId={accountPendingId}
+              onRetry={() => void accounts.refetch()}
+              onCreate={() => openAction({ kind: "create-wallet" })}
+              onSelect={(id) =>
+                setSelectedAccountId((current) => (current === id ? null : id))
+              }
+              onConfigure={(account) => {
+                const balance = accountBalance(account.id)
+                if (balance === undefined || balance.version === undefined) {
+                  setActionError("Atualize a carteira antes de configurar.")
+                  return
+                }
+                openAction({ kind: "edit-wallet", account: balance })
+              }}
+              onArchive={(account) =>
+                void changeAccountStatus(account.id, "ARCHIVED")
+              }
+              onReactivate={(account) =>
+                void changeAccountStatus(account.id, "ACTIVE")
+              }
+            />
+          </div>
+
+          <div className="flex min-w-0 flex-col gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h3 className="font-heading text-lg font-semibold">
+                  Instrumentos
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Ativos disponíveis para abrir e manter posições.
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => openAction({ kind: "create-instrument" })}
+              >
+                Cadastrar instrumento
+              </Button>
+            </div>
+            {instruments.isError && instruments.data !== undefined && (
+              <Alert variant="destructive">
+                <AlertTitle>
+                  Dados anteriores; atualização dos instrumentos falhou
+                </AlertTitle>
+                <AlertDescription>
+                  <Button
+                    variant="outline"
+                    onClick={() => void instruments.refetch()}
+                  >
+                    Recarregar instrumentos
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            )}
+            {instruments.isPending && instruments.data === undefined ? (
+              <Skeleton
+                aria-label="Carregando instrumentos"
+                className="h-28 rounded-2xl"
+              />
+            ) : instruments.data === undefined ? (
+              <ErrorState
+                variant="load-error"
+                title="Não foi possível carregar os instrumentos"
+                actionLabel="Tentar novamente"
+                onAction={() => void instruments.refetch()}
+              />
+            ) : instruments.data.length === 0 ? (
+              <Empty>
+                <EmptyHeader>
+                  <EmptyTitle>Nenhum instrumento cadastrado.</EmptyTitle>
+                </EmptyHeader>
+                <EmptyContent>
+                  <Button
+                    onClick={() => openAction({ kind: "create-instrument" })}
+                  >
+                    Cadastrar instrumento
+                  </Button>
+                </EmptyContent>
+              </Empty>
+            ) : (
+              <div className="grid min-w-0 grid-cols-1 gap-3 lg:grid-cols-2">
+                {instruments.data.map((instrument) => (
+                  <Card
+                    key={instrument.id}
+                    size="sm"
+                    className="min-w-0 rounded-2xl border shadow-none ring-0"
+                  >
+                    <CardHeader>
+                      <CardTitle className="break-words">
+                        {instrument.name}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex flex-wrap gap-2">
+                        <Badge variant="secondary">{instrument.type}</Badge>
+                        <Badge
+                          variant={
+                            instrument.status === "ACTIVE"
+                              ? "outline"
+                              : "secondary"
+                          }
+                        >
+                          {instrument.status === "ACTIVE"
+                            ? "Ativo"
+                            : "Arquivado"}
+                        </Badge>
+                      </div>
+                      <Button
+                        variant="outline"
+                        onClick={() =>
+                          openAction({ kind: "edit-instrument", instrument })
+                        }
+                      >
+                        Configurar {instrument.name}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </CollapsibleContent>
 
       <Drawer
         direction="right"
@@ -559,7 +657,7 @@ function InvestmentBookPage({
           </>
         )}
       </Drawer>
-    </section>
+    </Collapsible>
   )
 }
 
